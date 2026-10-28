@@ -1,6 +1,7 @@
 #include "Reverb.h"
 #include <algorithm>
 #include <cmath>
+#include <complex>
 #include <engine/core/Settings.h>
 #include <engine/dsp/Math.h>
 
@@ -154,6 +155,54 @@ constexpr float kSpaceEr = 0.19f, kSpaceTailIn = 0.6f, kSpaceOut = 0.15f, kSpace
 /** How long the taps take to glide to a new room. */
 constexpr float kSpaceGlideS = 0.05f;
 
+// --- tube and string ---
+
+/** The lines' range; a pitch outside it folds by octaves. */
+constexpr float kWaveMinHz = 20.0f, kWaveMaxHz = 2000.0f;
+/** Middle C, what `pitch` counts from when it isn't following. */
+constexpr float kWaveBaseHz = 261.6256f;
+/** The two lines, this many cents either side of the pitch. */
+constexpr float kWaveDetune = 1.5f;
+/** Wobble at the top swings each line's length by this much of it, about 10 cents. */
+constexpr float kWaveWobble = 0.006f;
+constexpr float kWaveModRate[2] = {0.37f, 0.53f};
+/** The input's high-pass, so no DC goes round. */
+constexpr float kWaveHpHz = 20.0f;
+/** The tube's soft clip: where loud hits start to growl. */
+constexpr float kTubeClip = 0.3f;
+constexpr float kTubeIn = 0.5f, kTubeOut = 0.5f, kStringIn = 0.4f, kStringOut = 0.21f, kWaveInject = 0.5f;
+/** How long the harmonic damp points at rings, against the fundamental. */
+constexpr float kWaveHighShare = 0.2f;
+/** The allpasses' coefficient at stiff 1, and the most of the period the chain may take. */
+constexpr float kStiffMax = 0.85f, kStiffShare = 0.45f;
+
+/** Phase in radians at w of the one-pole low-pass y += a (x - y). */
+double lowPassPhase(double a, double w) {
+    return std::arg(std::complex<double>(a) / (1.0 - (1.0 - a) * std::polar(1.0, -w)));
+}
+
+/** Phase at w of the first-order allpass (a + z^-1) / (1 + a z^-1). */
+double allpassPhase(double a, double w) {
+    const auto z = std::polar(1.0, -w);
+    return std::arg((a + z) / (1.0 + a * z));
+}
+
+/**
+ * The delay to ask a WaveTap for so it delays by `d` samples at w: the
+ * first-order allpass is a little off its fraction away from DC, so the
+ * fraction is moved by what it misses.
+ */
+float tapDelayFor(double d, double w) {
+    double ask = d;
+    for (int k = 0; k < 2; ++k) {
+        const double m = std::floor(ask - 0.5), f = ask - m;
+        const double c = (1.0 - f) / (1.0 + f);
+        const double got = m - allpassPhase(c, w) / w;
+        ask += d - got;
+    }
+    return static_cast<float>(ask);
+}
+
 // --- shared ---
 
 /** Modulation at default, and what wobble adds at the top, in seconds. */
@@ -232,8 +281,8 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         {"crush", 1.0f, 32.0f, 1.0f, Curve::Exponential, 0, ""},
         {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
-        // room, plate, hall, spring, early, space
-        {"model", 0.0f, 5.0f, 0.0f, Curve::Stepped, kModels, ""},
+        // room, plate, hall, spring, early, space, tube, string
+        {"model", 0.0f, 7.0f, 0.0f, Curve::Stepped, kModels, ""},
         {"duck", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"duckrel", 50.0f, 2000.0f, 300.0f, Curve::Exponential, 0, "ms"},
         {"distance", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -250,6 +299,14 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         {"position", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         // tile, plaster, wood, curtains
         {"material", 0.0f, 3.0f, 1.0f, Curve::Stepped, 4, ""},
+        // tube and string: semitones from middle C, or from the last note when following
+        {"pitch", -36.0f, 24.0f, 0.0f, Curve::Linear, 0, "st"},
+        {"follow", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        // tube
+        {"open", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // string
+        {"stiff", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
+        {"pick", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
     };
     count = Count;
     return defs;
@@ -354,6 +411,17 @@ void Reverb::prepare(int32_t sampleRate) {
         spcRot[i][0] = std::cos(w);
         spcRot[i][1] = std::sin(w);
     }
+    // Tube and string: the lowest pitch, a little under for the detune, and the most wobble.
+    const int32_t wgMost = static_cast<int32_t>(sr / kWaveMinHz * (1.02f + 2.0f * kWaveWobble)) + 8;
+    for (int c = 0; c < kWaveLines; ++c) {
+        wgLine[c].prepare(wgMost);
+        wgPick[c].prepare(wgMost / 2 + 8);
+        const float w = dsp::kTwoPi * kWaveModRate[c] / sr;
+        wgRot[c][0] = std::cos(w);
+        wgRot[c][1] = std::sin(w);
+    }
+    wgHpCoeff = std::exp(-dsp::kTwoPi * kWaveHpHz / sr);
+    wgWas[0] = -1.0f;
     plSizeWas = haSizeWas = spSizeWas = eaSizeWas = -1.0f;
     eaRateWas = -1.0f;
     spcGeomWas[0] = -1.0f;
@@ -437,6 +505,19 @@ void Reverb::clearSpace() {
     spcSnap = true;
 }
 
+void Reverb::clearWave() {
+    for (int c = 0; c < kWaveLines; ++c) {
+        wgLine[c].clear();
+        wgPick[c].clear();
+        for (auto &t : wgTap[c]) t.y = 0.0f;
+        for (float &v : wgChain[c]) v = 0.0f;
+        wgLp[c] = wgHpX[c] = wgHpY[c] = 0.0f;
+        const float ph = dsp::kTwoPi * static_cast<float>(c) * 0.31f;
+        wgOsc[c][0] = std::cos(ph);
+        wgOsc[c][1] = std::sin(ph);
+    }
+}
+
 void Reverb::reset() {
     clearRoom();
     clearPlate();
@@ -444,6 +525,8 @@ void Reverb::reset() {
     clearSpring();
     clearEarly();
     clearSpace();
+    clearWave();
+    heardNote = -1;
     for (auto &p : pre) p.clear();
     for (auto &p : preLong) p.clear();
     for (auto &l : shimmerLine) l.clear();
@@ -490,6 +573,8 @@ struct Reverb::Block {
     float erAt[2][kHallEr];
     // Spring: knock, its detector and the thump's and burst's rates.
     float knock, knFastAtk, knFastRel, knSlowAtk, knSlowRel, thumpAtk, thumpDecay, thumpGlide, burstDecay;
+    // Tube and string: open's two tap weights, and wobble's swing as a share of the length.
+    float wgOdd, wgFull, wgWob;
 };
 
 bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
@@ -506,7 +591,8 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 case Hall: clearHall(); break;
                 case Spring: clearSpring(); break;
                 case Early: clearEarly(); break;
-                default: clearSpace(); break;
+                case Space: clearSpace(); break;
+                default: clearWave(); break;
             }
         }
         lastModel = model;
@@ -606,6 +692,27 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { earlySample(bb, d, o); });
             for (auto &o : eaOsc) renormalise(o);
             break;
+        case Tube:
+        case String: {
+            const bool string = model == String;
+            updateWave(string, size, p.get(Damp), b.freeze, full);
+            // The odd tap is the closed pipe, half the loop with a sign flip; the full tap the open one.
+            // Together the odd harmonics ring as set and the even ones for `open` of that time:
+            // their loop gain is the odd ones' to the power 1 / open.
+            const float open = p.get(Open);
+            const float even = open > 0.0f ? std::pow(wgGLive, 1.0f / open - 1.0f) : 0.0f;
+            b.wgOdd = -0.5f * (1.0f - even);
+            b.wgFull = 0.5f * (1.0f + even);
+            b.wgWob = wobble * kWaveWobble;
+            const float pick = 0.04f + 0.46f * p.get(Pick);
+            for (int c = 0; c < kWaveLines; ++c) wgPickD[c] = std::max(1.0f, wgPeriod[c] * pick * (c == 0 ? 1.0f : 0.85f));
+            if (string)
+                run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { stringSample(bb, d, o); });
+            else
+                run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { tubeSample(bb, d, o); });
+            for (auto &o : wgOsc) renormalise(o);
+            break;
+        }
         case Space:
             updateSpace(p.get(Damp), b.freeze, full, frames);
             run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { spaceSample(bb, d, o); });
@@ -1322,6 +1429,164 @@ void Reverb::spaceSample(const Block &b, const float dry[2], float out[2]) {
     for (int c = 0; c < 2; ++c) {
         const float wet = o[c] * outScale + er[c] * erLevel;
         lp[c] += (wet - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Tube and string -----------------------------------------------------------
+
+float Reverb::WaveTap::read(const Line &l, float d) {
+    d = clampf(d, 1.5f, static_cast<float>(l.size - 2));
+    const auto m = static_cast<int32_t>(d - 0.5f);
+    const float f = d - static_cast<float>(m);
+    const float c = (1.0f - f) / (1.0f + f);
+    y = undenormal(c * l.at(m) + l.at(m + 1) - c * y);
+    return y;
+}
+
+void Reverb::updateWave(bool string, float size, float damp, bool freeze, bool full) {
+    const auto &p = params_;
+    const bool follow = p.get(Follow) >= 0.5f && heardNote >= 0;
+    const float pitch = p.get(Pitch), stiff = string ? p.get(Stiff) : 0.0f;
+    const float key[8] = {pitch, follow ? static_cast<float>(heardNote) : -1.0f, size, damp, stiff,
+                          freeze ? 1.0f : 0.0f, full ? 1.0f : 0.0f, string ? 1.0f : 0.0f};
+    if (std::equal(key, key + 8, wgWas)) return;
+    std::copy(key, key + 8, wgWas);
+
+    float hz = (follow ? 440.0f * std::pow(2.0f, (static_cast<float>(heardNote) - 69.0f) / 12.0f) : kWaveBaseHz) *
+               std::pow(2.0f, pitch / 12.0f);
+    while (hz > kWaveMaxHz) hz *= 0.5f;
+    while (hz < kWaveMinHz) hz *= 2.0f;
+    wgHz = hz;
+    // Tube 0.25 s to 6 s, string 0.4 s to 12 s.
+    const float rt = string ? 0.4f * std::pow(30.0f, size) : 0.25f * std::pow(24.0f, size);
+    // Brightness: the harmonic this many up rings for kWaveHighShare of the ring, so the
+    // loop's low-pass takes that much more off it each trip (the tube's odd trip is half a period).
+    const float harm = string ? 40.0f * std::pow(3.0f / 40.0f, damp) : 30.0f * std::pow(3.0f / 30.0f, damp);
+    const double ref = dsp::kTwoPi * std::min(hz * harm, 0.45f * sr) / sr;
+    const float trip = (string ? 1.0f : 0.5f) / hz;
+    const double m = decayGain(trip, rt * kWaveHighShare) / decayGain(trip, rt);
+    // The one-pole's 1 - a for a gain of m at ref.
+    const double cr = std::cos(ref), k = 1.0 - m * m * cr, q = 1.0 - m * m;
+    const double pole = (k - std::sqrt(std::max(0.0, k * k - q * q))) / q;
+    wgLpCoeff = freeze ? 1.0f : static_cast<float>(1.0 - pole);
+
+    const int lines = full ? kWaveLines : 1;
+    double fHz[kWaveLines];
+    for (int c = 0; c < lines; ++c) fHz[c] = full ? hz * std::pow(2.0, (c == 0 ? -kWaveDetune : kWaveDetune) / 1200.0) : hz;
+    // Stiff: the chain's allpasses, eased off until it takes no more than its share of the loop.
+    wgA = 0.0f;
+    if (string) {
+        const double wTop = dsp::kTwoPi * fHz[lines - 1] / sr;
+        const double most = kStiffShare * sr / fHz[lines - 1];
+        const auto chainDelay = [&](double a) { return -kWaveStages * allpassPhase(a, wTop) / wTop; };
+        double a = -kStiffMax * stiff;
+        if (chainDelay(a) > most) {
+            double lo = a, hi = 0.0;
+            for (int k = 0; k < 30; ++k) {
+                const double mid = 0.5 * (lo + hi);
+                (chainDelay(mid) > most ? lo : hi) = mid;
+            }
+            a = hi;
+        }
+        wgA = static_cast<float>(a);
+    }
+    for (int c = 0; c < lines; ++c) {
+        const double w = dsp::kTwoPi * fHz[c] / sr, period = sr / fHz[c];
+        // The low-pass and the chain delay the loop too; the taps are that much shorter.
+        double phase = lowPassPhase(wgLpCoeff, w);
+        if (string) phase += kWaveStages * allpassPhase(wgA, w);
+        wgPeriod[c] = static_cast<float>(period);
+        wgD[c][1] = tapDelayFor(period + phase / w, w);
+        wgD[c][0] = tapDelayFor(0.5 * period + phase / w, w);
+        wgG[c][1] = freeze ? 1.0f : decayGain(static_cast<float>(period) / sr, rt);
+        wgG[c][0] = freeze ? 1.0f : decayGain(static_cast<float>(0.5 * period) / sr, rt);
+    }
+    // Open's even harmonics follow the ring as it is unfrozen, so freeze doesn't open the tube.
+    wgGLive = decayGain(1.0f / hz, rt);
+    if (!full) {
+        wgPeriod[1] = wgPeriod[0];
+        wgD[1][0] = wgD[0][0];
+        wgD[1][1] = wgD[0][1];
+        wgG[1][0] = wgG[0][0];
+        wgG[1][1] = wgG[0][1];
+    }
+}
+
+void Reverb::tubeSample(const Block &b, const float dry[2], float out[2]) {
+    const int lines = b.full ? kWaveLines : 1;
+    const float inGain = b.freeze ? 0.0f : kTubeIn;
+    float y[kWaveLines];
+    for (int c = 0; c < lines; ++c) {
+        const float in = b.full ? 0.7f * dry[c] + 0.3f * dry[c ^ 1] : 0.5f * (dry[0] + dry[1]);
+        const float hp = wgHpCoeff * (wgHpY[c] + in - wgHpX[c]);
+        wgHpX[c] = in;
+        wgHpY[c] = undenormal(hp);
+        float off = 0.0f;
+        if (b.wgWob > 0.0f) {
+            rotate(wgOsc[c], wgRot[c]);
+            off = b.wgWob * wgPeriod[c] * wgOsc[c][1];
+        }
+        const float odd = wgTap[c][0].read(wgLine[c], wgD[c][0] + 0.5f * off);
+        const float all = wgTap[c][1].read(wgLine[c], wgD[c][1] + off);
+        const float fb = b.wgOdd * wgG[c][0] * odd + b.wgFull * wgG[c][1] * all;
+        wgLp[c] = undenormal(wgLp[c] + (fb - wgLp[c]) * wgLpCoeff);
+        const float x = hp * inGain + shimmerFb[c] * b.shimmer * (1.0f - wgG[c][1]) * kWaveInject;
+        // The soft clip: quiet rings pass, loud ones growl.
+        // Frozen, it gets the string's ceiling instead, since the growl would wear the held ring away.
+        const float v = wgLp[c] + x;
+        wgLine[c].write(b.freeze ? dsp::feedbackCeiling(v) : kTubeClip * fastTanh(v * (1.0f / kTubeClip)));
+        // Out from a period back: a sum of the taps would cancel the even harmonics half open.
+        y[c] = all;
+    }
+    if (lines == 1) y[1] = y[0];
+    for (int c = 0; c < 2; ++c) {
+        // Bloom thins the ring out too, since the clip evens out a thinner feed.
+        lp[c] += (y[c] * kTubeOut * b.diffMul - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+void Reverb::stringSample(const Block &b, const float dry[2], float out[2]) {
+    const int lines = b.full ? kWaveLines : 1;
+    const float inGain = b.freeze ? 0.0f : kStringIn;
+    const float a = wgA;
+    float y[kWaveLines];
+    for (int c = 0; c < lines; ++c) {
+        const float in = b.full ? 0.7f * dry[c] + 0.3f * dry[c ^ 1] : 0.5f * (dry[0] + dry[1]);
+        const float hp = wgHpCoeff * (wgHpY[c] + in - wgHpX[c]);
+        wgHpX[c] = in;
+        wgHpY[c] = undenormal(hp);
+        // Pick: the input lands part way along, so the harmonics with a node there are missing.
+        wgPick[c].write(hp);
+        const float picked = hp - wgPick[c].frac(wgPickD[c]);
+        float off = 0.0f;
+        if (b.wgWob > 0.0f) {
+            rotate(wgOsc[c], wgRot[c]);
+            off = b.wgWob * wgPeriod[c] * wgOsc[c][1];
+        }
+        const float t = wgTap[c][1].read(wgLine[c], wgD[c][1] + off);
+        wgLp[c] = undenormal(wgLp[c] + (t * wgG[c][1] - wgLp[c]) * wgLpCoeff);
+        float v = wgLp[c];
+        // Stiffness: each stage delays the lows more than the highs, so the overtones come round sooner.
+        for (int k = 0; k < kWaveStages; ++k) {
+            const float s = wgChain[c][k];
+            const float w = undenormal(v - a * s);
+            wgChain[c][k] = w;
+            v = a * w + s;
+        }
+        const float x = picked * inGain + shimmerFb[c] * b.shimmer * (1.0f - wgG[c][1]) * kWaveInject;
+        // A ceiling for a note held in tune with a long ring.
+        wgLine[c].write(dsp::feedbackCeiling(v + x));
+        y[c] = t;
+    }
+    if (lines == 1) y[1] = y[0];
+    for (int c = 0; c < 2; ++c) {
+        lp[c] += (y[c] * kStringOut * b.diffMul - lp[c]) * b.toneCoeff;
         const float t = lofi(c, lp[c], b);
         shimmerStep(c, t, b);
         out[c] = t;

@@ -29,6 +29,17 @@ namespace acidulous::effect {
  *     `width`, `depth`, `height`, where you stand (`position`) and the walls'
  *     `material`, and a tail whose decay comes from the room's volume and
  *     absorption. The taps glide when the room changes.
+ *   - tube: a tuned pipe the track rings through. Closed at one end, so it
+ *     rings in odd harmonics; `open` blends to a pipe open at both ends, with
+ *     every harmonic. A low-pass for the bore and a soft clip in the loop, so
+ *     loud hits growl.
+ *   - string: a tuned string the track rings through, with a low-pass and a
+ *     chain of allpasses in the loop. `stiff` pulls the overtones sharp, from
+ *     a string to a metal wire, and `pick` is where the input lands on it.
+ *
+ *     Both are tuned by `pitch`, in semitones from middle C, or from the
+ *     track's last note when `follow` is on. Two lines a hair apart, one a
+ *     side, at full quality; one at lean.
  *
  * Shared by every model:
  *
@@ -51,8 +62,9 @@ class Reverb final : public Effect {
     // Appended after Gain, so old songs, patches and lanes keep their indices.
     enum P { Size, Damp, Tone, PreDelay, Mix, Freeze, Gate, Shimmer, Bits, Crush, Wobble, Gain,
              Model, Duck, DuckRel, Distance, Bloom,
-             Drip, Knock, Rate, Width, Depth, Height, Position, Material, Count };
-    enum ModelKind { Room, Plate, Hall, Spring, Early, Space, kModels };
+             Drip, Knock, Rate, Width, Depth, Height, Position, Material,
+             Pitch, Follow, Open, Stiff, Pick, Count };
+    enum ModelKind { Room, Plate, Hall, Spring, Early, Space, Tube, String, kModels };
     Reverb() { initParams(); }
     const char *typeName() const override { return "Reverb"; }
     const ParamDef *paramDefs(int32_t &count) const override;
@@ -61,12 +73,15 @@ class Reverb final : public Effect {
     bool process(float *L, float *R, int32_t frames, bool stereoIn) override;
     /**
      * The room's geometry rebuilds the space's taps, which glide by themselves;
-     * drip changes the spring's stage count and rate the early tank's lengths.
+     * drip changes the spring's stage count and rate the early tank's lengths;
+     * pitch and stiff retune the tube's and string's loops.
      */
     bool glides(int32_t index) const override {
         return index != Width && index != Depth && index != Height && index != Position && index != Material &&
-               index != Drip && index != Rate;
+               index != Drip && index != Rate && index != Pitch && index != Stiff;
     }
+    /** The track's last note, for `follow`. */
+    void onNote(int32_t note) override { heardNote = note; }
 
     /** A plain circular buffer: whole-sample reads and wrapped fractional reads. */
     struct Line {
@@ -94,6 +109,8 @@ class Reverb final : public Effect {
     void springSample(const Block &b, const float dry[2], float out[2]);
     void earlySample(const Block &b, const float dry[2], float out[2]);
     void spaceSample(const Block &b, const float dry[2], float out[2]);
+    void tubeSample(const Block &b, const float dry[2], float out[2]);
+    void stringSample(const Block &b, const float dry[2], float out[2]);
     float lofi(int c, float t, const Block &b);
     void shimmerStep(int c, float t, const Block &b);
     void clearRoom();
@@ -102,11 +119,13 @@ class Reverb final : public Effect {
     void clearSpring();
     void clearEarly();
     void clearSpace();
+    void clearWave();
     void updatePlate(float size, float damp, bool freeze);
     void updateHall(float size, float damp, bool freeze);
     void updateSpring(float size, float damp, float drip, bool freeze, bool full);
     void updateEarly(float size, float damp, float rate, bool freeze);
     void updateSpace(float damp, bool freeze, bool full, int32_t frames);
+    void updateWave(bool string, float size, float damp, bool freeze, bool full);
 
     float sr = 48000.0f;
 
@@ -209,6 +228,26 @@ class Reverb final : public Effect {
     float spcGeomWas[5]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
     bool spcFullWas = true;
     float spcErLp[2]{}, spcErCoeff = 1.0f, spcRt = 1.0f, spcRtHigh = 1.0f, spcRtLow = 1.0f;
+
+    // --- tube and string ---
+    static constexpr int32_t kWaveLines = 2;
+    static constexpr int32_t kWaveStages = 8;
+    /** A read off a line with a first-order allpass for the fraction: `m` whole samples back, then the allpass. */
+    struct WaveTap {
+        float y = 0.0f;
+        float read(const Line &l, float d);
+    };
+    Line wgLine[kWaveLines], wgPick[kWaveLines];
+    WaveTap wgTap[kWaveLines][2];
+    float wgLp[kWaveLines]{}, wgChain[kWaveLines][kWaveStages]{}, wgHpX[kWaveLines]{}, wgHpY[kWaveLines]{};
+    float wgOsc[kWaveLines][2]{}, wgRot[kWaveLines][2]{};
+    // Per line: the taps' delays with the filters taken off (the whole loop
+    // and, for the tube, half of it), the gains, the pick's delay.
+    float wgD[kWaveLines][2]{}, wgG[kWaveLines][2]{}, wgPickD[kWaveLines]{}, wgPeriod[kWaveLines]{};
+    float wgLpCoeff = 1.0f, wgA = 0.0f, wgHpCoeff = 0.0f, wgHz = 261.6f, wgGLive = 0.0f;
+    float wgWas[8]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
+    /** The track's last note-on, or -1 for none since reset(). */
+    int32_t heardNote = -1;
 };
 
 } // namespace acidulous::effect

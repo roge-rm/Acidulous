@@ -1096,15 +1096,197 @@ double fallTime(const std::vector<float> &x, size_t from) {
     return double(x.size() - from) / kRate;
 }
 
+/** A Hann-windowed DFT's strength at [hz] over [from, to), at [rate]. */
+double strengthAt(const std::vector<float> &x, double hz, size_t from, size_t to, double rate) {
+    // The tone and the window as rotating phasors, renormalised now and then.
+    const double w = 2.0 * M_PI * hz / rate, n = double(to - from), v = 2.0 * M_PI / n;
+    const double cw = std::cos(w), sw = std::sin(w), cv = std::cos(v), sv = std::sin(v);
+    double re = 0.0, im = 0.0, pc = 1.0, ps = 0.0, hc = 1.0, hs = 0.0;
+    for (size_t i = from; i < to; ++i) {
+        const double h = 0.5 - 0.5 * hc;
+        re += x[i] * h * pc;
+        im -= x[i] * h * ps;
+        const double a = pc * cw - ps * sw, b = ps * cw + pc * sw;
+        const double c = hc * cv - hs * sv, d = hs * cv + hc * sv;
+        pc = a; ps = b; hc = c; hs = d;
+        if (((i - from) & 4095) == 4095) {
+            const double k = 1.0 / std::sqrt(pc * pc + ps * ps), m = 1.0 / std::sqrt(hc * hc + hs * hs);
+            pc *= k; ps *= k; hc *= m; hs *= m;
+        }
+    }
+    return std::sqrt(re * re + im * im) / n;
+}
+
+/** The strongest frequency within [cents] of [hz], to about a tenth of a cent. */
+double peakNear(const std::vector<float> &x, double hz, double cents, size_t from, size_t to, double rate) {
+    // Four-cent steps, then a golden-section search around the best.
+    const auto at = [&](double c) { return strengthAt(x, hz * std::pow(2.0, c / 1200.0), from, to, rate); };
+    double best = 0.0, top = -1.0;
+    for (double c = -cents; c <= cents; c += 4.0) {
+        const double v = at(c);
+        if (v > top) { top = v; best = c; }
+    }
+    const double g = 0.5 * (std::sqrt(5.0) - 1.0);
+    double lo = best - 4.0, hi = best + 4.0;
+    double c1 = hi - g * (hi - lo), c2 = lo + g * (hi - lo), v1 = at(c1), v2 = at(c2);
+    for (int k = 0; k < 16; ++k) {
+        if (v1 > v2) { hi = c2; c2 = c1; v2 = v1; c1 = hi - g * (hi - lo); v1 = at(c1); }
+        else { lo = c1; c1 = c2; v1 = v2; c2 = lo + g * (hi - lo); v2 = at(c2); }
+    }
+    return hz * std::pow(2.0, 0.5 * (lo + hi) / 1200.0);
+}
+
+double cents(double hz, double ref) { return 1200.0 * std::log2(hz / ref); }
+
+/** Tube and string: in tune, open, stiff, pick, follow. */
+void reverbWaves() {
+    using acidulous::effect::Reverb;
+    const auto prepared = [](int32_t rate, std::initializer_list<std::pair<const char *, float>> set) {
+        std::unique_ptr<Effect> fx(EffectRegistry::create("Reverb"));
+        fx->prepare(rate);
+        for (const auto &[name, value] : set) {
+            const int32_t i = fx->params().indexOf(name);
+            fx->params().set(i, fx->params().def(i).unmap(value));
+        }
+        fx->params().jumpAll();
+        return fx;
+    };
+    // A click through it; the left side, or the right with [side] 1.
+    const auto ring = [](Effect &fx, size_t n, int side = 0) {
+        std::vector<float> l(n, 0.0f), r(n, 0.0f);
+        l[64] = r[64] = 1.0f;
+        for (size_t at = 0; at < n; at += kBlock) fx.run(l.data() + at, r.data() + at, kBlock, false);
+        return side == 0 ? l : r;
+    };
+    auto &q = EngineSettings::get().quality;
+    const int was = q.load();
+
+    // In tune: the ring's fundamental against the knob, every rate, both qualities, across the range.
+    // Full quality runs a line a side, 1.5 cents either way of the knob; lean one line on it.
+    for (int m : {6, 7}) {
+        double worstCents = 0.0;
+        std::string where;
+        for (int32_t rate : {44100, 48000, 96000}) {
+            for (int quality : {1, 0}) {
+                q.store(quality);
+                for (float pitch : {-36.0f, -24.0f, -12.0f, -5.0f, 0.0f, 7.0f, 12.0f, 24.0f}) {
+                    auto fx = prepared(rate, {{"model", float(m)}, {"mix", 1.0f}, {"size", 1.0f}, {"damp", 0.0f},
+                                              {"tone", 18000.0f}, {"predelay", 0.0f}, {"pitch", pitch}, {"stiff", 0.0f},
+                                              {"pick", 0.0f}});
+                    const size_t n = size_t(rate) * 5 / 4;
+                    for (int side = 0; side < quality + 1; ++side) {
+                    if (side == 1) fx->reset();
+                    const auto w = ring(*fx, n, side);
+                    const double want = 261.6256 * std::pow(2.0, (pitch + (quality ? (side ? 0.015 : -0.015) : 0.0)) / 12.0);
+                    const double got = peakNear(w, want, 40.0, size_t(rate) / 4, n, double(rate));
+                    const double off = cents(got, want);
+                    if (std::fabs(off) > std::fabs(worstCents)) {
+                        worstCents = off;
+                        where = std::to_string(rate) + " Hz, pitch " + num(pitch) + (quality ? " full" : " lean");
+                    }
+                    }
+                }
+            }
+        }
+        q.store(was);
+        ok(std::string(m == 6 ? "tube" : "string") + ": in tune across the pitch range at 44.1, 48 and 96 kHz",
+           std::fabs(worstCents) < 1.0, "worst " + num(worstCents) + " cents at " + where);
+    }
+
+    // Follow: tuned to the last note, pitch on top of it.
+    for (int m : {6, 7}) {
+        auto fx = prepared(48000, {{"model", float(m)}, {"mix", 1.0f}, {"size", 1.0f}, {"damp", 0.0f},
+                                   {"predelay", 0.0f}, {"follow", 1.0f}, {"pitch", 12.0f}, {"stiff", 0.0f}});
+        fx->onNote(45);
+        q.store(0);
+        const auto w = ring(*fx, 120000);
+        q.store(was);
+        const double got = peakNear(w, 220.0, 40.0, 12000, 120000, 48000.0);
+        ok(std::string(m == 6 ? "tube" : "string") + ": follow tunes to the last note", std::fabs(cents(got, 220.0)) < 1.0,
+           num(got) + " Hz for A2 an octave up");
+    }
+
+    // Open: the closed tube rings in odd harmonics, the open one in all of them.
+    {
+        const auto evenOverOdd = [&](float open) {
+            auto fx = prepared(48000, {{"model", 6.0f}, {"mix", 1.0f}, {"size", 0.8f}, {"damp", 0.0f},
+                                       {"predelay", 0.0f}, {"pitch", -12.0f}, {"open", open}});
+            const auto w = ring(*fx, 96000);
+            const double f = 130.8128;
+            const double even = strengthAt(w, 2 * f, 4800, 96000, 48000.0) + strengthAt(w, 4 * f, 4800, 96000, 48000.0);
+            const double odd = strengthAt(w, f, 4800, 96000, 48000.0) + strengthAt(w, 3 * f, 4800, 96000, 48000.0);
+            return dB(even / odd);
+        };
+        const double closed = evenOverOdd(0.0f), half = evenOverOdd(0.5f), open = evenOverOdd(1.0f);
+        ok("tube: open brings the even harmonics in", closed < -20.0 && open > -6.0 && half > closed && half < open,
+           num(closed) + " -> " + num(half) + " -> " + num(open) + " dB even against odd");
+    }
+
+    // Stiff: the overtones pull sharp.
+    {
+        const auto stretch = [&](float stiff) {
+            auto fx = prepared(48000, {{"model", 7.0f}, {"mix", 1.0f}, {"size", 0.8f}, {"damp", 0.0f},
+                                       {"predelay", 0.0f}, {"pitch", -12.0f}, {"stiff", stiff}, {"pick", 0.0f}});
+            const auto w = ring(*fx, 96000);
+            const double f = 130.8128;
+            const double f1 = peakNear(w, f, 30.0, 4800, 96000, 48000.0);
+            const double f6 = peakNear(w, 6 * f1, 150.0, 4800, 96000, 48000.0);
+            return cents(f6, 6 * f1);
+        };
+        const double loose = stretch(0.0f), stiff = stretch(1.0f);
+        ok("string: stiff pulls the sixth harmonic sharp", std::fabs(loose) < 5.0 && stiff > 20.0,
+           num(loose) + " -> " + num(stiff) + " cents");
+    }
+
+    // Pick: in the middle the even harmonics drop out.
+    {
+        const auto evenOverOdd = [&](float pick) {
+            auto fx = prepared(48000, {{"model", 7.0f}, {"mix", 1.0f}, {"size", 0.8f}, {"damp", 0.0f},
+                                       {"predelay", 0.0f}, {"pitch", -12.0f}, {"stiff", 0.0f}, {"pick", pick}});
+            q.store(0);
+            const auto w = ring(*fx, 96000);
+            q.store(was);
+            const double f = 130.8128;
+            const double even = strengthAt(w, 2 * f, 4800, 96000, 48000.0) + strengthAt(w, 4 * f, 4800, 96000, 48000.0);
+            const double odd = strengthAt(w, f, 4800, 96000, 48000.0) + strengthAt(w, 3 * f, 4800, 96000, 48000.0);
+            return dB(even / odd);
+        };
+        const double end = evenOverOdd(0.0f), middle = evenOverOdd(1.0f);
+        ok("string: picked in the middle loses the even harmonics", middle < end - 15.0,
+           num(end) + " -> " + num(middle) + " dB even against odd");
+    }
+
+    // Loud hits growl in the tube: more of the ring is harmonics it doesn't have when quiet.
+    {
+        const auto rough = [&](float amp) {
+            auto fx = prepared(48000, {{"model", 6.0f}, {"mix", 1.0f}, {"size", 0.6f}, {"damp", 0.0f},
+                                       {"predelay", 0.0f}, {"pitch", -12.0f}});
+            q.store(0);
+            auto in = tone(130.8128f, amp, 48000);
+            // Faded in, so the start doesn't ring the third by itself.
+            for (size_t i = 0; i < 9600; ++i) in[i] *= float(0.5 - 0.5 * std::cos(M_PI * double(i) / 9600.0));
+            for (size_t i = 24000; i < in.size(); ++i) in[i] = 0.0f;
+            const auto w = wetOf(run(*fx, in).l, in);
+            q.store(was);
+            const double f = 130.8128;
+            const double fund = strengthAt(w, f, 12000, 24000, 48000.0);
+            return dB(strengthAt(w, 3 * f, 12000, 24000, 48000.0) / fund);
+        };
+        const double quiet = rough(0.0005f), loud = rough(0.5f);
+        ok("tube: a loud note growls", loud > quiet + 12.0, num(quiet) + " -> " + num(loud) + " dB third against first");
+    }
+}
+
 void reverb() {
     printf("- reverb\n");
-    const char *names[] = {"room", "plate", "hall", "spring", "early", "space"};
+    const char *names[] = {"room", "plate", "hall", "spring", "early", "space", "tube", "string"};
+    constexpr int kModels = 8;
     // A half-second burst of noise, then four and a half seconds of tail.
     auto burst = noise(0.25f, 240000, 3);
     for (size_t i = 24000; i < burst.size(); ++i) burst[i] = 0.0f;
 
     double roomLevel = 0.0;
-    for (int m = 0; m < 6; ++m) {
+    for (int m = 0; m < kModels; ++m) {
         const std::string n = names[m];
         auto fx = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
         const auto wet = wetOf(run(*fx, burst).l, burst);
@@ -1138,13 +1320,14 @@ void reverb() {
     {
         auto in = noise(0.5f, 48000 * 30, 11);
         for (size_t i = 48000 * 2; i < in.size(); ++i) if ((i / 48000) % 4 != 0) in[i] = 0.0f;
-        for (int m = 0; m < 6; ++m) {
+        for (int m = 0; m < kModels; ++m) {
             for (int frozen = 0; frozen < 2; ++frozen) {
                 // The model knobs at their tops too: the biggest tiled room, the top rate, all drip and knock.
                 auto fx = make("Reverb", {{"model", float(m)}, {"size", 1.0f}, {"shimmer", 1.0f}, {"mix", 1.0f},
                                           {"wobble", 1.0f}, {"bloom", 0.5f}, {"duck", 0.5f}, {"distance", 0.5f},
                                           {"drip", 1.0f}, {"knock", 1.0f}, {"rate", 32000.0f}, {"width", 30.0f},
-                                          {"depth", 50.0f}, {"height", 15.0f}, {"position", 1.0f}, {"material", 0.0f}});
+                                          {"depth", 50.0f}, {"height", 15.0f}, {"position", 1.0f}, {"material", 0.0f},
+                                          {"pitch", -36.0f}, {"open", 1.0f}, {"stiff", 1.0f}, {"pick", 1.0f}});
                 Stereo s{in, in};
                 for (size_t at = 0; at < in.size(); at += kBlock) {
                     if (frozen && at == 48000 * 2) set(*fx, "freeze", 1.0f);
@@ -1161,7 +1344,7 @@ void reverb() {
 
     // reset() makes the next render the same as the first, every model, with
     // everything that holds state switched on.
-    for (int m = 0; m < 6; ++m) {
+    for (int m = 0; m < kModels; ++m) {
         auto fx = make("Reverb", {{"model", float(m)}, {"shimmer", 0.5f}, {"wobble", 0.6f}, {"bits", 10.0f},
                                   {"crush", 3.0f}, {"gate", 0.3f}, {"duck", 0.5f}, {"distance", 0.4f}, {"bloom", 0.5f},
                                   {"knock", 1.0f}});
@@ -1176,7 +1359,7 @@ void reverb() {
     {
         auto &q = EngineSettings::get().quality;
         const int was = q.load();
-        for (int m = 1; m < 6; ++m) {
+        for (int m = 1; m < kModels; ++m) {
             q.store(1);
             auto full = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
             const double lf = rms(wetOf(run(*full, burst).l, burst), 12000, 48000);
@@ -1193,7 +1376,7 @@ void reverb() {
         // Four bars: a second of noise then a second of nothing, twice.
         auto in = noise(0.25f, 48000 * 4, 5);
         for (size_t i = 0; i < in.size(); ++i) if ((i / 48000) % 2 == 1) in[i] = 0.0f;
-        for (int m = 0; m < 6; ++m) {
+        for (int m = 0; m < kModels; ++m) {
             auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}});
             auto ducked = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}, {"duck", 1.0f}, {"duckrel", 100.0f}});
             const auto a = wetOf(run(*plain, in).l, in), b = wetOf(run(*ducked, in).l, in);
@@ -1205,7 +1388,7 @@ void reverb() {
     }
 
     // Distance: later, more wet against the dry, less top.
-    for (int m = 0; m < 6; ++m) {
+    for (int m = 0; m < kModels; ++m) {
         std::vector<float> click(96000, 0.0f);
         click[100] = 1.0f;
         auto near = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"knock", 0.0f}});
@@ -1227,12 +1410,13 @@ void reverb() {
         const double louder = dB(rms(b, 0, 96000) / 0.5 / rms(a, 0, 96000));
         ok(std::string(names[m]) + ": distance starts the tail later, louder against the dry and darker",
            // The spring has little over 4 kHz for the air loss to take.
-           later > 50.0 && louder > 6.0 && top(b, 4800 + 3840) < top(a, 4800) - (m == 3 ? 1.0 : 3.0),
+           // The tube and string have little over 3 kHz to take.
+           later > 50.0 && louder > 6.0 && (m >= 6 || top(b, 4800 + 3840) < top(a, 4800) - (m == 3 ? 1.0 : 3.0)),
            num(later) + " ms later, " + num(louder) + " dB more wet, top " + num(top(a, 4800)) + " -> " + num(top(b, 4800 + 3840)) + " dB");
     }
 
     // Bloom: the tail starts thin and fills in.
-    for (int m = 0; m < 6; ++m) {
+    for (int m = 0; m < kModels; ++m) {
         auto in = noise(0.25f, 48000 * 3, 9);
         auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
         auto bloom = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"bloom", 1.0f}});
@@ -1349,20 +1533,23 @@ void reverb() {
     }
 
     // The model knobs do nothing on the other models.
-    for (int m = 0; m < 6; ++m) {
+    for (int m = 0; m < kModels; ++m) {
         auto a = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}});
         auto b = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}, {"drip", m == 3 ? 0.5f : 0.9f},
                                  {"knock", m == 3 ? 0.25f : 1.0f}, {"rate", m == 4 ? 16000.0f : 9000.0f},
                                  {"width", m == 5 ? 9.0f : 20.0f}, {"depth", m == 5 ? 14.0f : 3.0f},
                                  {"height", m == 5 ? 4.5f : 12.0f}, {"position", m == 5 ? 0.5f : 0.1f},
-                                 {"material", m == 5 ? 1.0f : 3.0f}});
+                                 {"material", m == 5 ? 1.0f : 3.0f}, {"pitch", m >= 6 ? 0.0f : 7.0f},
+                                 {"follow", m >= 6 ? 0.0f : 1.0f}, {"open", m == 6 ? 0.0f : 0.8f},
+                                 {"stiff", m == 7 ? 0.2f : 0.9f}, {"pick", m == 7 ? 0.25f : 0.8f}});
+        b->onNote(40);
         ok(std::string(names[m]) + ": the other models' knobs change nothing",
            worst(run(*a, hits(48000)).l, run(*b, hits(48000)).l) == 0.0);
     }
 
     // At 44.1 and 96 kHz too, every model with everything up stays finite.
     for (int32_t rate : {44100, 96000}) {
-        for (int m = 0; m < 6; ++m) {
+        for (int m = 0; m < kModels; ++m) {
             std::unique_ptr<Effect> fx(EffectRegistry::create("Reverb"));
             fx->prepare(rate);
             for (int32_t i = 0; i < fx->params().size(); ++i) {
@@ -1372,7 +1559,7 @@ void reverb() {
                     continue;
                 fx->params().set(i, 1.0f);
             }
-            fx->params().set(fx->params().indexOf("model"), float(m) / 5.0f);
+            fx->params().set(fx->params().indexOf("model"), float(m) / float(kModels - 1));
             fx->params().jumpAll();
             auto in = noise(0.5f, size_t(rate) * 4, 13);
             for (size_t i = size_t(rate); i < in.size(); ++i) in[i] = 0.0f;
@@ -1383,6 +1570,8 @@ void reverb() {
                finite(s) && peak(s.l) < 4.0 && tail > 1e-3, "peak " + num(peak(s.l)) + ", tail " + num(tail));
         }
     }
+
+    reverbWaves();
 
     // The new knobs at their defaults leave the room as it was: checked against
     // master by tools/match_master.sh. Here, at least, they cost nothing.

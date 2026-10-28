@@ -2,7 +2,7 @@
 # built from its size, and the things that are not rooms.
 #
 # `model` picks the tank: #0 room, #1 plate, #2 hall, #3 spring, #4 early,
-# #5 space. `size` is the room and
+# #5 space, #6 tube, #7 string. `size` is the room and
 # `damp` is what the walls are made of; `predelay` is how far you are from
 # them, and it is the control that keeps a big reverb from swallowing the
 # thing that caused it. `duck` drops the tail while the track plays,
@@ -16,7 +16,14 @@
 # `position`, where you stand from the front to the back, and the walls'
 # `material`: #0 tile, #1 plaster, #2 wood, #3 curtains.
 #
-# Families: room, plate, hall, spring, early, space, motion, gate, shimmer, lofi.
+# The tube and the string are one tuned line the track rings through. `pitch`
+# is in semitones from middle C, or from the track's last note with `follow`
+# on. The tube has `open`, from a pipe closed at one end (odd harmonics) to
+# one open at both; the string has `stiff`, from a string to a metal wire, and
+# `pick`, where the input lands on it, from the end to the middle.
+#
+# Families: room, plate, hall, spring, early, space, tube, string, motion,
+# gate, shimmer, lofi.
 
 machine fx.Reverb
 
@@ -346,6 +353,112 @@ patch "Stone Church" family=space
   material       #1
   predelay       10 ms
   mix            0.4
+
+patch Tube family=tube
+  # A pipe closed at one end: every hit comes out as a hollow note an octave
+  # under middle C, in odd harmonics.
+  model          #6
+  pitch          -12 st
+  size           0.5
+  damp           0.4
+  predelay       0 ms
+  mix            0.3
+
+patch Drainpipe family=tube
+  # Long and dark, two octaves down. Kicks boom in it.
+  model          #6
+  pitch          -24 st
+  size           0.6
+  damp           0.6
+  predelay       0 ms
+  mix            0.35
+
+patch "Open Pipe" family=tube
+  # Open at both ends: every harmonic, so it sounds more like a flute than a
+  # bottle.
+  model          #6
+  pitch          -5 st
+  open           1.0
+  size           0.55
+  damp           0.3
+  predelay       0 ms
+  mix            0.3
+
+patch Bark family=tube
+  # Bright and pushed hard, so loud hits growl.
+  model          #6
+  pitch          -17 st
+  size           0.4
+  damp           0.15
+  predelay       0 ms
+  mix            0.45
+
+patch "Following Tube" family=tube
+  # Tuned to the track's last note, an octave down, half open.
+  model          #6
+  follow         #1
+  pitch          -12 st
+  open           0.5
+  size           0.55
+  damp           0.4
+  predelay       0 ms
+  mix            0.3
+
+patch String family=string
+  # A string an octave under middle C, picked near the end.
+  model          #7
+  pitch          -12 st
+  size           0.6
+  damp           0.35
+  stiff          0.2
+  pick           0.25
+  predelay       0 ms
+  mix            0.3
+
+patch Wire family=string
+  # Stiff and bright: the overtones go sharp and it rings like a metal wire.
+  model          #7
+  pitch          -5 st
+  size           0.75
+  damp           0.1
+  stiff          1.0
+  pick           0.15
+  predelay       0 ms
+  mix            0.3
+
+patch "Middle Pluck" family=string
+  # Picked in the middle, so the even harmonics are gone: round and hollow.
+  model          #7
+  pitch          -12 st
+  size           0.55
+  damp           0.5
+  stiff          0.1
+  pick           1.0
+  predelay       0 ms
+  mix            0.3
+
+patch "Low Wire" family=string
+  # A long metal wire well down, struck by every kick.
+  model          #7
+  pitch          -29 st
+  size           0.7
+  damp           0.3
+  stiff          0.7
+  pick           0.4
+  predelay       0 ms
+  mix            0.35
+
+patch Sympathy family=string
+  # Tuned to the track's last note and left to ring under it.
+  model          #7
+  follow         #1
+  pitch          0 st
+  size           0.8
+  damp           0.4
+  stiff          0.15
+  pick           0.3
+  predelay       0 ms
+  mix            0.25
 
 patch "Ducked Plate" family=motion
   # A long plate that keeps out of the way: it drops while the track plays

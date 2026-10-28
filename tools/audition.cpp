@@ -1282,7 +1282,11 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * piano spread wide. Returns the stereo source; it stops at `stop`, and the
  * silence after it is longer for a reverb.
  */
+/** The pitched notes in the last effect source, frame and note, for an effect that follows them. */
+std::vector<std::pair<int64_t, int>> gSourceNotes;
+
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
+    gSourceNotes.clear();
     const float bars = 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
     // A reverb gets longer to ring out, since a big hall outlasts three seconds.
@@ -1331,10 +1335,12 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         add(renderPart("Hexbeat", "Squared", {
             {0.0f, 0.25f, 38, 110}, {2.0f, 0.25f, 36, 110}, {2.0f, 0.25f, 38, 100},
         }, bpm, frames), 0.8f);
-        add(renderPart("Trinity", "Electric Piano", {
+        const std::vector<Hit> notes = {
             {4.0f, 0.25f, 57, 95}, {4.0f, 0.25f, 60, 95}, {4.0f, 0.25f, 64, 95}, {4.0f, 0.25f, 67, 95},
             {6.0f, 0.2f, 76, 90}, {6.5f, 0.2f, 79, 85}, {7.0f, 0.2f, 72, 90},
-        }, bpm, frames), 0.7f);
+        };
+        add(renderPart("Trinity", "Electric Piano", notes, bpm, frames), 0.7f);
+        for (const Hit &h : notes) gSourceNotes.emplace_back(secondsToFrames(h.beat * 60.0f / bpm), h.note);
     } else {
         // Hexbeat's kit: kick 36, snare 38, closed hat 43, open hat 44.
         std::vector<Hit> drums;
@@ -1425,6 +1431,9 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        // The notes starting in this block, as the rack hands them on.
+        for (const auto &[frame, note] : gSourceNotes)
+            if (frame >= at && frame < at + kBlock) fx->onNote(note);
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {

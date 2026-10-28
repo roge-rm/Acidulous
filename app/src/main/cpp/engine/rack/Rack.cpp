@@ -128,6 +128,8 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
             d1 = static_cast<uint8_t>(to);
             const int32_t fixed = static_cast<int32_t>(std::lround(channel.target(Velocity)));
             if (fixed > 0) d2 = static_cast<uint8_t>(std::min(fixed, 127));
+            // The inserts hear the note too, for anything tuned to it.
+            for (Effect *e : effects) if (e != nullptr) e->onNote(d1);
         } else if (k == 0x80 || k == 0x90) {
             const uint8_t played = d1 & 0x7f;
             d1 = sentTo[played];
