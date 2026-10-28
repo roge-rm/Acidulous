@@ -85,7 +85,7 @@ internal fun ModCard(type: String, trackNames: List<String>, a: ModAccess) {
                 StepBars(a, length)
             }
             else -> {
-                if (source == InsertMod.KEYED) Choice(a, InsertMod.KEY, "track", trackNames)
+                if (source == InsertMod.KEYED) Choice(a, InsertMod.KEY, "track", trackNames + panelWord("none"))
                 Continuous(a, InsertMod.ATTACK, panelWord("attack"))
                 Continuous(a, InsertMod.RELEASE, panelWord("release"))
             }

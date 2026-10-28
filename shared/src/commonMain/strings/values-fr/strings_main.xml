@@ -105,4 +105,9 @@
     <string name="update_get">l’obtenir</string>
     <!-- What TalkBack calls the line's close button. -->
     <string name="update_close">Fermer</string>
+    <!-- A line at the top of the song screen after a track was deleted that keyed some inserts' mods. -->
+    <plurals name="mods_lost_key">
+        <item quantity="one">%d mod n’écoute plus aucune piste</item>
+        <item quantity="other">%d mods n’écoutent plus aucune piste</item>
+    </plurals>
 </resources>

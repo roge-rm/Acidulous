@@ -41,7 +41,7 @@ inline const ParamDef *defs(int32_t &count) {
         {"mod_length", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},                             // 8, 16
         {"mod_attack", 1.0f, 500.0f, 10.0f, Curve::Exponential, 0, "ms"},
         {"mod_release", 10.0f, 2000.0f, 150.0f, Curve::Exponential, 0, "ms"},
-        {"mod_key", 0.0f, kRackCount - 1, 0.0f, Curve::Stepped, kRackCount, ""},
+        {"mod_key", 0.0f, kRackCount, 0.0f, Curve::Stepped, kRackCount + 1, ""},        // tracks 1-16, none
         {"mod_target1", 0.0f, kSlotModTargets, 0.0f, Curve::Stepped, kSlotModTargets + 1, ""},
         {"mod_depth1", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"mod_target2", 0.0f, kSlotModTargets, 0.0f, Curve::Stepped, kSlotModTargets + 1, ""},
@@ -180,6 +180,7 @@ class SlotMod {
         keyBuf_ = key;
         seed_ = seed;
     }
+    /** The track a keyed mod follows, 0-based; kRackCount (none) or -1 hears silence. */
     int32_t keyTrack() const { return source_ == slotmod::Keyed ? key_ : -1; }
 
     /** Before the effect's params tick: offsets each target for this block. */

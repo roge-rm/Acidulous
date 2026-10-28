@@ -29,8 +29,12 @@ object InsertMod {
     const val SOURCES = 5
     const val SHAPES = 7
 
-    /** [KEY] is a track, 0-based over this many steps. */
-    const val KEYS = 16
+    /** [KEY] is a track, 0-based, over this many steps; the last is none, which hears silence. */
+    const val KEYS = 17
+    const val NO_KEY = KEYS - 1
+    fun keyValue(track: Int): Float = track.coerceIn(0, NO_KEY).toFloat() / NO_KEY
+    /** The 0-based track a key's value names, or [NO_KEY]. */
+    fun keyTrack(v01: Float): Int = kotlin.math.round(v01.coerceIn(0f, 1f) * NO_KEY).toInt()
     fun sourceValue(source: Int): Float = source.coerceIn(0, SOURCES - 1).toFloat() / (SOURCES - 1)
 
     /** A target is an effect parameter's index + 1 over this many steps; 0 is none. */

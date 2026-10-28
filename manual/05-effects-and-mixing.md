@@ -252,6 +252,9 @@ in the mixer.
 - **follow** and **track** have an **attack** and a **release**. **track** hears
   the other track before its fader and mute, like a sidechain, and a block
   (about 1.3 ms) late.
+- **track** can be **none**, which hears nothing. Deleting a track sets every
+  mod listening to it to none, and a line under the header says how many. Undo
+  puts them back.
 - **target 1** and **target 2** pick the knobs, and each **depth** says how far
   and which way. The LFO swings both sides of the knob. Steps and the followers
   only push one way, so use a negative depth to pull the knob down, like a

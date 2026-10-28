@@ -61,7 +61,7 @@ void setMod(Rack &rack, Unit unit, const Mod &m, int32_t target = 0) {
     rack.setParam(unit, modIndex(slotmod::Rate), stepped(m.rate, dsp::Lfo::kRates));
     rack.setParam(unit, modIndex(slotmod::Attack), 0.0f);
     rack.setParam(unit, modIndex(slotmod::Release), 0.3f);
-    rack.setParam(unit, modIndex(slotmod::Key), stepped(m.key, kRackCount));
+    rack.setParam(unit, modIndex(slotmod::Key), stepped(m.key, kRackCount + 1));
     rack.setParam(unit, modIndex(slotmod::Target1), stepped(target + 1, kSlotModTargets + 1));
     rack.setParam(unit, modIndex(slotmod::Depth1), depth01(m.depth));
     rack.setParam(unit, modIndex(slotmod::Source), stepped(m.source, slotmod::SourceCount));
@@ -533,6 +533,19 @@ void aCountInLandsOnTheSong() {
     ok("the cutoff doesn't jump as the song starts", atStart < 2.0f * elsewhere + 1e-4f, d);
 }
 
+/** A keyed mod whose key is none hears silence: the cutoff stays on the knob. */
+void aKeyOfNoneIsSilence() {
+    printf("- a keyed mod with no key track\n");
+    Mod m;
+    m.source = slotmod::Keyed;
+    m.key = kRackCount;
+    std::vector<float> out, cutoff;
+    { Fixture f(m); f.start(); f.run(kBlocks, out, &cutoff); }
+    char d[64];
+    std::snprintf(d, sizeof d, "%.5f oct", octavesMoved(cutoff));
+    ok("hears nothing, so the cutoff stays put", octavesMoved(cutoff) < 1e-4f, d);
+}
+
 /** The fixture's scene made [bars] long, round its two-bar clips; a one-scene song loops. */
 void lengthen(Fixture &f, int32_t bars) {
     auto snap = std::make_shared<SongSnapshot>(*f.snap);
@@ -779,6 +792,7 @@ int main() {
     aLoopDoesNotDip();
     blocksThatCrossNoTick();
     aCountInLandsOnTheSong();
+    aKeyOfNoneIsSilence();
     fastModsDoNotZipper(true);
     fastModsDoNotZipper(false);
     printf("%d checks, %d failed\n", checks, failures);

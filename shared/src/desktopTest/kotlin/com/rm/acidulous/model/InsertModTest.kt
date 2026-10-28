@@ -63,7 +63,7 @@ class InsertModTest {
         assertEquals(null, InsertMod.nameOfIndex(-2, names))
     }
 
-    private fun key(track: Int) = track / (InsertMod.KEYS - 1f)
+    private fun key(track: Int) = InsertMod.keyValue(track)
     private fun keyedFrom(song: Song, on: Int, from: Int): Song = song.updateTrack(on) { t ->
         val withLane = t.clips.mapValues { (_, c) ->
             c.copy(automation = c.automation + (laneKey("effect1", InsertMod.KEY) to Lane(listOf(LanePoint(0, key(from)), LanePoint(10, LANE_BASE)))))
@@ -87,38 +87,89 @@ class InsertModTest {
     }
 
     @Test
-    fun `a mod keyed from a deleted track follows its own input`() {
-        val song = keyedFrom(Fixtures.song(), on = 1, from = 0).deleteTrack(0)
-        val fx = song.tracks[0].effectAt(0)
-        assertEquals(InsertMod.sourceValue(InsertMod.FOLLOW), fx.params[InsertMod.SOURCE])
+    fun `a key names a track or none, and back`() {
+        for (t in 0..InsertMod.NO_KEY) assertEquals(t, InsertMod.keyTrack(InsertMod.keyValue(t)))
+        assertEquals(1f, InsertMod.keyValue(InsertMod.NO_KEY))
+    }
+
+    @Test
+    fun `a mod keyed from a deleted track hears nothing, keeping its source`() {
+        val none = key(InsertMod.NO_KEY)
+        val keyed = keyedFrom(Fixtures.song(), on = 1, from = 0).deleteTrack(0).tracks[0]
+        assertEquals(none, keyed.effectAt(0).params[InsertMod.KEY])
+        assertEquals(InsertMod.sourceValue(InsertMod.KEYED), keyed.effectAt(0).params[InsertMod.SOURCE])
         // And one keyed from a track after the deleted one moves up with it.
         val other = keyedFrom(Fixtures.song(), on = 1, from = 1).deleteTrack(0)
         assertEquals(key(0), other.tracks[0].effectAt(0).params[InsertMod.KEY])
     }
 
     @Test
-    fun `a deleted track's key goes to the empty last track, keyed or not`() {
-        val last = key(InsertMod.KEYS - 1)
-        // Keyed now: it follows its own input, and the key no longer names the next track.
+    fun `a deleted track's key goes to none, keyed or not`() {
+        val none = key(InsertMod.NO_KEY)
         val keyed = keyedFrom(Fixtures.song(), on = 1, from = 0).deleteTrack(0).tracks[0]
-        assertEquals(last, keyed.effectAt(0).params[InsertMod.KEY])
         // On an LFO, with a key a lane on its source may switch to later.
         val lfo = keyedFrom(Fixtures.song(), on = 1, from = 0).updateTrack(1) {
             it.withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO))
         }.deleteTrack(0).tracks[0]
-        assertEquals(last, lfo.effectAt(0).params[InsertMod.KEY])
+        assertEquals(none, lfo.effectAt(0).params[InsertMod.KEY])
         assertEquals(InsertMod.sourceValue(InsertMod.LFO), lfo.effectAt(0).params[InsertMod.SOURCE])
         // The same with the key left at its default, track 1.
         val implicit = Fixtures.song().updateTrack(1) {
             it.withEffect(0, "Filter").withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO))
         }.deleteTrack(0).tracks[0]
-        assertEquals(last, implicit.effectAt(0).params[InsertMod.KEY])
-        // A lane's points that named it go there too; a lock's "back to the knob" stays.
+        assertEquals(none, implicit.effectAt(0).params[InsertMod.KEY])
+        // A lane's points that named it go to none too; a lock's "back to the knob" stays.
         for (t in listOf(keyed, lfo)) {
             val lane = t.clips.values.first().automation.getValue(laneKey("effect1", InsertMod.KEY))
-            assertEquals(last, lane.points[0].value)
+            assertEquals(none, lane.points[0].value)
             assertEquals(LANE_BASE, lane.points[1].value)
         }
+        // A key of none stays none as tracks move.
+        val kept = keyedFrom(Fixtures.song(), on = 1, from = InsertMod.NO_KEY).deleteTrack(0).duplicateTrack(0).tracks[1]
+        assertEquals(none, kept.effectAt(0).params[InsertMod.KEY])
+    }
+
+    @Test
+    fun `a slot whose mod is only a lane loses its key too`() {
+        // Nothing in the slot's params but a lane on its source: its key is the default, track 1.
+        val song = Fixtures.song().updateTrack(1) { t ->
+            t.withEffect(0, "Filter").copy(clips = t.clips.mapValues { (_, c) ->
+                c.copy(automation = c.automation + (laneKey("effect1", InsertMod.SOURCE) to
+                    Lane(listOf(LanePoint(0, InsertMod.sourceValue(InsertMod.KEYED))))))
+            })
+        }
+        assertEquals(1, song.modsKeyedFrom(0))
+        assertEquals(key(InsertMod.NO_KEY), song.deleteTrack(0).tracks[0].effectAt(0).params[InsertMod.KEY])
+    }
+
+    @Test
+    fun `counting the mods a delete leaves without a key`() {
+        val song = keyedFrom(Fixtures.song(), on = 1, from = 0)
+        assertEquals(1, song.modsKeyedFrom(0))
+        assertEquals(0, song.modsKeyedFrom(1))
+        // An LFO with an unused key on the track doesn't count; one with a lane naming it does.
+        val lfoNoLane = song.updateTrack(1) { t ->
+            t.withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO))
+                .copy(clips = t.clips.mapValues { (_, c) -> c.copy(automation = c.automation - laneKey("effect1", InsertMod.KEY)) })
+        }
+        assertEquals(0, lfoNoLane.modsKeyedFrom(0))
+        val lfoLane = song.updateTrack(1) { it.withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO)) }
+        assertEquals(1, lfoLane.modsKeyedFrom(0))
+        // The master's too.
+        val master = Fixtures.song().let { it.copy(master = it.master.copy(inserts = listOf(UnitSlot("Filter",
+            mapOf(InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.KEYED), InsertMod.KEY to key(0)))))) }
+        assertEquals(1, master.modsKeyedFrom(0))
+    }
+
+    @Test
+    fun `undo of the delete puts the keys back`() {
+        val song = keyedFrom(Fixtures.song(), on = 1, from = 0)
+        val editor = SongEditor(song) { _, _ -> }
+        editor.editSong { it.deleteTrack(0) }
+        assertEquals(key(InsertMod.NO_KEY), editor.song.tracks[0].effectAt(0).params[InsertMod.KEY])
+        editor.undoSong()
+        assertEquals(key(0), editor.song.tracks[1].effectAt(0).params[InsertMod.KEY])
+        assertEquals(song, editor.song)
     }
 
     @Test

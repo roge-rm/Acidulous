@@ -270,6 +270,9 @@ généraux, d’envoi et d’entrée du mixage.
 - **suivre** et **piste** ont une **attaque** et une **relâche**. **piste** entend
   l’autre piste avant son fader et son muet, comme une entrée latérale, et avec
   un bloc (environ 1,3 ms) de retard.
+- **piste** peut être **aucune**, qui n’entend rien. Supprimer une piste met à
+  aucune chaque mod qui l’écoute, et une ligne sous l’en-tête dit combien.
+  Annuler les remet.
 - **cible 1** et **cible 2** choisissent les réglages, et chaque **prof.** dit de
   combien et dans quel sens. Le LFO oscille des deux côtés du réglage. Les pas
   et les suiveurs ne poussent que dans un sens, donc prenez une profondeur

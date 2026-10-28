@@ -137,15 +137,14 @@ const val SIDECHAIN_STEPS = 17
  * A compressor, gate or filter that listens to another track stores it by
  * position: `sidechain` is 0 for its own input and 1..16 for a track, since
  * that's how the engine, lanes and controller mappings address it. An
- * insert's mod keyed from a track stores it in `mod_key`, 0..15. So moving
- * tracks has to update both everywhere they can live: the inserts, the send
- * buses, the input's, a machine that listens (Diction talking), and any
- * automation lane on them. [f] takes and returns the 1-based track, or 0.
+ * insert's mod keyed from a track stores it in `mod_key`, 0..15, or none. So
+ * moving tracks has to update both everywhere they can live: the inserts,
+ * the send buses, the input's, a machine that listens (Diction talking), and
+ * any automation lane on them. [f] takes and returns the 1-based track, or 0.
  *
- * A mod keyed from a deleted track follows its own input instead, as a
- * sidechain does. Its key, and any lane point that named the track, go to
- * the last track, which a deletion leaves empty, so a lane switching the
- * source to keyed later hears nothing rather than the next track.
+ * A mod keyed from a deleted track hears nothing: its key, and any lane
+ * point that named the track, go to none, whatever its source is now, since
+ * a lane may switch it to keyed later.
  */
 fun Song.remapSidechains(f: (Int) -> Int): Song {
     val last = (SIDECHAIN_STEPS - 1).toFloat()
@@ -153,23 +152,21 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
         val k = (v01 * last).roundToInt()
         return if (k == 0) v01 else (f(k).coerceIn(0, SIDECHAIN_STEPS - 1) / last)
     }
-    val keyLast = (InsertMod.KEYS - 1).toFloat()
-    /** The key's new value; a deleted track's goes to the last track. */
+    /** The key's new value; a deleted track's is none. */
     fun remapKey(v01: Float): Float {
-        val k = f((v01 * keyLast).roundToInt() + 1)
-        return if (k == 0) 1f else (k - 1).coerceIn(0, InsertMod.KEYS - 1) / keyLast
+        val k = InsertMod.keyTrack(v01)
+        if (k == InsertMod.NO_KEY) return v01
+        val to = f(k + 1)
+        return if (to == 0) InsertMod.keyValue(InsertMod.NO_KEY) else InsertMod.keyValue(to - 1)
     }
-    fun UnitSlot.remapped(): UnitSlot {
+    /** [modLanes]: a lane on one of the slot's mod settings, so it has a mod even with none in its params. */
+    fun UnitSlot.remapped(modLanes: Boolean = false): UnitSlot {
         var p = params
         p[SIDECHAIN_PARAM]?.let { p = p + (SIDECHAIN_PARAM to remap(it)) }
-        // Any slot with a mod, keyed now or not: a lane on its source may key it later.
-        if (p.keys.any { InsertMod.isModParam(it) }) {
-            val isKeyed = ((p[InsertMod.SOURCE] ?: 0f) * (InsertMod.SOURCES - 1)).roundToInt() == InsertMod.KEYED
+        if (modLanes || p.keys.any { InsertMod.isModParam(it) }) {
             val was = p[InsertMod.KEY] ?: 0f
-            val gone = f((was * keyLast).roundToInt() + 1) == 0
             val now = remapKey(was)
             if (now != was) p = p + (InsertMod.KEY to now)
-            if (gone && isKeyed) p = p + (InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.FOLLOW))
         }
         return if (p === params) this else copy(params = p)
     }
@@ -177,9 +174,13 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
     val keyLane = ":${InsertMod.KEY}"
     return copy(
         tracks = tracks.map { t ->
+            val lanes = t.clips.values.flatMap { it.automation.keys }.toSet()
             t.copy(
                 machine = t.machine.params[SIDECHAIN_PARAM]?.let { v -> t.machine.copy(params = t.machine.params + (SIDECHAIN_PARAM to remap(v))) } ?: t.machine,
-                effects = t.effects.map { it.remapped() },
+                effects = t.effects.mapIndexed { s, slot ->
+                    val unit = "${effectUnit(s)}:"
+                    slot.remapped(lanes.any { it.startsWith(unit) && InsertMod.isModParam(laneParam(it)) })
+                },
                 clips = t.clips.mapValues { (_, c) ->
                     if (c.automation.keys.none { it.endsWith(lane) || it.endsWith(keyLane) }) c
                     else c.copy(automation = c.automation.mapValues { (key, l) ->
@@ -203,6 +204,36 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
         ),
         input = input.map { it.remapped() },
     )
+}
+
+/**
+ * How many inserts' mods would lose their key if track [index] went: keyed
+ * from it now, or with a lane that keys it or can switch the source to
+ * keyed. A mod on an LFO whose unused key named the track doesn't count.
+ */
+fun Song.modsKeyedFrom(index: Int): Int {
+    fun names(v01: Float) = v01 != LANE_BASE && InsertMod.keyTrack(v01) == index
+    fun keyedNow(p: Map<String, Float>) =
+        ((p[InsertMod.SOURCE] ?: 0f) * (InsertMod.SOURCES - 1)).roundToInt() == InsertMod.KEYED
+    fun counts(p: Map<String, Float>, lanes: List<Lane>, sourceLane: Boolean): Boolean {
+        val keyNames = names(p[InsertMod.KEY] ?: 0f)
+        return (keyNames && (keyedNow(p) || sourceLane)) || lanes.any { l -> l.points.any { names(it.value) } }
+    }
+    var n = 0
+    tracks.forEachIndexed { t, track ->
+        if (t == index) return@forEachIndexed
+        track.effects.forEachIndexed { s, slot ->
+            val unit = effectUnit(s)
+            val autos = track.clips.values.map { it.automation }
+            val keyLanes = autos.mapNotNull { it[laneKey(unit, InsertMod.KEY)] }
+            val sourceLane = autos.any { laneKey(unit, InsertMod.SOURCE) in it }
+            val modded = sourceLane || keyLanes.isNotEmpty() || slot.params.keys.any { InsertMod.isModParam(it) }
+            if (modded && counts(slot.params, keyLanes, sourceLane)) n++
+        }
+    }
+    val songSlots = master.sends + master.inserts + master.groups.flatMap { it.inserts } + input
+    for (slot in songSlots) if (counts(slot.params, emptyList(), false)) n++
+    return n
 }
 
 fun Song.changeMachine(index: Int, machineType: String): Song =
