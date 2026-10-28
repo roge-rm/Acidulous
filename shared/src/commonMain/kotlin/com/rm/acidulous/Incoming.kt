@@ -27,7 +27,7 @@ object Incoming {
     fun tempName(stem: String, ext: String): String =
         "$stem-${kotlin.random.Random.nextLong().toULong().toString(36)}.$ext"
 
-    /** A window the system asked for, like the Mac's app menu: the song screen opens it. */
+    /** Settings or About, asked for by a menu: the app shows it over any screen until it's closed. */
     var window by mutableStateOf<AppWindow?>(null)
 }
 

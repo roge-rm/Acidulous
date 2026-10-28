@@ -23,15 +23,17 @@ import com.rm.acidulous.res.menu_zoom
 import com.rm.acidulous.ui.KeyAction
 import com.rm.acidulous.ui.KeyHub
 import com.rm.acidulous.ui.UiPrefs
+import com.rm.acidulous.ui.macMenuShortcut
 
 /**
  * The Edit and Window menus in a Mac's menu bar. The app menu (About,
  * Settings, Hide, Quit) is the system's: see MacApp.
  *
- * Edit's items run the same actions as their keys, which stay with the app's
- * own key handling (and can be changed in the keys window), so the items carry
- * no shortcut of their own. They're greyed out where the screen has no use
- * for them.
+ * Edit's items run the same actions as their keys and show the keys they're
+ * bound to now (see the keys window). The keys themselves stay with the app's
+ * own key handling, which skips shortcuts while a text field has focus, so an
+ * item run by its key does nothing (see [menuClickRuns]). They're greyed out
+ * where the screen has no use for them.
  */
 @Composable
 internal fun FrameWindowScope.MacMenus(state: WindowState, toggleFullScreen: () -> Unit) {
@@ -51,7 +53,15 @@ internal fun FrameWindowScope.MacMenus(state: WindowState, toggleFullScreen: () 
                 KeyAction.Duplicate to Res.string.menu_duplicate,
             )) {
                 if (action == null || title == null) Separator()
-                else Item(word(title), enabled = action in live, onClick = { KeyHub.run(action) })
+                else Item(
+                    word(title),
+                    enabled = action in live,
+                    shortcut = macMenuShortcut(UiPrefs.keyBindings[action].orEmpty()),
+                    onClick = {
+                        val sinceKey = System.nanoTime() - lastKeyTaken
+                        if (menuClickRuns(java.awt.EventQueue.getCurrentEvent(), sinceKey)) KeyHub.run(action)
+                    },
+                )
             }
         }
         Menu(word(Res.string.menu_window)) {
@@ -63,3 +73,20 @@ internal fun FrameWindowScope.MacMenus(state: WindowState, toggleFullScreen: () 
         }
     }
 }
+
+/** When the app's key handling last used a key press, in System.nanoTime. Set by the window. */
+@Volatile internal var lastKeyTaken = System.nanoTime() - 1_000_000_000L
+
+/** How soon after a key the app used a menu click is taken as that same key. */
+private const val KEY_ECHO_NS = 250_000_000L
+
+/**
+ * Whether a menu item's click should run its action, given the event being
+ * handled when it came and how long since the app last used a key. A click
+ * with the mouse comes as its own event. The item's key comes during the
+ * key's own event, which the app's key handling has had first and has run or
+ * skipped the action already. Should the system send the key's click a moment
+ * later instead, the time catches it.
+ */
+internal fun menuClickRuns(current: java.awt.AWTEvent?, sinceKeyNs: Long): Boolean =
+    current !is java.awt.event.KeyEvent && sinceKeyNs >= KEY_ECHO_NS

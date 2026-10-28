@@ -362,6 +362,8 @@ fun registerAppImage(
         from(file("deb/acidulous.desktop"))
         from(file("deb/acidulous-mime.xml")) { into("usr/share/mime/packages"); rename { "acidulous.xml" } }
         from(rootProject.file("branding/acidulous-icon-1024.svg")) { rename { "acidulous.svg" } }
+        // Integration tools look for the icon here as well as at the top.
+        from(rootProject.file("branding/acidulous-icon-1024.svg")) { into("usr/share/icons/hicolor/scalable/apps"); rename { "acidulous.svg" } }
         from(rootProject.file("NOTICE")) { into("usr/share/doc/acidulous") }
         // The runtime is unpacked here later and replaced each build. Pruning
         // it deletes java.base before the links into it, which fails the sync.

@@ -306,8 +306,14 @@ object KeyHub {
         KeyCodes.KEYCODE_FUNCTION,
     )
 
-    /** A text field has focus, so it gets every key. */
-    internal var typing = false
+    /**
+     * A text field has focus, so it gets every key, Alt (Option on a Mac)
+     * chords too, which type accents and other characters.
+     */
+    internal val typing: Boolean get() = typingFields > 0
+
+    /** Text fields focused now, see [TypingField]. */
+    internal var typingFields = 0
 
     /**
      * True when the last input was a key press, not a touch. A window opened
@@ -531,8 +537,23 @@ fun KeyScope(vararg handlers: Pair<KeyAction, () -> Unit>, window: Boolean = fal
  * every shortcut would stay dead.
  */
 fun Modifier.typing(): Modifier = composed {
-    DisposableEffect(Unit) { onDispose { KeyHub.typing = false } }
-    onFocusChanged { KeyHub.typing = it.isFocused }
+    val field = androidx.compose.runtime.remember { TypingField() }
+    DisposableEffect(field) { onDispose { field.focused(false) } }
+    onFocusChanged { field.focused(it.isFocused) }
+}
+
+/**
+ * One text field's part in [KeyHub.typing]. Each field counts itself, since
+ * moving from one field to another can tell the new one before the old one.
+ */
+internal class TypingField {
+    private var on = false
+
+    fun focused(now: Boolean) {
+        if (now == on) return
+        on = now
+        KeyHub.typingFields = (KeyHub.typingFields + if (now) 1 else -1).coerceAtLeast(0)
+    }
 }
 
 /**

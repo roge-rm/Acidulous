@@ -2242,6 +2242,15 @@ fun App(modifier: Modifier = Modifier) {
             presetChoice = null
         }
     }
+
+    // Settings and About, from the song screen's menu or a Mac's app menu, over
+    // whatever screen is showing. Not shown by the song screen, which is kept
+    // hidden under the others, and a window it opens then gets none of its keys.
+    when (Incoming.window) {
+        AppWindow.Settings -> com.rm.acidulous.ui.SettingsDialog(song.tracks.map { it.name }) { Incoming.window = null }
+        AppWindow.About -> com.rm.acidulous.ui.AboutDialog(onDismiss = { Incoming.window = null })
+        null -> Unit
+    }
 }
 
 /**
