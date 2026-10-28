@@ -615,6 +615,11 @@ Result timeEffect(const std::string &name) {
     if (fx == nullptr) return r;
     fx->prepare(kSr);
     fx->reset();
+    // `paired fx.Reverb model=0.2` times one model.
+    for (const auto &kv : forced) {
+        const int32_t i = fx->params().indexOf(kv.first.c_str());
+        if (i >= 0) fx->params().set(i, kv.second);
+    }
     fx->params().jumpAll();
 
     std::vector<float> L(kBlock), R(kBlock);

@@ -409,11 +409,17 @@ void checkBank(const Bank &bank) {
         } else if (out.m.peakDb > -1.0f) {
             warn(who, "peaks within a decibel of full scale");
         }
-        // A reverse delay plays the end of the source back last, rising.
+        // A reverse delay plays the end of the source back last, rising, and a
+        // ducked reverb comes back up once the source stops.
         bool swells = false;
         if (bank.isEffect() && bank.typeName() == "Delay") {
             for (int32_t i = 0; i < count; ++i) {
                 if (std::strcmp(defs[i].name, "mode") == 0) swells = defs[i].map(r.norm[static_cast<size_t>(i)]) > 2.5f;
+            }
+        }
+        if (bank.isEffect() && bank.typeName() == "Reverb") {
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::strcmp(defs[i].name, "duck") == 0) swells = defs[i].map(r.norm[static_cast<size_t>(i)]) > 0.0f;
             }
         }
         if (!swells && runaway(out.audio)) fail(who, "louder at the end of its tail than before it");

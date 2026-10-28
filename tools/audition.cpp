@@ -1279,12 +1279,14 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
  * a single line they can follow, Rotary an organ, Gate the band over a
  * little hiss to take out, Deesser a voice and Midside the band with a
- * piano spread wide. Returns the stereo source; it stops at `stop`.
+ * piano spread wide. Returns the stereo source; it stops at `stop`, and the
+ * silence after it is longer for a reverb.
  */
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     const float bars = 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
-    const int64_t frames = stop + secondsToFrames(3.0f);
+    // A reverb gets longer to ring out, since a big hall outlasts three seconds.
+    const int64_t frames = stop + secondsToFrames(effect == "Reverb" ? 6.0f : 3.0f);
     std::vector<float> out(static_cast<size_t>(frames) * 2, 0.0f);
     const auto add = [&](const std::vector<float> &part, float gain) {
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;

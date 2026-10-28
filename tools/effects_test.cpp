@@ -1,7 +1,7 @@
 // Tests the character effects: Smash, Acid, Mouth, Tape, Slicer, Horn,
-// Spectral, Formula, Transient, Midside, Deesser and the Delay's modes. Each
-// is rendered and measured for the thing it's for, since none of it shows in
-// a frequency response.
+// Spectral, Formula, Transient, Midside, Deesser, the Delay's modes and the
+// Reverb's models. Each is rendered and measured for the thing it's for,
+// since none of it shows in a frequency response.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include <engine/core/Settings.h>
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Magneto.h>
@@ -1076,6 +1077,183 @@ void deEsser() {
 }
 } // namespace
 
+// --- Reverb -----------------------------------------------------------------------
+
+/** The wet part of a mono run at mix 1: what came out less the dry, scaled as the effect scaled it. */
+std::vector<float> wetOf(const std::vector<float> &out, const std::vector<float> &in, float dryGain = 1.0f) {
+    std::vector<float> w(out.size());
+    for (size_t i = 0; i < out.size(); ++i) w[i] = out[i] - in[i] * dryGain;
+    return w;
+}
+
+/** Seconds from [from] until the 50 ms rms of [x] falls 30 dB under its level just after [from]. */
+double fallTime(const std::vector<float> &x, size_t from) {
+    const size_t win = 2400;
+    const double start = rms(x, from, from + win);
+    for (size_t at = from; at + win < x.size(); at += 480)
+        if (dB(rms(x, at, at + win) / start) < -30.0) return double(at - from) / kRate;
+    return double(x.size() - from) / kRate;
+}
+
+void reverb() {
+    printf("- reverb\n");
+    const char *names[] = {"room", "plate", "hall", "spring", "early", "space"};
+    // A half-second burst of noise, then four and a half seconds of tail.
+    auto burst = noise(0.25f, 240000, 3);
+    for (size_t i = 24000; i < burst.size(); ++i) burst[i] = 0.0f;
+
+    double roomLevel = 0.0;
+    for (int m = 0; m < 3; ++m) {
+        const std::string n = names[m];
+        auto fx = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
+        const auto wet = wetOf(run(*fx, burst).l, burst);
+        const double level = rms(wet, 12000, 24000);
+        if (m == 0) roomLevel = level;
+        else ok(n + ": about as loud as the room at its defaults", std::fabs(dB(level / roomLevel)) < 2.0,
+                num(dB(level / roomLevel)) + " dB");
+        // A bigger size rings longer.
+        auto small = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.2f}});
+        auto big = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}});
+        const double ts = fallTime(wetOf(run(*small, burst).l, burst), 24000 + 2400);
+        const double tb = fallTime(wetOf(run(*big, burst).l, burst), 24000 + 2400);
+        ok(n + ": size 0.8 rings longer than 0.2", tb > ts * 1.5, num(ts) + " s -> " + num(tb) + " s");
+        // Damp takes the top off the tail.
+        auto bright = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 0.0f}});
+        auto dull = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 1.0f}});
+        const auto high = [&](Effect &e) {
+            const auto w = wetOf(run(e, burst).l, burst);
+            std::vector<float> d(w.size());
+            for (size_t i = 1; i < w.size(); ++i) d[i] = w[i] - w[i - 1];
+            return dB(rms(d, 48000, 96000) / rms(w, 48000, 96000));
+        };
+        const double hb = high(*bright), hd = high(*dull);
+        ok(n + ": damp darkens the tail", hd < hb - 3.0, num(hb) + " -> " + num(hd) + " dB of top");
+    }
+
+    // Spring, early and space play the room until they're built.
+    {
+        auto room = make("Reverb", {{"mix", 0.5f}});
+        const auto want = run(*room, burst).l;
+        for (int m = 3; m < 6; ++m) {
+            auto fx = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}});
+            ok(std::string(names[m]) + ": plays the room for now", worst(run(*fx, burst).l, want) == 0.0);
+        }
+    }
+
+    // Every model, with freeze after two seconds or shimmer at the top, size
+    // at the top and wobble on, for 30 s of bursts: finite and bounded.
+    {
+        auto in = noise(0.5f, 48000 * 30, 11);
+        for (size_t i = 48000 * 2; i < in.size(); ++i) if ((i / 48000) % 4 != 0) in[i] = 0.0f;
+        for (int m = 0; m < 3; ++m) {
+            for (int frozen = 0; frozen < 2; ++frozen) {
+                auto fx = make("Reverb", {{"model", float(m)}, {"size", 1.0f}, {"shimmer", 1.0f}, {"mix", 1.0f},
+                                          {"wobble", 1.0f}, {"bloom", 0.5f}, {"duck", 0.5f}, {"distance", 0.5f}});
+                Stereo s{in, in};
+                for (size_t at = 0; at < in.size(); at += kBlock) {
+                    if (frozen && at == 48000 * 2) set(*fx, "freeze", 1.0f);
+                    fx->run(s.l.data() + at, s.r.data() + at, kBlock, false);
+                }
+                const double last = rms(s.l, s.l.size() - 48000, s.l.size());
+                ok(std::string(names[m]) + (frozen ? ": frozen" : ": shimmer and size at the top") +
+                       " for 30 s, finite and bounded",
+                   finite(s) && peak(s.l) < 4.0 && peak(s.r) < 4.0 && (!frozen || last > 0.01),
+                   "peak " + num(std::max(peak(s.l), peak(s.r))) + ", last second " + num(last));
+            }
+        }
+    }
+
+    // reset() makes the next render the same as the first, every model, with
+    // everything that holds state switched on.
+    for (int m = 0; m < 3; ++m) {
+        auto fx = make("Reverb", {{"model", float(m)}, {"shimmer", 0.5f}, {"wobble", 0.6f}, {"bits", 10.0f},
+                                  {"crush", 3.0f}, {"gate", 0.3f}, {"duck", 0.5f}, {"distance", 0.4f}, {"bloom", 0.5f}});
+        const auto in = hits(96000);
+        const auto a = run(*fx, in);
+        fx->reset();
+        const auto b = run(*fx, in);
+        ok(std::string(names[m]) + ": reset() renders the same twice", worst(a.l, b.l) == 0.0 && worst(a.r, b.r) == 0.0);
+    }
+
+    // Lean quality: still a reverb, about as loud.
+    {
+        auto &q = EngineSettings::get().quality;
+        const int was = q.load();
+        for (int m = 1; m < 3; ++m) {
+            q.store(1);
+            auto full = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
+            const double lf = rms(wetOf(run(*full, burst).l, burst), 12000, 48000);
+            q.store(0);
+            auto lean = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
+            const double ll = rms(wetOf(run(*lean, burst).l, burst), 12000, 48000);
+            ok(std::string(names[m]) + ": lean within 2 dB of full", std::fabs(dB(ll / lf)) < 2.0, num(dB(ll / lf)) + " dB");
+        }
+        q.store(was);
+    }
+
+    // Duck: the tail drops while the track plays and comes back in the gaps.
+    {
+        // Four bars: a second of noise then a second of nothing, twice.
+        auto in = noise(0.25f, 48000 * 4, 5);
+        for (size_t i = 0; i < in.size(); ++i) if ((i / 48000) % 2 == 1) in[i] = 0.0f;
+        for (int m = 0; m < 3; ++m) {
+            auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}});
+            auto ducked = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}, {"duck", 1.0f}, {"duckrel", 100.0f}});
+            const auto a = wetOf(run(*plain, in).l, in), b = wetOf(run(*ducked, in).l, in);
+            const double playing = dB(rms(b, 48000 * 2 + 12000, 48000 * 3) / rms(a, 48000 * 2 + 12000, 48000 * 3));
+            const double gap = dB(rms(b, 48000 * 3 + 24000, 48000 * 4) / rms(a, 48000 * 3 + 24000, 48000 * 4));
+            ok(std::string(names[m]) + ": duck pulls the tail down while it plays, not in the gaps",
+               playing < -12.0 && gap > -1.0, num(playing) + " dB playing, " + num(gap) + " dB in the gap");
+        }
+    }
+
+    // Distance: later, more wet against the dry, less top.
+    for (int m = 0; m < 3; ++m) {
+        std::vector<float> click(96000, 0.0f);
+        click[100] = 1.0f;
+        auto near = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
+        auto far = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"distance", 1.0f}});
+        const auto a = wetOf(run(*near, click).l, click), b = wetOf(run(*far, click).l, click, 0.5f);
+        const auto first = [](const std::vector<float> &x) {
+            const double p = peak(x);
+            for (size_t i = 0; i < x.size(); ++i) if (std::fabs(x[i]) > 0.05 * p) return double(i) / kRate;
+            return 0.0;
+        };
+        const auto top = [](const std::vector<float> &x) {
+            std::vector<float> d(x.size());
+            for (size_t i = 1; i < x.size(); ++i) d[i] = x[i] - x[i - 1];
+            return dB(rms(d, 4800, 48000) / rms(x, 4800, 48000));
+        };
+        const double later = (first(b) - first(a)) * 1000.0;
+        // The wet against the dry: the far dry is half, so a louder wet shows twice.
+        const double louder = dB(rms(b, 0, 96000) / 0.5 / rms(a, 0, 96000));
+        ok(std::string(names[m]) + ": distance starts the tail later, louder against the dry and darker",
+           later > 50.0 && louder > 6.0 && top(b) < top(a) - 3.0,
+           num(later) + " ms later, " + num(louder) + " dB more wet, top " + num(top(a)) + " -> " + num(top(b)) + " dB");
+    }
+
+    // Bloom: the tail starts thin and fills in.
+    for (int m = 0; m < 3; ++m) {
+        auto in = noise(0.25f, 48000 * 3, 9);
+        auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
+        auto bloom = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"bloom", 1.0f}});
+        const auto a = wetOf(run(*plain, in).l, in), b = wetOf(run(*bloom, in).l, in);
+        const double early = dB(rms(b, 4800, 14400) / rms(a, 4800, 14400));
+        const double late = dB(rms(b, 48000 * 2, 48000 * 3) / rms(a, 48000 * 2, 48000 * 3));
+        ok(std::string(names[m]) + ": bloom starts thin and fills in by two seconds", early < -8.0 && late > -2.0,
+           num(early) + " dB at the start, " + num(late) + " dB after two seconds");
+    }
+
+    // The new knobs at their defaults leave the room as it was: checked against
+    // master by tools/match_master.sh. Here, at least, they cost nothing.
+    {
+        auto a = make("Reverb", {{"size", 0.7f}, {"shimmer", 0.3f}});
+        auto b = make("Reverb", {{"size", 0.7f}, {"shimmer", 0.3f}, {"duck", 0.0f}, {"distance", 0.0f}, {"bloom", 0.0f},
+                                 {"duckrel", 1500.0f}});
+        ok("room: duckrel alone changes nothing", worst(run(*a, burst).l, run(*b, burst).l) == 0.0);
+    }
+}
+
 int main() {
     printf("character effects\n");
     smash();
@@ -1091,6 +1269,7 @@ int main() {
     transient();
     midSide();
     deEsser();
+    reverb();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

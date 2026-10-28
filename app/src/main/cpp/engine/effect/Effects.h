@@ -59,48 +59,6 @@ class Delay final : public Effect {
     void startStretch();
 };
 
-/**
- * Reverb.
- *
- * Based on Freeverb: eight combs and four allpasses a side, with `size`,
- * `damp` and `predelay`. The extras:
- *
- *   - Shimmer: the tail is fed back an octave up, so each pass climbs into a
- *     rising chord. The pitch shift is a delay line read at double speed with
- *     two crossfaded taps, and it sits inside the feedback so it builds up.
- *   - Bits and crush: only the tail goes through a bit quantiser and a
- *     sample-and-hold, so the dry stays clean and the room sounds like an old
- *     sampler.
- *   - Wobble: the comb lengths drift slowly and out of step, so a long tail
- *     never sits still, like tape.
- *
- * Freeze holds the tail forever and gate cuts it off.
- */
-class Reverb final : public Effect {
-  public:
-    enum P { Size, Damp, Tone, PreDelay, Mix, Freeze, Gate, Shimmer, Bits, Crush, Wobble, Gain, Count };
-    Reverb() { initParams(); }
-    ACIDULOUS_EFFECT_COMMON(Reverb)
-  private:
-    struct Comb { dsp::DelayLine line; float store = 0.0f; int32_t len = 1; };
-    struct Allpass { dsp::DelayLine line; int32_t len = 1; };
-    /** Eight combs and four allpasses a side at full quality, half at lean. */
-    static constexpr int32_t kCombs = 8;
-    static constexpr int32_t kAps = 4;
-    Comb combs[2][kCombs];
-    Allpass aps[2][kAps];
-    dsp::DelayLine pre[2];
-    /** The shimmer's line: the tail, read back an octave up. */
-    dsp::DelayLine shimmerLine[2];
-    float shimmerPhase[2]{}, shimmerFb[2]{};
-    /** The shimmer path's DC blocker. See the note where it's used. */
-    float shimDcX[2]{}, shimDcY[2]{}, shimLp[2]{};
-    float crushAcc[2]{}, crushHeld[2]{};
-    float wobblePhase = 0.0f;
-    float lp[2]{}, gateEnv = 0.0f, inputEnv = 0.0f, sr = 48000.0f;
-    int32_t gateHold = 0;
-};
-
 class Eq final : public Effect {
   public:
     enum P { LowGain, LowFreq, MidGain, MidFreq, MidQ, HighGain, HighFreq, Tilt, Gain, Count };

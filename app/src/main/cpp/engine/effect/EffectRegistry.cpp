@@ -4,6 +4,7 @@
 #include "Acid.h"
 #include "DeEsser.h"
 #include "MidSide.h"
+#include "Reverb.h"
 #include "Transient.h"
 #include "Mouth.h"
 #include "Formula.h"

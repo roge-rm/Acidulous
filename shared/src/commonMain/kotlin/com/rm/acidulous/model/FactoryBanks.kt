@@ -13829,7 +13829,7 @@ internal object FactoryBanks {
         mapOf("size" to 0.38f, "predelay" to 0.09f, "mix" to 0.28f),
         family = "room")
 
-    private fun fx_reverb3() = Patch("fx.Reverb", "Hall",
+    private fun fx_reverb3() = Patch("fx.Reverb", "Big Room",
         mapOf("size" to 0.72f, "damp" to 0.55f, "tone" to 0.69342643f, "predelay" to 0.175f, "mix" to 0.35f),
         family = "room")
 
@@ -13837,67 +13837,131 @@ internal object FactoryBanks {
         mapOf("size" to 0.95f, "damp" to 0.3f, "tone" to 0.6425486f, "predelay" to 0.3f, "mix" to 0.42f),
         family = "room")
 
-    private fun fx_reverb5() = Patch("fx.Reverb", "Plate",
-        mapOf("size" to 0.45f, "damp" to 0.15f, "tone" to 0.8868528f, "predelay" to 0.075f, "mix" to 0.25f),
+    private fun fx_reverb5() = Patch("fx.Reverb", "Dark",
+        mapOf("size" to 0.6f, "damp" to 0.8f, "tone" to 0.413449615f, "predelay" to 0.125f, "mix" to 0.32f),
         family = "room")
 
-    private fun fx_reverb6() = Patch("fx.Reverb", "Dark",
-        mapOf("size" to 0.6f, "damp" to 0.8f, "tone" to 0.413449615f, "predelay" to 0.125f, "mix" to 0.32f),
-        family = "tone")
-
-    private fun fx_reverb7() = Patch("fx.Reverb", "Bright",
+    private fun fx_reverb6() = Patch("fx.Reverb", "Bright",
         mapOf("size" to 0.55f, "damp" to 0.05f, "tone" to 0.967132032f, "predelay" to 0.06f),
-        family = "tone")
+        family = "room")
 
-    private fun fx_reverb8() = Patch("fx.Reverb", "Gated",
+    private fun fx_reverb7() = Patch("fx.Reverb", "Plate",
+        mapOf("size" to 0.45f, "damp" to 0.15f, "tone" to 0.8868528f, "predelay" to 0.075f, "mix" to 0.25f, "model" to 0.2f),
+        family = "plate")
+
+    private fun fx_reverb8() = Patch("fx.Reverb", "Vocal Plate",
+        mapOf("size" to 0.55f, "damp" to 0.3f, "predelay" to 0.175f, "mix" to 0.25f, "model" to 0.2f),
+        family = "plate")
+
+    private fun fx_reverb9() = Patch("fx.Reverb", "Snare Plate",
+        mapOf("size" to 0.3f, "damp" to 0.05f, "tone" to 0.9491222f, "predelay" to 0.02f, "model" to 0.2f),
+        family = "plate")
+
+    private fun fx_reverb10() = Patch("fx.Reverb", "Long Plate",
+        mapOf("size" to 0.8f, "damp" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.125f, "model" to 0.2f),
+        family = "plate")
+
+    private fun fx_reverb11() = Patch("fx.Reverb", "Dark Plate",
+        mapOf("size" to 0.6f, "damp" to 0.75f, "tone" to 0.6131472f, "predelay" to 0.1f, "model" to 0.2f),
+        family = "plate")
+
+    private fun fx_reverb12() = Patch("fx.Reverb", "Small Hall",
+        mapOf("size" to 0.3f, "damp" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.06f, "mix" to 0.25f, "model" to 0.4f),
+        family = "hall")
+
+    private fun fx_reverb13() = Patch("fx.Reverb", "Concert Hall",
+        mapOf("size" to 0.55f, "damp" to 0.45f, "tone" to 0.736443f, "predelay" to 0.125f, "model" to 0.4f),
+        family = "hall")
+
+    private fun fx_reverb14() = Patch("fx.Reverb", "Big Hall",
+        mapOf("size" to 0.8f, "damp" to 0.5f, "tone" to 0.69342643f, "predelay" to 0.2f, "mix" to 0.35f, "model" to 0.4f),
+        family = "hall")
+
+    private fun fx_reverb15() = Patch("fx.Reverb", "Warm Hall",
+        mapOf("size" to 0.65f, "damp" to 0.8f, "tone" to 0.543016553f, "predelay" to 0.15f, "mix" to 0.32f, "model" to 0.4f),
+        family = "hall")
+
+    private fun fx_reverb16() = Patch("fx.Reverb", "Bright Hall",
+        mapOf("size" to 0.6f, "damp" to 0.1f, "tone" to 0.9091891f, "predelay" to 0.1f, "mix" to 0.28f, "model" to 0.4f),
+        family = "hall")
+
+    private fun fx_reverb17() = Patch("fx.Reverb", "Ducked Plate",
+        mapOf("size" to 0.7f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.4f, "model" to 0.2f, "duck" to 0.7f, "duckrel" to 0.563705444f),
+        family = "space")
+
+    private fun fx_reverb18() = Patch("fx.Reverb", "Ducked Hall",
+        mapOf("size" to 0.8f, "damp" to 0.45f, "predelay" to 0.15f, "mix" to 0.45f, "model" to 0.4f, "duck" to 0.9f, "duckrel" to 0.7835365f),
+        family = "space")
+
+    private fun fx_reverb19() = Patch("fx.Reverb", "Back Row",
+        mapOf("gain" to 0.579166651f, "distance" to 0.7f),
+        family = "space")
+
+    private fun fx_reverb20() = Patch("fx.Reverb", "Far Hall",
+        mapOf("size" to 0.7f, "damp" to 0.45f, "predelay" to 0.1f, "gain" to 0.589583337f, "model" to 0.4f, "distance" to 0.85f),
+        family = "space")
+
+    private fun fx_reverb21() = Patch("fx.Reverb", "Bloom",
+        mapOf("size" to 0.75f, "predelay" to 0.1f, "mix" to 0.4f, "model" to 0.4f, "bloom" to 0.8f),
+        family = "space")
+
+    private fun fx_reverb22() = Patch("fx.Reverb", "Slow Plate",
+        mapOf("size" to 0.65f, "damp" to 0.25f, "tone" to 0.835975f, "predelay" to 0.075f, "mix" to 0.4f, "model" to 0.2f, "bloom" to 1f),
+        family = "space")
+
+    private fun fx_reverb23() = Patch("fx.Reverb", "Gated",
         mapOf("size" to 0.85f, "damp" to 0.25f, "predelay" to 0.04f, "mix" to 0.55f, "gate" to 0.18f),
         family = "gate")
 
-    private fun fx_reverb9() = Patch("fx.Reverb", "Snare Gate",
+    private fun fx_reverb24() = Patch("fx.Reverb", "Snare Gate",
         mapOf("size" to 0.6f, "damp" to 0.15f, "tone" to 0.862571836f, "predelay" to 0.025f, "mix" to 0.6f, "gate" to 0.08f),
         family = "gate")
 
-    private fun fx_reverb10() = Patch("fx.Reverb", "Freeze",
-        mapOf("size" to 0.8f, "damp" to 0.1f, "predelay" to 0.1f, "mix" to 0.6f, "freeze" to 1f),
-        family = "hold")
+    private fun fx_reverb25() = Patch("fx.Reverb", "Gated Plate",
+        mapOf("size" to 0.75f, "damp" to 0.1f, "tone" to 0.8868528f, "predelay" to 0.025f, "mix" to 0.5f, "gate" to 0.12f, "model" to 0.2f),
+        family = "gate")
 
-    private fun fx_reverb11() = Patch("fx.Reverb", "Shimmer",
+    private fun fx_reverb26() = Patch("fx.Reverb", "Freeze",
+        mapOf("size" to 0.8f, "damp" to 0.1f, "predelay" to 0.1f, "mix" to 0.6f, "freeze" to 1f),
+        family = "shimmer")
+
+    private fun fx_reverb27() = Patch("fx.Reverb", "Shimmer",
         mapOf("size" to 0.8f, "damp" to 0.35f, "predelay" to 0.15f, "mix" to 0.45f, "shimmer" to 0.55f),
         family = "shimmer")
 
-    private fun fx_reverb12() = Patch("fx.Reverb", "Ascend",
+    private fun fx_reverb28() = Patch("fx.Reverb", "Ascend",
         mapOf("size" to 0.45f, "damp" to 0.1f, "tone" to 0.929869354f, "predelay" to 0.075f, "mix" to 0.55f, "shimmer" to 1f),
         family = "shimmer")
 
-    private fun fx_reverb13() = Patch("fx.Reverb", "Held Sky",
+    private fun fx_reverb29() = Patch("fx.Reverb", "Held Sky",
         mapOf("size" to 0.95f, "damp" to 0.6f, "tone" to 0.6131472f, "predelay" to 0.25f, "mix" to 0.5f, "shimmer" to 0.4f, "wobble" to 0.3f),
         family = "shimmer")
 
-    private fun fx_reverb14() = Patch("fx.Reverb", "Eight Bit",
+    private fun fx_reverb30() = Patch("fx.Reverb", "Eight Bit",
         mapOf("size" to 0.55f, "damp" to 0.3f, "predelay" to 0.06f, "mix" to 0.4f, "bits" to 0.466666669f),
         family = "lofi")
 
-    private fun fx_reverb15() = Patch("fx.Reverb", "Four Bit",
+    private fun fx_reverb31() = Patch("fx.Reverb", "Four Bit",
         mapOf("size" to 0.7f, "damp" to 0.2f, "tone" to 0.736443f, "predelay" to 0.1f, "mix" to 0.45f, "bits" to 0.2f),
         family = "lofi")
 
-    private fun fx_reverb16() = Patch("fx.Reverb", "Downsampled",
+    private fun fx_reverb32() = Patch("fx.Reverb", "Downsampled",
         mapOf("size" to 0.6f, "damp" to 0.25f, "mix" to 0.42f, "crush" to 0.761471f),
         family = "lofi")
 
-    private fun fx_reverb17() = Patch("fx.Reverb", "Ruined",
+    private fun fx_reverb33() = Patch("fx.Reverb", "Ruined",
         mapOf("size" to 0.85f, "tone" to 0.543016553f, "predelay" to 0.2f, "mix" to 0.5f, "bits" to 0.266666681f, "crush" to 0.633985f, "wobble" to 0.8f),
         family = "lofi")
 
-    private fun fx_reverb18() = Patch("fx.Reverb", "Seasick",
+    private fun fx_reverb34() = Patch("fx.Reverb", "Seasick",
         mapOf("size" to 0.9f, "damp" to 0.45f, "predelay" to 0.125f, "mix" to 0.4f, "wobble" to 1f),
         family = "lofi")
 
-    private fun fx_reverb19() = Patch("fx.Reverb", "Spring",
+    private fun fx_reverb35() = Patch("fx.Reverb", "Spring",
         mapOf("size" to 0.3f, "damp" to 0.5f, "tone" to 0.6425486f, "mix" to 0.25f, "wobble" to 0.5f),
         family = "lofi")
 
-    private val fx_reverb: List<Patch> by lazy { listOf(fx_reverb0(), fx_reverb1(), fx_reverb2(), fx_reverb3(), fx_reverb4(), fx_reverb5(), fx_reverb6(), fx_reverb7(), fx_reverb8(), fx_reverb9(), fx_reverb10(), fx_reverb11(), fx_reverb12(), fx_reverb13(), fx_reverb14(), fx_reverb15(), fx_reverb16(), fx_reverb17(), fx_reverb18(), fx_reverb19()) }
+    private val fx_reverb: List<Patch> by lazy { listOf(fx_reverb0(), fx_reverb1(), fx_reverb2(), fx_reverb3(), fx_reverb4(), fx_reverb5(), fx_reverb6(), fx_reverb7(), fx_reverb8(), fx_reverb9(), fx_reverb10(), fx_reverb11(), fx_reverb12(), fx_reverb13(), fx_reverb14(), fx_reverb15(), fx_reverb16(), fx_reverb17(), fx_reverb18(), fx_reverb19(), fx_reverb20(), fx_reverb21(), fx_reverb22(), fx_reverb23(), fx_reverb24(), fx_reverb25(), fx_reverb26(), fx_reverb27(), fx_reverb28(), fx_reverb29(), fx_reverb30(), fx_reverb31(), fx_reverb32(), fx_reverb33(), fx_reverb34(), fx_reverb35()) }
 
     private fun fx_eq0() = Patch("fx.Eq", "Init", emptyMap(),
         family = "shape")

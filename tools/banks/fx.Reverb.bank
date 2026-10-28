@@ -1,12 +1,14 @@
-# Reverb - a room, its tone, and the two things that are not rooms.
+# Reverb - a room, a plate and a hall, and the things that are not rooms.
 #
-# `size` is the room and `damp` is what the walls are made of; `predelay` is
-# how far you are from them, and it is the control that keeps a big reverb from
-# swallowing the thing that caused it. The two that are not rooms are `freeze`,
-# which holds the tail for as long as you leave it, and `gate`, which cuts the
-# tail off flat and is a sound rather than a space.
+# `model` picks the tank: #0 room, #1 plate, #2 hall. `size` is the room and
+# `damp` is what the walls are made of; `predelay` is how far you are from
+# them, and it is the control that keeps a big reverb from swallowing the
+# thing that caused it. `duck` drops the tail while the track plays,
+# `distance` moves the source further away and `bloom` lets the tail fill in
+# slowly. The things that are not rooms are `freeze`, which holds the tail for
+# as long as you leave it, and `gate`, which cuts the tail off flat.
 #
-# Families: room, tone, gate, hold, shimmer, lofi.
+# Families: room, plate, hall, space, gate, shimmer, lofi.
 
 machine fx.Reverb
 
@@ -28,7 +30,7 @@ patch Room family=room
   predelay       18 ms
   mix            0.28
 
-patch Hall family=room
+patch "Big Room" family=room
   # Long, soft, and far away. Above about a half, `size` stops sounding like a
   # bigger room and starts sounding like a different building.
   size           0.72
@@ -46,15 +48,7 @@ patch Cathedral family=room
   predelay       60 ms
   mix            0.42
 
-patch Plate family=room
-  # A bright plate, dense and smooth.
-  size           0.45
-  damp           0.15
-  tone           12000 Hz
-  predelay       15 ms
-  mix            0.25
-
-patch Dark family=tone
+patch Dark family=room
   # The top taken off the tail but not off the source: the room is made of
   # curtains rather than tile, and nothing sibilant comes back.
   size           0.6
@@ -63,7 +57,7 @@ patch Dark family=tone
   predelay       25 ms
   mix            0.32
 
-patch Bright family=tone
+patch Bright family=room
   # The other way: hard surfaces, nothing absorbed, and the tail keeps every
   # bit of the top it was given. Unkind to cymbals on purpose.
   size           0.55
@@ -71,6 +65,167 @@ patch Bright family=tone
   tone           16000 Hz
   predelay       12 ms
   mix            0.3
+
+patch Plate family=plate
+  # A bright plate, dense and smooth, with no room around it: the classic
+  # thing to put on a snare or a voice.
+  model          #1
+  size           0.45
+  damp           0.15
+  tone           12000 Hz
+  predelay       15 ms
+  mix            0.25
+
+patch "Vocal Plate" family=plate
+  # A little longer and a little darker, with enough predelay that the words
+  # come before their own tail.
+  model          #1
+  size           0.55
+  damp           0.3
+  tone           9000 Hz
+  predelay       35 ms
+  mix            0.25
+
+patch "Snare Plate" family=plate
+  # Short and very bright. It gives a snare a crack and a ring and is gone
+  # before the next one.
+  model          #1
+  size           0.3
+  damp           0.05
+  tone           15000 Hz
+  predelay       4 ms
+  mix            0.3
+
+patch "Long Plate" family=plate
+  # The plate let ring. Smooth enough to sit behind a pad without turning
+  # into a chord of its own.
+  model          #1
+  size           0.8
+  damp           0.35
+  tone           8000 Hz
+  predelay       25 ms
+  mix            0.3
+
+patch "Dark Plate" family=plate
+  # Most of the top taken out in the tank, so the tail is warm and the source
+  # keeps its edge.
+  model          #1
+  size           0.6
+  damp           0.75
+  tone           4500 Hz
+  predelay       20 ms
+  mix            0.3
+
+patch "Small Hall" family=hall
+  # A hall at the small end: early reflections close behind the note and a
+  # short tail.
+  model          #2
+  size           0.3
+  damp           0.35
+  tone           8000 Hz
+  predelay       12 ms
+  mix            0.25
+
+patch "Concert Hall" family=hall
+  # The middle of the range. The lows hang on a little longer than the rest,
+  # as they do in a real hall.
+  model          #2
+  size           0.55
+  damp           0.45
+  tone           7000 Hz
+  predelay       25 ms
+  mix            0.3
+
+patch "Big Hall" family=hall
+  # Long and soft, with the reflections spread wide. The one for strings.
+  model          #2
+  size           0.8
+  damp           0.5
+  tone           6000 Hz
+  predelay       40 ms
+  mix            0.35
+
+patch "Warm Hall" family=hall
+  # A hall with heavy curtains: the highs die early and the lows carry on.
+  model          #2
+  size           0.65
+  damp           0.8
+  tone           3500 Hz
+  predelay       30 ms
+  mix            0.32
+
+patch "Bright Hall" family=hall
+  # Stone and glass. The highs last almost as long as the lows.
+  model          #2
+  size           0.6
+  damp           0.1
+  tone           13000 Hz
+  predelay       20 ms
+  mix            0.28
+
+patch "Ducked Plate" family=space
+  # A long plate that keeps out of the way: it drops while the track plays
+  # and swells up in the gaps.
+  model          #1
+  size           0.7
+  damp           0.3
+  tone           9000 Hz
+  predelay       20 ms
+  mix            0.4
+  duck           0.7
+  duckrel        400 ms
+
+patch "Ducked Hall" family=space
+  # A big hall under a busy part, ducked hard and slow to come back, so it
+  # fills only the pauses.
+  model          #2
+  size           0.8
+  damp           0.45
+  predelay       30 ms
+  mix            0.45
+  duck           0.9
+  duckrel        900 ms
+
+patch "Back Row" family=space
+  # The room heard from the back: the direct sound smaller and further off,
+  # the room louder, later and duller.
+  size           0.5
+  damp           0.4
+  predelay       10 ms
+  mix            0.3
+  distance       0.7
+  gain           3.8 dB
+
+patch "Far Hall" family=space
+  # The hall from far away, with the reflections late and quiet.
+  model          #2
+  size           0.7
+  damp           0.45
+  predelay       20 ms
+  mix            0.3
+  distance       0.85
+  gain           4.3 dB
+
+patch Bloom family=space
+  # A hall that starts thin and fills in over the first couple of seconds of
+  # a held note.
+  model          #2
+  size           0.75
+  damp           0.4
+  predelay       20 ms
+  mix            0.4
+  bloom          0.8
+
+patch "Slow Plate" family=space
+  # A plate that grows: each phrase comes in nearly dry and its tail swells
+  # up behind it.
+  model          #1
+  size           0.65
+  damp           0.25
+  tone           10000 Hz
+  predelay       15 ms
+  mix            0.4
+  bloom          1.0
 
 patch Gated family=gate
   # The tail cut off flat instead of decaying. A big room and a short gate is
@@ -92,7 +247,17 @@ patch "Snare Gate" family=gate
   predelay       5 ms
   mix            0.6
 
-patch Freeze family=hold
+patch "Gated Plate" family=gate
+  # The gate on a plate: a dense bright burst behind each hit, cut short.
+  model          #1
+  size           0.75
+  damp           0.1
+  tone           12000 Hz
+  gate           0.12
+  predelay       5 ms
+  mix            0.5
+
+patch Freeze family=shimmer
   # Held. The tail stops decaying and stays exactly where it was until you let
   # go - not a long reverb, an infinite one, and the difference is that this
   # one does not get quieter.
