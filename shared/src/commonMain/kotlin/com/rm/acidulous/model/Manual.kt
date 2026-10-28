@@ -1396,23 +1396,42 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "On the master, go gentle: 2:1, with 2-3 dB of reduction on the loud parts."),
     ))
 
-    private fun en4_5() = ManualSection("Delay", "Echoes on a note value, and it can duck while you play.", listOf(
+    private fun en4_5() = ManualSection("Deesser", "Turns down a band when it gets too loud: an s, a cymbal.", listOf(
+        ManualBlock(ManualKind.Para, "Listens to a band of frequencies and turns it down when it goes over the threshold. Made for the hiss of an s on a voice, and just as good on harsh cymbals."),
+        ManualBlock(ManualKind.Heading, "The controls"),
+        ManualBlock(ManualKind.Bullet, "**freq** - the middle of the band, 2 to 12 kHz."),
+        ManualBlock(ManualKind.Bullet, "**threshold** - where the band starts to come down."),
+        ManualBlock(ManualKind.Bullet, "**range** - the most it comes down."),
+        ManualBlock(ManualKind.Bullet, "**mode** - **split** turns down only the band. **wide** turns down the whole sound, which is gentler on a voice with a lot of air."),
+        ManualBlock(ManualKind.Bullet, "**listen** - plays only the band, so you can find where the s sits."),
+        ManualBlock(ManualKind.Bullet, "**relative** *(extra)* - measures the band against the rest of the sound instead of against full level, so a quiet line and a loud one are treated the same. The threshold is then how far under the rest the band can come up: an s is nearly all band, a vowel has it 20 dB or more down. Try -10."),
+        ManualBlock(ManualKind.Bullet, "**gain** - the output level."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "Turn on **listen**, move **freq** until the s is loudest, then turn **listen** off."),
+        ManualBlock(ManualKind.Bullet, "With **relative** on, the singer can move off the microphone and it still catches the same s."),
+    ))
+
+    private fun en4_6() = ManualSection("Delay", "Echoes on a note value, in four modes, and it can duck while you play.", listOf(
         ManualBlock(ManualKind.Para, "A delay timed to the song. **time** is a note value, so a dotted-eighth delay stays a dotted eighth when the tempo changes."),
         ManualBlock(ManualKind.Heading, "The controls"),
-        ManualBlock(ManualKind.Bullet, "**time** - the gap between echoes, from 1/32 to a whole bar, including dotted and triplet values."),
+        ManualBlock(ManualKind.Bullet, "**time** - the gap between echoes, from 1/32 to a whole bar, including dotted values."),
         ManualBlock(ManualKind.Bullet, "**feedback** - how much of each echo is fed back in, up to 0.95."),
         ManualBlock(ManualKind.Bullet, "**tone** - a low-pass on the echoes, so each repeat is duller than the last."),
-        ManualBlock(ManualKind.Bullet, "**pingpong** - how much the echoes bounce between left and right."),
+        ManualBlock(ManualKind.Bullet, "**mode** - how the echoes come back: - **normal** - an echo on each side. - **ping-pong** - the echoes bounce between left and right. - **multi-tap** - two to four echoes inside the time, spread from left to right. Only the last one feeds back. - **reverse** - each stretch of **time** is played backwards. With feedback, the next pass plays forwards again.", "**mode** - how the echoes come back: - **normal** - an echo on each side. - **ping-pong** - the echoes bounce between left and right. - **multi-click** - two to four echoes inside the time, spread from left to right. Only the last one feeds back. - **reverse** - each stretch of **time** is played backwards. With feedback, the next pass plays forwards again."),
+        ManualBlock(ManualKind.Bullet, "**taps** - how many echoes multi-tap puts inside the time, 2 to 4.", "**clicks** - how many echoes multi-click puts inside the time, 2 to 4."),
+        ManualBlock(ManualKind.Bullet, "**spacing** - where the taps sit: in the middle they're even, down bunches them early and up bunches them late, toward the full time.", "**spacing** - where the clicks sit: in the middle they're even, down bunches them early and up bunches them late, toward the full time."),
         ManualBlock(ManualKind.Bullet, "**mix** - how much of the echo you hear."),
         ManualBlock(ManualKind.Bullet, "**duck** *(extra)* - turns the echoes down while the dry sound plays and brings them back in the gaps."),
         ManualBlock(ManualKind.Bullet, "**wobble** *(extra)* - makes the delay time drift slowly like a tape machine. A little warms it up, and more detunes the echoes."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Bring **tone** down to a few kHz so long feedback fades into the background instead of piling up."),
         ManualBlock(ManualKind.Bullet, "Use **duck** instead of lowering the mix to stop the delay swamping a part."),
+        ManualBlock(ManualKind.Bullet, "Reverse on a quarter or a half note swells into each beat. A reverse stretch starts when the song starts, so it stays on the beat. One longer than 1.5 seconds (a bar at 120) plays back in halves."),
+        ManualBlock(ManualKind.Bullet, "Three even taps in a quarter is a triplet; four taps over a half note repeats every eighth.", "Three even clicks in a quarter is a triplet; four clicks over a half note repeats every eighth."),
         ManualBlock(ManualKind.Bullet, "On a send the delay is always fully wet, and each track's send slider sets how much goes to it."),
     ))
 
-    private fun en4_6() = ManualSection("Distortion", "Four kinds of clipping and a bias control.", listOf(
+    private fun en4_7() = ManualSection("Distortion", "Four kinds of clipping and a bias control.", listOf(
         ManualBlock(ManualKind.Para, "Drive into clipping, with a tone control after it."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**drive** - how hard the signal is pushed, 1 to 40."),
@@ -1426,7 +1445,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "This one isn't oversampled like Amp is, so it has some rough edges on purpose."),
     ))
 
-    private fun en4_7() = ManualSection("Eq", "Three bands and a tilt.", listOf(
+    private fun en4_8() = ManualSection("Eq", "Three bands and a tilt.", listOf(
         ManualBlock(ManualKind.Para, "A low shelf, a sweepable mid band and a high shelf."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**lowgain** and **lowfreq** - a shelf up to 15 dB either way, from 40 to 500 Hz."),
@@ -1440,7 +1459,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Try **tilt** first when something sounds too dark or too thin."),
     ))
 
-    private fun en4_8() = ManualSection("Filter", "Low, band or high pass, moved by an LFO, the signal's level or another track.", listOf(
+    private fun en4_9() = ManualSection("Filter", "Low, band or high pass, moved by an LFO, the signal's level or another track.", listOf(
         ManualBlock(ManualKind.Para, "A resonant filter that can move on its own, in time with the song or with the sound going through it."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**cutoff** - 20 Hz to 20 kHz."),
@@ -1457,7 +1476,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For a dubstep wobble, put it after a thick bass and start from a **wobble** patch. A wobble talks by changing speed: lock **lforate** on the steps (1/4, 1/8, 1/8T, 1/16), or map it to a knob or the mod wheel and play it. Distortion after it makes it gnarly. Trinity's **Wobble** and **Wub** bass patches have the same thing built in, on LFO 1's **sync**."),
     ))
 
-    private fun en4_9() = ManualSection("Flanger", "A short sweeping delay, with negative feedback for the hollow sound.", listOf(
+    private fun en4_10() = ManualSection("Flanger", "A short sweeping delay, with negative feedback for the hollow sound.", listOf(
         ManualBlock(ManualKind.Para, "One very short delay, swept and mixed back with the dry sound."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**rate** - the sweep speed, as a note value."),
@@ -1472,7 +1491,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "A slow rate and small depth on a send adds some movement to a mix."),
     ))
 
-    private fun en4_10() = ManualSection("Formula", "Type a formula and it shapes the track, a sample at a time.", listOf(
+    private fun en4_11() = ManualSection("Formula", "Type a formula and it shapes the track, a sample at a time.", listOf(
         ManualBlock(ManualKind.Para, "Formula uses the same small language as the Formulate machine: whole numbers and the operators of C (`+ - * / % & | ^ << >>`, comparisons, `? :`) and `sin`, `abs`, `min` and `max`. The track comes in as `x`, from 0 to 255 with silence at 128. Whatever the formula gives, taken as 0 to 255, goes out. So `x` on its own is the track cut to eight bits, and everything else bends it from there."),
         ManualBlock(ManualKind.Para, "Tap **edit…** above the knobs to write one, or pick an example to start from. The formula is only applied when you press OK, and if it can't be read the reason shows in red. With no formula the track passes through untouched.", "Click **edit…** above the knobs to write one, or pick an example to start from. The formula is only applied when you press OK, and if it can't be read the reason shows in red. With no formula the track passes through untouched."),
         ManualBlock(ManualKind.Heading, "What a formula can read"),
@@ -1493,7 +1512,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The output is always within full scale, but it can be harsh: start with **mix** low or **smooth** down."),
     ))
 
-    private fun en4_11() = ManualSection("Gate", "A noise gate, with a filter on what it listens to and a sidechain.", listOf(
+    private fun en4_12() = ManualSection("Gate", "A noise gate, with a filter on what it listens to and a sidechain.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**threshold** - the level it opens at, -80 to 0 dB."),
         ManualBlock(ManualKind.Bullet, "**hyst** - how far below the threshold the signal has to drop before it closes, up to 24 dB, so it doesn't flicker on a note near the threshold."),
@@ -1511,7 +1530,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Before an amp it removes the pickup's hiss, and after it the amp's. On an input slot it cleans up the recording itself."),
     ))
 
-    private fun en4_12() = ManualSection("Grain", "A cloud of short slices of what the track just played.", listOf(
+    private fun en4_13() = ManualSection("Grain", "A cloud of short slices of what the track just played.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**size** - how long each grain is, 5 to 500 ms."),
         ManualBlock(ManualKind.Bullet, "**density** - how many grains start a second, 1 to 100."),
@@ -1530,7 +1549,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**feedback** with **pitch** at +7 makes a cloud that climbs in fifths."),
     ))
 
-    private fun en4_13() = ManualSection("Harmonizer", "Adds two voices at scale steps, so they stay in key.", listOf(
+    private fun en4_14() = ManualSection("Harmonizer", "Adds two voices at scale steps, so they stay in key.", listOf(
         ManualBlock(ManualKind.Para, "A pitch shifter that knows the key. You set the intervals in scale steps instead of semitones, so a third comes out major or minor depending on the note, like a real harmony part."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**interval** and **interval2** - the two added voices, -7 to +7 scale steps."),
@@ -1546,7 +1565,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Two steps with feedback stacks up a chord."),
     ))
 
-    private fun en4_14() = ManualSection("Horn", "The track plays a wind instrument.", listOf(
+    private fun en4_15() = ManualSection("Horn", "The track plays a wind instrument.", listOf(
         ManualBlock(ManualKind.Para, "Horn listens for the pitch of the track and how loud it is, and plays the same line on a horn, a clarinet, an oboe or a flute: the level becomes the breath. It follows one note at a time, so give it a lead, a bass line or a voice. Sing into an input track and you play a trumpet."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**kind** - **brass**, **clarinet** (a single reed), **oboe** (a double reed) or **flute** (an air jet)."),
@@ -1565,7 +1584,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "If it wobbles between notes, raise **glide** or switch **snap** to **semi**."),
     ))
 
-    private fun en4_15() = ManualSection("Magneto", "The sound of a small recordable disc, in each of its formats.", listOf(
+    private fun en4_16() = ManualSection("Magneto", "The sound of a small recordable disc, in each of its formats.", listOf(
         ManualBlock(ManualKind.Para, "Those discs held more than they had room for by throwing away what the ear was least likely to miss, and each format threw away more than the last. Magneto does the same: the track is cut into short frames, each split into bands, and each frame has only so many bits to spend."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**mode** - the format: - **SP** - the original. The top stays nearly all the way up, with a fine grain through the mids and highs. - **LP2** - half the bits. The top is cut a little below 16 kHz, it turns grainy and hits smear a little. - **LP4** - half again, with left and right sharing their bits. The highs flicker in and out above the cut at 14 kHz, quiet high detail disappears, and the upper mids narrow almost to mono. - **HQ** - the later high-rate format. The cleanest, nearly clear. - **XLP** - the later format at its lowest rate, between LP2 and LP4."),
@@ -1579,7 +1598,24 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Turn **mix** down for the grit without losing the top."),
     ))
 
-    private fun en4_16() = ManualSection("Mouth", "Diction's throat on any track: it shapes whatever goes through into a vowel.", listOf(
+    private fun en4_17() = ManualSection("Midside", "The middle and the sides, each with its own level and tilt.", listOf(
+        ManualBlock(ManualKind.Para, "Splits the sound into what both sides share (the middle) and how they differ (the sides), works on each, and puts them back. A mono track has no sides, so only the middle's controls act on it."),
+        ManualBlock(ManualKind.Heading, "The controls"),
+        ManualBlock(ManualKind.Bullet, "**width** - 0 is mono, 1 is unchanged and 2 is twice as wide."),
+        ManualBlock(ManualKind.Bullet, "**mid** - the middle's level."),
+        ManualBlock(ManualKind.Bullet, "**side** - the sides' level."),
+        ManualBlock(ManualKind.Bullet, "**midtilt** - leans the middle brighter or darker, around 650 Hz."),
+        ManualBlock(ManualKind.Bullet, "**sidetilt** - the same for the sides."),
+        ManualBlock(ManualKind.Bullet, "**mono** - takes the sides out below this frequency, so the bass sits in the middle. At the bottom of its range it's off."),
+        ManualBlock(ManualKind.Bullet, "**breathe** *(extra)* - the sides drop while the middle is loud and open up in the gaps, so a part goes narrow when it plays and wide as it rings."),
+        ManualBlock(ManualKind.Bullet, "**gain** - the output level."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "**sidetilt** up with a little more **width** opens the top of a mix without making the bass wider."),
+        ManualBlock(ManualKind.Bullet, "**side** down and **mid** up puts a lead in front of everything else."),
+        ManualBlock(ManualKind.Bullet, "**breathe** on a pad or a reverb return keeps the middle clear for the part on top."),
+    ))
+
+    private fun en4_18() = ManualSection("Mouth", "Diction's throat on any track: it shapes whatever goes through into a vowel.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**vowel** - oo, oh, ah, eh, ee from bottom to top."),
         ManualBlock(ManualKind.Bullet, "**size** - the throat's size, big and dark to small and bright."),
@@ -1596,7 +1632,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Slow **lfo** sweeps from oo to ah sound like a wah played by a voice."),
     ))
 
-    private fun en4_17() = ManualSection("Phaser", "Two to eight stages.", listOf(
+    private fun en4_19() = ManualSection("Phaser", "Two to eight stages.", listOf(
         ManualBlock(ManualKind.Para, "Sweeping notches from a chain of allpass filters. The notches aren't evenly spaced like a flanger's, which gives a phaser its own sound."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**rate** - the sweep speed, as a note value."),
@@ -1611,7 +1647,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "A slow phaser on a send adds movement without being noticeable."),
     ))
 
-    private fun en4_18() = ManualSection("Resonator", "Strings tuned to a key, ringing in sympathy with the track.", listOf(
+    private fun en4_20() = ManualSection("Resonator", "Strings tuned to a key, ringing in sympathy with the track.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**key** and **scale** - the strings' key. Set them to the song's."),
         ManualBlock(ManualKind.Bullet, "**low** - the lowest string, as a note. The strings climb the scale from the first note of the key at or above it."),
@@ -1629,7 +1665,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Put it on a send, so several tracks set the same strings ringing."),
     ))
 
-    private fun en4_19() = ManualSection("Reverb", "A room that can also freeze, gate, shimmer or crush itself.", listOf(
+    private fun en4_21() = ManualSection("Reverb", "A room that can also freeze, gate, shimmer or crush itself.", listOf(
         ManualBlock(ManualKind.Para, "A reverb with the usual size, damping and predelay, plus some extras."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**size** - how big the space is."),
@@ -1648,7 +1684,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Put **bits** and **crush** on a send for a lo-fi copy of the mix behind the clean one."),
     ))
 
-    private fun en4_20() = ManualSection("Rotary", "The organ's rotating speaker cabinet, for any track.", listOf(
+    private fun en4_22() = ManualSection("Rotary", "The organ's rotating speaker cabinet, for any track.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**speed** - brake, slow or fast."),
         ManualBlock(ManualKind.Bullet, "**slow** - how fast the horn turns at slow, 0.1 to 2 Hz."),
@@ -1667,7 +1703,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "With **tempo** on, a pad pulses in time with no LFO to set up."),
     ))
 
-    private fun en4_21() = ManualSection("Shifter", "Frequency shifting, for metallic and detuned sounds.", listOf(
+    private fun en4_23() = ManualSection("Shifter", "Frequency shifting, for metallic and detuned sounds.", listOf(
         ManualBlock(ManualKind.Para, "A frequency shifter moves every harmonic of a sound up or down by the same number of hertz, so the sound stops being in tune with itself. A pitch shifter keeps them in proportion instead."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**shift** - -500 to +500 Hz. Small amounts are the most useful."),
@@ -1681,7 +1717,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Feedback with a small shift turns a hit into a rising metallic ladder."),
     ))
 
-    private fun en4_22() = ManualSection("Slicer", "The track cut on the tempo, some slices repeated, reversed or dropped.", listOf(
+    private fun en4_24() = ManualSection("Slicer", "The track cut on the tempo, some slices repeated, reversed or dropped.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**rate** - the slice: a quarter, eighth, sixteenth or thirty-second note."),
         ManualBlock(ManualKind.Bullet, "**chance** - how likely a slice is to change."),
@@ -1697,7 +1733,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "With **chance** at 0, **gate** alone chops a pad in time."),
     ))
 
-    private fun en4_23() = ManualSection("Smash", "Three bands, each squashed from above and lifted from below.", listOf(
+    private fun en4_25() = ManualSection("Smash", "Three bands, each squashed from above and lifted from below.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**depth** - how much of it is mixed in with the track as it was. A little adds density; all of it brings every tail and breath up to the level of the hits."),
         ManualBlock(ManualKind.Bullet, "**time** - scales every band's attack and release together. Slow is smooth, fast pumps and grinds."),
@@ -1714,7 +1750,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Fast **time** with **in** turned up grinds a bass into a snarl."),
     ))
 
-    private fun en4_24() = ManualSection("Spectral", "The track taken apart into its frequencies and put back together.", listOf(
+    private fun en4_26() = ManualSection("Spectral", "The track taken apart into its frequencies and put back together.", listOf(
         ManualBlock(ManualKind.Para, "About forty times a second, Spectral splits the sound into its frequencies, changes them, and puts it back. With nothing turned, what comes out is what went in."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**freeze** *(extra)* - **hold** keeps the sound as it is at that moment, a chord or a vowel that goes on for as long as it's held. **run** lets go."),
@@ -1732,7 +1768,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Ice** on a pad or a piano leaves a glassy shimmer of its loudest notes."),
     ))
 
-    private fun en4_25() = ManualSection("Swell", "Upward compression: the quiet parts come up to meet the loud ones, in one band or three.", listOf(
+    private fun en4_27() = ManualSection("Swell", "Upward compression: the quiet parts come up to meet the loud ones, in one band or three.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**floor** - everything louder than this is brought up, -80 to 0 dB. Anything more than 12 dB under it is left exactly as it is, so the hiss and hum at the bottom of a recording stay where they were."),
         ManualBlock(ManualKind.Bullet, "**ceiling** - the level everything above the floor is pulled toward, -30 to 0 dB. A sound already over the ceiling is brought down to it."),
@@ -1750,7 +1786,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Set **ceiling** a few dB under the master limiter's so the two don't fight."),
     ))
 
-    private fun en4_26() = ManualSection("Tape", "A worn tape machine, and a stop button.", listOf(
+    private fun en4_28() = ManualSection("Tape", "A worn tape machine, and a stop button.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**wow** - slow wandering in the speed, and so the pitch."),
         ManualBlock(ManualKind.Bullet, "**flutter** - fast wobble in the speed."),
@@ -1768,7 +1804,21 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Seasick** on keys and pads makes them drift out of tune."),
     ))
 
-    private fun en4_27() = ManualSection("Tremolo", "Volume on an LFO, or auto-pan.", listOf(
+    private fun en4_29() = ManualSection("Transient", "The start of each hit and the ring after it, up or down.", listOf(
+        ManualBlock(ManualKind.Para, "Shapes each hit by its own movement rather than its level, so there's no threshold to set: a quiet hit and a loud one are shaped the same."),
+        ManualBlock(ManualKind.Heading, "The controls"),
+        ManualBlock(ManualKind.Bullet, "**attack** - up brings the start of each hit forward, for snap and crack. Down softens it, as if it were further away."),
+        ManualBlock(ManualKind.Bullet, "**sustain** - up brings out the ring after each hit, the room and the body. Down tightens it and dries it out."),
+        ManualBlock(ManualKind.Bullet, "**time** - how long counts as the start of a hit and as its ring. Short catches only the click, long the whole hit."),
+        ManualBlock(ManualKind.Bullet, "**split** *(extra)* - only what's above this frequency is shaped. At the bottom of its range the whole sound is."),
+        ManualBlock(ManualKind.Bullet, "**gain** - the output level."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "On a drum loop, set **split** to 1 or 2 kHz and turn up **attack**: the hats and snare snap and the kick stays as it was."),
+        ManualBlock(ManualKind.Bullet, "Turning **attack** up raises the peaks, so turn **gain** down to match."),
+        ManualBlock(ManualKind.Bullet, "**sustain** down on a roomy recording takes the room out."),
+    ))
+
+    private fun en4_30() = ManualSection("Tremolo", "Volume on an LFO, or auto-pan.", listOf(
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**rate** - the pulse speed, as a note value."),
         ManualBlock(ManualKind.Bullet, "**depth** - how deep each dip goes. At full, the sound cuts out between pulses."),
@@ -1781,7 +1831,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Try **pan** around a third of the way for movement that never sits on one side."),
     ))
 
-    private fun en4_28() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
+    private fun en4_31() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
         ManualBlock(ManualKind.Para, "Controls the stereo image."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**width** - 0 is mono, 1 is unchanged and 2 is twice as wide. Anything in the centre stays in the centre."),
@@ -1796,10 +1846,10 @@ object Manual {
     private fun en4() = ManualSection("Effects and mixing", "", listOf(
         ManualBlock(ManualKind.Heading, "Inserts"),
         ManualBlock(ManualKind.Para, "Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in the editor's bottom bar shows them in place of the machine panel. A patch's own effects only go in FX1 and FX2, so FX3 and FX4 are always yours."),
-        ManualBlock(ManualKind.Para, "There are twenty-nine effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
+        ManualBlock(ManualKind.Para, "There are thirty-two effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
         ManualBlock(ManualKind.Para, "Each effect has its own page below."),
         ManualBlock(ManualKind.Heading, "Time"),
-        ManualBlock(ManualKind.Bullet, "**Delay** - echoes on a note value, and it can duck while you play."),
+        ManualBlock(ManualKind.Bullet, "**Delay** - echoes on a note value: normal, ping-pong, multi-tap or reverse, and it can duck while you play.", "**Delay** - echoes on a note value: normal, ping-pong, multi-click or reverse, and it can duck while you play."),
         ManualBlock(ManualKind.Bullet, "**Reverb** - a room that can also freeze, gate, shimmer or crush itself down to 8 bits."),
         ManualBlock(ManualKind.Bullet, "**Grain** - a cloud of short slices of what the track just played, which can freeze."),
         ManualBlock(ManualKind.Bullet, "**Tape** - a worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop."),
@@ -1808,6 +1858,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Eq** - three bands and a tilt."),
         ManualBlock(ManualKind.Bullet, "**Filter** - low, band or high pass, moved by an LFO, the signal's level or another track."),
         ManualBlock(ManualKind.Bullet, "**Width** - wider, narrower, mono below a frequency or rotated."),
+        ManualBlock(ManualKind.Bullet, "**Midside** - the middle and the sides, each with its own level and tilt, and sides that open in the gaps."),
         ManualBlock(ManualKind.Bullet, "**Acid** - the acid bass filter on any track, opened by each note or by a pattern on the beat."),
         ManualBlock(ManualKind.Bullet, "**Mouth** - vowels, moved by an LFO, the track's level or another track."),
         ManualBlock(ManualKind.Bullet, "**Spectral** - freeze, blur, smear or robotise the track's frequencies."),
@@ -1822,6 +1873,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Gate** - a noise gate that another track can open."),
         ManualBlock(ManualKind.Bullet, "**Swell** - upward compression, in one band or three: the quiet parts come up to meet the loud ones."),
         ManualBlock(ManualKind.Bullet, "**Smash** - three bands squashed from both sides: loud parts down, quiet parts up."),
+        ManualBlock(ManualKind.Bullet, "**Transient** - the start of each hit and the ring after it, up or down."),
+        ManualBlock(ManualKind.Bullet, "**Deesser** - turns down a band when it gets too loud: an s, a cymbal."),
         ManualBlock(ManualKind.Heading, "Movement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** - two to four detuned voices that drift."),
         ManualBlock(ManualKind.Bullet, "**Flanger** - a short sweeping delay, with negative feedback for the hollow sound."),
@@ -1948,6 +2001,9 @@ object Manual {
         en4_26(),
         en4_27(),
         en4_28(),
+        en4_29(),
+        en4_30(),
+        en4_31(),
     ))
 
     private fun en5() = ManualSection("Modifiers", "", listOf(
@@ -3574,23 +3630,42 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Sur la sortie principale, allez-y doucement : 2:1, avec 2-3 dB de réduction sur les passages forts."),
     ))
 
-    private fun fr4_5() = ManualSection("Delay", "Des échos sur une valeur de note, qui peuvent s’atténuer pendant que vous jouez.", listOf(
+    private fun fr4_5() = ManualSection("Deesser", "Baisse une bande quand elle devient trop forte : un s, une cymbale.", listOf(
+        ManualBlock(ManualKind.Para, "Écoute une bande de fréquences et la baisse quand elle passe le seuil. Fait pour le sifflement d’un s sur une voix, et tout aussi bon sur des cymbales dures."),
+        ManualBlock(ManualKind.Heading, "Les réglages"),
+        ManualBlock(ManualKind.Bullet, "**fréq.** : le milieu de la bande, de 2 à 12 kHz."),
+        ManualBlock(ManualKind.Bullet, "**seuil** : là où la bande commence à baisser."),
+        ManualBlock(ManualKind.Bullet, "**plage** : de combien elle baisse au plus."),
+        ManualBlock(ManualKind.Bullet, "**mode** : **partage** ne baisse que la bande. **large** baisse tout le son, ce qui est plus doux sur une voix avec beaucoup d’air."),
+        ManualBlock(ManualKind.Bullet, "**écouter** : ne joue que la bande, pour trouver où se trouve le s."),
+        ManualBlock(ManualKind.Bullet, "**relatif** *(extra)* : mesure la bande par rapport au reste du son plutôt qu’au niveau maximal, donc une phrase douce et une forte sont traitées pareil. Le seuil devient alors de combien la bande peut monter sous le reste : un s est presque tout en bande, une voyelle l’a 20 dB plus bas ou plus. Essayez -10."),
+        ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Heading, "Astuces"),
+        ManualBlock(ManualKind.Bullet, "Activez **écouter**, déplacez **fréq.** jusqu’à ce que le s soit le plus fort, puis coupez **écouter**."),
+        ManualBlock(ManualKind.Bullet, "Avec **relatif**, la voix peut s’éloigner du micro et il attrape toujours le même s."),
+    ))
+
+    private fun fr4_6() = ManualSection("Delay", "Des échos sur une valeur de note, en quatre modes, qui peuvent s’atténuer pendant que vous jouez.", listOf(
         ManualBlock(ManualKind.Para, "Un delay calé sur le morceau. **temps** est une valeur de note, donc un delay à la croche pointée reste à la croche pointée quand le tempo change."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
-        ManualBlock(ManualKind.Bullet, "**temps** : l’écart entre les échos, de 1/32 à une mesure entière, avec les valeurs pointées et en triolet."),
+        ManualBlock(ManualKind.Bullet, "**temps** : l’écart entre les échos, de 1/32 à une mesure entière, avec les valeurs pointées."),
         ManualBlock(ManualKind.Bullet, "**réinjection** : la part de chaque écho renvoyée dedans, jusqu’à 0,95."),
         ManualBlock(ManualKind.Bullet, "**ton** : un passe-bas sur les échos, donc chaque répétition est plus sourde que la précédente."),
-        ManualBlock(ManualKind.Bullet, "**ping-pong** : à quel point les échos rebondissent entre la gauche et la droite."),
+        ManualBlock(ManualKind.Bullet, "**mode** : comment les échos reviennent : - **normal** : un écho de chaque côté. - **ping-pong** : les échos rebondissent entre la gauche et la droite. - **multi-têtes** : deux à quatre échos dans le temps, répartis de gauche à droite. Seul le dernier est réinjecté. - **inverser** : chaque tranche de **temps** est jouée à l’envers. Avec de la réinjection, le passage suivant repart à l’endroit."),
+        ManualBlock(ManualKind.Bullet, "**têtes** : combien d’échos le mode multi-têtes place dans le temps, de 2 à 4."),
+        ManualBlock(ManualKind.Bullet, "**écart** : où tombent les têtes : au milieu elles sont régulières, plus bas elles se serrent au début et plus haut vers la fin du temps."),
         ManualBlock(ManualKind.Bullet, "**mélange** : la part d’écho que vous entendez."),
         ManualBlock(ManualKind.Bullet, "**atténuer** *(extra)* : baisse les échos pendant que le son direct joue et les ramène dans les silences."),
         ManualBlock(ManualKind.Bullet, "**oscillation** *(extra)* : fait dériver lentement le temps du delay comme un magnétophone. Un peu le réchauffe, et plus désaccorde les échos."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Descendez **ton** à quelques kHz pour qu’une longue réinjection se fonde dans le fond au lieu de s’empiler."),
         ManualBlock(ManualKind.Bullet, "Utilisez **atténuer** au lieu de baisser le mélange pour que le delay n’écrase pas une partie."),
+        ManualBlock(ManualKind.Bullet, "À l’envers sur une noire ou une blanche, le delay monte vers chaque temps. Une tranche inversée part du début du morceau, donc elle reste sur le temps. Une tranche de plus de 1,5 seconde (une mesure à 120) est jouée par moitiés."),
+        ManualBlock(ManualKind.Bullet, "Trois têtes régulières dans une noire font un triolet; quatre têtes sur une blanche répètent chaque croche."),
         ManualBlock(ManualKind.Bullet, "Sur un envoi, le delay est toujours 100 % traité, et le curseur d’envoi de chaque piste règle combien lui arrive."),
     ))
 
-    private fun fr4_6() = ManualSection("Distortion", "Quatre sortes d’écrêtage et un réglage de polarisation.", listOf(
+    private fun fr4_7() = ManualSection("Distortion", "Quatre sortes d’écrêtage et un réglage de polarisation.", listOf(
         ManualBlock(ManualKind.Para, "Une saturation jusqu’à l’écrêtage, avec un réglage de ton après."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**satur.** : à quel point le signal est poussé, de 1 à 40."),
@@ -3604,7 +3679,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Celle-ci n’est pas suréchantillonnée comme Amp, donc elle a quelques aspérités, exprès."),
     ))
 
-    private fun fr4_7() = ManualSection("Eq", "Trois bandes et une pente.", listOf(
+    private fun fr4_8() = ManualSection("Eq", "Trois bandes et une pente.", listOf(
         ManualBlock(ManualKind.Para, "Un plateau grave, une bande médium réglable et un plateau aigu."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**gain grave** et **fréq. grave** : un plateau jusqu’à 15 dB dans un sens ou dans l’autre, de 40 à 500 Hz."),
@@ -3618,7 +3693,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Essayez **pente** en premier quand quelque chose sonne trop sombre ou trop mince."),
     ))
 
-    private fun fr4_8() = ManualSection("Filter", "Passe-bas, passe-bande ou passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.", listOf(
+    private fun fr4_9() = ManualSection("Filter", "Passe-bas, passe-bande ou passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.", listOf(
         ManualBlock(ManualKind.Para, "Un filtre résonant qui peut bouger tout seul, en mesure avec le morceau ou avec le son qui le traverse."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**coupure** : de 20 Hz à 20 kHz."),
@@ -3635,7 +3710,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour un wobble dubstep, mettez-le après une basse épaisse et partez d’un son **wobble**. Un wobble parle en changeant de vitesse : verrouillez **vit. lfo** sur les pas (1/4, 1/8, 1/8T, 1/16), ou assignez-le à un bouton ou à la molette de modulation et jouez-le. Une distorsion après le rend plus méchant. Les sons de basse **Wobble** et **Wub** de Trinity ont la même chose intégrée, sur le **sync** du LFO 1."),
     ))
 
-    private fun fr4_9() = ManualSection("Flanger", "Un court délai qui balaie, avec une réinjection négative pour le son creux.", listOf(
+    private fun fr4_10() = ManualSection("Flanger", "Un court délai qui balaie, avec une réinjection négative pour le son creux.", listOf(
         ManualBlock(ManualKind.Para, "Un seul délai très court, balayé et mélangé au son direct."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**vitesse** : la vitesse du balayage, en valeur de note."),
@@ -3650,7 +3725,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Une vitesse lente et une petite profondeur sur un envoi donnent un peu de mouvement à un mixage."),
     ))
 
-    private fun fr4_10() = ManualSection("Formula", "Tapez une formule et elle façonne la piste, échantillon par échantillon.", listOf(
+    private fun fr4_11() = ManualSection("Formula", "Tapez une formule et elle façonne la piste, échantillon par échantillon.", listOf(
         ManualBlock(ManualKind.Para, "Formula emploie le même petit langage que la machine Formulate : des nombres entiers et les opérateurs du C (`+ - * / % & | ^ << >>`, comparaisons, `? :`) et `sin`, `abs`, `min` et `max`. La piste entre comme `x`, de 0 à 255, le silence à 128. Ce que la formule donne, pris de 0 à 255, ressort. Ainsi `x` seul, c’est la piste réduite à huit bits, et tout le reste la tord à partir de là."),
         ManualBlock(ManualKind.Para, "Touchez **modifier…** au-dessus des boutons pour en écrire une, ou choisissez un exemple pour commencer. La formule n’est appliquée que quand vous appuyez sur OK, et si elle ne peut pas être lue, la raison s’affiche en rouge. Sans formule, la piste passe intacte.", "Cliquez **modifier…** au-dessus des boutons pour en écrire une, ou choisissez un exemple pour commencer. La formule n’est appliquée que quand vous appuyez sur OK, et si elle ne peut pas être lue, la raison s’affiche en rouge. Sans formule, la piste passe intacte."),
         ManualBlock(ManualKind.Heading, "Ce qu’une formule peut lire"),
@@ -3671,7 +3746,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La sortie reste toujours sous le plein niveau, mais elle peut être dure : commencez avec **mélange** bas ou **lisse** baissé."),
     ))
 
-    private fun fr4_11() = ManualSection("Gate", "Une porte de bruit, avec un filtre sur ce qu’elle écoute et une entrée latérale.", listOf(
+    private fun fr4_12() = ManualSection("Gate", "Une porte de bruit, avec un filtre sur ce qu’elle écoute et une entrée latérale.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**seuil** : le niveau où elle s’ouvre, de -80 à 0 dB."),
         ManualBlock(ManualKind.Bullet, "**hyst.** : de combien le signal doit descendre sous le seuil avant qu’elle se ferme, jusqu’à 24 dB, pour qu’elle ne clignote pas sur une note proche du seuil."),
@@ -3689,7 +3764,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Avant un ampli, elle enlève le souffle du micro de guitare, et après, celui de l’ampli. Sur un emplacement d’entrée, elle nettoie l’enregistrement lui-même."),
     ))
 
-    private fun fr4_12() = ManualSection("Grain", "Un nuage de courtes tranches de ce que la piste vient de jouer.", listOf(
+    private fun fr4_13() = ManualSection("Grain", "Un nuage de courtes tranches de ce que la piste vient de jouer.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**taille** : la longueur de chaque grain, de 5 à 500 ms."),
         ManualBlock(ManualKind.Bullet, "**densité** : combien de grains commencent par seconde, de 1 à 100."),
@@ -3708,7 +3783,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**réinjection** avec **hauteur** à +7 donne un nuage qui monte par quintes."),
     ))
 
-    private fun fr4_13() = ManualSection("Harmonizer", "Ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.", listOf(
+    private fun fr4_14() = ManualSection("Harmonizer", "Ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.", listOf(
         ManualBlock(ManualKind.Para, "Un décaleur de hauteur qui connaît la tonalité. Vous réglez les intervalles en degrés de la gamme plutôt qu’en demi-tons, donc une tierce sort majeure ou mineure selon la note, comme une vraie partie d’harmonie."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**intervalle** et **intervalle2** : les deux voix ajoutées, de -7 à +7 degrés."),
@@ -3724,7 +3799,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Deux degrés avec de la réinjection empilent un accord."),
     ))
 
-    private fun fr4_14() = ManualSection("Horn", "La piste joue d’un instrument à vent.", listOf(
+    private fun fr4_15() = ManualSection("Horn", "La piste joue d’un instrument à vent.", listOf(
         ManualBlock(ManualKind.Para, "Horn écoute la hauteur de la piste et son volume, et joue la même ligne sur un cuivre, une clarinette, un hautbois ou une flûte : le niveau devient le souffle. Il suit une note à la fois : donnez-lui une mélodie, une ligne de basse ou une voix. Chantez dans une piste d’entrée et vous jouez de la trompette."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**type** : **laiton** (un cuivre), **clarinette** (une anche simple), **hautbois** (une anche double) ou **flûte** (un biseau)."),
@@ -3743,7 +3818,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "S’il hésite entre deux notes, montez **porta.** ou passez **aimant** sur **demi-ton**."),
     ))
 
-    private fun fr4_15() = ManualSection("Magneto", "Le son d’un petit disque enregistrable, dans chacun de ses formats.", listOf(
+    private fun fr4_16() = ManualSection("Magneto", "Le son d’un petit disque enregistrable, dans chacun de ses formats.", listOf(
         ManualBlock(ManualKind.Para, "Ces disques contenaient plus qu’ils n’avaient de place en jetant ce que l’oreille risquait le moins de regretter, et chaque format en jetait plus que le précédent. Magneto fait de même : la piste est coupée en trames courtes, chacune divisée en bandes, et chaque trame n’a que tant de bits à dépenser."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**mode** : le format : - **SP** : l’original. Le haut reste presque entier, avec un grain fin dans les médiums et les aigus. - **LP2** : moitié moins de bits. Le haut est coupé un peu sous 16 kHz, il devient granuleux et les coups bavent un peu. - **LP4** : encore moitié moins, la gauche et la droite partageant leurs bits. Les aigus vont et viennent sous la coupure à 14 kHz, les détails aigus discrets disparaissent et le haut-médium se resserre presque en mono. - **HQ** : le format plus récent à haut débit. Le plus propre, presque transparent. - **XLP** : le format plus récent à son débit le plus bas, entre LP2 et LP4."),
@@ -3757,7 +3832,24 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Baissez **mélange** pour garder le grain sans perdre le haut."),
     ))
 
-    private fun fr4_16() = ManualSection("Mouth", "La gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.", listOf(
+    private fun fr4_17() = ManualSection("Midside", "Le centre et les côtés, chacun avec son niveau et sa pente.", listOf(
+        ManualBlock(ManualKind.Para, "Sépare le son en ce que les deux côtés ont en commun (le centre) et ce qui les distingue (les côtés), traite chacun et les remet ensemble. Une piste mono n’a pas de côtés, donc seuls les réglages du centre agissent dessus."),
+        ManualBlock(ManualKind.Heading, "Les réglages"),
+        ManualBlock(ManualKind.Bullet, "**Width** : 0 est mono, 1 ne change rien et 2 est deux fois plus large."),
+        ManualBlock(ManualKind.Bullet, "**centre** : le niveau du centre."),
+        ManualBlock(ManualKind.Bullet, "**côtés** : le niveau des côtés."),
+        ManualBlock(ManualKind.Bullet, "**pente centre** : rend le centre plus brillant ou plus sombre, autour de 650 Hz."),
+        ManualBlock(ManualKind.Bullet, "**pente côtés** : la même chose pour les côtés."),
+        ManualBlock(ManualKind.Bullet, "**mono** : enlève les côtés sous cette fréquence, pour que les basses restent au centre. Tout en bas, c’est coupé."),
+        ManualBlock(ManualKind.Bullet, "**respirer** *(extra)* : les côtés baissent quand le centre est fort et s’ouvrent dans les silences, donc une partie se resserre quand elle joue et s’élargit quand elle résonne."),
+        ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Heading, "Astuces"),
+        ManualBlock(ManualKind.Bullet, "**pente côtés** vers le haut avec un peu plus de **Width** ouvre le haut d’un mix sans élargir les basses."),
+        ManualBlock(ManualKind.Bullet, "**côtés** vers le bas et **centre** vers le haut met une mélodie devant tout le reste."),
+        ManualBlock(ManualKind.Bullet, "**respirer** sur une nappe ou un retour de réverbération garde le centre libre pour la partie du dessus."),
+    ))
+
+    private fun fr4_18() = ManualSection("Mouth", "La gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**voyelle** : ou, o, a, è, i du bas vers le haut."),
         ManualBlock(ManualKind.Bullet, "**taille** : la taille de la gorge, grande et sombre à petite et brillante."),
@@ -3774,7 +3866,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Un balayage lent de ou à a sonne comme une wah jouée par une voix."),
     ))
 
-    private fun fr4_17() = ManualSection("Phaser", "Deux à huit étages.", listOf(
+    private fun fr4_19() = ManualSection("Phaser", "Deux à huit étages.", listOf(
         ManualBlock(ManualKind.Para, "Des creux qui balaient, faits d’une chaîne de filtres passe-tout. Les creux ne sont pas espacés régulièrement comme ceux d’un flanger, ce qui donne au phaser son propre son."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**vitesse** : la vitesse du balayage, en valeur de note."),
@@ -3789,7 +3881,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Un phaser lent sur un envoi ajoute du mouvement sans se faire remarquer."),
     ))
 
-    private fun fr4_18() = ManualSection("Resonator", "Des cordes accordées dans une tonalité, qui résonnent avec la piste.", listOf(
+    private fun fr4_20() = ManualSection("Resonator", "Des cordes accordées dans une tonalité, qui résonnent avec la piste.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**tonalité** et **gamme** : la tonalité des cordes. Réglez-les sur celles du morceau."),
         ManualBlock(ManualKind.Bullet, "**grave** : la corde la plus grave, en note. Les cordes montent la gamme à partir de la première note de la tonalité à ce niveau ou au-dessus."),
@@ -3807,7 +3899,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Mettez-le sur un envoi : plusieurs pistes font résonner les mêmes cordes."),
     ))
 
-    private fun fr4_19() = ManualSection("Reverb", "Une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.", listOf(
+    private fun fr4_21() = ManualSection("Reverb", "Une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.", listOf(
         ManualBlock(ManualKind.Para, "Une réverbération avec la taille, l’amortissement et le prédélai habituels, plus quelques extras."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**taille** : la grandeur de l’espace."),
@@ -3826,7 +3918,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Mettez **bits** et **écraser** sur un envoi pour une copie lo-fi du mixage derrière la version propre."),
     ))
 
-    private fun fr4_20() = ManualSection("Rotary", "La cabine à haut-parleur tournant de l’orgue, pour n’importe quelle piste.", listOf(
+    private fun fr4_22() = ManualSection("Rotary", "La cabine à haut-parleur tournant de l’orgue, pour n’importe quelle piste.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**vitesse** : frein, lent ou rapide."),
         ManualBlock(ManualKind.Bullet, "**lent** : la vitesse du pavillon en lent, de 0,1 à 2 Hz."),
@@ -3845,7 +3937,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Avec **tempo**, une nappe pulse en rythme sans LFO à régler."),
     ))
 
-    private fun fr4_21() = ManualSection("Shifter", "Un décalage de fréquence, pour des sons métalliques et désaccordés.", listOf(
+    private fun fr4_23() = ManualSection("Shifter", "Un décalage de fréquence, pour des sons métalliques et désaccordés.", listOf(
         ManualBlock(ManualKind.Para, "Un décaleur de fréquence monte ou descend chaque harmonique d’un son du même nombre de hertz, donc le son n’est plus juste avec lui-même. Un décaleur de hauteur, lui, garde leurs proportions."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**décalage** : de -500 à +500 Hz. Les petites valeurs sont les plus utiles."),
@@ -3859,7 +3951,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La réinjection avec un petit décalage change un coup en échelle métallique qui monte."),
     ))
 
-    private fun fr4_22() = ManualSection("Slicer", "La piste coupée sur le tempo, certaines tranches répétées, inversées ou omises.", listOf(
+    private fun fr4_24() = ManualSection("Slicer", "La piste coupée sur le tempo, certaines tranches répétées, inversées ou omises.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**vitesse** : la tranche : une noire, une croche, une double ou une triple croche."),
         ManualBlock(ManualKind.Bullet, "**proba** : la probabilité qu’une tranche change."),
@@ -3875,7 +3967,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Avec **proba** à 0, **gate** seul hache une nappe en rythme."),
     ))
 
-    private fun fr4_23() = ManualSection("Smash", "Trois bandes, chacune écrasée par le haut et relevée par le bas.", listOf(
+    private fun fr4_25() = ManualSection("Smash", "Trois bandes, chacune écrasée par le haut et relevée par le bas.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**prof.** : la part mélangée à la piste telle qu’elle était. Un peu ajoute de la densité; tout remonte chaque queue et chaque souffle au niveau des coups."),
         ManualBlock(ManualKind.Bullet, "**temps** : règle ensemble l’attaque et la relâche de chaque bande. Lent, c’est doux; rapide, ça pompe et ça grince."),
@@ -3892,7 +3984,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Un **temps** rapide avec **entrée** montée fait grogner une basse."),
     ))
 
-    private fun fr4_24() = ManualSection("Spectral", "La piste décomposée en fréquences et remise ensemble.", listOf(
+    private fun fr4_26() = ManualSection("Spectral", "La piste décomposée en fréquences et remise ensemble.", listOf(
         ManualBlock(ManualKind.Para, "Environ quarante fois par seconde, Spectral sépare le son en ses fréquences, les modifie et le reconstruit. Sans rien tourner, ce qui sort est ce qui est entré."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**figer** *(extra)* : **tenir** garde le son tel qu’il est à cet instant, un accord ou une voyelle qui dure tant qu’il est tenu. **marche** le relâche."),
@@ -3910,7 +4002,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Ice** sur une nappe ou un piano laisse un scintillement vitreux de ses notes les plus fortes."),
     ))
 
-    private fun fr4_25() = ManualSection("Swell", "Une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.", listOf(
+    private fun fr4_27() = ManualSection("Swell", "Une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**plancher** : tout ce qui est plus fort que ce niveau est remonté, de -80 à 0 dB. Ce qui est plus de 12 dB en dessous reste exactement comme avant, donc le souffle et le ronflement au fond d’un enregistrement ne bougent pas."),
         ManualBlock(ManualKind.Bullet, "**plafond** : le niveau vers lequel tout ce qui dépasse le plancher est tiré, de -30 à 0 dB. Un son déjà au-dessus du plafond est ramené à lui."),
@@ -3928,7 +4020,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Réglez **plafond** quelques dB sous celui du limiteur du master pour qu’ils ne se battent pas."),
     ))
 
-    private fun fr4_26() = ManualSection("Tape", "Un magnétophone usé, et un bouton d’arrêt.", listOf(
+    private fun fr4_28() = ManualSection("Tape", "Un magnétophone usé, et un bouton d’arrêt.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**wow** : une dérive lente de la vitesse, et donc de la hauteur."),
         ManualBlock(ManualKind.Bullet, "**flutter** : un tremblement rapide de la vitesse."),
@@ -3946,7 +4038,21 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Seasick** sur des claviers et des nappes les fait dériver."),
     ))
 
-    private fun fr4_27() = ManualSection("Tremolo", "Le volume sur un LFO, ou un panoramique automatique.", listOf(
+    private fun fr4_29() = ManualSection("Transient", "Le début de chaque coup et la résonance après, plus fort ou plus doux.", listOf(
+        ManualBlock(ManualKind.Para, "Façonne chaque coup selon son mouvement plutôt que son niveau, donc il n’y a pas de seuil à régler : un coup doux et un coup fort sont traités pareil."),
+        ManualBlock(ManualKind.Heading, "Les réglages"),
+        ManualBlock(ManualKind.Bullet, "**attaque** : vers le haut, le début de chaque coup ressort, pour du claquant. Vers le bas, il s’adoucit, comme plus loin."),
+        ManualBlock(ManualKind.Bullet, "**maintien** : vers le haut, la résonance après chaque coup ressort, la salle et le corps. Vers le bas, il se resserre et s’assèche."),
+        ManualBlock(ManualKind.Bullet, "**temps** : combien de temps compte comme le début d’un coup et comme sa résonance. Court ne prend que le clic, long le coup entier."),
+        ManualBlock(ManualKind.Bullet, "**partage** *(extra)* : seul ce qui est au-dessus de cette fréquence est façonné. Tout en bas, tout le son l’est."),
+        ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Heading, "Astuces"),
+        ManualBlock(ManualKind.Bullet, "Sur une boucle de batterie, réglez **partage** vers 1 ou 2 kHz et montez **attaque** : les charleys et la caisse claire claquent et la grosse caisse reste comme elle était."),
+        ManualBlock(ManualKind.Bullet, "Monter **attaque** fait monter les crêtes, donc baissez **gain** en conséquence."),
+        ManualBlock(ManualKind.Bullet, "**maintien** vers le bas sur un enregistrement avec beaucoup de salle enlève la salle."),
+    ))
+
+    private fun fr4_30() = ManualSection("Tremolo", "Le volume sur un LFO, ou un panoramique automatique.", listOf(
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**vitesse** : la vitesse des pulsations, en valeur de note."),
         ManualBlock(ManualKind.Bullet, "**prof.** : la profondeur de chaque creux. À fond, le son se coupe entre les pulsations."),
@@ -3959,7 +4065,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Essayez **pano** vers le tiers pour un mouvement qui ne s’arrête jamais d’un côté."),
     ))
 
-    private fun fr4_28() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
+    private fun fr4_31() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
         ManualBlock(ManualKind.Para, "Règle l’image stéréo."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**largeur** : 0 est mono, 1 ne change rien et 2 est deux fois plus large. Ce qui est au centre reste au centre."),
@@ -3974,10 +4080,10 @@ object Manual {
     private fun fr4() = ManualSection("Effets et mixage", "", listOf(
         ManualBlock(ManualKind.Heading, "Insertions"),
         ManualBlock(ManualKind.Para, "Chaque piste a quatre emplacements d’effet en insertion, joués dans l’ordre de FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place du panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc FX3 et FX4 sont toujours à vous."),
-        ManualBlock(ManualKind.Para, "Il y a vingt-neuf effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
+        ManualBlock(ManualKind.Para, "Il y a trente-deux effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
         ManualBlock(ManualKind.Para, "Chaque effet a sa propre page ci-dessous."),
         ManualBlock(ManualKind.Heading, "Temps"),
-        ManualBlock(ManualKind.Bullet, "**Delay** : des échos sur une valeur de note, qui peuvent s’atténuer pendant que vous jouez."),
+        ManualBlock(ManualKind.Bullet, "**Delay** : des échos sur une valeur de note, normaux, en ping-pong, à plusieurs têtes ou à l’envers, qui peuvent s’atténuer pendant que vous jouez."),
         ManualBlock(ManualKind.Bullet, "**Reverb** : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser jusqu’à 8 bits."),
         ManualBlock(ManualKind.Bullet, "**Grain** : un nuage de courtes tranches de ce que la piste vient de jouer, qui peut se figer."),
         ManualBlock(ManualKind.Bullet, "**Tape** : un magnétophone usé, avec pleurage, scintillement, saturation et souffle, et un interrupteur qui le ralentit jusqu’à l’arrêt."),
@@ -3986,6 +4092,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Eq** : trois bandes et une pente."),
         ManualBlock(ManualKind.Bullet, "**Filter** : passe-bas, passe-bande ou passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste."),
         ManualBlock(ManualKind.Bullet, "**Width** : plus large, plus étroit, mono sous une fréquence ou tourné."),
+        ManualBlock(ManualKind.Bullet, "**Midside** : le centre et les côtés, chacun avec son niveau et sa pente, et des côtés qui s’ouvrent dans les silences."),
         ManualBlock(ManualKind.Bullet, "**Acid** : le filtre de la basse acid sur n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps."),
         ManualBlock(ManualKind.Bullet, "**Mouth** : des voyelles, déplacées par un LFO, le niveau de la piste ou une autre piste."),
         ManualBlock(ManualKind.Bullet, "**Spectral** : fige, étire, brouille ou robotise les fréquences de la piste."),
@@ -4000,6 +4107,8 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Gate** : une porte de bruit qu’une autre piste peut ouvrir."),
         ManualBlock(ManualKind.Bullet, "**Swell** : une compression vers le haut, sur une bande ou trois. Les passages doux montent rejoindre les forts."),
         ManualBlock(ManualKind.Bullet, "**Smash** : trois bandes écrasées des deux côtés. Les passages forts descendent, les doux montent."),
+        ManualBlock(ManualKind.Bullet, "**Transient** : le début de chaque coup et la résonance après, plus fort ou plus doux."),
+        ManualBlock(ManualKind.Bullet, "**Deesser** : baisse une bande quand elle devient trop forte : un s, une cymbale."),
         ManualBlock(ManualKind.Heading, "Mouvement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** : deux à quatre voix désaccordées qui dérivent."),
         ManualBlock(ManualKind.Bullet, "**Flanger** : un court délai qui balaie, avec une réinjection négative pour le son creux."),
@@ -4126,6 +4235,9 @@ object Manual {
         fr4_26(),
         fr4_27(),
         fr4_28(),
+        fr4_29(),
+        fr4_30(),
+        fr4_31(),
     ))
 
     private fun fr5() = ManualSection("Les modificateurs", "", listOf(

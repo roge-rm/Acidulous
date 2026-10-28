@@ -42,7 +42,8 @@
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) : moins de bits et une fréquence d’échantillonnage plus basse, avec une horloge instable si vous voulez.
     - [Chorus](05-effects-and-mixing/chorus.md) : deux à quatre voix désaccordées qui dérivent.
     - [Compressor](05-effects-and-mixing/compressor.md) : les réglages habituels, une entrée latérale de n’importe quelle piste et un pompage calé sur le tempo.
-    - [Delay](05-effects-and-mixing/delay.md) : des échos sur une valeur de note, qui peuvent s’atténuer pendant que vous jouez.
+    - [Deesser](05-effects-and-mixing/deesser.md) : baisse une bande quand elle devient trop forte : un s, une cymbale.
+    - [Delay](05-effects-and-mixing/delay.md) : des échos sur une valeur de note, en quatre modes, qui peuvent s’atténuer pendant que vous jouez.
     - [Distortion](05-effects-and-mixing/distortion.md) : quatre sortes d’écrêtage et un réglage de polarisation.
     - [Eq](05-effects-and-mixing/eq.md) : trois bandes et une pente.
     - [Filter](05-effects-and-mixing/filter.md) : passe-bas, passe-bande ou passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.
@@ -53,6 +54,7 @@
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) : ajoute deux voix à des degrés de la gamme, pour qu’elles restent dans la tonalité.
     - [Horn](05-effects-and-mixing/horn.md) : la piste joue d’un instrument à vent.
     - [Magneto](05-effects-and-mixing/magneto.md) : le son d’un petit disque enregistrable, dans chacun de ses formats.
+    - [Midside](05-effects-and-mixing/midside.md) : le centre et les côtés, chacun avec son niveau et sa pente.
     - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.
@@ -64,6 +66,7 @@
     - [Spectral](05-effects-and-mixing/spectral.md) : la piste décomposée en fréquences et remise ensemble.
     - [Swell](05-effects-and-mixing/swell.md) : une compression vers le haut : les passages doux montent rejoindre les forts, sur une bande ou trois.
     - [Tape](05-effects-and-mixing/tape.md) : un magnétophone usé, et un bouton d’arrêt.
+    - [Transient](05-effects-and-mixing/transient.md) : le début de chaque coup et la résonance après, plus fort ou plus doux.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.
 6. [Les modificateurs](06-modifiers.md)

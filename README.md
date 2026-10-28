@@ -72,7 +72,7 @@ There are 31 machines. Each has patches to start from and a [manual page](manual
 | Diction | A vocal synthesizer trained on your voice. |
 | Nexus | A modular synth built from the other machines. |
 
-There are 29 effects, including filters, distortion, amps, dynamics, delays, reverb, modulation, pitch and frequency shifting, granular and spectral processing. Some follow the tempo, the signal or another track. Each has its own page in the manual.
+There are 32 effects, including filters, distortion, amps, dynamics, delays, reverb, modulation, pitch and frequency shifting, granular and spectral processing. Some follow the tempo, the signal or another track. Each has its own page in the manual.
 
 ### Mixing
 

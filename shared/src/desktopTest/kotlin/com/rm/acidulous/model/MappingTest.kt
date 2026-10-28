@@ -180,7 +180,7 @@ class MappingTest {
         assertEquals(0.7f, now.sendAt(0).params["size"]!!, 1e-3f)
         assertEquals(0.3f, now.sendAt(0).params["damp"]!!, 1e-3f)
         assertEquals(0.5f, now.sendAt(1).params["feedback"]!!, 1e-3f)
-        assertEquals(0f, now.sendAt(1).params["pingpong"]!!, 0f)
+        assertEquals(0f, now.sendAt(1).params["mode"]!!, 0f)
         // The old fields are cleared, so migrating twice does nothing more.
         assertEquals(now, now.migrated())
     }
