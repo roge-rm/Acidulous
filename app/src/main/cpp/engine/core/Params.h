@@ -95,6 +95,18 @@ class ParamSet {
         norm[index] = v01;
         smooth[index].jump(defs[index].map(v01));
     }
+    /**
+     * Steers the smoother to the knob's value plus [off01] (normalised),
+     * leaving the knob where it is. An insert's mod slot calls it each block
+     * before tick(); an offset of 0 puts the knob back on its own value.
+     */
+    void offset(int32_t index, float off01, bool jumpNow) {
+        if (index < 0 || index >= count) return;
+        float v = norm[index] + off01;
+        v = v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
+        if (jumpNow) smooth[index].jump(defs[index].map(v));
+        else smooth[index].set(defs[index].map(v));
+    }
     void jumpAll() {
         for (int32_t i = 0; i < count; ++i) smooth[i].jump(defs[i].map(norm[i]));
     }

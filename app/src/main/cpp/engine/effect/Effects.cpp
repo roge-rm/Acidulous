@@ -601,7 +601,7 @@ void Filter::prepare(int32_t sampleRate) {
     for (auto &s : svf) s.setSampleRate(sr);
     reset();
 }
-void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; fcSet = resoSet = -1.0f; }
+void Filter::reset() { for (auto &s : svf) s.reset(); follower = 0.0f; fcSet = resoSet = -1.0f; cutoffWas = -1.0f; }
 
 bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
@@ -612,6 +612,11 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float inc = Lfo::phaseInc(beats, bpm, sr);
     const float atk = dsp::onePoleCoeff(0.004f, sr), rel = dsp::onePoleCoeff(0.12f, sr);
     const int chans = stereoIn ? 2 : 1;
+    // The cutoff walks from last block's to this one's across the block's
+    // coefficient updates, so a moving knob or a mod slot doesn't step it once a block.
+    const float from = cutoffWas > 0.0f ? cutoffWas : cutoff;
+    const float walk = std::log2(cutoff / from) * 16.0f / static_cast<float>(frames > 0 ? frames : 1);
+    cutoffWas = cutoff;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         // The follower listens to the sidechain if there is one, so a negative
@@ -625,7 +630,7 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
             // Both modulators move the cutoff in octaves: the LFO up to +-3, the
             // follower up to 4 (an auto-wah when positive, a duck when negative).
             const float octaves = lfoDepth * 3.0f * Lfo::triangle(phase) + envDepth * 4.0f * clampf(follower, 0.0f, 1.0f);
-            const float fc = cutoff * std::exp2(octaves);
+            const float fc = from * std::exp2(octaves + walk * static_cast<float>((i >> 4) + 1));
             if (fc != fcSet || reso != resoSet) {
                 fcSet = fc;
                 resoSet = reso;

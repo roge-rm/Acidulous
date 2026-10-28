@@ -126,6 +126,7 @@ class Filter final : public Effect {
     dsp::Svf svf[2];
     float follower = 0.0f, sr = 48000.0f, bpm = 120.0f;
     float fcSet = -1.0f, resoSet = -1.0f; // what the filters were last solved for
+    float cutoffWas = -1.0f;               // last block's cutoff, -1 after a reset
     int64_t tick = 0;
 };
 

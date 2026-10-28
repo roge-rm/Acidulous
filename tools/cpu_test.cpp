@@ -22,6 +22,7 @@
 #include <engine/core/Settings.h>
 #include <engine/dsp/Denormals.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/effect/SlotMod.h>
 #include <engine/core/Frozen.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/diction/Diction.h>
@@ -278,7 +279,7 @@ std::pair<long, long> residentKb() {
  * in resident memory, so run one case per process for the peak to mean
  * anything.
  */
-Result timeInserts(const std::string &machine, const std::string &fx, int32_t perRack, int32_t racks) {
+Result timeInserts(const std::string &machine, const std::string &fx, int32_t perRack, int32_t racks, bool mod = false) {
     Result r;
     r.name = std::to_string(racks) + "x" + std::to_string(perRack) + " " + (fx.empty() ? "empty" : fx);
     const auto before = residentKb();
@@ -291,6 +292,16 @@ Result timeInserts(const std::string &machine, const std::string &fx, int32_t pe
             Effect *e = EffectRegistry::create(fx.c_str());
             if (e == nullptr) return r;
             e->prepare(kSr); e->reset(); e->params().jumpAll();
+            if (mod) {
+                // A sine at 1/16 on its first two knobs, half depth each way.
+                const auto at = [](int32_t k) { return kSlotModIndexBase - k; };
+                e->setParamAt(at(slotmod::Rate), 2.0f / (dsp::Lfo::kRates - 1));
+                e->setParamAt(at(slotmod::Target1), 1.0f / kSlotModTargets);
+                e->setParamAt(at(slotmod::Depth1), 0.75f);
+                e->setParamAt(at(slotmod::Target2), 2.0f / kSlotModTargets);
+                e->setParamAt(at(slotmod::Depth2), 0.25f);
+                e->setParamAt(at(slotmod::Source), 1.0f / (slotmod::SourceCount - 1));
+            }
             rack->swapEffect(sl, e);
         }
         set.push_back(std::move(rack));
@@ -848,9 +859,12 @@ int main(int argc, char **argv) {
         const int32_t perRack = argc > 3 ? std::atoi(argv[3]) : kEffectSlots;
         const int32_t racks = argc > 4 ? std::atoi(argv[4]) : kRackCount;
         const std::string machine = argc > 5 ? argv[5] : "Reflux";
+        // "mod" as the sixth: every insert's mod slot on, an LFO on two knobs.
+        const bool mod = argc > 6 && std::string(argv[6]) == "mod";
         printf("%d racks of %s, %d slots each, %d holding %s\n\n", racks, machine.c_str(), kEffectSlots, perRack,
                fx.empty() ? "nothing" : fx.c_str());
-        rows.push_back(timeInserts(machine, fx, fx.empty() ? 0 : perRack, racks));
+        if (mod) printf("every insert's mod on: a 1/16 sine on its first two knobs\n\n");
+        rows.push_back(timeInserts(machine, fx, fx.empty() ? 0 : perRack, racks, mod));
         report(rows);
         return 0;
     }

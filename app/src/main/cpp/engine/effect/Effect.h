@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstring>
 #include <engine/core/Params.h>
+#include "SlotMod.h"
 
 // An insert effect in a rack slot. Same lifecycle rules as Machine.
 namespace acidulous {
@@ -33,9 +34,17 @@ class Effect {
     virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
     ParamSet &params() { return params_; }
 
-    // What the rack calls: bypass short-circuits, params are ticked here.
+    // What the rack calls once a block before run(): the mod slot's clock, then the effect's.
+    void block(int64_t tickStart, int64_t tickEnd, float bpm) {
+        if (mod_.active()) mod_.block(tickStart, tickEnd, bpm);
+        onBlock(tickStart, tickEnd, bpm);
+    }
+
+    // What the rack calls: bypass short-circuits, the mod offsets its
+    // targets, params are ticked here.
     bool run(float *L, float *R, int32_t frames, bool stereoIn) {
         if (bypass_) return stereoIn;
+        if (mod_.active()) mod_.apply(L, R, frames, stereoIn, params_);
         params_.tick();
         const bool stereo = process(L, R, frames, stereoIn);
         applyGain(L, R, frames, stereo || stereoIn);
@@ -45,6 +54,40 @@ class Effect {
     // Bypass keeps state (a delay's tail survives being switched back on).
     void setBypass(bool on) { bypass_ = on; }
     bool bypassed() const { return bypass_; }
+
+    /**
+     * Any of the slot's parameters by index: the effect's own, bypass
+     * (kEffectBypassIndex) or the mod slot's (isSlotModIndex). [jump] is a
+     * step lock's: no glide.
+     */
+    void setParamAt(int32_t index, float v01, bool jump = false) {
+        if (index == kEffectBypassIndex) {
+            setBypass(v01 >= 0.5f);
+        } else if (isSlotModIndex(index)) {
+            mod_.set(kSlotModIndexBase - index, v01, &params_);
+        } else if (jump) {
+            params_.jump(index, v01);
+            if (mod_.targets(index)) mod_.jumpNext();
+        } else {
+            params_.set(index, v01);
+        }
+    }
+    /** The normalised value setParamAt last set, or -1 for an index the slot hasn't got. */
+    float normalizedAt(int32_t index) const {
+        if (index == kEffectBypassIndex) return bypass_ ? 1.0f : 0.0f;
+        if (isSlotModIndex(index)) return mod_.normalized(kSlotModIndexBase - index);
+        if (index < 0 || index >= params_.size()) return -1.0f;
+        return params_.normalized(index);
+    }
+    /** After reset() on a panic or a render's start: the mod starts from the top too. */
+    void resetMod() { mod_.reset(); }
+    /**
+     * The track a keyed mod follows (0-based), or -1. The engine hands its
+     * sound over with setModKey before the block.
+     */
+    int32_t modKeyTrack() const { return mod_.keyTrack(); }
+    void setModKey(const float *key, uint32_t seed) { mod_.setKey(key, seed); }
+    bool modActive() const { return mod_.active(); }
 
     /**
      * The rack this effect's detector listens to, e.g. a compressor on the
@@ -124,6 +167,7 @@ class Effect {
   protected:
     ParamSet params_;
     bool bypass_ = false;
+    SlotMod mod_;
 };
 
 } // namespace acidulous

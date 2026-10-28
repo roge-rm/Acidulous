@@ -43,6 +43,7 @@ echo "--- mounttype"; "$ROOT/tools/mount_type_test.sh" | tail -2 || fail=1
 echo "--- machinefree"; "$ROOT/tools/machine_free_test.sh" | tail -2 || fail=1
 echo "--- sweep"; "$ROOT/tools/param_sweep.sh" | tail -1 || fail=1
 echo "--- render"; "$ROOT/tools/render_test.sh" | tail -2 || fail=1
+echo "--- insert mods"; "$ROOT/tools/insert_mod_test.sh" | tail -2 || fail=1
 echo "--- loudness"; "$ROOT/tools/loudness_test.sh" | tail -2 || fail=1
 echo "--- perform"; "$ROOT/tools/perform_test.sh" | tail -2 || fail=1
 echo "--- modsource"; "$ROOT/tools/modsource_test.sh" | tail -2 || fail=1
