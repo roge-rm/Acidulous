@@ -7,7 +7,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.BeforeClass
+import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
@@ -22,6 +25,11 @@ class CoreMidiTest {
     companion object {
         private var midi: CoreMidi? = null
 
+        // CoreMIDI calls can wait on the MIDI server with no limit. These fail
+        // the class or test with the stuck thread's stack rather than hang CI.
+        @ClassRule @JvmField
+        val classTimeout: Timeout = Timeout.builder().withTimeout(60, TimeUnit.SECONDS).withLookingForStuckThread(true).build()
+
         @BeforeClass @JvmStatic
         fun openLoop() {
             if (!onMac) return
@@ -30,6 +38,9 @@ class CoreMidiTest {
             check(CoreMidiNative.nativeLoopback("Acidulous Loop")) { "no loopback" }
         }
     }
+
+    @get:Rule
+    val timeout: Timeout = Timeout.builder().withTimeout(15, TimeUnit.SECONDS).withLookingForStuckThread(true).build()
 
     private fun loop(): CoreMidi {
         assumeTrue("macOS only", onMac)
@@ -48,7 +59,8 @@ class CoreMidiTest {
         val latch = CountDownLatch(1)
         var opened: MidiOpenDevice? = null
         midi.openDevice(desc!!) { opened = it; latch.countDown() }
-        assertTrue(latch.await(2, TimeUnit.SECONDS))
+        assertTrue("the loopback didn't open within 2 seconds", latch.await(2, TimeUnit.SECONDS))
+        assertNotNull("the loopback couldn't be opened", opened)
         return opened!!
     }
 
@@ -86,7 +98,7 @@ class CoreMidiTest {
         device.connectOutputPort(0) { _, _, _, _ -> arrived += System.nanoTime() }
         val at = System.nanoTime() + 80_000_000L
         device.openInputPort(0)!!.send(byteArrayOf(0x80.toByte(), 60, 0), 0, 3, at)
-        val got = arrived.poll(2, TimeUnit.SECONDS)!!
+        val got = arrived.poll(2, TimeUnit.SECONDS) ?: throw AssertionError("nothing came back within 2 seconds")
         assertTrue("arrived ${(at - got) / 1_000_000} ms early", got >= at - 2_000_000L)
         device.close()
     }

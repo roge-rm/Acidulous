@@ -160,3 +160,21 @@ internal fun awtKeyFor(code: Int): Int? = when (code) {
     KeyCodes.KEYCODE_ENTER -> Awt.VK_ENTER
     else -> AWT_TO_ANDROID.entries.firstOrNull { it.value == code }?.key
 }
+
+/**
+ * The shortcut a Mac menu item shows for an action bound to [chords]: the
+ * first with Cmd, else the first with Ctrl, or null. Cmd is [KeyChord.ctrl]
+ * and Ctrl [KeyChord.meta] here, and the other way round in AWT's.
+ *
+ * Option and plain keys are never shown: a key a menu shows never reaches a
+ * text field as typing, and those keys type characters.
+ */
+fun macMenuShortcut(chords: List<KeyChord>): androidx.compose.ui.input.key.KeyShortcut? {
+    val chord = chords.firstOrNull { it.ctrl && awtKeyFor(it.key) != null }
+        ?: chords.firstOrNull { it.meta && awtKeyFor(it.key) != null }
+        ?: return null
+    return androidx.compose.ui.input.key.KeyShortcut(
+        Key(awtKeyFor(chord.key)!!),
+        ctrl = chord.meta, meta = chord.ctrl, alt = chord.alt, shift = chord.shift,
+    )
+}

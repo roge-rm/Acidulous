@@ -160,6 +160,8 @@ fun main(args: Array<String>) {
             override fun moved(device: String, axes: List<com.rm.acidulous.ui.Pad.Axis>) =
                 com.rm.acidulous.ui.PadEvents.moved(device, axes)
         })
+        // Run as an AppImage: its menu entry and file type, like the package's.
+        AppImageDesktop.installSoon()
     }
     // Desktops don't filter multicast, so Link needs no lock.
     LinkHub.multicastLock = null
@@ -214,9 +216,9 @@ fun main(args: Array<String>) {
                         }
                     }
                     true
-                } else previewKey(it)
+                } else previewKey(it).also { used -> if (used && it.type == KeyEventType.KeyDown) lastKeyTaken = System.nanoTime() }
             },
-            onKeyEvent = { fallbackKey(it) },
+            onKeyEvent = { e -> fallbackKey(e).also { used -> if (used && e.type == KeyEventType.KeyDown) lastKeyTaken = System.nanoTime() } },
         ) {
             // The screen scale if one is chosen (Settings > display) sets the
             // density, and the app's own size setting applies on top. See

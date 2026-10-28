@@ -182,14 +182,6 @@ fun MainScreen(
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
-    // Settings or About from outside the app's own menu (a Mac's app menu).
-    androidx.compose.runtime.LaunchedEffect(com.rm.acidulous.Incoming.window) {
-        when (com.rm.acidulous.Incoming.window ?: return@LaunchedEffect) {
-            com.rm.acidulous.AppWindow.Settings -> dialog = Dialog.Settings
-            com.rm.acidulous.AppWindow.About -> dialog = Dialog.About
-        }
-        com.rm.acidulous.Incoming.window = null
-    }
     if (freezeStatus != null) {
         // Modal because the audio stream is down while a render runs.
         PlainDialog(title = stringResource(Res.string.main_freezing), onDismiss = {}, dismissLabel = "") {
@@ -505,10 +497,10 @@ fun MainScreen(
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_share_song)) }, onClick = { fileMenu = false; onShareSong() })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_midi)) }, onClick = { fileMenu = false; dialog = Dialog.Midi })
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_sound)) }, onClick = { fileMenu = false; dialog = Dialog.Sound })
-                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { fileMenu = false; dialog = Dialog.Settings })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { fileMenu = false; com.rm.acidulous.Incoming.window = com.rm.acidulous.AppWindow.Settings })
                         // Help goes above About.
                         DropdownMenuItem(text = { Text(stringResource(Res.string.main_help)) }, onClick = { fileMenu = false; dialog = Dialog.Help })
-                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_about)) }, onClick = { fileMenu = false; dialog = Dialog.About })
+                        DropdownMenuItem(text = { Text(stringResource(Res.string.main_about)) }, onClick = { fileMenu = false; com.rm.acidulous.Incoming.window = com.rm.acidulous.AppWindow.About })
                     }
                 }
             }
@@ -1037,9 +1029,7 @@ fun MainScreen(
             startOn = RecorderPage.Library,
             inUse = song.samplesInUse(),
         )
-        Dialog.Settings -> SettingsDialog(song.tracks.map { it.name }) { dialog = null }
         Dialog.Help -> HelpDialog(onDismiss = { dialog = null })
-        Dialog.About -> AboutDialog(onDismiss = { dialog = null })
         Dialog.Quantise -> QuantiseDialog(
             current = UiPrefs.launchQuantise,
             onPick = { bars ->
@@ -1072,9 +1062,7 @@ private sealed class Dialog {
     object NewSong : Dialog()
     object Midi : Dialog()
     object Sound : Dialog()
-    object Settings : Dialog()
     object Help : Dialog()
-    object About : Dialog()
     object Quantise : Dialog()
 }
 

@@ -46,8 +46,30 @@ jobs:
       - name: Build the .dmg
         run: ./gradlew --stacktrace :desktop:macosDmg
 
+      # The tests time out by themselves (JUnit Timeout rules). If the test
+      # JVM still hangs, after 8 minutes this saves its Java and native stacks
+      # in checks/ and stops the build.
       - name: CoreMIDI and Java Sound MIDI tests
-        run: ./gradlew :desktop:test --tests 'com.rm.acidulous.desktop.CoreMidiTest' --tests 'com.rm.acidulous.desktop.JavaSoundMidiTest'
+        timeout-minutes: 12
+        run: |
+          ./gradlew :desktop:test --tests 'com.rm.acidulous.desktop.CoreMidiTest' --tests 'com.rm.acidulous.desktop.JavaSoundMidiTest' &
+          gradle=$!
+          for i in $(seq 480); do
+            kill -0 $gradle 2>/dev/null || break
+            sleep 1
+          done
+          if kill -0 $gradle 2>/dev/null; then
+            echo "the MIDI tests are still running after 8 minutes; stacks in checks/"
+            mkdir -p checks
+            for p in $(pgrep -f GradleWorkerMain); do
+              jstack $p > checks/jstack-$p.txt 2>&1 || true
+              sample $p 5 -file checks/sample-$p.txt >/dev/null 2>&1 || true
+              cat checks/jstack-$p.txt
+            done
+            kill $gradle
+            exit 1
+          fi
+          wait $gradle
 
       - name: Check the .dmg
         run: desktop/macos/check.sh desktop/build/macos/acidulous-*-macos-${{ matrix.arch }}.dmg ${{ matrix.arch }} checks
