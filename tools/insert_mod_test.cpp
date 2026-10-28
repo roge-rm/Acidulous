@@ -11,6 +11,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
@@ -317,9 +318,53 @@ void theMasterHasOne() {
     ok("an lfo on a master insert changes the mix", firstDifference(a, b) < a.size());
 }
 
+/** A 16-bit stereo WAV of an interleaved render. */
+void writeWav(const std::string &path, const std::vector<float> &x) {
+    FILE *f = std::fopen(path.c_str(), "wb");
+    if (f == nullptr) return;
+    const auto u32 = [&](uint32_t v) { std::fwrite(&v, 4, 1, f); };
+    const auto u16 = [&](uint16_t v) { std::fwrite(&v, 2, 1, f); };
+    const auto bytes = static_cast<uint32_t>(x.size() * 2);
+    std::fwrite("RIFF", 1, 4, f); u32(36 + bytes); std::fwrite("WAVEfmt ", 1, 8, f);
+    u32(16); u16(1); u16(2); u32(kSampleRate); u32(kSampleRate * 4); u16(4); u16(16);
+    std::fwrite("data", 1, 4, f); u32(bytes);
+    for (float v : x) {
+        const auto s = static_cast<int16_t>(std::lround(std::fmax(-1.0f, std::fmin(1.0f, v)) * 32767.0f));
+        std::fwrite(&s, 2, 1, f);
+    }
+    std::fclose(f);
+}
+
+/** INSERT_MOD_WAVS=folder: four seconds of each source, numbered, for listening. */
+void writeAuditions(const char *dir) {
+    printf("- auditions into %s\n", dir);
+    Mod off;
+    Mod lfo; lfo.source = slotmod::Lfo; lfo.rate = 5; lfo.depth = 0.35f;
+    Mod hold; hold.source = slotmod::Lfo; hold.shape = slotmod::RandomHold; hold.rate = 2; hold.depth = 0.35f;
+    Mod drift; drift.source = slotmod::Lfo; drift.shape = slotmod::RandomSmooth; drift.rate = 8; drift.depth = 0.4f;
+    Mod steps; steps.source = slotmod::Steps; steps.rate = 2; steps.depth = 0.4f;
+    Mod follow; follow.source = slotmod::Follow; follow.depth = 0.4f;
+    Mod duck; duck.source = slotmod::Keyed; duck.depth = -0.4f;
+    const std::pair<const char *, Mod> cases[] = {
+        {"01-off", off}, {"02-lfo-sine-eighth", lfo}, {"03-random-hold-sixteenth", hold}, {"04-drift-quarter", drift},
+        {"05-steps-sixteenth", steps}, {"06-follower", follow}, {"07-filter-closes-on-the-kick", duck},
+    };
+    for (const auto &c : cases) {
+        std::vector<float> out;
+        Fixture f(c.second);
+        f.start();
+        f.run(3000, out);
+        writeWav(std::string(dir) + "/" + c.first + ".wav", out);
+    }
+}
+
 } // namespace
 
 int main() {
+    if (const char *dir = std::getenv("INSERT_MOD_WAVS")) {
+        writeAuditions(dir);
+        return 0;
+    }
     eachSourceMovesItsTarget();
     anOffSlotIsNotThere();
     aModulatedSongRepeats();
