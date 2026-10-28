@@ -91,6 +91,7 @@ echo "--- overwrite"; "$ROOT/tools/overwrite_test.sh" | tail -2 || fail=1
 echo "--- link";  "$ROOT/tools/link_test.sh"  | tail -2 || fail=1
 # The host's beat (EngineHost::alignBeat), followed like Link.
 echo "--- hostbeat"; "$ROOT/tools/hostbeat_test.sh" | tail -2 || fail=1
+echo "--- host getters"; "$ROOT/tools/host_getters_test.sh" | tail -2 || fail=1
 echo "--- delay"; "$ROOT/tools/delay_test.sh" | tail -2 || fail=1
 echo "--- slice"; "$ROOT/tools/slice_test.sh" | tail -2 || fail=1
 echo "--- forage"; "$ROOT/tools/forage_test.sh" | tail -2 || fail=1
