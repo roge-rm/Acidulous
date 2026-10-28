@@ -81,7 +81,7 @@ class Reverb final : public Effect {
                index != Drip && index != Rate && index != Pitch && index != Stiff;
     }
     /** The track's last note, for `follow`. */
-    void onNote(int32_t note) override { heardNote = note; }
+    void onNote(int32_t note, float hz) override { heardNote = note; heardHz = hz; }
 
     /** A plain circular buffer: whole-sample reads and wrapped fractional reads. */
     struct Line {
@@ -248,6 +248,7 @@ class Reverb final : public Effect {
     float wgWas[8]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
     /** The track's last note-on, or -1 for none since reset(). */
     int32_t heardNote = -1;
+    float heardHz = 440.0f;
 };
 
 } // namespace acidulous::effect

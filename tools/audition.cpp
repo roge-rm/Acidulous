@@ -1433,7 +1433,7 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
         // The notes starting in this block, as the rack hands them on.
         for (const auto &[frame, note] : gSourceNotes)
-            if (frame >= at && frame < at + kBlock) fx->onNote(note);
+            if (frame >= at && frame < at + kBlock) fx->onNote(note, 440.0f * std::pow(2.0f, (static_cast<float>(note) - 69.0f) / 12.0f));
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {

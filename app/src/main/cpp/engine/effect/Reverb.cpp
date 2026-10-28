@@ -527,6 +527,7 @@ void Reverb::reset() {
     clearSpace();
     clearWave();
     heardNote = -1;
+    heardHz = 440.0f;
     for (auto &p : pre) p.clear();
     for (auto &p : preLong) p.clear();
     for (auto &l : shimmerLine) l.clear();
@@ -1450,12 +1451,12 @@ void Reverb::updateWave(bool string, float size, float damp, bool freeze, bool f
     const auto &p = params_;
     const bool follow = p.get(Follow) >= 0.5f && heardNote >= 0;
     const float pitch = p.get(Pitch), stiff = string ? p.get(Stiff) : 0.0f;
-    const float key[8] = {pitch, follow ? static_cast<float>(heardNote) : -1.0f, size, damp, stiff,
+    const float key[8] = {pitch, follow ? heardHz : -1.0f, size, damp, stiff,
                           freeze ? 1.0f : 0.0f, full ? 1.0f : 0.0f, string ? 1.0f : 0.0f};
     if (std::equal(key, key + 8, wgWas)) return;
     std::copy(key, key + 8, wgWas);
 
-    float hz = (follow ? 440.0f * std::pow(2.0f, (static_cast<float>(heardNote) - 69.0f) / 12.0f) : kWaveBaseHz) *
+    float hz = (follow ? heardHz : kWaveBaseHz) *
                std::pow(2.0f, pitch / 12.0f);
     while (hz > kWaveMaxHz) hz *= 0.5f;
     while (hz < kWaveMinHz) hz *= 2.0f;

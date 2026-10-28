@@ -1197,13 +1197,24 @@ void reverbWaves() {
     for (int m : {6, 7}) {
         auto fx = prepared(48000, {{"model", float(m)}, {"mix", 1.0f}, {"size", 1.0f}, {"damp", 0.0f},
                                    {"predelay", 0.0f}, {"follow", 1.0f}, {"pitch", 12.0f}, {"stiff", 0.0f}});
-        fx->onNote(45);
+        fx->onNote(45, 110.0f);
         q.store(0);
         const auto w = ring(*fx, 120000);
         q.store(was);
         const double got = peakNear(w, 220.0, 40.0, 12000, 120000, 48000.0);
         ok(std::string(m == 6 ? "tube" : "string") + ": follow tunes to the last note", std::fabs(cents(got, 220.0)) < 1.0,
            num(got) + " Hz for A2 an octave up");
+        // A retuned track hands over its own frequency for the note: 45 sits 40 cents sharp.
+        const double sharp = 110.0 * std::pow(2.0, 40.0 / 1200.0);
+        auto tuned = prepared(48000, {{"model", float(m)}, {"mix", 1.0f}, {"size", 1.0f}, {"damp", 0.0f},
+                                      {"predelay", 0.0f}, {"follow", 1.0f}, {"pitch", 12.0f}, {"stiff", 0.0f}});
+        tuned->onNote(45, static_cast<float>(sharp));
+        q.store(0);
+        const auto wt = ring(*tuned, 120000);
+        q.store(was);
+        const double gotT = peakNear(wt, 2.0 * sharp, 40.0, 12000, 120000, 48000.0);
+        ok(std::string(m == 6 ? "tube" : "string") + ": follow lands on a retuned note's frequency",
+           std::fabs(cents(gotT, 2.0 * sharp)) < 3.0, num(gotT) + " Hz for " + num(2.0 * sharp));
     }
 
     // Open: the closed tube rings in odd harmonics, the open one in all of them.
@@ -1542,7 +1553,7 @@ void reverb() {
                                  {"material", m == 5 ? 1.0f : 3.0f}, {"pitch", m >= 6 ? 0.0f : 7.0f},
                                  {"follow", m >= 6 ? 0.0f : 1.0f}, {"open", m == 6 ? 0.0f : 0.8f},
                                  {"stiff", m == 7 ? 0.2f : 0.9f}, {"pick", m == 7 ? 0.25f : 0.8f}});
-        b->onNote(40);
+        b->onNote(40, 440.0f * std::pow(2.0f, -29.0f / 12.0f));
         ok(std::string(names[m]) + ": the other models' knobs change nothing",
            worst(run(*a, hits(48000)).l, run(*b, hits(48000)).l) == 0.0);
     }

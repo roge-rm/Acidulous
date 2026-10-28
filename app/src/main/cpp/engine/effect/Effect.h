@@ -24,8 +24,9 @@ class Effect {
     // Once per block, before process(): tempo and the block's tick range, for
     // anything synced to the transport.
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
-    // A note-on reaching the track's machine, after transpose. Audio thread.
-    virtual void onNote(int32_t /*note*/) {}
+    // A note-on reaching the track's machine, after transpose, with its pitch
+    // in hertz in the track's tuning. Audio thread.
+    virtual void onNote(int32_t /*note*/, float /*hz*/) {}
     // In place. Return true if the output is stereo.
     virtual bool process(float *L, float *R, int32_t frames, bool stereoIn) = 0;
     /**
