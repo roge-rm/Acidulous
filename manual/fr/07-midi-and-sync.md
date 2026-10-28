@@ -9,6 +9,8 @@ Les claviers MIDI USB et Bluetooth fonctionnent tout de suite. Les notes vont à
 la piste ouverte, ou à une piste que vous fixez pour qu’elle reste la même peu
 importe ce que vous regardez.
 
+<!-- desktop: Sur un Mac, jumelez d’abord un clavier MIDI Bluetooth dans **Configuration audio et MIDI** : **Fenêtre › Afficher le studio MIDI**, puis le bouton Bluetooth. -->
+
 Si un contrôleur joue tout trop fort ou trop doux, tournez **vélocité** dans
 l’onglet **notes**. **plus doux** baisse le milieu de la plage et **plus fort**
 le monte, et les notes les plus douces et les plus fortes ne bougent pas.

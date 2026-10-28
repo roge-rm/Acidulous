@@ -1,4 +1,5 @@
 # Réglages
+<!-- desktop: Sur un Mac, **Réglages…** et **À propos…** sont aussi dans le menu Acidulous, et **Cmd+,** ouvre les réglages. Le menu **Édition** a annuler, rétablir et copier-coller des notes, et **Fenêtre** a placer dans le Dock, réduire/agrandir et plein écran. -->
 
 ## affichage
 

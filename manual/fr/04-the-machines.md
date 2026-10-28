@@ -97,3 +97,4 @@ utilise. **importer…**, dans le même onglet, ajoute les sons d’un fichier. 
 déjà pris devient « Nom 2 », et un fichier que vous avez déjà avec un autre
 contenu est gardé sous un nouveau nom. Sur Android, vous pouvez aussi ouvrir un
 fichier `.acpreset` avec l’appli.
+<!-- desktop: Sur un ordinateur, double-cliquez sur un fichier `.acpreset` pour l’ouvrir dans Acidulous. -->

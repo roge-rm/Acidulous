@@ -9,15 +9,16 @@ plugins {
     alias(libs.plugins.compose.multiplatform)
 }
 
-// Acidulous for desktop Linux: the shared app in a window, with the engine
-// built by CMake from the same sources as Android (see native/).
+// Acidulous for desktop Linux, Windows and macOS: the shared app in a window,
+// with the engine built by CMake from the same sources as Android (see native/).
 //
 //   ./gradlew :desktop:run       build the engine for this machine and start it
 //   ./gradlew :desktop:debAmd64  a .deb for Debian Trixie on x86-64
 //   ./gradlew :desktop:debArm64  a .deb for Raspberry Pi OS (Trixie, 64-bit)
 //
-// The packages use the system's Java 21 rather than bundling one, so they
-// only differ in the engine's two libraries and Skia's.
+// The Debian packages use the system's Java 21 rather than bundling one, so
+// they only differ in the engine's two libraries and Skia's. The AppImages,
+// Windows and macOS builds are further down.
 
 kotlin { jvmToolchain(21) }
 
@@ -44,6 +45,7 @@ kotlin.sourceSets.main { kotlin.srcDir(buildInfo) }
 val debAmd64Runtime: Configuration = configurations.create("debAmd64Runtime")
 val debArm64Runtime: Configuration = configurations.create("debArm64Runtime")
 val windowsX64Runtime: Configuration = configurations.create("windowsX64Runtime")
+val macosRuntime: Configuration = configurations.create("macosRuntime")
 
 dependencies {
     implementation(project(":shared"))
@@ -55,10 +57,12 @@ dependencies {
     debAmd64Runtime(compose.desktop.linux_x64)
     debArm64Runtime(compose.desktop.linux_arm64)
     windowsX64Runtime(compose.desktop.windows_x64)
+    // Built on a Mac for that Mac's architecture (see the macOS section).
+    macosRuntime(if (System.getProperty("os.arch") == "aarch64") compose.desktop.macos_arm64 else compose.desktop.macos_x64)
     testImplementation(libs.junit)
 }
 
-for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime)) {
+for (runtime in listOf(debAmd64Runtime, debArm64Runtime, windowsX64Runtime, macosRuntime)) {
     runtime.extendsFrom(configurations.implementation.get())
     runtime.isCanBeConsumed = false
     // Resolved the same way as the run classpath, so :shared gives its desktop jar.
@@ -98,14 +102,28 @@ fun containerArgs(image: String): String {
 
 val nativeBuild = nativeOutDir("build")
 
-/** The engine for this machine: libacidulous.so, with LAME's libmp3lame.so next to it. */
+/** Building on a Mac, where the engine is built for this Mac's own architecture (see the macOS section). */
+val onMac = System.getProperty("os.name").startsWith("Mac")
+/** This Mac's architecture as Apple names it: arm64 or x86_64. */
+val macArch = if (System.getProperty("os.arch") == "aarch64") "arm64" else "x86_64"
+/** On a Mac: the one architecture, and the JNI headers of the JDK running Gradle. */
+val macCmakeArgs = if (onMac) {
+    val jdk = System.getProperty("java.home")
+    "-DCMAKE_OSX_ARCHITECTURES=$macArch '-DJNI_INCLUDE_DIRS=$jdk/include;$jdk/include/darwin'"
+} else ""
+
+/**
+ * The engine for this machine: libacidulous.so, with LAME's libmp3lame.so
+ * next to it (.dylib on a Mac, with the app bundle's launcher).
+ */
 val buildEngine = tasks.register<Exec>("buildEngine") {
     inputs.dir(rootProject.file("app/src/main/cpp"))
     inputs.file(nativeDir.file("CMakeLists.txt"))
+    inputs.dir(layout.projectDirectory.dir("macos"))
     outputs.dir(nativeBuild)
     workingDir = nativeDir.asFile
     val out = nativeBuild.asFile.path
-    commandLine("sh", "-c", "cmake -S . -B '$out' -DCMAKE_BUILD_TYPE=Release $launcher >/dev/null && cmake --build '$out' -j8")
+    commandLine("sh", "-c", "cmake -S . -B '$out' -DCMAKE_BUILD_TYPE=Release $launcher $macCmakeArgs >/dev/null && cmake --build '$out' -j8")
 }
 
 /**
@@ -217,6 +235,7 @@ fun registerDeb(arch: String, runtime: Configuration, engine: TaskProvider<Exec>
             filePermissions { unix("rwxr-xr-x") }
         }
         from(file("deb/acidulous.desktop")) { into("usr/share/applications") }
+        from(file("deb/acidulous-mime.xml")) { into("usr/share/mime/packages"); rename { "acidulous.xml" } }
         from(rootProject.file("branding/acidulous-icon-1024.svg")) {
             into("usr/share/icons/hicolor/scalable/apps")
             rename { "acidulous.svg" }
@@ -341,6 +360,7 @@ fun registerAppImage(
         from(file("src/main/resources/acidulous.png")) { into("usr/lib/acidulous"); rename { "splash.png" } }
         from(file("appimage/AppRun")) { filePermissions { unix("rwxr-xr-x") } }
         from(file("deb/acidulous.desktop"))
+        from(file("deb/acidulous-mime.xml")) { into("usr/share/mime/packages"); rename { "acidulous.xml" } }
         from(rootProject.file("branding/acidulous-icon-1024.svg")) { rename { "acidulous.svg" } }
         from(rootProject.file("NOTICE")) { into("usr/share/doc/acidulous") }
         // The runtime is unpacked here later and replaced each build. Pruning
@@ -514,3 +534,113 @@ tasks.register("windowsX64") {
     }
 }
 
+
+// --- macOS ---------------------------------------------------------------------
+//
+// macOS 11 Big Sur and newer, on Apple silicon or Intel, built on a Mac of
+// that kind (the GitHub workflow, .github/workflows/macos.yml, uses one of
+// each). An app bundle with Eclipse Temurin's Java runtime inside, in a .dmg:
+//
+//   ./gradlew :desktop:macosDmg   build/macos/acidulous-<version>-macos-<arm64|x86_64>.dmg
+//
+//   Acidulous.app/Contents/MacOS/Acidulous   the launcher (macos/launcher.c)
+//   Acidulous.app/Contents/app               the engine's two libraries, and the jars in lib
+//   Acidulous.app/Contents/runtime           the Java runtime
+//
+// There's no Apple developer account, so everything is signed ad hoc, which
+// Apple silicon needs to run it at all. Gatekeeper still asks the first time
+// it's opened (see the README).
+
+val macosApp = layout.buildDirectory.dir("macos/Acidulous.app")
+val stageMacos = tasks.register<Sync>("stageMacos") {
+    dependsOn(buildEngine)
+    into(macosApp)
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    val version = versionName
+    val code = versionCode
+    inputs.property("version", "$version ($code)")
+    from(nativeBuild.file("Acidulous")) {
+        into("Contents/MacOS")
+        filePermissions { unix("rwxr-xr-x") }
+    }
+    from(listOf(nativeBuild.file("libacidulous.dylib"), nativeBuild.file("libmp3lame.dylib"))) { into("Contents/app") }
+    from(tasks.named("jar")) { into("Contents/app/lib") }
+    from(file("macos/Info.plist")) {
+        into("Contents")
+        filter { it.replace("@VERSION@", version).replace("@VERSION_CODE@", code) }
+    }
+    from(file("macos/acidulous.icns")) { into("Contents/Resources") }
+    from(rootProject.file("NOTICE")) { into("Contents/Resources") }
+    from(rootProject.file("LICENSE")) { into("Contents/Resources") }
+    // The runtime is unpacked later, like the AppImage's.
+    preserve { include("Contents/runtime/**") }
+}
+
+tasks.register("macosDmg") {
+    group = "distribution"
+    description = "Builds acidulous-$versionName-macos-$macArch.dmg on a Mac"
+    notCompatibleWithConfigurationCache("uses the build script's download and exec helpers")
+    dependsOn(stageMacos)
+    val artifacts = macosRuntime.incoming.artifacts.resolvedArtifacts
+    val app = macosApp.get().asFile
+    val out = layout.buildDirectory.dir("macos").get().asFile
+    val cache = downloads.get().asFile
+    val dmg = File(out, "acidulous-$versionName-macos-$macArch.dmg")
+    val jre = if (macArch == "arm64") {
+        Download(
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_aarch64_mac_hotspot_21.0.12.1_1.tar.gz",
+            "dec50fc6f9fcd4fe3ae8cabf5a5fa68f6afc48841f7698e468e9aa5d54beed84",
+        )
+    } else {
+        Download(
+            "https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.12.1%2B1/OpenJDK21U-jre_x64_mac_hotspot_21.0.12.1_1.tar.gz",
+            "6717ec641fd9ce0bb209ca083ee23b42202ac68cb6fcc5753496e0e4a0f41989",
+        )
+    }
+    inputs.files(macosRuntime)
+    inputs.dir(macosApp)
+    outputs.file(dmg)
+    doLast {
+        check(onMac) { "the macOS app is built on a Mac" }
+        // The jars, named with their group like in the Debian package.
+        val lib = File(app, "Contents/app/lib")
+        for (a in artifacts.get()) {
+            val id = a.id.componentIdentifier
+            val name = if (id is org.gradle.api.artifacts.component.ModuleComponentIdentifier) "${id.group}-${a.file.name}" else a.file.name
+            a.file.copyTo(File(lib, name), overwrite = true)
+        }
+        // The runtime, as a bundle of its own in Contents/runtime.
+        val runtime = File(app, "Contents/runtime")
+        runtime.deleteRecursively()
+        runtime.mkdirs()
+        runCommand("tar", "-xzf", fetch(jre, cache).path, "-C", runtime.path, "--strip-components=1")
+        File(app, "Contents/PkgInfo").writeText("APPL????")
+
+        // Sign ad hoc from the inside out: every library and program in the
+        // runtime and app folders, then the runtime as a bundle, then the app.
+        fun machO(f: File): Boolean = f.isFile && !Files.isSymbolicLink(f.toPath()) && f.length() > 4 &&
+            f.inputStream().use { val b = ByteArray(4); it.read(b); b.contentEquals(byteArrayOf(0xcf.toByte(), 0xfa.toByte(), 0xed.toByte(), 0xfe.toByte())) }
+        val inner = (runtime.walkTopDown() + File(app, "Contents/app").walkTopDown()).filter(::machO).map { it.path }.toList()
+        for (chunk in inner.chunked(50)) runCommand("codesign", "--force", "--sign", "-", *chunk.toTypedArray())
+        runCommand("codesign", "--force", "--sign", "-", runtime.path)
+        runCommand("codesign", "--force", "--deep", "--sign", "-", app.path)
+        runCommand("codesign", "--verify", "--deep", "--strict", app.path)
+
+        // The disk image: the app and a link to Applications to drag it onto.
+        val folder = File(out, "dmg").apply { deleteRecursively(); mkdirs() }
+        runCommand("ditto", app.path, File(folder, "Acidulous.app").path)
+        Files.createSymbolicLink(File(folder, "Applications").toPath(), File("/Applications").toPath())
+        dmg.delete()
+        // hdiutil sometimes finds the folder busy for a moment on a build machine.
+        var tries = 0
+        while (true) {
+            val made = runCatching {
+                runCommand("hdiutil", "create", "-volname", "Acidulous", "-srcfolder", folder.path, "-fs", "HFS+", "-format", "UDZO", "-ov", dmg.path)
+            }
+            if (made.isSuccess) break
+            if (++tries == 3) throw made.exceptionOrNull()!!
+            Thread.sleep(5000)
+        }
+        folder.deleteRecursively()
+    }
+}

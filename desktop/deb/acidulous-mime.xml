@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The preset file type, so file managers open .acpreset files with Acidulous. -->
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-acidulous-preset">
+    <comment>Acidulous preset</comment>
+    <sub-class-of type="application/zip"/>
+    <glob pattern="*.acpreset"/>
+  </mime-type>
+</mime-info>

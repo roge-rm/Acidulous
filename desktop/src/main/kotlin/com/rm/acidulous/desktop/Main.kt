@@ -1,6 +1,8 @@
 package com.rm.acidulous.desktop
 
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,15 +69,32 @@ private fun windowIcon(): BitmapPainter? = runCatching {
 /** Running on Windows, where folders, MIDI and library loading differ. */
 internal val onWindows: Boolean = System.getProperty("os.name").orEmpty().startsWith("Windows")
 
+/** How long a second copy on a Mac waits for the files Finder sends it, to hand them over. */
+private const val MAC_FILES_WAIT_MS = 1500L
+
+/** Running on macOS, where folders and MIDI differ. */
+internal val onMac: Boolean = System.getProperty("os.name").orEmpty().startsWith("Mac")
+
 /** The XDG folder from [variable], or its default under the home folder. */
 private fun xdg(variable: String, fallback: String): File =
     File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: (System.getProperty("user.home") + "/" + fallback), "acidulous")
+
+/** macOS folders: settings and songs in Application Support, the cache in Caches. */
+private fun macDir(vararg under: String): File =
+    under.fold(File(System.getProperty("user.home"), "Library")) { dir, name -> File(dir, name) }
 
 /** Windows folders: settings and songs roam with the account, the cache stays on this machine. */
 private fun windowsDir(variable: String, vararg under: String): File =
     under.fold(File(System.getenv(variable)?.takeIf { it.isNotBlank() } ?: System.getProperty("user.home"), "Acidulous")) { dir, name -> File(dir, name) }
 
-fun main() {
+fun main(args: Array<String>) {
+    // Before AWT starts: a Mac's menus go in the menu bar at the top of the
+    // screen, and Cmd is the shortcut key (see KeyPress.desktop.kt).
+    if (onMac) {
+        System.setProperty("apple.laf.useScreenMenuBar", "true")
+        System.setProperty("apple.awt.application.name", "Acidulous")
+        com.rm.acidulous.ui.macKeys = true
+    }
     // Windows looks for a DLL's dependencies next to java.exe, not next to
     // the DLL, so load LAME first and the engine finds it already loaded.
     if (onWindows) System.loadLibrary("mp3lame")
@@ -84,11 +103,31 @@ fun main() {
     if (steamDeck && System.getenv("SKIKO_RENDER_API") == null && System.getProperty("skiko.renderApi") == null) {
         System.setProperty("skiko.renderApi", "SOFTWARE_FAST")
     }
-    val config = (if (onWindows) windowsDir("APPDATA", "config") else xdg("XDG_CONFIG_HOME", ".config")).apply { mkdirs() }
-    val data = (if (onWindows) windowsDir("APPDATA", "data") else xdg("XDG_DATA_HOME", ".local/share")).apply { mkdirs() }
-    val cache = (if (onWindows) windowsDir("LOCALAPPDATA", "cache") else xdg("XDG_CACHE_HOME", ".cache")).apply { mkdirs() }
-    // A second launch brings the running copy forward instead.
-    if (!SingleInstance.claim(data)) return
+    val config = when {
+        onWindows -> windowsDir("APPDATA", "config")
+        onMac -> macDir("Application Support", "Acidulous", "config")
+        else -> xdg("XDG_CONFIG_HOME", ".config")
+    }.apply { mkdirs() }
+    val data = when {
+        onWindows -> windowsDir("APPDATA", "data")
+        onMac -> macDir("Application Support", "Acidulous", "data")
+        else -> xdg("XDG_DATA_HOME", ".local/share")
+    }.apply { mkdirs() }
+    val cache = when {
+        onWindows -> windowsDir("LOCALAPPDATA", "cache")
+        onMac -> macDir("Caches", "Acidulous")
+        else -> xdg("XDG_CACHE_HOME", ".cache")
+    }.apply { mkdirs() }
+    // Files the app was opened with. On a Mac they come from Finder, a
+    // moment after the start, so the handler goes in before anything else.
+    OpenFiles.add(OpenFiles.fromArgs(args))
+    if (onMac) MacApp.install()
+    // A second launch hands its files to the running copy and brings it forward.
+    if (!SingleInstance.claim(data) { OpenFiles.add(it) }) {
+        val files = OpenFiles.drain() + if (onMac) MacApp.filesSoon(MAC_FILES_WAIT_MS) else emptyList()
+        SingleInstance.handOver(data, files)
+        kotlin.system.exitProcess(0)
+    }
     // Before anything else can throw, like on Android. Also collects native
     // crashes from earlier runs, which the JVM wrote where the launcher said.
     val crashes = CrashReports(data).apply { install(); collect() }
@@ -103,11 +142,18 @@ fun main() {
     DesktopAudio.chooseOutput(UiPrefs.outputDevice)
     Names.scene = { AppStrings.getString(Res.string.name_scene, it) }
     Names.copyOf = { AppStrings.getString(Res.string.name_copy, it) }
-    // ALSA's sequencer, which sees every device and program. Java Sound's raw
-    // MIDI if there's no sequencer, and on Windows. See AlsaSeqMidi.
-    MidiHub.start((if (onWindows) null else AlsaSeqMidi.open()) ?: JavaSoundMidi())
+    // ALSA's sequencer on Linux and CoreMIDI on macOS, which see every device
+    // and program. Java Sound's MIDI if those won't open, and on Windows.
+    // See AlsaSeqMidi and CoreMidi.
+    MidiHub.start(
+        when {
+            onWindows -> null
+            onMac -> CoreMidi.open()
+            else -> AlsaSeqMidi.open()
+        } ?: JavaSoundMidi(),
+    )
     // Game controllers, read from /dev/input. Linux only for now.
-    if (!onWindows) {
+    if (!onWindows && !onMac) {
         LinuxControllers.start(object : PadSink {
             override fun button(device: String, keyCode: Int, down: Boolean) =
                 com.rm.acidulous.ui.PadEvents.button(device, keyCode, down)
@@ -123,8 +169,10 @@ fun main() {
     RightClickHold.install()
 
     application {
-        // The window's close button, and holding B on the song screen.
+        // The window's close button (Alt+F4), holding B on the song screen, and
+        // Quit on a Mac. The session's last edits are saved first.
         fun quit() {
+            com.rm.acidulous.OnQuit.run()
             MidiHub.clearPads()
             MidiHub.releaseLaunchpad()
             exitApplication()
@@ -175,6 +223,19 @@ fun main() {
             // UiPrefs.screenScale.
             // Another launch while running brings this window forward.
             val frame = this.window
+            // Files handed to the app go to the import one at a time.
+            LaunchedEffect(Unit) {
+                OpenFiles.running = true
+                snapshotFlow { com.rm.acidulous.Incoming.idle(dialogs = false) to com.rm.acidulous.Incoming.idle() }.collect { OpenFiles.next() }
+            }
+            if (onMac) MacMenus(window, toggleFullScreen = {
+                if (window.placement == WindowPlacement.Fullscreen) {
+                    window.placement = before
+                } else {
+                    before = window.placement
+                    window.placement = WindowPlacement.Fullscreen
+                }
+            })
             DisposableEffect(Unit) {
                 SingleInstance.onRaise = {
                     java.awt.EventQueue.invokeLater {

@@ -19,6 +19,8 @@ import javax.swing.Timer
  *
  * Mouse movement is swallowed while the fake press is down, so the mouse
  * drifting doesn't turn it into a drag.
+ *
+ * On a Mac, Ctrl-click is a right-click too, as everywhere on a Mac.
  */
 internal object RightClickHold {
     /** Safely past Compose's long press time (500 ms). */
@@ -29,6 +31,8 @@ internal object RightClickHold {
     private var pressY = 0
     private var pressedAt = 0L
     private var releaseTimer: Timer? = null
+    /** The left button went down with Ctrl held, on a Mac, so its events until the next press are a right-click's. */
+    private var ctrlClick = false
 
     fun install() {
         Toolkit.getDefaultToolkit().systemEventQueue.push(object : EventQueue() {
@@ -41,8 +45,12 @@ internal object RightClickHold {
 
     /** True when [e] is a right-button event, or movement during the hold, and has been handled here. */
     private fun take(e: MouseEvent): Boolean {
+        if (onMac && e.id == MouseEvent.MOUSE_PRESSED && e.button == MouseEvent.BUTTON1) {
+            ctrlClick = e.modifiersEx and InputEvent.CTRL_DOWN_MASK != 0
+        }
         val right = e.button == MouseEvent.BUTTON3 ||
-            (e.id == MouseEvent.MOUSE_DRAGGED && e.modifiersEx and InputEvent.BUTTON3_DOWN_MASK != 0)
+            (e.id == MouseEvent.MOUSE_DRAGGED && e.modifiersEx and InputEvent.BUTTON3_DOWN_MASK != 0) ||
+            (ctrlClick && (e.button == MouseEvent.BUTTON1 || e.id == MouseEvent.MOUSE_DRAGGED))
         if (right) {
             when (e.id) {
                 MouseEvent.MOUSE_PRESSED -> if (pressed == null) press(e)
@@ -63,7 +71,9 @@ internal object RightClickHold {
         pressX = e.x
         pressY = e.y
         pressedAt = System.currentTimeMillis()
-        target.dispatchEvent(leftEvent(target, MouseEvent.MOUSE_PRESSED, e.modifiersEx))
+        // Without the Ctrl of a Mac's Ctrl-click, which isn't part of the hold.
+        val keys = if (ctrlClick) e.modifiersEx and InputEvent.CTRL_DOWN_MASK.inv() else e.modifiersEx
+        target.dispatchEvent(leftEvent(target, MouseEvent.MOUSE_PRESSED, keys))
         // Release after the hold time even if the right button is still down,
         // since a long press fires at that time, not when the finger lifts.
         later(HOLD_MS)

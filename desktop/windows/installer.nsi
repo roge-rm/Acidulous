@@ -61,6 +61,19 @@ Section
   WriteRegStr HKCU "${KEY}" "URLInfoAbout" "https://github.com/roge-rm/Acidulous"
   WriteRegDWORD HKCU "${KEY}" "NoModify" 1
   WriteRegDWORD HKCU "${KEY}" "NoRepair" 1
+
+  ; Preset files open with the app. Song zips get it under Open with, and
+  ; zips keep whatever opens them now.
+  WriteRegStr HKCU "Software\Classes\.acpreset" "" "Acidulous.Preset"
+  WriteRegStr HKCU "Software\Classes\.acpreset" "Content Type" "application/x-acidulous-preset"
+  WriteRegStr HKCU "Software\Classes\Acidulous.Preset" "" "Acidulous preset"
+  WriteRegStr HKCU "Software\Classes\Acidulous.Preset\DefaultIcon" "" "$INSTDIR\Acidulous.exe,0"
+  WriteRegStr HKCU "Software\Classes\Acidulous.Preset\shell\open\command" "" '"$INSTDIR\Acidulous.exe" "%1"'
+  WriteRegStr HKCU "Software\Classes\.zip\OpenWithProgids" "Acidulous.Song" ""
+  WriteRegStr HKCU "Software\Classes\Acidulous.Song" "" "Acidulous song"
+  WriteRegStr HKCU "Software\Classes\Acidulous.Song\DefaultIcon" "" "$INSTDIR\Acidulous.exe,0"
+  WriteRegStr HKCU "Software\Classes\Acidulous.Song\shell\open\command" "" '"$INSTDIR\Acidulous.exe" "%1"'
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
 SectionEnd
 
 Section "Uninstall"
@@ -73,4 +86,9 @@ Section "Uninstall"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
   DeleteRegKey HKCU "${KEY}"
+  DeleteRegKey HKCU "Software\Classes\.acpreset"
+  DeleteRegKey HKCU "Software\Classes\Acidulous.Preset"
+  DeleteRegKey HKCU "Software\Classes\Acidulous.Song"
+  DeleteRegValue HKCU "Software\Classes\.zip\OpenWithProgids" "Acidulous.Song"
+  System::Call 'shell32::SHChangeNotify(i 0x08000000, i 0, p 0, p 0)'
 SectionEnd

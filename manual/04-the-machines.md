@@ -94,3 +94,4 @@ The file holds the patch and your own samples, SoundFonts and voices it uses.
 **import…** in the same tab adds the patches in a file. A name that's taken
 becomes "Name 2", and a file you already have with other contents is kept
 under a new name. On Android you can also open a `.acpreset` file with the app.
+<!-- desktop: On a computer, double-click a `.acpreset` file to open it in Acidulous. -->

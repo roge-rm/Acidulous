@@ -1,6 +1,7 @@
 package com.rm.acidulous
 
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
@@ -12,4 +13,22 @@ import androidx.compose.runtime.setValue
  */
 object Incoming {
     var doc by mutableStateOf<Doc?>(null)
+
+    /** Imports in flight. */
+    var running by mutableIntStateOf(0)
+
+    /** True while a dialog an import opened is waiting for an answer. Reads state, so it can be watched. */
+    var dialogOpen: () -> Boolean = { false }
+
+    /** True when the last file is done with and the next may be handed over, after its dialog too if [dialogs]. */
+    fun idle(dialogs: Boolean = true): Boolean = doc == null && running == 0 && !(dialogs && dialogOpen())
+
+    /** A file name no other import is using. */
+    fun tempName(stem: String, ext: String): String =
+        "$stem-${kotlin.random.Random.nextLong().toULong().toString(36)}.$ext"
+
+    /** A window the system asked for, like the Mac's app menu: the song screen opens it. */
+    var window by mutableStateOf<AppWindow?>(null)
 }
+
+enum class AppWindow { Settings, About }

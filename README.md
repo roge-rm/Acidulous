@@ -1,6 +1,6 @@
 # Acidulous
 
-Acidulous is a music studio for Android 8.1 or newer, Linux, Windows and browsers. Combine up to 16 synthesizers, drum machines, samplers and processors into scenes, then play them in order or launch clips as you go.
+Acidulous is a music studio for Android 8.1 or newer, Linux, Windows, macOS and browsers. Combine up to 16 synthesizers, drum machines, samplers and processors into scenes, then play them in order or launch clips as you go.
 
 It's an homage to Caustic and a collection of things I've liked or wanted in other music tools. You can sequence, record, play live, change your voice and export songs or stems. It's nearly at 1.0 and ready for people other than me to test.
 
@@ -124,7 +124,7 @@ Either can be kept on its notes page, to play live while you change scenes and c
 
 Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song, one scene or stems, and MIDI files or a song bundle you can share.
 
-Import MIDI files as a new song, with a machine picked for each part and General MIDI drums moved onto a drum machine. Song bundles open with their samples, and sounds go into the library.
+Import MIDI files as a new song, with a machine picked for each part and General MIDI drums moved onto a drum machine. Song bundles open with their samples, and sounds go into the library. On a computer, preset files open from the file manager, and song zips with Open With (not with the AppImage, which doesn't add itself to the file manager).
 
 Exports can go straight to the share sheet, and files shared to the app or opened with it get imported.
 
@@ -178,6 +178,25 @@ anywhere and run `Acidulous.exe`. They aren't signed, so Windows will warn
 you: choose **More info** and then **Run anyway**. If your audio interface has
 its own low-latency driver, pick it in **Settings › audio › output**.
 
+### macOS
+
+macOS 11 Big Sur or newer. From the [Releases](https://github.com/roge-rm/Acidulous/releases)
+page, get the .dmg for your Mac: **Apple Silicon (M1 and later)**
+(`acidulous-*-macos-arm64.dmg`) or **Intel** (`acidulous-*-macos-x86_64.dmg`).
+**About This Mac** in the Apple menu says which: a **Chip** line is Apple
+Silicon, a **Processor** line is Intel. Open it and drag Acidulous into
+Applications. Their sums are in `SHA256SUMS-macos`.
+
+It isn't signed by an Apple developer account, so macOS won't open it the
+first time. Try to open it once, then go to **System Settings › Privacy &
+Security** and choose **Open Anyway**. On Big Sur and Monterey that's in
+**System Preferences › Security & Privacy › General**. Or run this once in
+Terminal:
+
+```
+xattr -dr com.apple.quarantine /Applications/Acidulous.app
+```
+
 ### In a browser
 
 [https://hunke.ws/fdroid/play/acidulous](https://hunke.ws/fdroid/play/acidulous/)
@@ -197,14 +216,17 @@ You need the Android SDK and NDK. The NDK version is set in
 ./gradlew -Parm32 assembleRelease   # the 32-bit APK
 ```
 
-The desktop and browser versions build from the same code, on Linux. The
-packages need Docker, and the browser's engine needs the Emscripten SDK.
+The desktop and browser versions build from the same code, on Linux, except
+the macOS one, which builds on a Mac (GitHub builds both kinds, see
+`.github/workflows/macos.yml`). The Linux and Windows packages need Docker,
+and the browser's engine needs the Emscripten SDK.
 
 ```sh
 ./gradlew :desktop:run                          # run it on this computer
 ./gradlew :desktop:debAmd64 :desktop:debArm64   # the Debian packages
 ./gradlew :desktop:appImageAmd64                # an AppImage (appImageArm64 too)
 ./gradlew :desktop:windowsX64                   # the Windows installer and zip
+./gradlew :desktop:macosDmg                     # the macOS .dmg, on a Mac
 ./gradlew :webApp:wasmJsBrowserDistribution     # the browser version
 ```
 

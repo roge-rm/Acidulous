@@ -1278,6 +1278,7 @@ object Manual {
         ManualBlock(ManualKind.Subheading, "Sharing patches"),
         ManualBlock(ManualKind.Para, "In the browser, **share** next to a patch writes it to a `.acpreset` file and opens the share sheet. **share all** in the last tab shares all your patches for that machine. Effects work the same way."),
         ManualBlock(ManualKind.Para, "The file holds the patch and your own samples, SoundFonts and voices it uses. **import…** in the same tab adds the patches in a file. A name that's taken becomes \"Name 2\", and a file you already have with other contents is kept under a new name. On Android you can also open a `.acpreset` file with the app."),
+        ManualBlock(ManualKind.Para, "", "On a computer, double-click a `.acpreset` file to open it in Acidulous."),
     ), listOf(
         en3_0(),
         en3_1(),
@@ -2021,6 +2022,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "You can use MIDI with a variety of keyboards and controllers, including MPE. Special support has been added for the Intuitive Instruments Exquis and Novation Launchpad Pro MK3 (as I have these myself)."),
         ManualBlock(ManualKind.Heading, "Playing from a keyboard"),
         ManualBlock(ManualKind.Para, "USB and Bluetooth MIDI keyboards work straight away. Notes go to whichever track is open, or to a track you pin so it stays the same whatever you're looking at."),
+        ManualBlock(ManualKind.Para, "", "On a Mac, pair a Bluetooth MIDI keyboard in **Audio MIDI Setup** first: **Window › Show MIDI Studio**, then the Bluetooth button."),
         ManualBlock(ManualKind.Para, "If a controller plays everything too loud or too soft, turn **velocity** on the **notes** tab. **softer** brings the middle of the range down and **harder** brings it up, and the softest and hardest notes stay where they are. The readout next to it shows each note's velocity as the app gets it."),
         ManualBlock(ManualKind.Subheading, "MPE"),
         ManualBlock(ManualKind.Para, "With an MPE controller every finger has its own bend, pressure and slide, so bending one note leaves the others alone. Leave **zone** on **auto** and the app follows the controller, using the zone and bend range it announces or picking it up as soon as two fingers are down on separate channels. The card says what it found. Choose **lower** or **upper** to set the zone and bend range by hand."),
@@ -2114,9 +2116,11 @@ object Manual {
         ManualBlock(ManualKind.Para, "When an export finishes, **Share** sends it straight on through the phone's share sheet: email, Drive, a chat or another app. Stems go as all their files together.", "When an export finishes, **Share** opens the folder it was saved in, to send it on from there."),
         ManualBlock(ManualKind.Para, "**Share song…** in the file menu sends the open song as a bundle, samples included, for someone else to open in Acidulous.", "**Share song…** in the file menu saves the open song as a bundle, samples included, and opens its folder so you can send it to someone."),
         ManualBlock(ManualKind.Para, "The other way works too. Open a MIDI file, a bundle, a shared voice or a sound with Acidulous, or share one to it, and it goes wherever **Import…** would have put it; a voice goes to the voice page in **Sound**.", ""),
+        ManualBlock(ManualKind.Para, "", "On a computer, double-click a `.acpreset` file to open it in Acidulous, and open a song zip with **Open With › Acidulous**. If Acidulous is already open, the file goes to that window."),
     ))
 
     private fun en9() = ManualSection("Settings", "", listOf(
+        ManualBlock(ManualKind.Para, "", "On a Mac, **Settings…** and **About…** are in the Acidulous menu too, and **Cmd+,** opens Settings. The **Edit** menu has undo, redo and the note copy and paste, and **Window** has minimise, zoom and full screen."),
         ManualBlock(ManualKind.Heading, "display"),
         ManualBlock(ManualKind.Bullet, "**theme** - dark, light, high contrast or follow the phone. High contrast is white on black, with brighter colours and outlines round every control.", "**theme** - dark, light, high contrast or follow the system. High contrast is white on black, with brighter colours and outlines round every control."),
         ManualBlock(ManualKind.Bullet, "**keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a phone and up to five on a wider screen.", "**keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a computer and up to five on a wider screen."),
@@ -2191,6 +2195,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "fold the keyboard - **B**, or **Alt+J**"),
         ManualBlock(ManualKind.Bullet, "copy / cut / paste / duplicate notes - **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D**, or **Alt+C**, **Alt+X**, **Alt+W**, **Alt+E**"),
         ManualBlock(ManualKind.Para, "The first key is for a full keyboard and the second for a small one. Keys without Alt or Ctrl only work as shortcuts when play mode is off."),
+        ManualBlock(ManualKind.Para, "", "On a Mac, Cmd takes the place of Ctrl and Option of Alt, and the keys window names them that way. Cmd+Left and Cmd+Right are Home and End."),
         ManualBlock(ManualKind.Para, "In a window with tabs, previous and next page step through the tabs."),
         ManualBlock(ManualKind.Heading, "Moving around"),
         ManualBlock(ManualKind.Para, "The arrows, or swipes on a touchpad, move between controls. Tab and Shift+Tab do too, and a ring shows where you are. **Enter** presses a button or a switch.", "The arrows move between controls. Tab and Shift+Tab do too, and a ring shows where you are. **Enter** presses a button or a switch."),
@@ -3442,6 +3447,7 @@ object Manual {
         ManualBlock(ManualKind.Subheading, "Partager des sons"),
         ManualBlock(ManualKind.Para, "Dans le navigateur, **partager** à côté d’un son l’écrit dans un fichier `.acpreset` et ouvre le partage. **tout partager**, dans le dernier onglet, partage tous vos sons de cette machine. Les effets fonctionnent de la même façon."),
         ManualBlock(ManualKind.Para, "Le fichier contient le son et vos propres échantillons, SoundFonts et voix qu’il utilise. **importer…**, dans le même onglet, ajoute les sons d’un fichier. Un nom déjà pris devient « Nom 2 », et un fichier que vous avez déjà avec un autre contenu est gardé sous un nouveau nom. Sur Android, vous pouvez aussi ouvrir un fichier `.acpreset` avec l’appli."),
+        ManualBlock(ManualKind.Para, "", "Sur un ordinateur, double-cliquez sur un fichier `.acpreset` pour l’ouvrir dans Acidulous."),
     ), listOf(
         fr3_0(),
         fr3_1(),
@@ -4185,6 +4191,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "Vous pouvez utiliser le MIDI avec toutes sortes de claviers et de contrôleurs, y compris MPE. L’Intuitive Instruments Exquis et le Novation Launchpad Pro MK3 ont un support particulier (je les ai moi-même)."),
         ManualBlock(ManualKind.Heading, "Jouer d’un clavier"),
         ManualBlock(ManualKind.Para, "Les claviers MIDI USB et Bluetooth fonctionnent tout de suite. Les notes vont à la piste ouverte, ou à une piste que vous fixez pour qu’elle reste la même peu importe ce que vous regardez."),
+        ManualBlock(ManualKind.Para, "", "Sur un Mac, jumelez d’abord un clavier MIDI Bluetooth dans **Configuration audio et MIDI** : **Fenêtre › Afficher le studio MIDI**, puis le bouton Bluetooth."),
         ManualBlock(ManualKind.Para, "Si un contrôleur joue tout trop fort ou trop doux, tournez **vélocité** dans l’onglet **notes**. **plus doux** baisse le milieu de la plage et **plus fort** le monte, et les notes les plus douces et les plus fortes ne bougent pas. L’affichage à côté montre la vélocité de chaque note telle que l’appli la reçoit."),
         ManualBlock(ManualKind.Subheading, "MPE"),
         ManualBlock(ManualKind.Para, "Avec un contrôleur MPE, chaque doigt a son propre bend, sa pression et son glissé, donc plier une note laisse les autres tranquilles. Laissez **zone** sur **auto** et l’appli suit le contrôleur : elle prend la zone et la plage de bend qu’il annonce, ou les devine dès que deux doigts sont posés sur des canaux séparés. La carte dit ce qu’elle a trouvé. Choisissez **basse** ou **haute** pour régler la zone et la plage de bend à la main."),
@@ -4278,9 +4285,11 @@ object Manual {
         ManualBlock(ManualKind.Para, "Quand une exportation est finie, **Partager** l’envoie tout de suite par le menu de partage du téléphone : courriel, Drive, une conversation ou une autre appli. Les pistes séparées partent avec tous leurs fichiers ensemble.", "Quand une exportation est finie, **Partager** ouvre le dossier où elle a été enregistrée, pour l’envoyer de là."),
         ManualBlock(ManualKind.Para, "**Partager le morceau…** dans le menu fichier envoie le morceau ouvert en paquet, échantillons compris, pour que quelqu’un d’autre l’ouvre dans Acidulous.", "**Partager le morceau…** dans le menu fichier enregistre le morceau ouvert en paquet, échantillons compris, et ouvre son dossier pour que vous puissiez l’envoyer."),
         ManualBlock(ManualKind.Para, "L’inverse fonctionne aussi. Ouvrez un fichier MIDI, un paquet, une voix partagée ou un son avec Acidulous, ou partagez-le vers l’appli, et il va là où **Importer…** l’aurait mis; une voix va à la page voix dans **Son**.", ""),
+        ManualBlock(ManualKind.Para, "", "Sur un ordinateur, double-cliquez sur un fichier `.acpreset` pour l’ouvrir dans Acidulous, et ouvrez un morceau en zip avec **Ouvrir avec › Acidulous**. Si Acidulous est déjà ouvert, le fichier va dans cette fenêtre."),
     ))
 
     private fun fr9() = ManualSection("Réglages", "", listOf(
+        ManualBlock(ManualKind.Para, "", "Sur un Mac, **Réglages…** et **À propos…** sont aussi dans le menu Acidulous, et **Cmd+,** ouvre les réglages. Le menu **Édition** a annuler, rétablir et copier-coller des notes, et **Fenêtre** a placer dans le Dock, réduire/agrandir et plein écran."),
         ManualBlock(ManualKind.Heading, "affichage"),
         ManualBlock(ManualKind.Bullet, "**thème** - sombre, clair, contraste élevé ou comme le téléphone. Le contraste élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour autour de chaque commande.", "**thème** - sombre, clair, contraste élevé ou comme le système. Le contraste élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour autour de chaque commande."),
         ManualBlock(ManualKind.Bullet, "**octaves du clavier** - combien d’octaves montre le clavier sous l’éditeur. **auto** en montre deux sur un téléphone et jusqu’à cinq sur un écran plus large."),
@@ -4355,6 +4364,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "replier le clavier - **B**, ou **Alt+J**"),
         ManualBlock(ManualKind.Bullet, "copier / couper / coller / dupliquer des notes - **Ctrl+C**, **Ctrl+X**, **Ctrl+V**, **Ctrl+D**, ou **Alt+C**, **Alt+X**, **Alt+W**, **Alt+E**"),
         ManualBlock(ManualKind.Para, "La première touche est pour un clavier complet et la deuxième pour un petit. Les touches sans Alt ni Ctrl ne servent de raccourcis que lorsque le mode jeu est désactivé."),
+        ManualBlock(ManualKind.Para, "", "Sur un Mac, Cmd remplace Ctrl et Option remplace Alt, et la fenêtre des touches les nomme ainsi. Cmd+Gauche et Cmd+Droite font Début et Fin."),
         ManualBlock(ManualKind.Para, "Dans une fenêtre à onglets, page précédente et page suivante passent d’un onglet à l’autre."),
         ManualBlock(ManualKind.Heading, "Se déplacer"),
         ManualBlock(ManualKind.Para, "Les flèches, ou des balayages sur un pavé tactile, passent d’une commande à l’autre. Tab et Maj+Tab aussi, et un anneau montre où vous êtes. **Entrée** appuie sur un bouton ou un interrupteur.", "Les flèches passent d’une commande à l’autre. Tab et Maj+Tab aussi, et un anneau montre où vous êtes. **Entrée** appuie sur un bouton ou un interrupteur."),

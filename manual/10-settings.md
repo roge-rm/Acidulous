@@ -1,4 +1,5 @@
 # Settings
+<!-- desktop: On a Mac, **Settings…** and **About…** are in the Acidulous menu too, and **Cmd+,** opens Settings. The **Edit** menu has undo, redo and the note copy and paste, and **Window** has minimise, zoom and full screen. -->
 
 ## display
 

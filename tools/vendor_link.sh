@@ -20,11 +20,10 @@ rm -rf "$OUT/link/include" "$OUT/link/LICENSE.md" "$OUT/link/GNU-GPL-v2.0.md" "$
 mkdir -p "$OUT/link/include"
 cp -r "$WORK/link/include/ableton" "$OUT/link/include/"
 # Leave out the tests, the Link Audio extension and platforms we don't build
-# for. Windows is kept for the desktop build.
+# for. Windows and darwin are kept for the desktop builds.
 rm -rf "$OUT/link/include/ableton/test" \
        "$OUT/link/include/ableton/link_audio" \
        "$OUT/link/include/ableton/LinkAudio.hpp" "$OUT/link/include/ableton/LinkAudio.ipp" \
-       "$OUT/link/include/ableton/platforms/darwin" \
        "$OUT/link/include/ableton/platforms/esp32"
 cp "$WORK/link/LICENSE.md" "$WORK/link/GNU-GPL-v2.0.md" "$WORK/link/README.md" "$OUT/link/"
 

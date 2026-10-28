@@ -68,6 +68,7 @@ In the editor:
 
 The first key is for a full keyboard and the second for a small one. Keys
 without Alt or Ctrl only work as shortcuts when play mode is off.
+<!-- desktop: On a Mac, Cmd takes the place of Ctrl and Option of Alt, and the keys window names them that way. Cmd+Left and Cmd+Right are Home and End. -->
 
 In a window with tabs, previous and next page step through the tabs.
 

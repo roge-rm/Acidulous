@@ -23,6 +23,7 @@ cd "$OUT"
 sha256sum acidulous-$V.apk acidulous-$V-32bit.apk acidulous_${V}_amd64.deb acidulous_${V}_arm64.deb \
     acidulous-$V-aarch64.AppImage acidulous-$V-x86_64.AppImage acidulous-$V-setup.exe acidulous-$V-windows-x64.zip > SHA256SUMS
 cat SHA256SUMS
+echo "The macOS .dmg files aren't built here: the tag's run of .github/workflows/macos.yml attaches them to the release with SHA256SUMS-macos."
 # Only the newest release folder is kept.
 for d in /home/dan/Projects/releases/acidulous-*; do
     v=${d##*-}

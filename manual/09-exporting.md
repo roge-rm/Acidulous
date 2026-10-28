@@ -83,3 +83,4 @@ included, for someone else to open in Acidulous.
 The other way works too. Open a MIDI file, a bundle, a shared voice or a sound
 with Acidulous, or share one to it, and it goes wherever **Import…** would have
 put it; a voice goes to the voice page in **Sound**.
+<!-- desktop: On a computer, double-click a `.acpreset` file to open it in Acidulous, and open a song zip with **Open With › Acidulous**. If Acidulous is already open, the file goes to that window. -->

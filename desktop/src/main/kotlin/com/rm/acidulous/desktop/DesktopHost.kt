@@ -26,7 +26,12 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     override val versionLong: String? = "$VERSION_NAME ($VERSION_CODE)"
     override val checksForUpdates: Boolean get() = !debugBuild
     override fun latestRelease(): String? =
-        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME (${if (onWindows) "Windows" else "Linux"})")
+        com.rm.acidulous.latestReleaseOnGitHub("Acidulous/$VERSION_NAME ($platformName)",
+            // The .dmg files are uploaded some time after the release.
+            if (onMac) { v -> macDmgName(v, System.getProperty("os.arch").orEmpty()) } else null)
+    /** On a Mac, the .dmg for this Mac's kind of processor; elsewhere the releases page. */
+    override fun downloadFor(version: String): String =
+        macDmg(version, System.getProperty("os.arch").orEmpty()) ?: super.downloadFor(version)
 
     override fun licenceText(path: String): String? =
         javaClass.classLoader.getResourceAsStream(path)?.bufferedReader()?.use { it.readText() }
@@ -72,8 +77,12 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     /** Nothing to do: desktops don't stop a playing app in the background. */
     override fun transportChanged(playing: Boolean, stop: () -> Unit) {}
 
-    override val platformName: String = if (onWindows) "Windows" else "Linux"
-    override val hasAlsa: Boolean = !onWindows
+    override val platformName: String = when {
+        onWindows -> "Windows"
+        onMac -> "macOS"
+        else -> "Linux"
+    }
+    override val hasAlsa: Boolean = !onWindows && !onMac
     override val hasDriverSdk: Boolean = onWindows
     override val usesMouse: Boolean = true
     override val onDesktop: Boolean = true
@@ -100,6 +109,15 @@ class DesktopHost(private val configDir: File, private val crashes: CrashReports
     private val Doc.file: File get() = handle as File
 
     companion object {
+        /** The release's .dmg for a JVM's os.arch, on a Mac; null elsewhere. */
+        internal fun macDmg(version: String, osArch: String, mac: Boolean = onMac): String? =
+            if (!mac) null else "https://github.com/roge-rm/Acidulous/releases/download/v$version/" + macDmgName(version, osArch)
+
+        internal fun macDmgName(version: String, osArch: String): String {
+            val arch = if (osArch == "aarch64" || osArch == "arm64") "arm64" else "x86_64"
+            return "acidulous-$version-macos-$arch.dmg"
+        }
+
         /** The system's own language, from before the app set one. */
         var systemLocale: java.util.Locale = java.util.Locale.getDefault()
     }
