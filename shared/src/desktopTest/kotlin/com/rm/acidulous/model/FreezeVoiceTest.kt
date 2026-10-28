@@ -84,4 +84,21 @@ class FreezeVoiceTest {
         val s = song.copy(tracks = song.tracks.toMutableList().also { it[0] = withClip })
         assertTrue(Freeze.stale(s, sceneId, s.tracks[0].clips[sceneId]!!))
     }
+
+    @Test
+    fun aFreezeFromTwoSlotsStaysCurrent() {
+        // The hash as it was with two slots, so songs frozen before slots 3 and 4 keep their freezes.
+        val t = song.tracks[0].copy(effects = listOf(UnitSlot("Delay", mapOf("time" to 0.3f))))
+        var h = t.machine.type.hashCode()
+        for ((k, v) in t.machine.params.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.toBits()
+        for ((k, v) in t.machine.settings.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.hashCode()
+        for (slot in 0 until 2) {
+            val fx = t.effectAt(slot)
+            h = h * 31 + fx.type.hashCode() + if (fx.bypass) 7 else 0
+            for ((k, v) in fx.params.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.toBits()
+        }
+        assertTrue(Freeze.voiceOf(t) == (if (h == 0) 1 else h))
+        val third = t.copy(effects = t.effects + UnitSlot() + UnitSlot("Reverb"))
+        assertNotEquals(Freeze.voiceOf(t), Freeze.voiceOf(third))
+    }
 }
