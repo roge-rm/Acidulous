@@ -658,7 +658,7 @@ void fastModsDoNotZipper(bool stereoIn) {
            stereoIn ? "stereo" : "mono");
     constexpr int32_t kZipBlocks = 300;
     constexpr double kAudible = -40.0;
-    int32_t worse = 0, fixed = 0, stillLoud = 0;
+    int32_t worse = 0, fixed = 0;
     std::string loud;
     for (int32_t e = 0; EffectRegistry::name(e)[0] != '\0'; ++e) {
         const char *type = EffectRegistry::name(e);
@@ -672,13 +672,13 @@ void fastModsDoNotZipper(bool stereoIn) {
             const auto ref = zipperRender(type, k, 1, kZipBlocks, stereoIn);
             const double block = errorDb(zipperRender(type, k, kBlockFrames, kZipBlocks, stereoIn), ref);
             const double sliced = errorDb(zipperRender(type, k, Effect::modSlice, kZipBlocks, stereoIn), ref);
-            // Past -20 dB once a block the render is no nearer the reference
-            // than another sound would be (a rate reducer's hold lands
-            // elsewhere), so a dB either way there says nothing.
-            if (sliced > block + 1.0 && block < -20.0) ++worse;
+            // A rate reducer's hold lands elsewhere once the rate moves, so
+            // its render is no nearer the reference than another sound would
+            // be and a dB either way says nothing.
+            const bool exempt = std::string(type) == "Bitcrusher" && std::string(defs[k].name) == "rate";
+            if (sliced > block + 1.0 && !exempt) ++worse;
             if (block > kAudible && sliced <= kAudible) ++fixed;
             if (sliced > kAudible) {
-                ++stillLoud;
                 loud += std::string(" ") + type + "." + defs[k].name;
             }
             char c[96];
@@ -692,7 +692,6 @@ void fastModsDoNotZipper(bool stereoIn) {
     ok(stereoIn ? "stereo in: slicing is never further from the reference" : "mono in: slicing is never further from the reference",
        worse == 0, d);
     printf("    still past %.0f dB sliced:%s\n", kAudible, loud.empty() ? " none" : loud.c_str());
-    (void)stillLoud;
 }
 
 

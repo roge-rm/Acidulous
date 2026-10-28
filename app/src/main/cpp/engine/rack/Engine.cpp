@@ -323,12 +323,12 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     // The inserts' mods follow the song's position, from where the scheduler
     // ended this block, so a loop or a scene jump inside it lands on the
-    // block's end. Stopped or counting in, they run from where play will
+    // block's end. Stopped, counting in or waiting on Link's downbeat, they run from where play will
     // start: the start scene's tick, less the ticks the count-in has left so
     // its last click lands on the song's phase. Clip mode has none, so it
     // keeps the one it had: 0 from a start, or the song's where it took over.
     if (!scheduler.launcherActive() && !transport.launcherMode()) {
-        if (playing && !counting) {
+        if (playing && !counting && !linkWaiting) {
             modTransport.songOffset = scheduler.songTickOffset();
         } else {
             const int64_t from = scheduler.songTickAtStartOf(transport.requestedStartScene());

@@ -393,7 +393,7 @@ fun MainScreen(
                 BarButton(
                     "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
                     description = stringResource(Res.string.a11y_undo),
-                ) { editor.undoSong() }
+                ) { editor.undoSong(); lostKeys = 0 to lostKeys.second }
                 // Mapping mode is on a long press of redo instead of its own
                 // button, there's no room for one.
                 BarButton(
@@ -465,7 +465,7 @@ fun MainScreen(
             if (!song.loopSong) editor.replace(song.copy(loopSong = true))
             onLoopScene(!loopScene)
         },
-        KeyAction.Undo to { if (editor.canUndoSong()) editor.undoSong() },
+        KeyAction.Undo to { if (editor.canUndoSong()) { editor.undoSong(); lostKeys = 0 to lostKeys.second } },
         KeyAction.Redo to { if (editor.canRedoSong()) editor.redoSong() },
         KeyAction.Panel to { showMixer = !showMixer },
         KeyAction.Save to { onSave() },
