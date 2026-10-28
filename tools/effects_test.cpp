@@ -1055,11 +1055,22 @@ void deEsser() {
         // Relative: the same ess 20 dB quieter is caught the same.
         std::vector<float> quiet = ess;
         for (auto &v : quiet) v *= 0.1f;
-        auto fx = make("Deesser", {{"relative", 1.0f}, {"threshold", -10.0f}});
-        auto fx2 = make("Deesser", {{"relative", 1.0f}, {"threshold", -10.0f}});
+        auto fx = make("Deesser", {{"relative", 1.0f}});
+        auto fx2 = make("Deesser", {{"relative", 1.0f}});
         const double dl = dB(rms(run(*fx, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
         const double dq = dB(rms(run(*fx2, quiet).l, 24000, 48000) / rms(quiet, 24000, 48000));
         ok("relative: a quiet ess is cut as much as a loud one", std::fabs(dl - dq) < 0.5 && dl < -3.0, num(dl) + " / " + num(dq) + " dB");
+    }
+    {
+        // Relative from the defaults: a vowel-ish low tone with the band 20 dB
+        // down is left near unity, a bare ess is cut.
+        std::vector<float> vowel(48000);
+        for (size_t i = 0; i < vowel.size(); ++i) vowel[i] = low[i] + 0.1f * ess[i];
+        auto fx = make("Deesser", {{"relative", 1.0f}});
+        auto fx2 = make("Deesser", {{"relative", 1.0f}});
+        const double dv = dB(rms(run(*fx, vowel).l, 24000, 48000) / rms(vowel, 24000, 48000));
+        const double de = dB(rms(run(*fx2, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
+        ok("relative from defaults: a vowel is left alone, an ess is cut", std::fabs(dv) < 0.3 && de < -3.0, num(dv) + " / " + num(de) + " dB");
     }
     staysBounded("Deesser");
 }

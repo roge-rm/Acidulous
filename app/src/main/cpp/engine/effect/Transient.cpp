@@ -66,6 +66,8 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool splitting = split > kSplitOff;
     const float lc = splitting ? dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * split), sr) : 0.0f;
     const int chans = stereoIn ? 2 : 1;
+    // The low filter only runs while split is on; it starts from silence each time.
+    if (!splitting) low[0] = low[1] = 0.0f;
     for (int32_t i = 0; i < frames; ++i) {
         // The part that's shaped: above the split, or all of it.
         float hi[2] = {L[i], stereoIn ? R[i] : 0.0f};

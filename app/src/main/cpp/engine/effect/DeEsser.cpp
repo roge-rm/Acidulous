@@ -11,6 +11,8 @@ constexpr float kQ = 1.4f;
 constexpr float kAttack = 0.0005f, kRelease = 0.06f;
 /** How much of the level over the threshold comes off: 5 to 1. */
 constexpr float kSlope = 0.8f;
+/** In relative mode the threshold counts from here: the default -36 is a band 10 dB under the whole. */
+constexpr float kRelativeOffset = 26.0f;
 } // namespace
 
 const ParamDef *DeEsser::paramDefs(int32_t &count) const {
@@ -59,8 +61,10 @@ bool DeEsser::process(float *L, float *R, int32_t frames, bool stereoIn) {
         const float b = std::fabs(detect.process(mono)), a = std::fabs(mono);
         bandEnv = dsp::guardDenormal(bandEnv + (b - bandEnv) * (b > bandEnv ? atk : rel));
         fullEnv = dsp::guardDenormal(fullEnv + (a - fullEnv) * (a > fullEnv ? atk : rel));
-        float over = 20.0f * std::log10(bandEnv + 1.0e-9f) - threshold;
-        if (relative) over -= 20.0f * std::log10(fullEnv + 1.0e-9f);
+        float over = 20.0f * std::log10(bandEnv + 1.0e-9f);
+        // Relative: the band against the whole sound, with the threshold
+        // moved up by kRelativeOffset so -36 dB means the band within 10 dB.
+        over -= relative ? 20.0f * std::log10(fullEnv + 1.0e-9f) + threshold + kRelativeOffset : threshold;
         const float cut = std::clamp(over * kSlope, 0.0f, range);
         const float g = cut > 0.0f ? std::pow(10.0f, -cut * 0.05f) : 1.0f;
         for (int c = 0; c < chans; ++c) {

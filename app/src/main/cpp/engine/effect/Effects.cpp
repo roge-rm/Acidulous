@@ -111,8 +111,11 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool wobbling = wobbleDepth > 0.0f;
 
     if (snapRead) { readSamples = target; snapRead = false; }
-    if (revStart && mode == Reverse) {
-        revLen = 0.0f;
+    // Each time the mode comes round to reverse, the first stretch starts on
+    // that block, with no fade from an older one.
+    if (mode != Reverse) revStart = true;
+    else if (revStart) {
+        revLen = revTail = revPrevTail = 0.0f;
         revStart = false;
     }
     if (mode == MultiTap || mode == Reverse) {

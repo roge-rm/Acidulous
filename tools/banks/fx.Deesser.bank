@@ -5,7 +5,8 @@
 # band, #1 wide the whole sound. `listen` plays the band, to find the
 # frequency. The extra is `relative`: the band is measured against the rest
 # of the sound, so a quiet line and a loud one are treated the same; its
-# threshold is then how far under the rest the band may come up to.
+# threshold is then how far under the rest the band may come up to, with
+# -36 dB meaning 10 dB under.
 #
 # Families: voice, gentle, steady, tame.
 
@@ -40,16 +41,14 @@ patch Steady family=steady
   # Measured against the voice, so it acts the same as the singer moves
   # off the microphone.
   relative       #1
-  threshold      -10 dB
 
 patch "Steady Wide" family=steady
   relative       #1
-  threshold      -10 dB
   mode           #1
 
 patch "Steady Hard" family=steady
   relative       #1
-  threshold      -14 dB
+  threshold      -40 dB
   range          18 dB
 
 patch Hard family=tame

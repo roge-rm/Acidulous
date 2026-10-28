@@ -13,11 +13,12 @@ internal object RateMigration {
     /**
      * The song and patch versions saved today: 2 has the seventeen rates, 3
      * the 32 wavetables, 4 Trinity's 37 destinations ([TableMigration]) and
-     * 5 Filament's louder sympathetic bank ([FilamentMigration]). [song] and
+     * 5 Filament's louder sympathetic bank ([FilamentMigration]) and 6 the
+     * Delay's mode ([DelayMigration]). [song] and
      * [patch] bring an older one up through all of them.
      */
-    const val SONG_VERSION = 5
-    const val PATCH_VERSION = 5
+    const val SONG_VERSION = 6
+    const val PATCH_VERSION = 6
     /** The first song and patch version with the seventeen. */
     private const val RATES_VERSION = 2
 
@@ -63,7 +64,7 @@ internal object RateMigration {
     fun song(song: Song): Song {
         if (song.version >= SONG_VERSION) return song
         val rated = if (song.version >= RATES_VERSION) song else rates(song)
-        return FilamentMigration.song(TableMigration.song(rated)).copy(version = SONG_VERSION)
+        return DelayMigration.song(FilamentMigration.song(TableMigration.song(rated))).copy(version = SONG_VERSION)
     }
 
     private fun rates(song: Song): Song {
@@ -103,6 +104,6 @@ internal object RateMigration {
         if (patch.version >= PATCH_VERSION) return patch
         val rated = if (patch.version >= RATES_VERSION) patch
         else patch.copy(params = params(patch.machine.removePrefix("fx."), patch.params))
-        return FilamentMigration.patch(TableMigration.patch(rated)).copy(version = PATCH_VERSION)
+        return DelayMigration.patch(FilamentMigration.patch(TableMigration.patch(rated))).copy(version = PATCH_VERSION)
     }
 }

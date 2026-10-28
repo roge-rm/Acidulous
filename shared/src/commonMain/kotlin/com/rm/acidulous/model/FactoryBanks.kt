@@ -15782,15 +15782,15 @@ internal object FactoryBanks {
         family = "gentle")
 
     private fun fx_deesser7() = Patch("fx.Deesser", "Steady",
-        mapOf("threshold" to 0.8333333f, "relative" to 1f),
+        mapOf("relative" to 1f),
         family = "steady")
 
     private fun fx_deesser8() = Patch("fx.Deesser", "Steady Wide",
-        mapOf("threshold" to 0.8333333f, "mode" to 1f, "relative" to 1f),
+        mapOf("mode" to 1f, "relative" to 1f),
         family = "steady")
 
     private fun fx_deesser9() = Patch("fx.Deesser", "Steady Hard",
-        mapOf("threshold" to 0.766666651f, "range" to 0.75f, "relative" to 1f),
+        mapOf("threshold" to 0.333333343f, "range" to 0.75f, "relative" to 1f),
         family = "steady")
 
     private fun fx_deesser10() = Patch("fx.Deesser", "Hard",

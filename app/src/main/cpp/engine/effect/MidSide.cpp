@@ -68,6 +68,8 @@ bool MidSide::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float sideGain = dsp::dbToGain(p.get(Side)) * p.get(Width);
     const float breathe = p.get(Breathe);
     const bool cutting = p.get(Mono) > kMonoOff;
+    // The side high-pass only runs while mono is on; it starts from silence each time.
+    if (!cutting) sideCut.reset();
     const float atk = dsp::onePoleCoeff(kBreatheAttack, sr), rel = dsp::onePoleCoeff(kBreatheRelease, sr);
     for (int32_t i = 0; i < frames; ++i) {
         const float l = L[i], r = stereoIn ? R[i] : l;

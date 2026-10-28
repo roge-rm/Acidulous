@@ -15,7 +15,7 @@ namespace acidulous::effect {
  * The extra is `relative`: the band is measured against the whole sound
  * rather than against full scale, so the same setting catches an s on a
  * quiet line and a loud one. Its threshold is then how far under the rest
- * of the sound the band may come up to: an s is nearly all band, a vowel
+ * of the sound the band may come up to (-36 dB is 10 dB): an s is nearly all band, a vowel
  * has it 20 dB or more down.
  */
 class DeEsser final : public Effect {

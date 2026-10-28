@@ -17,7 +17,7 @@ dures.
   qu’au niveau maximal, donc une phrase douce et une forte sont traitées
   pareil. Le seuil devient alors de combien la bande peut monter sous le
   reste : un s est presque tout en bande, une voyelle l’a 20 dB plus bas ou
-  plus. Essayez -10.
+  plus. À -36, c'est 10 dB.
 - **gain** : le niveau de sortie.
 
 ## Astuces

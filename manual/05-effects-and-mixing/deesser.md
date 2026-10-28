@@ -16,7 +16,8 @@ cymbals.
 - **relative** *(extra)* - measures the band against the rest of the sound
   instead of against full level, so a quiet line and a loud one are treated
   the same. The threshold is then how far under the rest the band can come
-  up: an s is nearly all band, a vowel has it 20 dB or more down. Try -10.
+  up: an s is nearly all band, a vowel has it 20 dB or more down. At -36 it
+  is 10 dB, each 1 dB lower allows 1 dB less.
 - **gain** - the output level.
 
 ## Tips
