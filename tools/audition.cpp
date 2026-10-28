@@ -1277,8 +1277,9 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * What an effect is fed: two bars of music made by the app's own machines,
  * then silence for the tails. Most effects get a band (drums, bass and
  * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
- * a single line they can follow, Rotary an organ, and Gate the band over a
- * little hiss to take out. Returns the stereo source; it stops at `stop`.
+ * a single line they can follow, Rotary an organ, Gate the band over a
+ * little hiss to take out, Deesser a voice and Midside the band with a
+ * piano spread wide. Returns the stereo source; it stops at `stop`.
  */
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     const float bars = 2.0f;
@@ -1310,6 +1311,17 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             {4.0f, 2.0f, 53, 100}, {4.0f, 2.0f, 57, 100}, {4.0f, 2.0f, 60, 100}, {4.0f, 2.0f, 64, 100},
             {6.0f, 2.0f, 55, 100}, {6.0f, 2.0f, 59, 100}, {6.0f, 2.0f, 62, 100}, {6.0f, 2.0f, 67, 100},
         }, bpm, frames, {{"rotary", 0.0f}, {"drive", 0.2f}, {"vibtype", 0.0f}, {"vibup", 0.0f}}), 1.0f);
+    } else if (effect == "Deesser") {
+        // A voice: the real recording named in tools/local.env, or the
+        // synthetic phrase, whose consonants are noise bursts.
+        const char *file = std::getenv("ACIDULOUS_INPUT_FILE");
+        std::vector<float> voice;
+        if (file != nullptr && *file != '\0') voice = fileInput(file, static_cast<float>(stop) / kSr);
+        if (voice.empty()) voice = voicePhrase();
+        for (size_t i = 0; i < voice.size() && static_cast<int64_t>(i) < stop; ++i) {
+            out[i * 2] = voice[i];
+            out[i * 2 + 1] = voice[i];
+        }
     } else {
         // Hexbeat's kit: kick 36, snare 38, closed hat 43, open hat 44.
         std::vector<Hit> drums;
@@ -1330,6 +1342,18 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             {4.0f, 1.5f, 53, 90}, {4.0f, 1.5f, 57, 90}, {4.0f, 1.5f, 60, 90}, {4.0f, 1.5f, 64, 90},
             {6.5f, 1.5f, 55, 85}, {6.5f, 1.5f, 59, 85}, {6.5f, 1.5f, 62, 85}, {6.5f, 1.5f, 67, 85},
         }, bpm, frames), 0.7f);
+        if (effect == "Midside") {
+            // Something on the sides: the piano again, one side 11 ms behind
+            // the other.
+            const auto keys = renderPart("Trinity", "Electric Piano", {
+                {0.0f, 1.5f, 69, 80}, {2.5f, 0.5f, 72, 70}, {4.0f, 1.5f, 65, 80}, {6.5f, 1.5f, 67, 75},
+            }, bpm, frames);
+            const auto lag = static_cast<size_t>(0.011f * kSr) * 2;
+            for (size_t i = 0; i + 1 < out.size(); i += 2) {
+                out[i] += keys[i] * 0.6f;
+                if (i >= lag) out[i + 1] += keys[i + 1 - lag] * 0.6f;
+            }
+        }
     }
 
     // Every source is equally loud, so presets on different effects can be
@@ -1342,6 +1366,16 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
     if (level > -190.0f) {
         const float gain = std::pow(10.0f, (target - level) / 20.0f);
         for (float &v : out) v *= gain;
+    }
+
+    if (effect == "Deesser") {
+        // A voice is peakier than a band: at the band's loudness a plosive
+        // goes past full scale, so the few peaks over -3 dBFS are rounded
+        // off under 0 dBFS and the rest is left as it was.
+        for (float &v : out) {
+            const float a = std::fabs(v);
+            if (a > 0.7f) v = std::copysign(0.7f + 0.25f * std::tanh((a - 0.7f) / 0.25f), v);
+        }
     }
 
     if (effect == "Gate") {

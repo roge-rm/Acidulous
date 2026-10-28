@@ -1,6 +1,7 @@
 // Tests the character effects: Smash, Acid, Mouth, Tape, Slicer, Horn,
-// Spectral and Formula. Each is rendered and measured for the thing it's
-// for, since none of it shows in a frequency response.
+// Spectral, Formula, Transient, Midside, Deesser and the Delay's modes. Each
+// is rendered and measured for the thing it's for, since none of it shows in
+// a frequency response.
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -745,6 +746,325 @@ void formula() {
     staysBounded("Formula");
 }
 
+namespace {
+
+// --- Delay modes ------------------------------------------------------------------
+
+/** Runs a stereo signal through in blocks at [bpm]. */
+Stereo runStereo(Effect &fx, const Stereo &in, float bpm = 120.0f) {
+    Stereo s = in;
+    const double ticksPerSample = kTicksPerBeat * bpm / 60.0 / kRate;
+    for (size_t at = 0; at < s.l.size(); at += kBlock) {
+        const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, s.l.size() - at));
+        fx.onBlock(static_cast<int64_t>(at * ticksPerSample), static_cast<int64_t>((at + n) * ticksPerSample), bpm);
+        fx.run(s.l.data() + at, s.r.data() + at, n, true);
+    }
+    return s;
+}
+
+/** The biggest |x| in [from, to). */
+double peakIn(const std::vector<float> &x, size_t from, size_t to) {
+    double p = 0.0;
+    for (size_t i = from; i < std::min(to, x.size()); ++i) p = std::max(p, double(std::fabs(x[i])));
+    return p;
+}
+
+void delayModes() {
+    printf("- delay modes\n");
+    // A quarter note at 120 is 24000 frames (time #4).
+    constexpr size_t kQuarter = 24000;
+    std::vector<float> click(3 * kQuarter, 0.0f);
+    click[0] = 1.0f;
+    {
+        auto fx = make("Delay", {{"mode", 0.0f}, {"time", 4.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, click);
+        ok("normal: the echo lands on the quarter in both sides",
+           peakIn(out.l, kQuarter - 1, kQuarter + 2) > 0.9 && peakIn(out.r, kQuarter - 1, kQuarter + 2) > 0.9 &&
+               peakIn(out.l, 2, kQuarter - 2) < 1e-6,
+           num(peakIn(out.l, kQuarter - 1, kQuarter + 2)) + " " + num(peakIn(out.r, kQuarter - 1, kQuarter + 2)));
+    }
+    {
+        auto fx = make("Delay", {{"mode", 1.0f}, {"time", 4.0f}, {"feedback", 0.9f}, {"mix", 1.0f}, {"tone", 18000.0f}});
+        const auto out = run(*fx, click);
+        const bool first = peakIn(out.l, kQuarter - 4, kQuarter + 4) > 0.3 && peakIn(out.r, kQuarter - 4, kQuarter + 4) < 1e-6;
+        const bool second = peakIn(out.r, 2 * kQuarter - 4, 2 * kQuarter + 4) > 0.2 && peakIn(out.l, 2 * kQuarter - 4, 2 * kQuarter + 4) < 1e-6;
+        ok("ping-pong: the first echo is on the left, the second on the right", first && second);
+    }
+    {
+        // Four even taps in a quarter: one every sixteenth, outside in.
+        auto fx = make("Delay", {{"mode", 2.0f}, {"time", 4.0f}, {"taps", 4.0f}, {"spacing", 0.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, click);
+        bool at = true;
+        std::string where;
+        for (int k = 1; k <= 4; ++k) {
+            const size_t t = kQuarter * k / 4;
+            const double here = peakIn(out.l, t - 2, t + 3) + peakIn(out.r, t - 2, t + 3);
+            at = at && here > 0.6;
+            where += num(here) + " ";
+        }
+        // Nothing between the taps.
+        double between = 0.0;
+        for (int k = 0; k < 4; ++k) {
+            const size_t a = kQuarter * k / 4 + 4, b = kQuarter * (k + 1) / 4 - 3;
+            between = std::max(between, std::max(peakIn(out.l, a, b), peakIn(out.r, a, b)));
+        }
+        ok("multi-tap: four even taps land on each sixteenth", at && between < 1e-6, where + "between " + num(between));
+        const size_t t1 = kQuarter / 4, t2 = kQuarter / 2;
+        ok("multi-tap: the first tap is hard left and the second hard right",
+           peakIn(out.r, t1 - 2, t1 + 3) < 1e-4 && peakIn(out.l, t2 - 2, t2 + 3) < 1e-4);
+    }
+    {
+        // Spacing up bunches the taps late: the first of three moves past a third.
+        auto fx = make("Delay", {{"mode", 2.0f}, {"time", 4.0f}, {"taps", 3.0f}, {"spacing", 1.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, click);
+        size_t first = 0;
+        for (size_t i = 2; i < kQuarter && first == 0; ++i) if (std::fabs(out.l[i]) + std::fabs(out.r[i]) > 0.3) first = i;
+        ok("multi-tap: spacing up moves the first tap late", first > kQuarter / 2, std::to_string(first) + " frames");
+    }
+    {
+        // A rising ramp a quarter long comes back falling over the next quarter.
+        std::vector<float> ramp(3 * kQuarter, 0.0f);
+        for (size_t i = 0; i < kQuarter; ++i) ramp[i] = 0.5f * static_cast<float>(i) / kQuarter;
+        auto fx = make("Delay", {{"mode", 3.0f}, {"time", 4.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, ramp);
+        double sxy = 0.0, sxx = 0.0, syy = 0.0;
+        for (size_t t = 600; t < kQuarter - 600; ++t) {
+            const double want = ramp[kQuarter - 1 - t], got = out.l[kQuarter + t];
+            sxy += want * got; sxx += want * want; syy += got * got;
+        }
+        const double corr = sxy / std::sqrt(sxx * syy + 1e-30);
+        ok("reverse: the stretch before plays back end first", corr > 0.999 && peakIn(out.l, 0, kQuarter) <= 0.5 + 1e-6,
+           "correlation " + num(corr));
+        ok("reverse: a whole stretch later it's gone (feedback 0)", peakIn(out.l, 2 * kQuarter + 600, 3 * kQuarter) < 1e-3,
+           num(peakIn(out.l, 2 * kQuarter + 600, 3 * kQuarter)));
+    }
+    {
+        // A bar at 120 is longer than the line holds twice, so it plays back in halves.
+        constexpr size_t kHalf = 2 * kQuarter;
+        std::vector<float> ramp(3 * kHalf, 0.0f);
+        for (size_t i = 0; i < kHalf; ++i) ramp[i] = 0.5f * static_cast<float>(i) / kHalf;
+        auto fx = make("Delay", {{"mode", 3.0f}, {"time", 7.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, ramp);
+        double sxy = 0.0, sxx = 0.0, syy = 0.0;
+        for (size_t t = 600; t < kHalf - 600; ++t) {
+            const double want = ramp[kHalf - 1 - t], got = out.l[kHalf + t];
+            sxy += want * got; sxx += want * want; syy += got * got;
+        }
+        ok("reverse: a bar too long for the line plays back in halves", sxy / std::sqrt(sxx * syy + 1e-30) > 0.999,
+           "correlation " + num(sxy / std::sqrt(sxx * syy + 1e-30)));
+    }
+    {
+        // Feedback plays the reversed echo forwards again.
+        std::vector<float> ramp(4 * kQuarter, 0.0f);
+        for (size_t i = 0; i < kQuarter; ++i) ramp[i] = 0.5f * static_cast<float>(i) / kQuarter;
+        auto fx = make("Delay", {{"mode", 3.0f}, {"time", 4.0f}, {"feedback", 0.5f}, {"mix", 1.0f}, {"tone", 18000.0f}});
+        const auto out = run(*fx, ramp);
+        const double early = rms(out.l, 2 * kQuarter + 600, 2 * kQuarter + 6000), late = rms(out.l, 3 * kQuarter - 6000, 3 * kQuarter - 600);
+        ok("reverse: with feedback the next pass runs forwards", late > 2.0 * early && late > 0.05, num(early) + " -> " + num(late));
+    }
+    for (int mode = 0; mode < 4; ++mode) {
+        // Played, reset and played again, every mode comes out the same.
+        auto fx = make("Delay", {{"mode", float(mode)}, {"feedback", 0.7f}, {"wobble", 0.5f}, {"time", 3.0f}});
+        const auto music = noise(0.3f, 96000, 5);
+        const auto a = run(*fx, music);
+        fx->reset();
+        fx->resetMod();
+        const auto b = run(*fx, music);
+        ok("mode " + std::to_string(mode) + ": reset plays it back the same", worst(a.l, b.l) == 0.0 && worst(a.r, b.r) == 0.0);
+    }
+    for (int mode = 0; mode < 4; ++mode) {
+        auto fx = make("Delay", {{"mode", float(mode)}, {"feedback", 0.95f}, {"wobble", 1.0f}, {"time", 7.0f}});
+        const auto out = run(*fx, noise(0.9f, 240000), 40.0f);
+        ok("mode " + std::to_string(mode) + ": a 1-bar delay at 40 bpm, full feedback and wobble stays bounded",
+           finite(out) && peak(out.l) < 8.0, "peak " + num(peak(out.l)));
+    }
+}
+
+// --- Transient --------------------------------------------------------------------
+
+/** Noise hits that ring down, four a second. */
+std::vector<float> hits(size_t n) {
+    auto x = noise(0.6f, n, 7);
+    for (size_t i = 0; i < n; ++i) x[i] *= static_cast<float>(std::exp(-double(i % 12000) / 2400.0));
+    return x;
+}
+
+void transient() {
+    printf("- transient\n");
+    const auto in = hits(96000);
+    {
+        auto fx = make("Transient");
+        ok("attack and sustain at 0 is the track untouched", worst(run(*fx, in).l, in) < 1e-7);
+    }
+    // The onset: the first 5 ms of each hit.
+    auto onset = [](const std::vector<float> &x) {
+        double p = 0.0;
+        for (size_t h = 12000; h < x.size(); h += 12000) p = std::max(p, peakIn(x, h, h + 240));
+        return p;
+    };
+    auto tail = [](const std::vector<float> &x) {
+        double s = 0.0;
+        for (size_t h = 12000; h < x.size(); h += 12000) s += rms(x, h + 4800, h + 11000);
+        return s;
+    };
+    {
+        auto fx = make("Transient", {{"attack", 1.0f}});
+        const auto out = run(*fx, in).l;
+        const double d = dB(onset(out) / onset(in));
+        ok("attack up raises each hit's onset peak", d > 3.0, num(d) + " dB");
+    }
+    {
+        auto fx = make("Transient", {{"attack", -1.0f}});
+        const double d = dB(onset(run(*fx, in).l) / onset(in));
+        ok("attack down lowers it", d < -3.0, num(d) + " dB");
+    }
+    {
+        auto fx = make("Transient", {{"sustain", 1.0f}});
+        const double d = dB(tail(run(*fx, in).l) / tail(in));
+        ok("sustain up raises the ring after the hit", d > 3.0, num(d) + " dB");
+    }
+    {
+        auto fx = make("Transient", {{"sustain", -1.0f}});
+        const double d = dB(tail(run(*fx, in).l) / tail(in));
+        ok("sustain down shortens it", d < -3.0, num(d) + " dB");
+    }
+    {
+        // With the split up high a held bass tone under it comes through.
+        std::vector<float> mix = in;
+        const auto bass = tone(60.0f, 0.3f, in.size());
+        for (size_t i = 0; i < mix.size(); ++i) mix[i] = 0.1f * mix[i] + bass[i];
+        auto fx = make("Transient", {{"attack", 1.0f}, {"sustain", -1.0f}, {"split", 2000.0f}});
+        auto full = make("Transient", {{"attack", 1.0f}, {"sustain", -1.0f}});
+        const auto split = run(*fx, mix).l, whole = run(*full, mix).l;
+        // How far the bass moved: the output against the input, lowpassed by a 4800-frame mean.
+        auto lowErr = [&](const std::vector<float> &out) {
+            double e = 0.0, b = 0.0;
+            for (size_t i = 48000; i < 96000; i += 400) {
+                double so = 0.0, si = 0.0;
+                for (size_t j = i; j < i + 400; ++j) { so += out[j] * bass[j]; si += mix[j] * bass[j]; }
+                e += std::fabs(so - si);
+                b += std::fabs(si);
+            }
+            return e / b;
+        };
+        ok("split: a bass under the split is left nearly alone", lowErr(split) < 0.02 && lowErr(whole) > 0.05,
+           num(lowErr(split)) + " against " + num(lowErr(whole)) + " shaping all of it");
+    }
+    staysBounded("Transient");
+}
+
+// --- Midside ----------------------------------------------------------------------
+
+void midSide() {
+    printf("- midside\n");
+    // Different sounds left and right.
+    Stereo in{tone(440.0f, 0.3f, 48000), noise(0.2f, 48000, 3)};
+    {
+        auto fx = make("Midside");
+        const auto out = runStereo(*fx, in);
+        ok("at its defaults it puts the track back", worst(out.l, in.l) < 1e-5 && worst(out.r, in.r) < 1e-5,
+           num(std::max(worst(out.l, in.l), worst(out.r, in.r))));
+    }
+    {
+        auto fx = make("Midside", {{"width", 0.0f}});
+        const auto out = runStereo(*fx, in);
+        ok("width 0 is mono", worst(out.l, out.r) == 0.0);
+    }
+    {
+        auto fx = make("Midside", {{"width", 2.0f}});
+        const auto out = runStereo(*fx, in);
+        double sIn = 0.0, sOut = 0.0;
+        for (size_t i = 0; i < in.l.size(); ++i) {
+            sIn += std::pow(double(in.l[i] - in.r[i]), 2.0);
+            sOut += std::pow(double(out.l[i] - out.r[i]), 2.0);
+        }
+        ok("width 2 doubles the side", std::fabs(dB(std::sqrt(sOut / sIn)) - 6.02) < 0.1, num(dB(std::sqrt(sOut / sIn))) + " dB");
+    }
+    {
+        // A 50 Hz tone out of phase is all side: mono at 200 Hz takes it out.
+        const auto lo = tone(50.0f, 0.3f, 96000);
+        Stereo anti{lo, lo};
+        for (auto &v : anti.r) v = -v;
+        auto fx = make("Midside", {{"mono", 200.0f}});
+        const auto out = runStereo(*fx, anti);
+        const double d = dB(rms(out.l, 48000, 96000) / rms(lo, 48000, 96000));
+        ok("mono at 200 Hz takes the side out of a 50 Hz tone", d < -20.0, num(d) + " dB");
+    }
+    {
+        auto fx = make("Midside", {{"side", -24.0f}, {"mid", 6.0f}});
+        Stereo same{in.l, in.l};
+        const auto out = runStereo(*fx, same);
+        const double d = dB(rms(out.l, 4800, 48000) / rms(same.l, 4800, 48000));
+        ok("mid +6 dB lifts a centred sound by 6 dB", std::fabs(d - 6.0) < 0.1, num(d) + " dB");
+    }
+    {
+        // Breathe: a loud centre narrows the side.
+        Stereo loud{tone(220.0f, 0.5f, 48000), tone(220.0f, 0.5f, 48000)};
+        const auto n = noise(0.05f, 48000, 9);
+        for (size_t i = 0; i < 48000; ++i) { loud.l[i] += n[i]; loud.r[i] -= n[i]; }
+        auto fx = make("Midside", {{"breathe", 1.0f}});
+        const auto out = runStereo(*fx, loud);
+        double sIn = 0.0, sOut = 0.0;
+        for (size_t i = 24000; i < 48000; ++i) {
+            sIn += std::pow(double(loud.l[i] - loud.r[i]), 2.0);
+            sOut += std::pow(double(out.l[i] - out.r[i]), 2.0);
+        }
+        ok("breathe: a loud centre closes the side", dB(std::sqrt(sOut / sIn)) < -20.0, num(dB(std::sqrt(sOut / sIn))) + " dB");
+    }
+    staysBounded("Midside");
+}
+
+// --- Deesser ----------------------------------------------------------------------
+
+void deEsser() {
+    printf("- de-esser\n");
+    const auto ess = tone(6000.0f, 0.3f, 48000);
+    const auto low = tone(200.0f, 0.5f, 48000);
+    {
+        auto fx = make("Deesser");
+        const double d = dB(rms(run(*fx, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
+        ok("split: a loud band at 6 kHz is ducked", d < -6.0, num(d) + " dB");
+    }
+    {
+        auto fx = make("Deesser");
+        const double d = dB(rms(run(*fx, low).l, 24000, 48000) / rms(low, 24000, 48000));
+        ok("a 200 Hz tone is left alone", std::fabs(d) < 0.1, num(d) + " dB");
+    }
+    {
+        // The ess on top of a low tone: wide ducks both, split only the ess.
+        std::vector<float> both(48000);
+        for (size_t i = 0; i < both.size(); ++i) both[i] = ess[i] + low[i];
+        auto split = make("Deesser");
+        auto wide = make("Deesser", {{"mode", 1.0f}});
+        const auto a = run(*split, both).l, b = run(*wide, both).l;
+        // The low tone's part of each, by correlation with it.
+        auto lowPart = [&](const std::vector<float> &x) {
+            double s = 0.0, n = 0.0;
+            for (size_t i = 24000; i < 48000; ++i) { s += x[i] * low[i]; n += low[i] * low[i]; }
+            return s / n;
+        };
+        ok("split leaves the low tone under an ess; wide turns it down",
+           std::fabs(dB(lowPart(a))) < 0.5 && dB(lowPart(b)) < -3.0, num(dB(lowPart(a))) + " / " + num(dB(lowPart(b))) + " dB");
+    }
+    {
+        auto fx = make("Deesser", {{"listen", 1.0f}});
+        const double d = dB(rms(run(*fx, low).l, 24000, 48000) / rms(low, 24000, 48000));
+        ok("listen plays the band, so a low tone nearly vanishes", d < -25.0, num(d) + " dB");
+    }
+    {
+        // Relative: the same ess 20 dB quieter is caught the same.
+        std::vector<float> quiet = ess;
+        for (auto &v : quiet) v *= 0.1f;
+        auto fx = make("Deesser", {{"relative", 1.0f}, {"threshold", -10.0f}});
+        auto fx2 = make("Deesser", {{"relative", 1.0f}, {"threshold", -10.0f}});
+        const double dl = dB(rms(run(*fx, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
+        const double dq = dB(rms(run(*fx2, quiet).l, 24000, 48000) / rms(quiet, 24000, 48000));
+        ok("relative: a quiet ess is cut as much as a loud one", std::fabs(dl - dq) < 0.5 && dl < -3.0, num(dl) + " / " + num(dq) + " dB");
+    }
+    staysBounded("Deesser");
+}
+} // namespace
+
 int main() {
     printf("character effects\n");
     smash();
@@ -756,6 +1076,10 @@ int main() {
     horn();
     spectral();
     formula();
+    delayModes();
+    transient();
+    midSide();
+    deEsser();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

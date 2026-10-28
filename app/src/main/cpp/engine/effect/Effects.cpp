@@ -40,18 +40,29 @@ const ParamDef *Delay::paramDefs(int32_t &count) const {
         {"time", 0.0f, 7.0f, 3.0f, Curve::Stepped, kDelayTimes, ""},   // 1/32 .. 1 bar
         {"feedback", 0.0f, 0.95f, 0.4f, Curve::Linear, 0, ""},
         {"tone", 300.0f, 18000.0f, 6000.0f, Curve::Exponential, 0, "Hz"},
-        {"pingpong", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""},
+        {"mode", 0.0f, 3.0f, 1.0f, Curve::Stepped, 4, ""}, // normal, ping-pong, multi-tap, reverse
         {"mix", 0.0f, 1.0f, 0.35f, Curve::Linear, 0, ""},
         {"duck", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"taps", 2.0f, 4.0f, 3.0f, Curve::Stepped, 3, ""},        // multi-tap only
+        {"spacing", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},     // multi-tap: early .. even .. late
     };
     count = Count;
     return defs;
 }
 
+namespace {
+/** The crossfade between reverse stretches, at most a quarter of a stretch. */
+constexpr float kReverseFadeSeconds = 0.01f;
+/** Room left in the line for wobble's drift, which is at most 70 frames either way. */
+constexpr float kReverseDriftRoom = 160.0f;
+} // namespace
+
 void Delay::prepare(int32_t sampleRate) {
     sr = static_cast<float>(sampleRate);
+    // The line's length is part of how a read rounds (see wrappedReadIndex),
+    // so it stays as it was for songs made before the modes.
     for (auto &l : line) l.prepare(static_cast<int32_t>(sr * kMaxDelaySeconds) + 64);
     reset();
 }
@@ -66,6 +77,23 @@ void Delay::reset() {
     snapRead = true;
     // Reset the flutter too, so renders repeat exactly.
     wobblePhase = 0.0f;
+    revAt = 0.0f;
+    revLen = revPrevLen = readSamples;
+    revTail = revPrevTail = 0.0f;
+    // The first stretch starts on the first block, at the time asked for.
+    revStart = true;
+}
+
+float Delay::wobbleDrift(float depth) {
+    wobblePhase += 0.9f / sr;
+    if (wobblePhase >= 1.0f) wobblePhase -= 1.0f;
+    if (depth <= 0.0f) return 0.0f;
+    return depth * (0.6f * std::sin(wobblePhase * dsp::kTwoPi) + 0.4f * std::sin(wobblePhase * dsp::kTwoPi * 2.71f));
+}
+
+float Delay::duckedMix(float inL, float inR) {
+    const float env = peakEnvelope(duckEnv, (std::fabs(inL) + std::fabs(inR)) * 1.5f, duckAtk_, duckRel_);
+    return mix_ * (1.0f - duck_ * clampf(env, 0.0f, 1.0f));
 }
 
 bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
@@ -73,7 +101,8 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int timeIdx = static_cast<int>(p.get(Time) + 0.5f);
     const float target = clampf(kDelayBeats[timeIdx] * 60.0f / bpm * sr, 1.0f, sr * kMaxDelaySeconds);
     const float fb = p.get(Feedback), mix = p.get(Mix), duck = p.get(Duck), wobble = p.get(Wobble);
-    const bool pingPong = p.get(PingPong) >= 0.5f;
+    const int mode = static_cast<int>(p.get(Mode) + 0.5f);
+    const bool pingPong = mode == PingPong;
     const float toneCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * p.get(Tone)), sr);
     const float duckAtk = dsp::onePoleCoeff(0.002f, sr), duckRel = dsp::onePoleCoeff(0.25f, sr);
     // The read position glides to a new note value, giving a pitch swoop instead of a click.
@@ -82,6 +111,19 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool wobbling = wobbleDepth > 0.0f;
 
     if (snapRead) { readSamples = target; snapRead = false; }
+    if (revStart && mode == Reverse) {
+        revLen = 0.0f;
+        revStart = false;
+    }
+    if (mode == MultiTap || mode == Reverse) {
+        fb_ = fb; mix_ = mix; duck_ = duck; wobbleDepth_ = wobbleDepth;
+        duckAtk_ = duckAtk; duckRel_ = duckRel; glide_ = glide;
+        if (mode == MultiTap) runMultiTap(L, R, frames, stereoIn, target, toneCoeff);
+        else runReverse(L, R, frames, stereoIn, target, toneCoeff);
+        return true;
+    }
+    // Normal and ping-pong: this loop is the delay as it always was, so
+    // songs made before the modes came out the same.
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         readSamples += (target - readSamples) * glide;
@@ -110,6 +152,100 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
         R[i] = inR + tapR * wet;
     }
     return true;
+}
+
+void Delay::runMultiTap(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff) {
+    const auto &p = params_;
+    const int taps = std::clamp(static_cast<int>(p.get(Taps) + 0.5f), 2, kMaxTaps);
+    // Where each tap sits in the time, as a fraction: k/taps bent by spacing,
+    // so at 0 they're even, below it they bunch early and above it late. The
+    // last is always the full time.
+    const float bend = std::exp2(-1.5f * p.get(Spacing));
+    float frac[kMaxTaps], gl[kMaxTaps], gr[kMaxTaps];
+    // Pans run left to right, taken outside in: hard left, hard right, then
+    // the ones between, so each tap answers the last from the other side.
+    static constexpr int kOrder[kMaxTaps][kMaxTaps] = {{0}, {0, 1}, {0, 2, 1}, {0, 3, 1, 2}};
+    for (int k = 0; k < taps; ++k) {
+        frac[k] = k == taps - 1 ? 1.0f : std::pow(static_cast<float>(k + 1) / static_cast<float>(taps), bend);
+        const float pan = -1.0f + 2.0f * static_cast<float>(kOrder[taps - 1][k]) / static_cast<float>(taps - 1);
+        const float th = (pan + 1.0f) * 0.25f * dsp::kPi;
+        gl[k] = std::cos(th);
+        gr[k] = std::sin(th);
+    }
+    for (int32_t i = 0; i < frames; ++i) {
+        const float inL = L[i], inR = stereoIn ? R[i] : L[i];
+        readSamples += (target - readSamples) * glide_;
+        const float drift = wobbleDrift(wobbleDepth_);
+        float outL = 0.0f, outR = 0.0f, last = 0.0f;
+        for (int k = 0; k < taps; ++k) {
+            const float t = line[0].read(readSamples * frac[k] + drift);
+            outL += t * gl[k];
+            outR += t * gr[k];
+            last = t;
+        }
+        // Only the last tap feeds back, through the tone.
+        lp[0] += (last - lp[0]) * toneCoeff;
+        const float feed = (inL + inR) * 0.5f + lp[0] * fb_;
+        line[0].write(feed);
+        // The right line keeps time too, so switching back to a two-line
+        // mode doesn't play something old.
+        line[1].write(feed);
+        const float wet = duckedMix(inL, inR);
+        L[i] = inL + outL * wet;
+        R[i] = inR + outR * wet;
+    }
+}
+
+void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff) {
+    for (int32_t i = 0; i < frames; ++i) {
+        const float inL = L[i], inR = stereoIn ? R[i] : L[i];
+        readSamples += (target - readSamples) * glide_;
+        const float drift = wobbleDrift(wobbleDepth_);
+        // Stretches start every `time`, so they stay on the beat they started
+        // on. Each plays a short tail on past its end, which the next fades
+        // in over.
+        if (revAt >= revLen) startStretch();
+        // At t frames into a stretch, reading 2t back plays the stretch
+        // before it from its end to its start.
+        float tapL, tapR;
+        {
+            const float d = 2.0f * revAt + 1.0f + drift;
+            tapL = line[0].read(d);
+            tapR = line[1].read(d);
+        }
+        if (revAt < revPrevTail) {
+            const float x = revAt / revPrevTail * 0.5f * dsp::kPi;
+            const float in = std::sin(x), out = std::cos(x);
+            const float d = 2.0f * (revAt + revPrevLen) + 1.0f + drift;
+            tapL = tapL * in + line[0].read(d) * out;
+            tapR = tapR * in + line[1].read(d) * out;
+        }
+        revAt += 1.0f;
+        lp[0] += (tapL - lp[0]) * toneCoeff;
+        lp[1] += (tapR - lp[1]) * toneCoeff;
+        line[0].write(inL + lp[0] * fb_);
+        line[1].write(inR + lp[1] * fb_);
+        const float wet = duckedMix(inL, inR);
+        L[i] = inL + tapL * wet;
+        R[i] = inR + tapR * wet;
+    }
+}
+
+void Delay::startStretch() {
+    revPrevLen = revLen;
+    revPrevTail = revTail;
+    // A stretch reads up to twice its length back, so one longer than half
+    // the line is halved until it fits: a bar at a slow tempo plays back in
+    // halves or quarters, still on the beat.
+    const float room = static_cast<float>(line[0].capacity()) - kReverseDriftRoom;
+    float len = readSamples, tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
+    while (2.0f * (len + tail) > room) {
+        len *= 0.5f;
+        tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
+    }
+    revLen = len;
+    revTail = tail;
+    revAt = 0.0f;
 }
 
 // --- Reverb -----------------------------------------------------------------------

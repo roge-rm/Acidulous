@@ -253,8 +253,12 @@ std::vector<float> renderMachine(const std::string &machine, const std::vector<f
     return out;
 }
 
-/** The same deterministic source reset_test feeds an effect. */
-std::vector<float> effectSource() {
+/**
+ * The same deterministic source reset_test feeds an effect. A de-esser also
+ * gets a burst of hiss on each offbeat, an s for it to catch, or every
+ * preset would leave the source alone.
+ */
+std::vector<float> effectSource(const std::string &type) {
     const auto n = static_cast<size_t>(kSr * (kHold + kTail));
     std::vector<float> out(n * 2, 0.0f);
     Rng rng(0xeffec7u);
@@ -268,7 +272,8 @@ std::vector<float> effectSource() {
                             0.5f * std::sin(2.0f * static_cast<float>(M_PI) * 331.0f * t)) * 0.35f;
         // A noise floor at about -54 dB, like real gear. Louder noise holds
         // gates open, so different thresholds would all sound the same.
-        const float v = tone * env + rng.next() * 0.002f;
+        float v = tone * env + rng.next() * 0.002f;
+        if (type == "Deesser" && std::fmod(t + 0.25f, 0.5f) < 0.08f) v += rng.next() * 0.15f;
         out[i * 2] = v;
         out[i * 2 + 1] = v * 0.97f;
     }
@@ -285,7 +290,7 @@ std::vector<float> renderEffect(const std::string &type, const std::vector<float
     for (size_t i = 0; i < norm.size(); ++i) fx->params().set(static_cast<int32_t>(i), norm[i]);
     fx->params().jumpAll();
 
-    std::vector<float> src = effectSource();
+    std::vector<float> src = effectSource(type);
     const auto frames = static_cast<int64_t>(src.size() / 2);
     std::vector<float> out;
     out.reserve(src.size());
@@ -404,7 +409,14 @@ void checkBank(const Bank &bank) {
         } else if (out.m.peakDb > -1.0f) {
             warn(who, "peaks within a decibel of full scale");
         }
-        if (runaway(out.audio)) fail(who, "louder at the end of its tail than before it");
+        // A reverse delay plays the end of the source back last, rising.
+        bool swells = false;
+        if (bank.isEffect() && bank.typeName() == "Delay") {
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::strcmp(defs[i].name, "mode") == 0) swells = defs[i].map(r.norm[static_cast<size_t>(i)]) > 2.5f;
+            }
+        }
+        if (!swells && runaway(out.audio)) fail(who, "louder at the end of its tail than before it");
 
         // Reset and play again. Different output means some state survives a
         // reset. reset_test checks this at default settings, but a patch can
