@@ -226,7 +226,8 @@ void Reverb::prepare(int32_t sampleRate) {
 
     const float haMax = (kHallScaleMin + kHallScaleRange) * sr * 0.001f;
     for (int i = 0; i < kHallLines; ++i) {
-        haLine[i].prepare(static_cast<int32_t>(kHallMs[i] * haMax) + modRoom);
+        // The read swings up to two mod depths past the line's length.
+        haLine[i].prepare(static_cast<int32_t>(kHallMs[i] * haMax) + 2 * modRoom);
         const float w = dsp::kTwoPi * kHallModRate[i] / sr;
         haRot[i][0] = std::cos(w);
         haRot[i][1] = std::sin(w);
@@ -333,7 +334,8 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool full = fullQuality();
     if (model != lastModel || full != lastFull) {
         // The tank coming in starts empty, or it would replay an old tail.
-        if (lastModel >= 0) {
+        // A quality switch keeps the room's tail, since its lean path reads the same lines.
+        if (lastModel >= 0 && (model != lastModel || model != Room)) {
             if (model == Room) clearRoom();
             else if (model == Plate) clearPlate();
             else clearHall();
