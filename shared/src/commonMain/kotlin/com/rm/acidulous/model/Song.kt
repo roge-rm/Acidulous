@@ -478,7 +478,10 @@ data class PatchSends(
 
 typealias EffectSlot = UnitSlot
 
-const val EFFECT_SLOTS = 2
+const val EFFECT_SLOTS = 4
+
+/** A patch's inserts go in the first this many of a track's slots; the rest are the player's. */
+const val PATCH_INSERT_SLOTS = 2
 
 /** How many send buses the master has; see [Master.sends]. */
 const val SEND_SLOTS = 2

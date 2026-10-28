@@ -9,8 +9,8 @@
     <string name="machine_patch_name">Nom du son</string>
     <!-- The save window's switch: the track's inserts and send levels go in the patch. -->
     <string name="machine_patch_with_effects">avec les effets</string>
-    <!-- A patch brought an insert and both of the track's slots were taken by the player's. -->
-    <string name="machine_patch_no_slot">Aucun emplacement d’effet libre pour %1$s.</string>
+    <!-- A patch brought an insert and the two slots a patch can use (FX1, FX2) were taken by the player's. -->
+    <string name="machine_patch_no_slot">FX1 et FX2 sont occupés, donc le son joue sans %1$s.</string>
     <!-- A patch from a newer version names an effect this one doesn't have. -->
     <string name="machine_patch_unknown_effect">Cette version n’a pas l’effet %1$s, donc le son joue sans lui.</string>
 

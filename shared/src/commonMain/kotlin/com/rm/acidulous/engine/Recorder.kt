@@ -272,8 +272,8 @@ class Recorder {
             "channel" -> CHANNEL_PARAMS.getOrNull(index)
             "performance" -> PERF_PARAMS.getOrNull(index)
             "perform" -> PERFORM_PARAMS.getOrNull(index)
-            "effect1", "effect2" -> {
-                val type = track.effectAt(if (unit == "effect1") 0 else 1).type
+            "effect1", "effect2", "effect3", "effect4" -> {
+                val type = track.effectAt(com.rm.acidulous.model.effectSlotOf(unit) ?: 0).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
                 else if (type.isEmpty()) null
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
@@ -373,5 +373,5 @@ internal val RECORD_UNITS = listOf(
     "machine", "effect1", "effect2", "mod1", "mod2", "mod3", "channel", "master",
     "send1", "send2", "input1", "input2", "performance", "master1", "master2",
     "group1fx1", "group1fx2", "group2fx1", "group2fx2", "group3fx1", "group3fx2", "group4fx1", "group4fx2",
-    "perform",
+    "perform", "effect3", "effect4",
 )

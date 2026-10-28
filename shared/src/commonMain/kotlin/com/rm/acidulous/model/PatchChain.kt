@@ -4,15 +4,16 @@ package com.rm.acidulous.model
  * The effects a machine patch brings: its inserts and send levels, put on the
  * track when the patch loads.
  *
- * A track's slots the current patch filled are marked [UnitSlot.fromPatch].
- * Loading another patch clears only those, then puts the new patch's inserts
- * in free slots, its old slots first, in slot order so the chain keeps its
+ * A patch's inserts only go in the first [PATCH_INSERT_SLOTS] slots; the
+ * slots after them are always the player's. A track's slots the current patch
+ * filled are marked [UnitSlot.fromPatch]. Loading another patch clears only
+ * those, then puts the new patch's inserts in free slots, its old slots first, in slot order so the chain keeps its
  * order. Inserts the player added stay, and an insert with no free slot is
  * skipped, and one naming an effect this build doesn't have is left out
  * before any slot is chosen. A patch with send levels sets both and keeps the
  * player's levels on the track ([Track.patchSends]); one without puts them
  * back. Moving a send by hand makes the sends the player's again. Saving a
- * patch with effects makes the track's inserts its own.
+ * patch with effects makes the inserts in its slots its own.
  *
  * The same rule as engine/core/PatchChain.h, which a host that drives the
  * engine directly uses through EngineHost::applyPatchChain. Keep them alike.
@@ -22,8 +23,8 @@ object PatchChain {
     class Plan(val slotOf: List<Int>, val clear: Set<Int>, val owned: Set<Int>, val skipped: Int)
 
     fun plan(occupied: List<Boolean>, owned: Set<Int>, wanted: Int): Plan {
-        val clear = (0 until EFFECT_SLOTS).filter { it in owned }
-        val chosen = (clear + (0 until EFFECT_SLOTS).filter { it !in owned && !occupied.getOrElse(it) { false } })
+        val clear = (0 until PATCH_INSERT_SLOTS).filter { it in owned }
+        val chosen = (clear + (0 until PATCH_INSERT_SLOTS).filter { it !in owned && !occupied.getOrElse(it) { false } })
             .take(wanted.coerceAtLeast(0))
             .sorted()
         val slotOf = List(wanted.coerceAtLeast(0)) { chosen.getOrElse(it) { -1 } }
@@ -46,7 +47,7 @@ object PatchChain {
     fun apply(track: Track, patch: Patch, known: (String) -> Boolean, defaults: (String) -> Map<String, Float>): Applied {
         val unknown = patch.inserts.filter { !it.isEmpty && !known(it.type) }.map { it.type }
         val inserts = patch.inserts.filter { !it.isEmpty && known(it.type) }
-        val owned = (0 until EFFECT_SLOTS).filter { track.effectAt(it).fromPatch }.toSet()
+        val owned = (0 until PATCH_INSERT_SLOTS).filter { track.effectAt(it).fromPatch }.toSet()
         val plan = plan(List(EFFECT_SLOTS) { !track.effectAt(it).isEmpty }, owned, inserts.size)
         val slots = MutableList(EFFECT_SLOTS) { track.effectAt(it) }
         for (s in plan.clear) slots[s] = UnitSlot()
@@ -94,7 +95,7 @@ object PatchChain {
     }
 
     /**
-     * [patch] carrying [track]'s inserts, the patch's and the player's, and
+     * [patch] carrying the inserts in [track]'s patch slots, the patch's and the player's, and
      * its send levels when either is up or a patch owns them, for saving with
      * effects. The player's sends at zero aren't saved, so loading the patch
      * leaves another track's alone. The track keeps its held levels.
@@ -102,7 +103,7 @@ object PatchChain {
     fun withEffectsOf(patch: Patch, track: Track): Patch {
         val sends = heldSends(track) != null || track.mixer.sendReverb > 0f || track.mixer.sendDelay > 0f
         return patch.copy(
-            inserts = (0 until EFFECT_SLOTS).map { track.effectAt(it) }.filter { !it.isEmpty }.map { it.copy(fromPatch = false) },
+            inserts = (0 until PATCH_INSERT_SLOTS).map { track.effectAt(it) }.filter { !it.isEmpty }.map { it.copy(fromPatch = false) },
             sendReverb = if (sends) track.mixer.sendReverb else null,
             sendDelay = if (sends) track.mixer.sendDelay else null,
         )
@@ -114,7 +115,9 @@ object PatchChain {
      * second set.
      */
     fun ownedBySaved(track: Track): Track {
-        if ((0 until EFFECT_SLOTS).all { track.effectAt(it).isEmpty || track.effectAt(it).fromPatch }) return track
-        return track.copy(effects = List(EFFECT_SLOTS) { track.effectAt(it).let { fx -> if (fx.isEmpty) fx else fx.copy(fromPatch = true) } })
+        if ((0 until PATCH_INSERT_SLOTS).all { track.effectAt(it).isEmpty || track.effectAt(it).fromPatch }) return track
+        return track.copy(effects = List(EFFECT_SLOTS) { s ->
+            track.effectAt(s).let { fx -> if (fx.isEmpty || s >= PATCH_INSERT_SLOTS) fx else fx.copy(fromPatch = true) }
+        })
     }
 }

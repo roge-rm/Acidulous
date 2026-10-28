@@ -88,6 +88,8 @@ int main() {
                               "LoadSample 0 0 \"zip:samples/hit.wav\" 0\n"
                               "MountInputMod 0 1 \"Chord\"\n"
                               "MountEffect 0 0 \"Delay\"\n"
+                              "MountEffect 0 3 \"Chorus\"\n"
+                              "SetParam 0 \"effect4\" \"bypass\" 1.0 false 0\n"
                               "MountMachine 1 \"Reflux\"\n"
                               "MountFrozen 1 7 \"zip:frozen/bass.wav\" 120.0 1920 96000 0 0.5\n"
                               "MountSend 0 \"Reverb\"\n"
@@ -154,6 +156,9 @@ int main() {
               h.masterInsertParamNormalized(2, "bypass") == -1.0f,
           "master insert 1 is bypassed, an empty or unknown slot is -1");
 
+    check(std::string(h.mountedEffect(0, 3)) == "Chorus" && h.mountedEffect(0, 2)[0] == '\0' &&
+              h.paramNormalized(0, "effect4", "bypass") == 1.0f && h.paramNormalized(0, "effect3", "bypass") == -1.0f,
+          "a track's fourth insert mounts and is bypassed by lines, the third reads empty");
     check(!h.loopSong(), "the song doesn't loop");
     check(h.swingUnit() == 1, "swing is on eighths");
 

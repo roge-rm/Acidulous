@@ -127,7 +127,7 @@ Freezing renders a clip to audio and plays that instead of the machine, which
 frees up CPU for everything else. You can freeze one clip, a whole scene or a
 whole track from the menus.
 
-The track's two insert effects are frozen in too, so a frozen clip costs almost
+The track's insert effects are frozen in too, so a frozen clip costs almost
 nothing to play. The mixer still works: fader, pan, sends and mute.
 
 The tail (reverb, delay, long release) is rendered too, up to eight seconds, so

@@ -73,7 +73,7 @@ class PatchChainTest {
     fun `a patch keeps its order whichever slots it gets`() {
         val t = track(UnitSlot(), UnitSlot("Chorus", fromPatch = true))
         val a = PatchChain.apply(t, patch(UnitSlot("Distortion"), UnitSlot("Delay")), known, defaults).track
-        assertEquals(listOf("Distortion", "Delay"), a.effects.map { it.type })
+        assertEquals(listOf("Distortion", "Delay", "", ""), a.effects.map { it.type })
     }
 
     @Test
@@ -145,12 +145,38 @@ class PatchChainTest {
         assertEquals(0f, p.sendDelay)
 
         val saved = PatchChain.ownedBySaved(t)
-        assertTrue(saved.effects.all { it.fromPatch })
+        assertTrue(saved.effects.filter { !it.isEmpty }.all { it.fromPatch })
         // Loading it again replaces them rather than adding a second set.
         val again = PatchChain.apply(saved, p, known, defaults)
         assertTrue(again.skipped.isEmpty())
-        assertEquals(listOf("Chorus", "Delay"), again.track.effects.map { it.type })
+        assertEquals(listOf("Chorus", "Delay"), again.track.effects.map { it.type }.filter { it.isNotEmpty() })
         assertEquals(setOf(0, 1), again.placed)
+    }
+
+    @Test
+    fun `a patch only uses FX1 and FX2, and FX3 and FX4 stay the player's`() {
+        val mine = UnitSlot("Distortion")
+        // FX1 taken by the player: the patch gets FX2 and its second insert is skipped, even with FX3 free.
+        val a = PatchChain.apply(track(mine), patch(UnitSlot("Chorus"), UnitSlot("Delay")), known, defaults)
+        assertEquals(listOf("Distortion", "Chorus", "", ""), (0 until EFFECT_SLOTS).map { a.track.effectAt(it).type })
+        assertEquals(listOf("Delay"), a.skipped)
+
+        // The player's FX3 and FX4 survive a patch load, aren't saved with it and don't become the patch's.
+        val t = track(UnitSlot(), UnitSlot(), UnitSlot("Delay"), mine)
+        val loaded = PatchChain.apply(t, patch(UnitSlot("Chorus")), known, defaults).track
+        assertEquals(listOf("Chorus", "", "Delay", "Distortion"), (0 until EFFECT_SLOTS).map { loaded.effectAt(it).type })
+        assertEquals(listOf("Chorus"), PatchChain.withEffectsOf(Patch("Trinity", "Mine", emptyMap()), loaded).inserts.map { it.type })
+        val saved = PatchChain.ownedBySaved(loaded)
+        assertFalse(saved.effectAt(2).fromPatch || saved.effectAt(3).fromPatch)
+        val next = PatchChain.apply(loaded, patch(), known, defaults).track
+        assertEquals(listOf("", "", "Delay", "Distortion"), (0 until EFFECT_SLOTS).map { next.effectAt(it).type })
+    }
+
+    @Test
+    fun `an old song with two inserts reads with FX3 and FX4 empty`() {
+        val t = Json { ignoreUnknownKeys = true }.decodeFromString(Track.serializer(),
+            """{"id":"t","name":"t","machine":{"type":"Trinity"},"effects":[{"type":"Chorus"},{"type":"Delay"}]}""")
+        assertEquals(listOf("Chorus", "Delay", "", ""), (0 until EFFECT_SLOTS).map { t.effectAt(it).type })
     }
 
     @Test
@@ -169,7 +195,7 @@ class PatchChainTest {
         val a = PatchChain.apply(first, patch(UnitSlot("FutureVerb"), UnitSlot("Distortion")), known, defaults)
         assertEquals(listOf("FutureVerb"), a.unknown)
         assertTrue(a.skipped.isEmpty())
-        assertEquals(listOf("Distortion", "Delay"), a.track.effects.map { it.type })
+        assertEquals(listOf("Distortion", "Delay", "", ""), a.track.effects.map { it.type })
         assertTrue(a.track.effects.none { it.type == "FutureVerb" })
         assertEquals(setOf(0), a.placed)
     }

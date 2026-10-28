@@ -134,7 +134,7 @@ Figer rend un clip en audio et joue cet audio au lieu de la machine, ce qui
 libère du processeur pour le reste. Vous pouvez figer un clip, une scène
 entière ou une piste entière à partir des menus.
 
-Les deux effets d’insertion de la piste sont figés aussi, donc un clip figé ne
+Les effets d’insertion de la piste sont figés aussi, donc un clip figé ne
 coûte presque rien à jouer. Le mixage fonctionne toujours : fader, panoramique,
 envois et muet.
 

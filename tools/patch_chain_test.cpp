@@ -34,25 +34,38 @@ bool parse(const std::string &text, Bank &bank, std::string &error) {
 
 void planRules() {
     {
-        const bool occupied[2] = {false, true};
+        const bool occupied[kEffectSlots] = {false, true, false, false};
         const InsertPlan p = planPatchInserts(occupied, 0b10u, 2);
         check(p.slotOf[0] == 0 && p.slotOf[1] == 1, "the last patch's slot and a free one, in slot order");
         check(p.clear == 0b10u && p.owned == 0b11u && p.skipped == 0, "plan bits");
     }
     {
-        const bool occupied[2] = {true, true};
+        const bool occupied[kEffectSlots] = {true, true, false, false};
         const InsertPlan p = planPatchInserts(occupied, 0u, 1);
         check(p.slotOf[0] == -1 && p.skipped == 1 && p.owned == 0u, "no free slot skips the insert");
     }
     {
-        const bool occupied[2] = {true, true};
+        const bool occupied[kEffectSlots] = {true, true, false, false};
         const InsertPlan p = planPatchInserts(occupied, 0b11u, 1);
         check(p.slotOf[0] == 0 && p.clear == 0b11u && p.owned == 0b01u, "one insert after a patch of two");
     }
     {
-        const bool occupied[2] = {false, false};
+        const bool occupied[kEffectSlots] = {false, false, false, false};
         const InsertPlan p = planPatchInserts(occupied, 0u, 3);
         check(p.owned == 0b11u && p.skipped == 1, "more inserts than slots");
+    }
+    {
+        // Slots 3 and 4 are the player's, even when they're free.
+        const bool occupied[kEffectSlots] = {true, false, false, false};
+        const InsertPlan p = planPatchInserts(occupied, 0u, 2);
+        check(p.slotOf[0] == 1 && p.slotOf[1] == -1 && p.owned == 0b10u && p.skipped == 1,
+              "a patch never takes the slots after its own");
+    }
+    {
+        // Owned bits past the patch's slots are ignored.
+        const bool occupied[kEffectSlots] = {false, false, true, true};
+        const InsertPlan p = planPatchInserts(occupied, 0b1100u, 0);
+        check(p.clear == 0u && p.owned == 0u, "the player's slots are never cleared");
     }
 }
 

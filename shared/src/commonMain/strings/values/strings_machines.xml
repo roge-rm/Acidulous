@@ -9,8 +9,8 @@
     <string name="machine_patch_name">Patch name</string>
     <!-- The save window's switch: the track's inserts and send levels go in the patch. -->
     <string name="machine_patch_with_effects">with effects</string>
-    <!-- A patch brought an insert and both of the track's slots were taken by the player's. -->
-    <string name="machine_patch_no_slot">No free effect slot for %1$s.</string>
+    <!-- A patch brought an insert and the two slots a patch can use (FX1, FX2) were taken by the player's. -->
+    <string name="machine_patch_no_slot">FX1 and FX2 are taken, so the patch plays without %1$s.</string>
     <!-- A patch from a newer version names an effect this one doesn't have. -->
     <string name="machine_patch_unknown_effect">This version has no %1$s effect, so the patch plays without it.</string>
 

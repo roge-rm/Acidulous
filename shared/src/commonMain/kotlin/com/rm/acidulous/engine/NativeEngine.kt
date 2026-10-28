@@ -20,15 +20,15 @@ object NativeEngine {
     /** Queues a machine of [typeName] to be mounted on [rackId]. Applied at a block boundary. */
     fun mountMachine(rackId: Int, typeName: String): Boolean = EngineNative.nativeMountMachine(rackId, typeName)
     fun unmountMachine(rackId: Int) = EngineNative.nativeUnmountMachine(rackId)
-    /** Mounts an insert effect on one of a rack's two slots. An empty [typeName] clears it. */
+    /** Mounts an insert effect on one of a rack's four slots. An empty [typeName] clears it. */
     fun mountEffect(rackId: Int, slot: Int, typeName: String): Boolean = EngineNative.nativeMountEffect(rackId, slot, typeName)
 
     /**
      * Put an effect on one of the two send buses, or empty it with "".
      *
      * No rack, because sends belong to the song. Their parameters use the
-     * units `send1` and `send2`, the same way inserts use `effect1` and
-     * `effect2`.
+     * units `send1` and `send2`, the same way inserts use `effect1` to
+     * `effect4`.
      */
     fun mountSend(slot: Int, typeName: String): Boolean = EngineNative.nativeMountSend(slot, typeName)
     fun mountMasterInsert(slot: Int, typeName: String): Boolean = EngineNative.nativeMountMasterInsert(slot, typeName)
@@ -253,7 +253,7 @@ object NativeEngine {
         EngineNative.nativeChannelPressure(rackId, value, record)
 
     /**
-     * [unit] is "machine", "effect1", "effect2", "mod1", "mod2", "mod3" or "channel".
+     * [unit] is "machine", "effect1".."effect4", "mod1", "mod2", "mod3" or "channel".
      * [value] is normalised 0..1. [quantise], in ticks: while playing, the
      * value waits for the rack's next multiple of it (the next bar, say) and
      * lands there. 0 means now. Returns false if the name is unknown for
