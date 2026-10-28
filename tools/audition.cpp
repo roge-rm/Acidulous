@@ -1277,7 +1277,7 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * What an effect is fed: two bars of music made by the app's own machines,
  * then silence for the tails. Most effects get a band (drums, bass and
  * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
- * a single line they can follow, Rotary an organ, Gate the band over a
+ * a single line they can follow, Reverb sparse hits with gaps, Rotary an organ, Gate the band over a
  * little hiss to take out, Deesser a voice and Midside the band with a
  * piano spread wide. Returns the stereo source; it stops at `stop`, and the
  * silence after it is longer for a reverb.
@@ -1324,6 +1324,17 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             out[i * 2] = voice[i];
             out[i * 2 + 1] = voice[i];
         }
+    } else if (effect == "Reverb") {
+        // Sparse hits with gaps, so the tail has room to ring: a snare alone,
+        // a kick and snare, a short chord stab, three single notes, then
+        // silence.
+        add(renderPart("Hexbeat", "Squared", {
+            {0.0f, 0.25f, 38, 110}, {2.0f, 0.25f, 36, 110}, {2.0f, 0.25f, 38, 100},
+        }, bpm, frames), 0.8f);
+        add(renderPart("Trinity", "Electric Piano", {
+            {4.0f, 0.25f, 57, 95}, {4.0f, 0.25f, 60, 95}, {4.0f, 0.25f, 64, 95}, {4.0f, 0.25f, 67, 95},
+            {6.0f, 0.2f, 76, 90}, {6.5f, 0.2f, 79, 85}, {7.0f, 0.2f, 72, 90},
+        }, bpm, frames), 0.7f);
     } else {
         // Hexbeat's kit: kick 36, snare 38, closed hat 43, open hat 44.
         std::vector<Hit> drums;
