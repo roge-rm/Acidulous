@@ -59,6 +59,19 @@ class OpenFilesTest {
     }
 
     @Test
+    fun aFileOpenedAloneIsNotHeldByANotice() {
+        OpenFiles.running = true
+        Incoming.dialogOpen = { true }
+        OpenFiles.add(files("one.acpreset"))
+        OpenFiles.next()
+        assertNotNull(Incoming.doc)
+        Incoming.doc = null
+        OpenFiles.add(files("two.zip"))
+        OpenFiles.next()
+        assertNotNull(Incoming.doc)
+    }
+
+    @Test
     fun importsGetTheirOwnTempFiles() {
         val names = (1..50).map { Incoming.tempName("import", "zip") }.toSet()
         assertEquals(50, names.size)

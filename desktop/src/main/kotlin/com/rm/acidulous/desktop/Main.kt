@@ -226,7 +226,7 @@ fun main(args: Array<String>) {
             // Files handed to the app go to the import one at a time.
             LaunchedEffect(Unit) {
                 OpenFiles.running = true
-                snapshotFlow { com.rm.acidulous.Incoming.idle() }.collect { if (it) OpenFiles.next() }
+                snapshotFlow { com.rm.acidulous.Incoming.idle(dialogs = false) to com.rm.acidulous.Incoming.idle() }.collect { OpenFiles.next() }
             }
             if (onMac) MacMenus(window, toggleFullScreen = {
                 if (window.placement == WindowPlacement.Fullscreen) {

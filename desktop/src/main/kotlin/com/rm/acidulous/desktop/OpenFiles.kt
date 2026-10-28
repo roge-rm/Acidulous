@@ -31,8 +31,19 @@ internal object OpenFiles {
     /** Everything added so far, taken off the list: for a second launch to hand over. */
     fun drain(): List<File> = generateSequence { waiting.poll() }.toList()
 
-    /** Gives [Incoming] the next file once the last is imported, with any dialog it opened closed. On the UI thread. */
+    // True while the file last handed over has more behind it, from the same opening.
+    private var inBatch = false
+
+    /**
+     * Gives [Incoming] the next file once the last is imported. Inside a
+     * batch it waits for the last file's dialog to be closed too; a file
+     * opened on its own doesn't, so a notice left up doesn't hold it back.
+     * On the UI thread.
+     */
     fun next() {
-        if (running && Incoming.idle()) waiting.poll()?.let { Incoming.doc = Doc(it) }
+        if (running && Incoming.idle(dialogs = inBatch)) waiting.poll()?.let {
+            inBatch = waiting.isNotEmpty()
+            Incoming.doc = Doc(it)
+        }
     }
 }

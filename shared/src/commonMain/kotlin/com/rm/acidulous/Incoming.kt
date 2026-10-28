@@ -20,8 +20,8 @@ object Incoming {
     /** True while a dialog an import opened is waiting for an answer. Reads state, so it can be watched. */
     var dialogOpen: () -> Boolean = { false }
 
-    /** True when the last file is done with and the next may be handed over. */
-    fun idle(): Boolean = doc == null && running == 0 && !dialogOpen()
+    /** True when the last file is done with and the next may be handed over, after its dialog too if [dialogs]. */
+    fun idle(dialogs: Boolean = true): Boolean = doc == null && running == 0 && !(dialogs && dialogOpen())
 
     /** A file name no other import is using. */
     fun tempName(stem: String, ext: String): String =
