@@ -163,6 +163,7 @@
     <string name="pw_brass_80c48f">brass</string>
     <string name="pw_brassiness">brassiness</string>
     <string name="pw_breath">breath</string>
+    <string name="pw_breathe">breathe</string>
     <string name="pw_bridge">bridge</string>
     <string name="pw_bright">bright</string>
     <string name="pw_broadcast">broadcast</string>
@@ -304,6 +305,7 @@
     <string name="pw_decay">decay</string>
     <string name="pw_decay_n">decay %d</string>
     <string name="pw_deep">deep</string>
+    <string name="pw_deesser">Deesser</string>
     <string name="pw_degree">degree</string>
     <string name="pw_delay">Delay</string>
     <string name="pw_delay_ab464f">delay</string>
@@ -364,6 +366,7 @@
     <string name="pw_e5">e5</string>
     <string name="pw_e6">e6</string>
     <string name="pw_east">east</string>
+    <string name="pw_echo">echo</string>
     <string name="pw_edge">edge</string>
     <string name="pw_edge_cone">edge</string>
     <string name="pw_ee">ee</string>
@@ -411,6 +414,7 @@
     <string name="pw_envf">envF</string>
     <string name="pw_envmod">envmod</string>
     <string name="pw_eq">Eq</string>
+    <string name="pw_eq_a9c619">eq</string>
     <string name="pw_esraj">esraj</string>
     <string name="pw_even">Even</string>
     <string name="pw_evenness">evenness</string>
@@ -419,6 +423,7 @@
     <string name="pw_exciter">exciter</string>
     <string name="pw_exciter_out">exciter out</string>
     <string name="pw_expression">expression</string>
+    <string name="pw_extra">extra</string>
     <string name="pw_extreme">extreme</string>
     <string name="pw_f">f</string>
     <string name="pw_f_freq">f.freq</string>
@@ -515,6 +520,7 @@
     <string name="pw_generative">generative</string>
     <string name="pw_generator">generator</string>
     <string name="pw_genggong">genggong</string>
+    <string name="pw_gentle">gentle</string>
     <string name="pw_ghost">ghost</string>
     <string name="pw_glass">Glass</string>
     <string name="pw_glass_170fd7">glass</string>
@@ -702,6 +708,7 @@
     <string name="pw_let_go">let go</string>
     <string name="pw_level">level</string>
     <string name="pw_level_n">level %d</string>
+    <string name="pw_levels">levels</string>
     <string name="pw_lfo">LFO</string>
     <string name="pw_lfo_2d699f">lfo</string>
     <string name="pw_lfo_n">lfo %d</string>
@@ -818,6 +825,9 @@
     <string name="pw_midfreq">midfreq</string>
     <string name="pw_midgain">midgain</string>
     <string name="pw_midq">midq</string>
+    <string name="pw_midside">Midside</string>
+    <string name="pw_midtilt">midtilt</string>
+    <string name="pw_mid_centre">mid</string>
     <string name="pw_minor">minor</string>
     <string name="pw_mirror">mirror</string>
     <string name="pw_mix">mix</string>
@@ -857,6 +867,7 @@
     <string name="pw_move">move</string>
     <string name="pw_mridangam">mridangam</string>
     <string name="pw_mukkuri">mukkuri</string>
+    <string name="pw_multi_tap">multi-tap</string>
     <string name="pw_munnharpe">munnharpe</string>
     <string name="pw_musette">musette</string>
     <string name="pw_music_box">music box</string>
@@ -866,6 +877,7 @@
     <string name="pw_muted">muted</string>
     <string name="pw_mute_lane">mute</string>
     <string name="pw_n">n</string>
+    <string name="pw_narrow">narrow</string>
     <string name="pw_nasal">Nasal</string>
     <string name="pw_nasal_be5900">nasal</string>
     <string name="pw_natural">natural</string>
@@ -879,6 +891,7 @@
     <string name="pw_noise_gated_by_the_clock">noise, gated by the clock</string>
     <string name="pw_noises">noises</string>
     <string name="pw_none">none</string>
+    <string name="pw_normal">normal</string>
     <string name="pw_northern">northern</string>
     <string name="pw_not">not</string>
     <string name="pw_notch">notch</string>
@@ -965,7 +978,7 @@
     <string name="pw_pickup">pickup</string>
     <string name="pw_pickups">pickups</string>
     <string name="pw_ping">Ping</string>
-    <string name="pw_pingpong">pingpong</string>
+    <string name="pw_ping_pong">ping-pong</string>
     <string name="pw_pinky">pinky</string>
     <string name="pw_pipe">pipe</string>
     <string name="pw_pipes">pipes</string>
@@ -1038,6 +1051,7 @@
     <string name="pw_ramp_181f09">ramp↓</string>
     <string name="pw_rand">rand</string>
     <string name="pw_random">random</string>
+    <string name="pw_range">range</string>
     <string name="pw_ranks">ranks</string>
     <string name="pw_rasp">rasp</string>
     <string name="pw_ratchet">ratchet</string>
@@ -1064,6 +1078,7 @@
     <string name="pw_reggae">reggae</string>
     <string name="pw_register">register</string>
     <string name="pw_rel">rel</string>
+    <string name="pw_relative">relative</string>
     <string name="pw_release">release</string>
     <string name="pw_remap">remap</string>
     <string name="pw_repeat">repeat</string>
@@ -1191,7 +1206,9 @@
     <string name="pw_shuffle">shuffle</string>
     <string name="pw_shutters">shutters</string>
     <string name="pw_sh_8177c9">shō</string>
+    <string name="pw_side">side</string>
     <string name="pw_sidechain">sidechain</string>
+    <string name="pw_sidetilt">sidetilt</string>
     <string name="pw_sin12">sin12</string>
     <string name="pw_sin8">sin8</string>
     <string name="pw_sine">sine</string>
@@ -1233,12 +1250,14 @@
     <string name="pw_snow">snow</string>
     <string name="pw_soft">soft</string>
     <string name="pw_soft_pedal">soft pedal</string>
+    <string name="pw_soften">soften</string>
     <string name="pw_song">song</string>
     <string name="pw_sound">sound</string>
     <string name="pw_source">source</string>
     <string name="pw_southern">southern</string>
     <string name="pw_sp">SP</string>
     <string name="pw_space">space</string>
+    <string name="pw_spacing">spacing</string>
     <string name="pw_span">span</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">speed</string>
@@ -1261,6 +1280,7 @@
     <string name="pw_stairs">stairs</string>
     <string name="pw_start">start</string>
     <string name="pw_started_by">started by</string>
+    <string name="pw_steady">steady</string>
     <string name="pw_steal">steal</string>
     <string name="pw_steel">steel</string>
     <string name="pw_steel_pan">steel pan</string>
@@ -1340,10 +1360,12 @@
     <string name="pw_takes">takes</string>
     <string name="pw_talk">talk</string>
     <string name="pw_talking">talking</string>
+    <string name="pw_tame">tame</string>
     <string name="pw_tangent">tangent</string>
     <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
     <string name="pw_tape_e9b6c7">tape</string>
+    <string name="pw_taps">taps</string>
     <string name="pw_tar">tar</string>
     <string name="pw_tarbs">tarbs</string>
     <string name="pw_temir_komuz">temir komuz</string>
@@ -1368,6 +1390,7 @@
     <string name="pw_thumb">thumb</string>
     <string name="pw_thunder">thunder</string>
     <string name="pw_tight">tight</string>
+    <string name="pw_tighten">tighten</string>
     <string name="pw_tilt">Tilt</string>
     <string name="pw_tilt_fc9879">tilt</string>
     <string name="pw_timbre">timbre</string>
@@ -1400,6 +1423,7 @@
     <string name="pw_tracker">tracker</string>
     <string name="pw_tracking">tracking</string>
     <string name="pw_track_follow">track</string>
+    <string name="pw_transient">Transient</string>
     <string name="pw_transport">transport</string>
     <string name="pw_transpose">transpose</string>
     <string name="pw_treble">treble</string>

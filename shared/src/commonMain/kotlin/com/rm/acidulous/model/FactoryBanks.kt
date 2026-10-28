@@ -67,6 +67,9 @@ internal object FactoryBanks {
         "fx.Horn" -> fx_horn
         "fx.Spectral" -> fx_spectral
         "fx.Formula" -> fx_formula
+        "fx.Transient" -> fx_transient
+        "fx.Midside" -> fx_midside
+        "fx.Deesser" -> fx_deesser
         else -> emptyList()
     }
 
@@ -721,7 +724,7 @@ internal object FactoryBanks {
         mapOf("macro1" to "Open", "macro2" to "Bite", "macro3" to "Edge", "macro4" to "PW", "macro5" to "Low", "macro6" to "Beat", "macro7" to "FM", "macro8" to "Ring"),
         family = "lead",
         low = 48, high = 91,
-        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "pingpong" to 0f, "mix" to 0.2f))))
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.2857143f, "feedback" to 0.3157895f, "mode" to 0f, "mix" to 0.2f))))
 
     private fun trinity9() = Patch("Trinity", "PWM Lead",
         mapOf("o1_wave" to 0.0285714287f, "o1_level" to 1f, "o2_wave" to 0.0285714287f, "o2_fine" to 0.46f, "o2_level" to 0.96f, "o3_wave" to 0.0285714287f, "o3_coarse" to 0.25f, "f1_freq" to 0.71537596f, "f1_res" to 0.12f, "a_attack" to 0.32525748f, "a_decay" to 0.716931f, "a_sustain" to 0.85f, "l1_rate" to 0.4589631f, "m01_src" to 0.8666667f, "m01_dest" to 0.305555552f, "m01_depth" to 0.7f, "m02_src" to 0.8666667f, "m02_dest" to 0.333333343f, "m02_depth" to 0.325f, "volume" to 0.22f, "mac1_d1" to 0.8611111f, "mac1_a1" to 0.7f, "mac2_d1" to 0.6388889f, "mac2_a1" to 0.675f, "mac3_d1" to 0.6944444f, "mac3_a1" to 0.675f, "mac4_d1" to 0.3888889f, "mac4_a1" to 0.7f, "mac5_d1" to 0.0833333358f, "mac5_a1" to 0.503f, "mac6_d1" to 0.5833333f, "mac6_a1" to 0.65f, "mac7_d1" to 0.5277778f, "mac7_a1" to 0.75f, "mac8_d1" to 0.2777778f, "mac8_a1" to 0.7f),
@@ -1577,7 +1580,7 @@ internal object FactoryBanks {
         mapOf("macro1" to "Open", "macro2" to "Res", "macro3" to "Body", "macro4" to "Octave", "macro5" to "Ring", "macro6" to "Beat", "macro7" to "Edge", "macro8" to "FM"),
         family = "pluck",
         low = 36, high = 79,
-        inserts = listOf(UnitSlot("Delay", mapOf("tone" to 0.51785177f, "pingpong" to 0f, "mix" to 0.25f)), UnitSlot("Tape", mapOf("flutter" to 0.08f, "tone" to 0.544068038f, "hiss" to 0f))))
+        inserts = listOf(UnitSlot("Delay", mapOf("tone" to 0.51785177f, "mode" to 0f, "mix" to 0.25f)), UnitSlot("Tape", mapOf("flutter" to 0.08f, "tone" to 0.544068038f, "hiss" to 0f))))
 
     private fun trinity137() = Patch("Trinity", "Vowel Pluck",
         mapOf("o1_wave" to 0.171428576f, "o1_pos" to 0.3f, "o1_level" to 1f, "o2_wave" to 0.171428576f, "o2_pos" to 0.5f, "o2_coarse" to 0.75f, "o2_level" to 1f, "o3_wave" to 0.08571429f, "o3_coarse" to 0.75f, "f1_type" to 0.09090909f, "f1_freq" to 0.76701f, "f1_key" to 0.6f, "f2_type" to 0.454545468f, "f2_freq" to 0f, "a_attack" to 0f, "a_decay" to 0.6846892f, "a_sustain" to 0.15f, "a_release" to 0.5411295f, "f_decay" to 0.5615631f, "f_sustain" to 0.1f, "e3_attack" to 0f, "e3_decay" to 0.5411295f, "e3_sustain" to 0f, "m01_src" to 0.6f, "m01_dest" to 0.1388889f, "m01_depth" to 0.75f, "volume" to 1f, "mac1_d1" to 0.6388889f, "mac1_a1" to 0.65f, "mac2_d1" to 0.1388889f, "mac2_a1" to 0.7f, "mac3_d1" to 0.6944444f, "mac3_a1" to 0.65f, "mac4_d1" to 0.2777778f, "mac4_a1" to 0.65f, "mac5_d1" to 0.5277778f, "mac5_a1" to 0.6f, "mac6_d1" to 0.0833333358f, "mac6_a1" to 0.503f, "mac7_d1" to 0.3888889f, "mac7_a1" to 0.625f, "mac8_d1" to 0.5833333f, "mac8_a1" to 0.6f),
@@ -1659,7 +1662,7 @@ internal object FactoryBanks {
         mapOf("macro1" to "Open", "macro2" to "Res", "macro3" to "Edge", "macro4" to "Octave", "macro5" to "Ring", "macro6" to "Beat", "macro7" to "Thin", "macro8" to "Air"),
         family = "sequence",
         low = 40, high = 79,
-        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.5714286f, "feedback" to 0.5263158f, "tone" to 0.4866298f, "pingpong" to 0f, "mix" to 0.23f))),
+        inserts = listOf(UnitSlot("Delay", mapOf("time" to 0.5714286f, "feedback" to 0.5263158f, "tone" to 0.4866298f, "mode" to 0f, "mix" to 0.23f))),
         sendReverb = 0.14f, sendDelay = 0f)
 
     private fun trinity149() = Patch("Trinity", "Octave Bounce",
@@ -13706,19 +13709,19 @@ internal object FactoryBanks {
         family = "short")
 
     private fun fx_delay1() = Patch("fx.Delay", "Slapback",
-        mapOf("time" to 0f, "feedback" to 0.126315787f, "tone" to 0.6614124f, "pingpong" to 0f, "mix" to 0.28f),
+        mapOf("time" to 0f, "feedback" to 0.126315787f, "tone" to 0.6614124f, "mode" to 0f, "mix" to 0.28f),
         family = "short")
 
     private fun fx_delay2() = Patch("fx.Delay", "Doubler",
-        mapOf("time" to 0f, "feedback" to 0f, "pingpong" to 0f, "mix" to 0.3f),
+        mapOf("time" to 0f, "feedback" to 0f, "mode" to 0f, "mix" to 0.3f),
         family = "short")
 
     private fun fx_delay3() = Patch("fx.Delay", "Rockabilly",
-        mapOf("time" to 0.142857149f, "feedback" to 0.210526317f, "tone" to 0.7693253f, "pingpong" to 0f),
+        mapOf("time" to 0.142857149f, "feedback" to 0.210526317f, "tone" to 0.7693253f, "mode" to 0f),
         family = "short")
 
     private fun fx_delay4() = Patch("fx.Delay", "Eighth Sync",
-        mapOf("time" to 0.2857143f, "feedback" to 0.4f, "tone" to 0.7693253f, "pingpong" to 0f, "mix" to 0.32f),
+        mapOf("time" to 0.2857143f, "feedback" to 0.4f, "tone" to 0.7693253f, "mode" to 0f, "mix" to 0.32f),
         family = "synced")
 
     private fun fx_delay5() = Patch("fx.Delay", "Ping Pong",
@@ -13754,7 +13757,7 @@ internal object FactoryBanks {
         family = "dub")
 
     private fun fx_delay13() = Patch("fx.Delay", "Tape",
-        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.57814467f, "pingpong" to 0f, "mix" to 0.36f, "wobble" to 0.35f, "gain" to 0.447916657f),
+        mapOf("time" to 0.5714286f, "feedback" to 0.578947365f, "tone" to 0.57814467f, "mode" to 0f, "mix" to 0.36f, "wobble" to 0.35f, "gain" to 0.447916657f),
         family = "tape")
 
     private fun fx_delay14() = Patch("fx.Delay", "Seasick",
@@ -13781,7 +13784,39 @@ internal object FactoryBanks {
         mapOf("time" to 0.142857149f, "feedback" to 0.3157895f, "mix" to 0.15f),
         family = "ambient")
 
-    private val fx_delay: List<Patch> by lazy { listOf(fx_delay0(), fx_delay1(), fx_delay2(), fx_delay3(), fx_delay4(), fx_delay5(), fx_delay6(), fx_delay7(), fx_delay8(), fx_delay9(), fx_delay10(), fx_delay11(), fx_delay12(), fx_delay13(), fx_delay14(), fx_delay15(), fx_delay16(), fx_delay17(), fx_delay18(), fx_delay19()) }
+    private fun fx_delay20() = Patch("fx.Delay", "Three Taps",
+        mapOf("time" to 0.5714286f, "feedback" to 0.210526317f, "mode" to 0.6666667f, "mix" to 0.32f, "gain" to 0.489583343f),
+        family = "taps")
+
+    private fun fx_delay21() = Patch("fx.Delay", "Rolling Taps",
+        mapOf("time" to 0.857142866f, "feedback" to 0.3157895f, "tone" to 0.6871456f, "mode" to 0.6666667f, "mix" to 0.3f, "gain" to 0.475f, "taps" to 1f),
+        family = "taps")
+
+    private fun fx_delay22() = Patch("fx.Delay", "Late Bunch",
+        mapOf("time" to 0.5714286f, "feedback" to 0.2631579f, "mode" to 0.6666667f, "mix" to 0.3f, "gain" to 0.485416651f, "taps" to 1f, "spacing" to 0.9f),
+        family = "taps")
+
+    private fun fx_delay23() = Patch("fx.Delay", "Scatter",
+        mapOf("time" to 0.714285731f, "feedback" to 0.4736842f, "tone" to 0.562381864f, "mode" to 0.6666667f, "mix" to 0.32f, "taps" to 1f, "spacing" to 0.15f),
+        family = "taps")
+
+    private fun fx_delay24() = Patch("fx.Delay", "Backwards",
+        mapOf("time" to 0.5714286f, "feedback" to 0.210526317f, "mode" to 1f, "mix" to 0.45f),
+        family = "reverse")
+
+    private fun fx_delay25() = Patch("fx.Delay", "Reverse Half",
+        mapOf("time" to 0.857142866f, "feedback" to 0.368421048f, "tone" to 0.63264513f, "mode" to 1f, "mix" to 0.42f),
+        family = "reverse")
+
+    private fun fx_delay26() = Patch("fx.Delay", "Swell Back",
+        mapOf("time" to 0.857142866f, "feedback" to 0.5263158f, "tone" to 0.6871456f, "mode" to 1f, "mix" to 0.5f, "duck" to 0.6f),
+        family = "reverse")
+
+    private fun fx_delay27() = Patch("fx.Delay", "Reverse Tape",
+        mapOf("time" to 0.5714286f, "feedback" to 0.4736842f, "tone" to 0.562381864f, "mode" to 1f, "mix" to 0.4f, "wobble" to 0.4f),
+        family = "reverse")
+
+    private val fx_delay: List<Patch> by lazy { listOf(fx_delay0(), fx_delay1(), fx_delay2(), fx_delay3(), fx_delay4(), fx_delay5(), fx_delay6(), fx_delay7(), fx_delay8(), fx_delay9(), fx_delay10(), fx_delay11(), fx_delay12(), fx_delay13(), fx_delay14(), fx_delay15(), fx_delay16(), fx_delay17(), fx_delay18(), fx_delay19(), fx_delay20(), fx_delay21(), fx_delay22(), fx_delay23(), fx_delay24(), fx_delay25(), fx_delay26(), fx_delay27()) }
 
     private fun fx_reverb0() = Patch("fx.Reverb", "Init", emptyMap(),
         family = "room")
@@ -15596,4 +15631,183 @@ internal object FactoryBanks {
         family = "rhythm")
 
     private val fx_formula: List<Patch> by lazy { listOf(fx_formula0(), fx_formula1(), fx_formula2(), fx_formula3(), fx_formula4(), fx_formula5(), fx_formula6(), fx_formula7(), fx_formula8(), fx_formula9(), fx_formula10(), fx_formula11(), fx_formula12(), fx_formula13(), fx_formula14(), fx_formula15(), fx_formula16(), fx_formula17(), fx_formula18(), fx_formula19()) }
+
+    private fun fx_transient0() = Patch("fx.Transient", "Init", emptyMap(),
+        family = "punch")
+
+    private fun fx_transient1() = Patch("fx.Transient", "Punch",
+        mapOf("attack" to 0.75f, "gain" to 0.475f),
+        family = "punch")
+
+    private fun fx_transient2() = Patch("fx.Transient", "Snap",
+        mapOf("attack" to 0.9f, "time" to 0.25f, "gain" to 0.4625f),
+        family = "punch")
+
+    private fun fx_transient3() = Patch("fx.Transient", "Smack",
+        mapOf("attack" to 1f, "sustain" to 0.35f, "gain" to 0.4375f),
+        family = "punch")
+
+    private fun fx_transient4() = Patch("fx.Transient", "Tight",
+        mapOf("sustain" to 0.199999988f),
+        family = "tighten")
+
+    private fun fx_transient5() = Patch("fx.Transient", "Dry Room",
+        mapOf("sustain" to 0f, "time" to 0.646240652f, "gain" to 0.5208333f),
+        family = "tighten")
+
+    private fun fx_transient6() = Patch("fx.Transient", "Gated",
+        mapOf("attack" to 0.65f, "sustain" to 0f, "time" to 0.25f),
+        family = "tighten")
+
+    private fun fx_transient7() = Patch("fx.Transient", "Soften",
+        mapOf("attack" to 0.199999988f, "gain" to 0.53125f),
+        family = "soften")
+
+    private fun fx_transient8() = Patch("fx.Transient", "Blunt",
+        mapOf("attack" to 0f, "sustain" to 0.65f, "gain" to 0.5416667f),
+        family = "soften")
+
+    private fun fx_transient9() = Patch("fx.Transient", "Pillow",
+        mapOf("attack" to 0.3f, "sustain" to 0.65f, "time" to 0.75f, "gain" to 0.5125f),
+        family = "soften")
+
+    private fun fx_transient10() = Patch("fx.Transient", "Ring On",
+        mapOf("sustain" to 0.85f, "gain" to 0.483333349f),
+        family = "room")
+
+    private fun fx_transient11() = Patch("fx.Transient", "Big Room",
+        mapOf("sustain" to 1f, "time" to 0.75f, "gain" to 0.46875f),
+        family = "room")
+
+    private fun fx_transient12() = Patch("fx.Transient", "Long Tail",
+        mapOf("sustain" to 0.75f, "time" to 0.896240652f),
+        family = "room")
+
+    private fun fx_transient13() = Patch("fx.Transient", "Hat Snap",
+        mapOf("attack" to 0.9f, "split" to 0.8362956f),
+        family = "split")
+
+    private fun fx_transient14() = Patch("fx.Transient", "Top Crack",
+        mapOf("attack" to 1f, "sustain" to 0.25f, "split" to 0.720606446f),
+        family = "split")
+
+    private fun fx_transient15() = Patch("fx.Transient", "Bloom Above",
+        mapOf("sustain" to 0.9f, "split" to 0.6156891f),
+        family = "split")
+
+    private val fx_transient: List<Patch> by lazy { listOf(fx_transient0(), fx_transient1(), fx_transient2(), fx_transient3(), fx_transient4(), fx_transient5(), fx_transient6(), fx_transient7(), fx_transient8(), fx_transient9(), fx_transient10(), fx_transient11(), fx_transient12(), fx_transient13(), fx_transient14(), fx_transient15()) }
+
+    private fun fx_midside0() = Patch("fx.Midside", "Init", emptyMap(),
+        family = "wide")
+
+    private fun fx_midside1() = Patch("fx.Midside", "Wider",
+        mapOf("width" to 0.7f),
+        family = "wide")
+
+    private fun fx_midside2() = Patch("fx.Midside", "Widest",
+        mapOf("width" to 0.95f, "mono" to 0.5566414f),
+        family = "wide")
+
+    private fun fx_midside3() = Patch("fx.Midside", "Air Sides",
+        mapOf("width" to 0.6f, "sidetilt" to 0.8333333f),
+        family = "wide")
+
+    private fun fx_midside4() = Patch("fx.Midside", "Narrow",
+        mapOf("width" to 0.25f),
+        family = "narrow")
+
+    private fun fx_midside5() = Patch("fx.Midside", "Mono",
+        mapOf("width" to 0f),
+        family = "narrow")
+
+    private fun fx_midside6() = Patch("fx.Midside", "Mono Bass",
+        mapOf("mono" to 0.6259648f),
+        family = "narrow")
+
+    private fun fx_midside7() = Patch("fx.Midside", "Centre Focus",
+        mapOf("mid" to 0.8666667f, "side" to 0.6f, "gain" to 0.466666669f),
+        family = "narrow")
+
+    private fun fx_midside8() = Patch("fx.Midside", "Dark Sides",
+        mapOf("sidetilt" to 0.166666672f),
+        family = "eq")
+
+    private fun fx_midside9() = Patch("fx.Midside", "Bright Centre",
+        mapOf("midtilt" to 0.75f, "gain" to 0.533333361f),
+        family = "eq")
+
+    private fun fx_midside10() = Patch("fx.Midside", "Clean Low End",
+        mapOf("width" to 0.6f, "sidetilt" to 0.6666667f, "mono" to 0.5566414f),
+        family = "eq")
+
+    private fun fx_midside11() = Patch("fx.Midside", "Breathing",
+        mapOf("width" to 0.75f, "breathe" to 0.7f),
+        family = "breathe")
+
+    private fun fx_midside12() = Patch("fx.Midside", "Open Gaps",
+        mapOf("width" to 0.9f, "breathe" to 1f),
+        family = "breathe")
+
+    private fun fx_midside13() = Patch("fx.Midside", "Pulse Wide",
+        mapOf("width" to 0.65f, "mono" to 0.5f, "breathe" to 0.5f),
+        family = "breathe")
+
+    private val fx_midside: List<Patch> by lazy { listOf(fx_midside0(), fx_midside1(), fx_midside2(), fx_midside3(), fx_midside4(), fx_midside5(), fx_midside6(), fx_midside7(), fx_midside8(), fx_midside9(), fx_midside10(), fx_midside11(), fx_midside12(), fx_midside13()) }
+
+    private fun fx_deesser0() = Patch("fx.Deesser", "Init", emptyMap(),
+        family = "voice")
+
+    private fun fx_deesser1() = Patch("fx.Deesser", "Vocal",
+        mapOf("freq" to 0.657819867f, "range" to 0.416666657f),
+        family = "voice")
+
+    private fun fx_deesser2() = Patch("fx.Deesser", "Low Voice",
+        mapOf("freq" to 0.452588767f),
+        family = "voice")
+
+    private fun fx_deesser3() = Patch("fx.Deesser", "High Voice",
+        mapOf("freq" to 0.7737056f),
+        family = "voice")
+
+    private fun fx_deesser4() = Patch("fx.Deesser", "Soft S",
+        mapOf("threshold" to 0.5f, "range" to 0.25f),
+        family = "gentle")
+
+    private fun fx_deesser5() = Patch("fx.Deesser", "Gentle Wide",
+        mapOf("threshold" to 0.533333361f, "range" to 0.25f, "mode" to 1f),
+        family = "gentle")
+
+    private fun fx_deesser6() = Patch("fx.Deesser", "Airy",
+        mapOf("freq" to 0.8394416f, "range" to 0.166666672f),
+        family = "gentle")
+
+    private fun fx_deesser7() = Patch("fx.Deesser", "Steady",
+        mapOf("relative" to 1f),
+        family = "steady")
+
+    private fun fx_deesser8() = Patch("fx.Deesser", "Steady Wide",
+        mapOf("mode" to 1f, "relative" to 1f),
+        family = "steady")
+
+    private fun fx_deesser9() = Patch("fx.Deesser", "Steady Hard",
+        mapOf("threshold" to 0.333333343f, "range" to 0.75f, "relative" to 1f),
+        family = "steady")
+
+    private fun fx_deesser10() = Patch("fx.Deesser", "Hard",
+        mapOf("threshold" to 0.266666681f, "range" to 0.75f),
+        family = "tame")
+
+    private fun fx_deesser11() = Patch("fx.Deesser", "Cymbal Tamer",
+        mapOf("freq" to 0.869617045f, "threshold" to 0.3f),
+        family = "tame")
+
+    private fun fx_deesser12() = Patch("fx.Deesser", "Hat Tamer",
+        mapOf("freq" to 0.7737056f, "threshold" to 0.233333334f, "range" to 0.416666657f),
+        family = "tame")
+
+    private fun fx_deesser13() = Patch("fx.Deesser", "Bright Cymbals",
+        mapOf("freq" to 0.951438f, "threshold" to 0.233333334f),
+        family = "tame")
+
+    private val fx_deesser: List<Patch> by lazy { listOf(fx_deesser0(), fx_deesser1(), fx_deesser2(), fx_deesser3(), fx_deesser4(), fx_deesser5(), fx_deesser6(), fx_deesser7(), fx_deesser8(), fx_deesser9(), fx_deesser10(), fx_deesser11(), fx_deesser12(), fx_deesser13()) }
 }

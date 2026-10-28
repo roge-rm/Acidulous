@@ -42,7 +42,8 @@
     - [Bitcrusher](05-effects-and-mixing/bitcrusher.md) - fewer bits and a lower sample rate, with an unsteady clock if you want it.
     - [Chorus](05-effects-and-mixing/chorus.md) - two to four detuned voices that drift.
     - [Compressor](05-effects-and-mixing/compressor.md) - the usual controls, a sidechain from any track and a tempo-synced pump.
-    - [Delay](05-effects-and-mixing/delay.md) - echoes on a note value, and it can duck while you play.
+    - [Deesser](05-effects-and-mixing/deesser.md) - turns down a band when it gets too loud: an s, a cymbal.
+    - [Delay](05-effects-and-mixing/delay.md) - echoes on a note value, in four modes, and it can duck while you play.
     - [Distortion](05-effects-and-mixing/distortion.md) - four kinds of clipping and a bias control.
     - [Eq](05-effects-and-mixing/eq.md) - three bands and a tilt.
     - [Filter](05-effects-and-mixing/filter.md) - low, band or high pass, moved by an LFO, the signal's level or another track.
@@ -53,6 +54,7 @@
     - [Harmonizer](05-effects-and-mixing/harmonizer.md) - adds two voices at scale steps, so they stay in key.
     - [Horn](05-effects-and-mixing/horn.md) - the track plays a wind instrument.
     - [Magneto](05-effects-and-mixing/magneto.md) - the sound of a small recordable disc, in each of its formats.
+    - [Midside](05-effects-and-mixing/midside.md) - the middle and the sides, each with its own level and tilt.
     - [Mouth](05-effects-and-mixing/mouth.md) - Diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.
@@ -64,6 +66,7 @@
     - [Spectral](05-effects-and-mixing/spectral.md) - the track taken apart into its frequencies and put back together.
     - [Swell](05-effects-and-mixing/swell.md) - upward compression: the quiet parts come up to meet the loud ones, in one band or three.
     - [Tape](05-effects-and-mixing/tape.md) - a worn tape machine, and a stop button.
+    - [Transient](05-effects-and-mixing/transient.md) - the start of each hit and the ring after it, up or down.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.
     - [Width](05-effects-and-mixing/width.md) - wider, narrower, mono below a frequency or rotated.
 6. [Modifiers](06-modifiers.md)

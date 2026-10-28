@@ -5,7 +5,7 @@ Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in
 the editor's bottom bar shows them in place of the machine panel. A patch's own
 effects only go in FX1 and FX2, so FX3 and FX4 are always yours.
 
-There are twenty-nine effects. Each one has the usual controls plus one extra,
+There are thirty-two effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -13,8 +13,8 @@ Each effect has its own page below.
 
 ## Time
 
-- [**Delay**](05-effects-and-mixing/delay.md) - echoes on a note value, and it
-  can duck while you play.
+- [**Delay**](05-effects-and-mixing/delay.md) - echoes on a note value: normal,
+  ping-pong, multi-tap or reverse, and it can duck while you play.
 - [**Reverb**](05-effects-and-mixing/reverb.md) - a room that can also freeze,
   gate, shimmer or crush itself down to 8 bits.
 - [**Grain**](05-effects-and-mixing/grain.md) - a cloud of short slices of what
@@ -31,6 +31,8 @@ Each effect has its own page below.
   by an LFO, the signal's level or another track.
 - [**Width**](05-effects-and-mixing/width.md) - wider, narrower, mono below a
   frequency or rotated.
+- [**Midside**](05-effects-and-mixing/midside.md) - the middle and the sides,
+  each with its own level and tilt, and sides that open in the gaps.
 - [**Acid**](05-effects-and-mixing/acid.md) - the acid bass filter on any
   track, opened by each note or by a pattern on the beat.
 - [**Mouth**](05-effects-and-mixing/mouth.md) - vowels, moved by an LFO, the
@@ -62,6 +64,10 @@ Each effect has its own page below.
   or three: the quiet parts come up to meet the loud ones.
 - [**Smash**](05-effects-and-mixing/smash.md) - three bands squashed from both
   sides: loud parts down, quiet parts up.
+- [**Transient**](05-effects-and-mixing/transient.md) - the start of each hit
+  and the ring after it, up or down.
+- [**Deesser**](05-effects-and-mixing/deesser.md) - turns down a band when it
+  gets too loud: an s, a cymbal.
 
 ## Movement
 

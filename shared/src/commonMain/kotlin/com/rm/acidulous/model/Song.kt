@@ -694,7 +694,8 @@ data class Master(
                         "time" to (d.time.toFloat() / (EngineParams.DELAY_TIMES - 1).toFloat()).coerceIn(0f, 1f),
                         "feedback" to d.feedback,
                         "tone" to d.tone,
-                        "pingpong" to if (d.pingPong) 1f else 0f,
+                        // Delay mode is 4 steps: normal 0, ping-pong 1/3.
+                        "mode" to if (d.pingPong) 1f / 3f else 0f,
                     ),
                     bypass = !d.on,
                 ),
@@ -710,7 +711,8 @@ data class Song(
     /**
      * 2 from 0.9.12: the LFOs' seventeen rates ([RateMigration]). 3: the 32
      * wavetables, 4: Trinity's 37 destinations ([TableMigration]). 5:
-     * Filament's louder sympathetic bank ([FilamentMigration]).
+     * Filament's louder sympathetic bank ([FilamentMigration]). 6: the Delay's
+     * mode ([DelayMigration]).
      */
     val version: Int = RateMigration.SONG_VERSION,
     val name: String,

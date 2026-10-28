@@ -19,16 +19,44 @@ namespace acidulous::effect {
     void reset() override;                                                    \
     bool process(float *L, float *R, int32_t frames, bool stereoIn) override;
 
+/**
+ * Delay on a note value, in four modes:
+ *
+ *   - normal: an echo a side.
+ *   - ping-pong: the echoes bounce from side to side.
+ *   - multi-tap: 2 to 4 taps inside the time, spread across the stereo
+ *     field, with `spacing` bunching them early or late. The last tap, at
+ *     the full time, feeds back.
+ *   - reverse: each stretch of `time` is played backwards, with short
+ *     crossfades between stretches. Feedback plays an echo forwards again.
+ *
+ * The extras are `duck` (echoes drop while the track plays) and `wobble`
+ * (tape-like drift of the time).
+ */
 class Delay final : public Effect {
   public:
-    enum P { Time, Feedback, Tone, PingPong, Mix, Duck, Wobble, Gain, Count };
+    enum P { Time, Feedback, Tone, Mode, Mix, Duck, Wobble, Gain, Taps, Spacing, Count };
+    enum ModeKind { Normal, PingPong, MultiTap, Reverse };
+    static constexpr int32_t kMaxTaps = 4;
     Delay() { initParams(); }
     ACIDULOUS_EFFECT_COMMON(Delay)
     void onBlock(int64_t, int64_t, float bpm) override { this->bpm = bpm; }
   private:
+    void runMultiTap(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff);
+    void runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff);
+    float wobbleDrift(float depth);
+    float duckedMix(float inL, float inR);
     dsp::DelayLine line[2];
     float readSamples = 24000.0f, lp[2]{}, duckEnv = 0.0f, wobblePhase = 0.0f, sr = 48000.0f, bpm = 120.0f;
     bool snapRead = true; // see reset()
+    // Per-block, for the helpers: the knobs as process() read them.
+    float fb_ = 0.0f, mix_ = 0.0f, duck_ = 0.0f, wobbleDepth_ = 0.0f, duckAtk_ = 0.0f, duckRel_ = 0.0f, glide_ = 0.0f;
+    // Reverse: frames into the current stretch; its length and the tail it
+    // plays on into the next, fixed when it starts; the same for the one
+    // fading out.
+    float revAt = 0.0f, revLen = 0.0f, revTail = 0.0f, revPrevLen = 0.0f, revPrevTail = 0.0f;
+    bool revStart = true;
+    void startStretch();
 };
 
 /**

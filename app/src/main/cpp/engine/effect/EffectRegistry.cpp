@@ -2,6 +2,9 @@
 #include "Effects.h"
 #include "FromMachines.h"
 #include "Acid.h"
+#include "DeEsser.h"
+#include "MidSide.h"
+#include "Transient.h"
 #include "Mouth.h"
 #include "Formula.h"
 #include "Horn.h"
@@ -49,6 +52,9 @@ const Entry kEntries[] = {
     {"Horn", make<effect::Horn>},
     {"Spectral", make<effect::Spectral>},
     {"Formula", make<effect::Formula>},
+    {"Transient", make<effect::Transient>},
+    {"Midside", make<effect::MidSide>},
+    {"Deesser", make<effect::DeEsser>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

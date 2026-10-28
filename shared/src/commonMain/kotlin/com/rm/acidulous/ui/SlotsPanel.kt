@@ -442,6 +442,29 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "scale" to listOf("mode", "key", "scale"),
         "how" to listOf("snap", "octave", "transpose"),
     ),
+    "Delay" to listOf(
+        "echo" to listOf("time", "feedback", "tone", "mix"),
+        // Taps and spacing only act in multi-tap.
+        "mode" to listOf("mode", "taps", "spacing"),
+        "extra" to listOf("duck", "wobble"),
+        "out" to listOf("gain"),
+    ),
+    "Transient" to listOf(
+        "shape" to listOf("attack", "sustain", "time"),
+        "extra" to listOf("split"),
+        "out" to listOf("gain"),
+    ),
+    "Midside" to listOf(
+        "levels" to listOf("width", "mid", "side"),
+        "eq" to listOf("midtilt", "sidetilt", "mono"),
+        "extra" to listOf("breathe"),
+        "out" to listOf("gain"),
+    ),
+    "Deesser" to listOf(
+        "band" to listOf("freq", "threshold", "range"),
+        "how" to listOf("mode", "listen", "relative"),
+        "out" to listOf("gain"),
+    ),
 )
 
 /**
@@ -537,6 +560,9 @@ private val EXTRA = mapOf(
     "Horn" to setOf("breath", "snap"),
     "Spectral" to setOf("freeze", "peaks"),
     "Formula" to setOf("rate", "smooth"),
+    "Transient" to setOf("split"), // only the highs shaped
+    "Midside" to setOf("breathe"), // the side opens in the gaps
+    "Deesser" to setOf("relative"), // measured against the whole sound
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -602,7 +628,10 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "stop" && type == "Tape" -> listOf("run", "stop")
     name == "snap" && type == "Horn" -> listOf("free", "semi")
     name == "freeze" && type == "Spectral" -> listOf("run", "hold")
+    name == "mode" && type == "Deesser" -> listOf("split", "wide")
     steps == 2 -> listOf("off", "on")
+    name == "mode" && type == "Delay" -> listOf("normal", "ping-pong", "multi-tap", "reverse")
+    name == "taps" && type == "Delay" -> listOf("2", "3", "4")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
     name == "speed" && type == "Rotary" -> listOf("brake", "slow", "fast")
@@ -752,6 +781,7 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
     name == "edge" && type.lowercase() == "amp" -> "edge~cone"
     name == "ring" && type.lowercase() == "chord" -> "ring~strings"
     name == "split" && type.lowercase() == "chord" -> "split~keys"
+    name == "mid" && type.lowercase() == "midside" -> "mid~centre"
     else -> name
 }
 

@@ -6,7 +6,7 @@ FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place 
 panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc
 FX3 et FX4 sont toujours à vous.
 
-Il y a vingt-neuf effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a trente-deux effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -15,7 +15,8 @@ Chaque effet a sa propre page ci-dessous.
 ## Temps
 
 - [**Delay**](05-effects-and-mixing/delay.md) : des échos sur une valeur de
-  note, qui peuvent s’atténuer pendant que vous jouez.
+  note, normaux, en ping-pong, à plusieurs têtes ou à l’envers, qui peuvent
+  s’atténuer pendant que vous jouez.
 - [**Reverb**](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se
   figer, se couper, miroiter ou s’écraser jusqu’à 8 bits.
 - [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
@@ -33,6 +34,9 @@ Chaque effet a sa propre page ci-dessous.
   passe-haut, déplacé par un LFO, le niveau du signal ou une autre piste.
 - [**Width**](05-effects-and-mixing/width.md) : plus large, plus étroit, mono
   sous une fréquence ou tourné.
+- [**Midside**](05-effects-and-mixing/midside.md) : le centre et les côtés,
+  chacun avec son niveau et sa pente, et des côtés qui s’ouvrent dans les
+  silences.
 - [**Acid**](05-effects-and-mixing/acid.md) : le filtre de la basse acid sur
   n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
 - [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
@@ -66,6 +70,10 @@ Chaque effet a sa propre page ci-dessous.
   sur une bande ou trois. Les passages doux montent rejoindre les forts.
 - [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
   côtés. Les passages forts descendent, les doux montent.
+- [**Transient**](05-effects-and-mixing/transient.md) : le début de chaque
+  coup et la résonance après, plus fort ou plus doux.
+- [**Deesser**](05-effects-and-mixing/deesser.md) : baisse une bande quand
+  elle devient trop forte : un s, une cymbale.
 
 ## Mouvement
 
