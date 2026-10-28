@@ -143,7 +143,9 @@ const val SIDECHAIN_STEPS = 17
  * automation lane on them. [f] takes and returns the 1-based track, or 0.
  *
  * A mod keyed from a deleted track follows its own input instead, as a
- * sidechain does.
+ * sidechain does. Its key, and any lane point that named the track, go to
+ * the last track, which a deletion leaves empty, so a lane switching the
+ * source to keyed later hears nothing rather than the next track.
  */
 fun Song.remapSidechains(f: (Int) -> Int): Song {
     val last = (SIDECHAIN_STEPS - 1).toFloat()
@@ -152,23 +154,22 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
         return if (k == 0) v01 else (f(k).coerceIn(0, SIDECHAIN_STEPS - 1) / last)
     }
     val keyLast = (InsertMod.KEYS - 1).toFloat()
-    /** The key's new value, or null if its track is gone. */
-    fun remapKey(v01: Float): Float? {
+    /** The key's new value; a deleted track's goes to the last track. */
+    fun remapKey(v01: Float): Float {
         val k = f((v01 * keyLast).roundToInt() + 1)
-        return if (k == 0) null else (k - 1).coerceIn(0, InsertMod.KEYS - 1) / keyLast
+        return if (k == 0) 1f else (k - 1).coerceIn(0, InsertMod.KEYS - 1) / keyLast
     }
     fun UnitSlot.remapped(): UnitSlot {
         var p = params
         p[SIDECHAIN_PARAM]?.let { p = p + (SIDECHAIN_PARAM to remap(it)) }
-        val isKeyed = ((p[InsertMod.SOURCE] ?: 0f) * (InsertMod.SOURCES - 1)).roundToInt() == InsertMod.KEYED
-        if (InsertMod.KEY in p || isKeyed) {
+        // Any slot with a mod, keyed now or not: a lane on its source may key it later.
+        if (p.keys.any { InsertMod.isModParam(it) }) {
+            val isKeyed = ((p[InsertMod.SOURCE] ?: 0f) * (InsertMod.SOURCES - 1)).roundToInt() == InsertMod.KEYED
             val was = p[InsertMod.KEY] ?: 0f
+            val gone = f((was * keyLast).roundToInt() + 1) == 0
             val now = remapKey(was)
-            p = when {
-                now != null -> if (now == was && InsertMod.KEY !in p) p else p + (InsertMod.KEY to now)
-                isKeyed -> p + (InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.FOLLOW))
-                else -> p
-            }
+            if (now != was) p = p + (InsertMod.KEY to now)
+            if (gone && isKeyed) p = p + (InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.FOLLOW))
         }
         return if (p === params) this else copy(params = p)
     }
@@ -186,9 +187,8 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
                         when {
                             key.endsWith(lane) ->
                                 l.copy(points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remap(it.value)) })
-                            // A point on a deleted track stays where it was.
                             key.endsWith(keyLane) -> l.copy(
-                                points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remapKey(it.value) ?: it.value) },
+                                points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remapKey(it.value)) },
                             )
                             else -> l
                         }

@@ -97,6 +97,38 @@ class InsertModTest {
     }
 
     @Test
+    fun `a deleted track's key goes to the empty last track, keyed or not`() {
+        val last = key(InsertMod.KEYS - 1)
+        // Keyed now: it follows its own input, and the key no longer names the next track.
+        val keyed = keyedFrom(Fixtures.song(), on = 1, from = 0).deleteTrack(0).tracks[0]
+        assertEquals(last, keyed.effectAt(0).params[InsertMod.KEY])
+        // On an LFO, with a key a lane on its source may switch to later.
+        val lfo = keyedFrom(Fixtures.song(), on = 1, from = 0).updateTrack(1) {
+            it.withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO))
+        }.deleteTrack(0).tracks[0]
+        assertEquals(last, lfo.effectAt(0).params[InsertMod.KEY])
+        assertEquals(InsertMod.sourceValue(InsertMod.LFO), lfo.effectAt(0).params[InsertMod.SOURCE])
+        // The same with the key left at its default, track 1.
+        val implicit = Fixtures.song().updateTrack(1) {
+            it.withEffect(0, "Filter").withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.LFO))
+        }.deleteTrack(0).tracks[0]
+        assertEquals(last, implicit.effectAt(0).params[InsertMod.KEY])
+        // A lane's points that named it go there too; a lock's "back to the knob" stays.
+        for (t in listOf(keyed, lfo)) {
+            val lane = t.clips.values.first().automation.getValue(laneKey("effect1", InsertMod.KEY))
+            assertEquals(last, lane.points[0].value)
+            assertEquals(LANE_BASE, lane.points[1].value)
+        }
+    }
+
+    @Test
+    fun `a slot without a mod is left alone when a track goes`() {
+        val song = Fixtures.song().updateTrack(1) { it.withEffect(0, "Filter").withEffectParam(0, "cutoff", 0.3f) }
+        val fx = song.deleteTrack(0).tracks[0].effectAt(0)
+        assertEquals(null, fx.params[InsertMod.KEY])
+    }
+
+    @Test
     fun `the input's and the master's keyed mods move too`() {
         val keyed = mapOf(InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.KEYED), InsertMod.KEY to key(1))
         val base = Fixtures.song()
