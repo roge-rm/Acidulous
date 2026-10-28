@@ -200,7 +200,10 @@ class Reverb final : public Effect {
     // Taps a side: delay and gain now, where they're gliding to and the step per sample.
     float tapD[2][kSpaceTaps]{}, tapG[2][kSpaceTaps]{}, tapDTo[2][kSpaceTaps]{}, tapGTo[2][kSpaceTaps]{};
     int32_t tapO[2][kSpaceTaps]{};
-    float tapF[2][kSpaceTaps]{}, tapDMid[2][kSpaceTaps]{}, tapDStep[2][kSpaceTaps]{}, tapGStep[2][kSpaceTaps]{};
+    float tapF[2][kSpaceTaps]{}, tapDStep[2][kSpaceTaps]{}, tapGStep[2][kSpaceTaps]{};
+    // The glide's block-level state in double, so it reaches the target: a float
+    // step this small rounds away. tapD and tapG restart from these each block.
+    double tapDMid[2][kSpaceTaps]{}, tapDAt[2][kSpaceTaps]{}, tapGAt[2][kSpaceTaps]{};
     int32_t spcTaps = kSpaceTaps;
     bool spcSnap = true, spcMoving = false;
     float spcGeomWas[5]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f};

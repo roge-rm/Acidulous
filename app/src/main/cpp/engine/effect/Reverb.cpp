@@ -324,10 +324,11 @@ void Reverb::prepare(int32_t sampleRate) {
         spRot[s][1] = std::sin(w);
     }
 
-    // Early: sized for the top rate, the longest size and the most wobble.
+    // Early: sized for the top rate, the longest size and the most wobble,
+    // which swings the read up to twice its depth.
     const float eaMost = kEarlyRateMax * 0.001f * (kEarlyScaleMin + kEarlyScaleRange);
     const int32_t eaWob = static_cast<int32_t>(kWobbleDepth * kEarlyRateMax) + 2;
-    for (int i = 0; i < kEarlyLines; ++i) eaLine[i].prepare(static_cast<int32_t>(kEarlyMs[i] * eaMost) + eaWob + 4);
+    for (int i = 0; i < kEarlyLines; ++i) eaLine[i].prepare(static_cast<int32_t>(kEarlyMs[i] * eaMost) + 2 * eaWob + 4);
     for (int c = 0; c < 2; ++c)
         for (int k = 0; k < 2; ++k) eaDiff[c][k].prepare(static_cast<int32_t>(kEarlyDiffMs[c][k] * eaMost) + 4);
 
@@ -1204,19 +1205,29 @@ void Reverb::updateSpace(float damp, bool freeze, bool full, int32_t frames) {
     const float f = static_cast<float>(std::max(1, frames));
     const float k = spcSnap ? 1.0f : 1.0f - std::exp(-f / (kSpaceGlideS * sr));
     spcMoving = false;
+    // Only the taps this quality reads; a quality switch snaps the rest.
+    const int32_t glideTaps = spcSnap ? kSpaceTaps : spcTaps;
     for (int e = 0; e < 2; ++e) {
-        for (int j = 0; j < kSpaceTaps; ++j) {
+        for (int j = 0; j < glideTaps; ++j) {
             // Close enough is there, so a still room skips the glide.
-            if (spcSnap || (std::fabs(tapDTo[e][j] - tapD[e][j]) < 1.0e-3f && std::fabs(tapGTo[e][j] - tapG[e][j]) < 1.0e-6f)) {
-                tapD[e][j] = tapDMid[e][j] = tapDTo[e][j];
+            if (spcSnap || (std::fabs(tapDTo[e][j] - tapDAt[e][j]) < 1.0e-3 && std::fabs(tapGTo[e][j] - tapGAt[e][j]) < 1.0e-6)) {
+                tapD[e][j] = tapDTo[e][j];
                 tapG[e][j] = tapGTo[e][j];
+                tapDMid[e][j] = tapDAt[e][j] = tapDTo[e][j];
+                tapGAt[e][j] = tapGTo[e][j];
                 tapDStep[e][j] = tapGStep[e][j] = 0.0f;
                 continue;
             }
             spcMoving = true;
+            tapD[e][j] = static_cast<float>(tapDAt[e][j]);
+            tapG[e][j] = static_cast<float>(tapGAt[e][j]);
             tapDMid[e][j] += (tapDTo[e][j] - tapDMid[e][j]) * k;
-            tapDStep[e][j] = (tapDMid[e][j] - tapD[e][j]) * k / f;
-            tapGStep[e][j] = (tapGTo[e][j] - tapG[e][j]) * k / f;
+            const double dNext = tapDAt[e][j] + (tapDMid[e][j] - tapDAt[e][j]) * k;
+            const double gNext = tapGAt[e][j] + (tapGTo[e][j] - tapGAt[e][j]) * k;
+            tapDStep[e][j] = static_cast<float>((dNext - tapDAt[e][j]) / f);
+            tapGStep[e][j] = static_cast<float>((gNext - tapGAt[e][j]) / f);
+            tapDAt[e][j] = dNext;
+            tapGAt[e][j] = gNext;
         }
     }
     if (!spcMoving) {
