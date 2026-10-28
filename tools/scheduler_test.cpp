@@ -710,7 +710,20 @@ void aSongEmptiedWhilePlaying() {
        "scene " + std::to_string(f->scheduler.currentScene()));
 }
 
+void positionPacksAndUnpacks() {
+    const int64_t ticks[] = {0, 1, 123456789, 0xffffffffffffLL};
+    bool same = true;
+    for (int32_t scene : {0, 1, 200, 255})
+        for (int32_t repeat : {0, 3, 255})
+            for (int64_t tick : ticks) {
+                const Transport::Unpacked u = Transport::unpack(Transport::pack(scene, repeat, tick));
+                same = same && u.scene == scene && u.repeat == repeat && u.tickInIteration == tick;
+            }
+    ok("a packed position unpacks to what went in", same);
+}
+
 int main() {
+    positionPacksAndUnpacks();
     theGridIsToldNothingBeforeAnythingRuns();
     songModePlaysTheSong();
     clipModeFromColdStaysSilent();

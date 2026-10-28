@@ -354,6 +354,12 @@ void hostile() {
         z.finish(entries);
         check(!presetfile::read(z.bytes.data(), z.bytes.size(), out, error) && error.find("too big") != std::string::npos,
               "more than the total is turned down: " + error);
+        std::vector<std::pair<std::string, std::vector<uint8_t>>> got;
+        check(!presetfile::unzip(z.bytes.data(), z.bytes.size(), got, error) && error.find("too big") != std::string::npos,
+              "unzip turns down more than 8 MB by default: " + error);
+        got.clear();
+        check(presetfile::unzip(z.bytes.data(), z.bytes.size(), got, error, 16u << 20) && got.size() == 9,
+              "and takes it with a bigger maxTotal: " + error);
     }
 }
 
