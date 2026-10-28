@@ -425,7 +425,8 @@ class SceneScheduler {
     /**
      * What to add to a clock tick to get the song's position, from where the
      * arranger is now. An insert's mod follows it, so a scene played or
-     * frozen on its own moves as it does in the song. Call before process().
+     * frozen on its own moves as it does in the song. After process(), it
+     * holds for the block just run, a loop inside it included.
      */
     int64_t songTickOffset() const {
         if (snap == nullptr || snap->scenes.empty()) return 0;

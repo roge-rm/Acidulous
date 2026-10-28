@@ -304,10 +304,6 @@ void Engine::renderBlock(const float *in, float *out) {
     master.setCountingIn(counting);
     // What the scheduler sends each rack is queued for the rack's own job.
     for (int32_t r = 0; r < kRackCount; ++r) racks[r].queue();
-    // The inserts' mods follow the song's position. Clip mode has none, so
-    // it keeps the one it had: 0 from a stop, or the song's where it took over.
-    if (playing && !counting && !scheduler.launcherActive()) modTickOffset = scheduler.songTickOffset();
-    else if (startedInLauncher) modTickOffset = 0;
     if (playing && !counting) {
         scheduler.setSwingPair(swingPair.load(std::memory_order_relaxed));
         if (!scheduler.process(clock.blockStart(), clock.blockEnd())) {
@@ -318,6 +314,12 @@ void Engine::renderBlock(const float *in, float *out) {
     } else if (!counting) {
         scheduler.applyIdleTempo();
     }
+    // The inserts' mods follow the song's position, from where the scheduler
+    // ended this block, so a loop or a scene jump inside it lands on the
+    // block's end. Clip mode has none, so it keeps the one it had: 0 from a
+    // stop, or the song's where it took over.
+    if (playing && !counting && !scheduler.launcherActive()) modTickOffset = scheduler.songTickOffset();
+    else if (startedInLauncher) modTickOffset = 0;
 
     // 24 pulses per quarter note, which at 240 PPQN is exactly every tenth
     // tick at any tempo. The clock runs whether or not the transport does,

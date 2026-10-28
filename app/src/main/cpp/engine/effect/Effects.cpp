@@ -362,15 +362,60 @@ void Eq::reset() {
     for (int c = 0; c < 2; ++c) { low[c].reset(); mid[c].reset(); high[c].reset(); tiltLo[c].reset(); tiltHi[c].reset(); }
 }
 
-bool Eq::process(float *L, float *R, int32_t frames, bool stereoIn) {
+// Kept out of line, so process() compiles as it did before slicing and a
+// song without mods renders to the bit.
+__attribute__((noinline)) void Eq::remember() {
     const auto &p = params_;
-    const float tilt = p.get(Tilt) * 6.0f; // +-6 dB across the spectrum
-    for (int c = 0; c < 2; ++c) {
-        low[c].lowShelf(p.get(LowFreq), p.get(LowGain), sr);
-        mid[c].peak(p.get(MidFreq), p.get(MidGain), p.get(MidQ), sr);
-        high[c].highShelf(p.get(HighFreq), p.get(HighGain), sr);
-        tiltLo[c].lowShelf(650.0f, -tilt, sr);
-        tiltHi[c].highShelf(650.0f, tilt, sr);
+    lowFor[0] = p.get(LowFreq); lowFor[1] = p.get(LowGain);
+    midFor[0] = p.get(MidFreq); midFor[1] = p.get(MidGain); midFor[2] = p.get(MidQ);
+    highFor[0] = p.get(HighFreq); highFor[1] = p.get(HighGain);
+    tiltFor = p.get(Tilt);
+}
+
+__attribute__((noinline)) void Eq::designMoved() {
+    const auto &p = params_;
+    const float lf = p.get(LowFreq), lg = p.get(LowGain);
+    if (lf != lowFor[0] || lg != lowFor[1]) {
+        low[0].lowShelf(lf, lg, sr);
+        low[1].copyCoefficients(low[0]);
+    }
+    const float mf = p.get(MidFreq), mg = p.get(MidGain), mq = p.get(MidQ);
+    if (mf != midFor[0] || mg != midFor[1] || mq != midFor[2]) {
+        mid[0].peak(mf, mg, mq, sr);
+        mid[1].copyCoefficients(mid[0]);
+    }
+    const float hf = p.get(HighFreq), hg = p.get(HighGain);
+    if (hf != highFor[0] || hg != highFor[1]) {
+        high[0].highShelf(hf, hg, sr);
+        high[1].copyCoefficients(high[0]);
+    }
+    const float t = p.get(Tilt);
+    if (t != tiltFor) {
+        const float tilt = t * 6.0f;
+        tiltLo[0].lowShelf(650.0f, -tilt, sr);
+        tiltHi[0].highShelf(650.0f, tilt, sr);
+        tiltLo[1].copyCoefficients(tiltLo[0]);
+        tiltHi[1].copyCoefficients(tiltHi[0]);
+    }
+    remember();
+}
+
+bool Eq::process(float *L, float *R, int32_t frames, bool stereoIn) {
+    // A later slice of a block a mod glides across redesigns only the bands
+    // it moved, once for both channels.
+    if (subOffset_ > 0) {
+        designMoved();
+    } else {
+        const auto &p = params_;
+        const float tilt = p.get(Tilt) * 6.0f; // +-6 dB across the spectrum
+        for (int c = 0; c < 2; ++c) {
+            low[c].lowShelf(p.get(LowFreq), p.get(LowGain), sr);
+            mid[c].peak(p.get(MidFreq), p.get(MidGain), p.get(MidQ), sr);
+            high[c].highShelf(p.get(HighFreq), p.get(HighGain), sr);
+            tiltLo[c].lowShelf(650.0f, -tilt, sr);
+            tiltHi[c].highShelf(650.0f, tilt, sr);
+        }
+        remember();
     }
     const int chans = stereoIn ? 2 : 1;
     for (int c = 0; c < chans; ++c) {

@@ -141,31 +141,38 @@ class SlotMod {
     }
 
     /**
-     * Once a block, with the tick range the block covers. While playing the
-     * position follows the transport, so a render repeats; stopped, it runs
-     * on at the tempo.
+     * Once a block, with the clock's tick range the block covers and what
+     * to add for the song's position. While playing the position follows
+     * the transport, so a render repeats; stopped, it runs on at the tempo.
+     * A loop or a jump in the song only moves [songOffset], so the
+     * followers carry on through it: only play, a panic and a freeze's
+     * start empty them.
      */
-    void block(int64_t tickStart, int64_t tickEnd, float bpm) {
+    void block(int64_t tickStart, int64_t tickEnd, float bpm, int64_t songOffset) {
         const double per = static_cast<double>(kBlockFrames) * bpm * kPPQN / (60.0 * kSampleRate);
         if (tickEnd > tickStart) {
             // tickStart is the whole tick the block starts in; the guess
             // between keeps the fraction, so the phase doesn't stair-step a tick at a time.
             const double start = static_cast<double>(tickStart);
-            const double guess = tick_ + per;
+            const double guess = clock_ + per;
             if (!running_ || guess < start - 1.0 || guess > start + 2.0) {
-                // Play, or a jump: the mod starts from here as a render does,
-                // whatever the stopped transport or a panic block left.
-                tick_ = start;
-                env_ = 0.0f;
-                snap_ = true;
+                // Play, or the clock itself jumped: the mod starts from here
+                // as a render does, whatever the stopped transport or a
+                // panic block left.
+                clock_ = start;
+                if (!running_) {
+                    env_ = 0.0f;
+                    snap_ = true;
+                }
             } else {
-                tick_ = guess < start ? start : (guess > start + 0.999 ? start + 0.999 : guess);
+                clock_ = guess < start ? start : (guess > start + 0.999 ? start + 0.999 : guess);
             }
             running_ = true;
         } else {
-            tick_ += per;
+            clock_ += per;
             running_ = false;
         }
+        tick_ = clock_ + static_cast<double>(songOffset);
     }
 
     /** Another track's sound as last block left it, or null for silence; and a seed for the random shapes. */
@@ -212,6 +219,7 @@ class SlotMod {
     /** A panic or a render's start: the follower empties and the next block lands without a glide. */
     void reset() {
         env_ = 0.0f;
+        clock_ = 0.0;
         tick_ = 0.0;
         running_ = false;
         snap_ = true;
@@ -281,7 +289,8 @@ class SlotMod {
     float depth_[2] = {0.0f, 0.0f};
     float step_[kSlotModSteps]{};
 
-    double tick_ = 0.0;
+    double clock_ = 0.0; // the clock's tick, which a loop in the song doesn't move
+    double tick_ = 0.0;  // the song's
     bool running_ = false;
     bool snap_ = true;
     bool snapped_ = true;

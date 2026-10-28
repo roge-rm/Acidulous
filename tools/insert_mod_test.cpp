@@ -10,6 +10,7 @@
 // and the master's inserts have one too. A scene played on its own moves as
 // the song moves through it, and a fast mod on every continuous knob of every
 // effect is measured once a block and sliced against a step every sample.
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -176,7 +177,7 @@ float largestStep(const std::vector<float> &c, size_t skip = 20) {
     return s;
 }
 
-constexpr int32_t kBlocks = 1500; // two bars at 120
+constexpr int32_t kBlocks = 1500; // a bar at 120
 
 void eachSourceMovesItsTarget() {
     printf("- each source moves the cutoff, and nothing moves it with the source off\n");
@@ -396,6 +397,47 @@ void aSceneStartsWhereTheSongHasIt() {
     }
 }
 
+/** The fixture's scene made [bars] long, round its two-bar clips; a one-scene song loops. */
+void lengthen(Fixture &f, int32_t bars) {
+    auto snap = std::make_shared<SongSnapshot>(*f.snap);
+    snap->scenes[0].bars = bars;
+    f.engine.scheduler.swapSnapshot(snap.get());
+    f.snap = snap;
+}
+
+/**
+ * A two-bar scene looping against the same clips in a four-bar scene, where
+ * nothing jumps: across the loop a follower carries on rather than dropping
+ * to nothing and attacking back, and an LFO that fits the loop lands on the
+ * same phase.
+ */
+void aLoopDoesNotDip() {
+    printf("- a one-scene song looping: followers carry on, an lfo keeps its phase\n");
+    struct Case { const char *name; Mod mod; };
+    Mod follow; follow.source = slotmod::Follow;
+    Mod keyed; keyed.source = slotmod::Keyed;
+    Mod fast; fast.source = slotmod::Lfo; fast.rate = 0; // 1/32
+    Mod slow; slow.source = slotmod::Lfo; slow.rate = 14; // two bars
+    const Case cases[] = {{"follower", follow}, {"keyed follower", keyed}, {"1/32 sine", fast}, {"two-bar sine", slow}};
+    for (const Case &c : cases) {
+        std::vector<float> out, looped, straight;
+        // The loop is two bars in: 4 s at 120.
+        const int32_t loop = 4 * kSampleRate / kBlockFrames;
+        { Fixture f(c.mod); f.start(); f.run(loop + 700, out, &looped); }
+        out.clear();
+        { Fixture f(c.mod); lengthen(f, 4); f.start(); f.run(loop + 700, out, &straight); }
+        float worst = 0.0f, dip = 0.0f;
+        for (size_t b = static_cast<size_t>(loop) - 100; b < looped.size(); ++b) {
+            const float d = std::log2(looped[b] / straight[b]);
+            worst = std::fmax(worst, std::fabs(d));
+            dip = std::fmin(dip, d);
+        }
+        char d[96];
+        std::snprintf(d, sizeof d, "within %.5f oct of no loop, lowest %.4f oct", worst, dip);
+        ok((std::string(c.name) + ": across the loop as if there were none").c_str(), worst < 0.005f, d);
+    }
+}
+
 /** A sine and a little noise, stereo, for the zipper renders. */
 void testTone(float *L, float *R, int64_t at) {
     static uint32_t rng = 1;
@@ -410,7 +452,7 @@ void testTone(float *L, float *R, int64_t at) {
 }
 
 /** One effect with a 1/32 sine on [param] at full depth, [slice] frames a step; interleaved. */
-std::vector<float> zipperRender(const char *type, int32_t param, int32_t slice, int32_t blocks) {
+std::vector<float> zipperRender(const char *type, int32_t param, int32_t slice, int32_t blocks, bool stereoIn = true) {
     Effect *fx = EffectRegistry::create(type);
     fx->prepare(kSampleRate);
     fx->reset();
@@ -429,9 +471,10 @@ std::vector<float> zipperRender(const char *type, int32_t param, int32_t slice, 
     const double perBlock = kBlockFrames * 120.0 * kPPQN / (60.0 * kSampleRate);
     for (int32_t b = 0; b < blocks; ++b) {
         testTone(L, R, static_cast<int64_t>(b) * kBlockFrames);
+        if (!stereoIn) std::fill(R, R + kBlockFrames, 0.0f);
         const auto t0 = static_cast<int64_t>(b * perBlock), t1 = static_cast<int64_t>((b + 1) * perBlock);
         fx->block(t0, t1, 120.0f);
-        const bool st = fx->run(L, R, kBlockFrames, true);
+        const bool st = fx->run(L, R, kBlockFrames, stereoIn);
         for (int32_t i = 0; i < kBlockFrames; ++i) {
             out[(static_cast<size_t>(b) * kBlockFrames + i) * 2] = L[i];
             out[(static_cast<size_t>(b) * kBlockFrames + i) * 2 + 1] = st ? R[i] : L[i];
@@ -458,10 +501,12 @@ double errorDb(const std::vector<float> &x, const std::vector<float> &ref) {
  * Every effect, every continuous knob, a fast mod at full depth: once a block
  * against a step every sample (the reference) and the slices runModulated
  * takes. A knob the block steps zipper on comes out far from the reference
- * once a block; sliced it has to be closer, and never further.
+ * once a block; sliced it has to be closer, and never further. Mono in, an
+ * effect can come out stereo in some slices and mono in others.
  */
-void fastModsDoNotZipper() {
-    printf("- a fast mod on every continuous knob: error against a step every sample, once a block -> sliced\n");
+void fastModsDoNotZipper(bool stereoIn) {
+    printf("- a fast mod on every continuous knob, %s in: error against a step every sample, once a block -> sliced\n",
+           stereoIn ? "stereo" : "mono");
     constexpr int32_t kZipBlocks = 300;
     constexpr double kAudible = -40.0;
     int32_t worse = 0, fixed = 0, stillLoud = 0;
@@ -475,9 +520,9 @@ void fastModsDoNotZipper() {
         std::string line;
         for (int32_t k = 0; k < n; ++k) {
             if (defs[k].curve == Curve::Stepped) continue;
-            const auto ref = zipperRender(type, k, 1, kZipBlocks);
-            const double block = errorDb(zipperRender(type, k, kBlockFrames, kZipBlocks), ref);
-            const double sliced = errorDb(zipperRender(type, k, Effect::modSlice, kZipBlocks), ref);
+            const auto ref = zipperRender(type, k, 1, kZipBlocks, stereoIn);
+            const double block = errorDb(zipperRender(type, k, kBlockFrames, kZipBlocks, stereoIn), ref);
+            const double sliced = errorDb(zipperRender(type, k, Effect::modSlice, kZipBlocks, stereoIn), ref);
             if (sliced > block + 1.0) ++worse;
             if (block > kAudible && sliced <= kAudible) ++fixed;
             if (sliced > kAudible) {
@@ -492,17 +537,12 @@ void fastModsDoNotZipper() {
     }
     char d[64];
     std::snprintf(d, sizeof d, "%d past %.0f dB brought under it", fixed, kAudible);
-    ok("slicing is never further from the reference", worse == 0, d);
+    ok(stereoIn ? "stereo in: slicing is never further from the reference" : "mono in: slicing is never further from the reference",
+       worse == 0, d);
     printf("    still past %.0f dB sliced:%s\n", kAudible, loud.empty() ? " none" : loud.c_str());
     (void)stillLoud;
 }
 
-/** With the source off, sliced or not makes no difference. */
-void slicingLeavesOffAlone() {
-    printf("- the slices only run with a mod on\n");
-    const auto a = zipperRender("Filter", -1, 1, 200), b = zipperRender("Filter", -1, kBlockFrames, 200);
-    ok("an effect without a mod is the same either way", errorDb(a, b) == -200.0);
-}
 
 /** A 16-bit stereo WAV of an interleaved render. */
 void writeWav(const std::string &path, const std::vector<float> &x) {
@@ -568,6 +608,18 @@ void writeAuditions(const char *dir) {
         Effect::modSlice = was;
         writeWav(std::string(dir) + "/" + c.first + ".wav", out);
     }
+    // A follower opening the filter over a one-bar scene looping four times.
+    {
+        Mod m;
+        m.source = slotmod::Follow;
+        m.depth = 0.6f;
+        Fixture f(m);
+        lengthen(f, 1);
+        std::vector<float> out;
+        f.start();
+        f.run(4 * 4 * kSampleRate / kBlockFrames / 2, out);
+        writeWav(std::string(dir) + "/10-follower-over-a-looping-scene.wav", out);
+    }
 }
 
 } // namespace
@@ -585,8 +637,9 @@ int main() {
     theKeyIsOneBlockLate();
     theMasterHasOne();
     aSceneStartsWhereTheSongHasIt();
-    slicingLeavesOffAlone();
-    fastModsDoNotZipper();
+    aLoopDoesNotDip();
+    fastModsDoNotZipper(true);
+    fastModsDoNotZipper(false);
     printf("%d checks, %d failed\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -81,6 +81,10 @@ class Eq final : public Effect {
   private:
     dsp::Biquad low[2], mid[2], high[2], tiltLo[2], tiltHi[2];
     float sr = 48000.0f;
+    /** What each band was designed from, so a later slice of a block redesigns only what moved. */
+    float lowFor[2] = {}, midFor[3] = {}, highFor[2] = {}, tiltFor = 0.0f;
+    void remember();
+    void designMoved();
 };
 
 class Distortion final : public Effect {

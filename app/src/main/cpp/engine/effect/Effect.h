@@ -32,11 +32,17 @@ class Effect {
      * thread. Effects that hold none refuse by handing the new one back.
      */
     virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
+    /**
+     * Whether a mod on parameter [index] glides across the block in slices.
+     * An effect returns false for a knob that rebuilds a table or a cabinet,
+     * so it moves once a block and the rebuild runs once.
+     */
+    virtual bool glides(int32_t /*index*/) const { return true; }
     ParamSet &params() { return params_; }
 
     // What the rack calls once a block before run(): the mod slot's clock, then the effect's.
     void block(int64_t tickStart, int64_t tickEnd, float bpm) {
-        if (mod_.active()) mod_.block(tickStart + modOffset_, tickEnd + modOffset_, bpm);
+        if (mod_.active()) mod_.block(tickStart, tickEnd, bpm, modOffset_);
         onBlock(tickStart, tickEnd, bpm);
     }
 
@@ -200,7 +206,7 @@ class Effect {
             const int32_t t = mod_.target(j);
             const bool valid = t >= 0 && t < params_.size() && !params_.isStepped(t) && (j == 0 || t != mod_.target(0));
             const float now = valid ? params_.get(t) : 0.0f;
-            if (valid && !modFresh_ && !mod_.snapped() && glideIndex_[j] == t && glideWas_[j] != now) {
+            if (valid && glides(t) && !modFresh_ && !mod_.snapped() && glideIndex_[j] == t && glideWas_[j] != now) {
                 idx[n] = t;
                 from[n] = glideWas_[j];
                 to[n] = now;
