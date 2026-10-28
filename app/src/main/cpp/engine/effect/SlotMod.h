@@ -81,6 +81,12 @@ inline int32_t slotModIndexOf(const char *name) {
     return -1;
 }
 
+/** What the engine tells every mod once a block. */
+struct ModTransport {
+    int64_t songOffset = 0; // clock tick to song tick
+    bool started = false;   // this block is play's first: the followers empty
+};
+
 /** One insert's mod. Audio thread only; no allocation. */
 class SlotMod {
   public:
@@ -115,7 +121,7 @@ class SlotMod {
             }
             if (was == slotmod::Off && source_ != slotmod::Off) {
                 // Picks the transport up afresh rather than from wherever it was left.
-                running_ = false;
+                synced_ = false;
                 env_ = 0.0f;
             }
             break;
@@ -141,38 +147,32 @@ class SlotMod {
     }
 
     /**
-     * Once a block, with the clock's tick range the block covers and what
-     * to add for the song's position. While playing the position follows
-     * the transport, so a render repeats; stopped, it runs on at the tempo.
-     * A loop or a jump in the song only moves [songOffset], so the
-     * followers carry on through it: only play, a panic and a freeze's
-     * start empty them.
+     * Once a block, with the whole tick the block starts in and the
+     * transport as the engine sees it. The position follows the clock, which
+     * runs at the tempo stopped or playing, so a render repeats. A loop or a
+     * jump in the song only moves the song offset, so the followers carry on
+     * through it: only a play start, a panic and a freeze's start empty them.
      */
-    void block(int64_t tickStart, int64_t tickEnd, float bpm, int64_t songOffset) {
-        const double per = static_cast<double>(kBlockFrames) * bpm * kPPQN / (60.0 * kSampleRate);
-        if (tickEnd > tickStart) {
-            // tickStart is the whole tick the block starts in; the guess
-            // between keeps the fraction, so the phase doesn't stair-step a tick at a time.
-            const double start = static_cast<double>(tickStart);
-            const double guess = clock_ + per;
-            if (!running_ || guess < start - 1.0 || guess > start + 2.0) {
-                // Play, or the clock itself jumped: the mod starts from here
-                // as a render does, whatever the stopped transport or a
-                // panic block left.
-                clock_ = start;
-                if (!running_) {
-                    env_ = 0.0f;
-                    snap_ = true;
-                }
-            } else {
-                clock_ = guess < start ? start : (guess > start + 0.999 ? start + 0.999 : guess);
-            }
-            running_ = true;
-        } else {
-            clock_ += per;
-            running_ = false;
+    void block(int64_t tickStart, float bpm, const ModTransport &t) {
+        if (t.started) {
+            env_ = 0.0f;
+            synced_ = false;
         }
-        tick_ = clock_ + static_cast<double>(songOffset);
+        // A block is often less than a tick, so the guess keeps the fraction
+        // and the phase doesn't stair-step a tick at a time.
+        const double per = static_cast<double>(kBlockFrames) * bpm * kPPQN / (60.0 * kSampleRate);
+        const double start = static_cast<double>(tickStart);
+        const double guess = clock_ + per;
+        if (!synced_ || guess < start - 1.0 || guess > start + 2.0) {
+            // Play, the mod just switched on, or the clock jumped (a stop
+            // puts it back to 0): start from here, as a render does.
+            clock_ = start;
+            snap_ = true;
+        } else {
+            clock_ = guess < start ? start : (guess >= start + 1.0 ? start + 0.999999 : guess);
+        }
+        synced_ = true;
+        tick_ = clock_ + static_cast<double>(t.songOffset);
     }
 
     /** Another track's sound as last block left it, or null for silence; and a seed for the random shapes. */
@@ -221,7 +221,7 @@ class SlotMod {
         env_ = 0.0f;
         clock_ = 0.0;
         tick_ = 0.0;
-        running_ = false;
+        synced_ = false;
         snap_ = true;
     }
     /** A step lock jumped a knob; the offset jumps with it rather than gliding back on. */
@@ -229,6 +229,8 @@ class SlotMod {
     bool targets(int32_t index) const { return index >= 0 && (index == target_[0] || index == target_[1]); }
     /** Target [j] (0 or 1) as an effect parameter index, or -1. */
     int32_t target(int32_t j) const { return target_[j]; }
+    /** The song position, in ticks, this block reads. */
+    double position() const { return tick_; }
     /** Whether this block's apply() jumped its targets rather than gliding. */
     bool snapped() const { return snapped_; }
 
@@ -291,7 +293,7 @@ class SlotMod {
 
     double clock_ = 0.0; // the clock's tick, which a loop in the song doesn't move
     double tick_ = 0.0;  // the song's
-    bool running_ = false;
+    bool synced_ = false; // clock_ follows the clock
     bool snap_ = true;
     bool snapped_ = true;
     float env_ = 0.0f;

@@ -42,7 +42,7 @@ class Effect {
 
     // What the rack calls once a block before run(): the mod slot's clock, then the effect's.
     void block(int64_t tickStart, int64_t tickEnd, float bpm) {
-        if (mod_.active()) mod_.block(tickStart, tickEnd, bpm, modOffset_);
+        if (mod_.active()) mod_.block(tickStart, bpm, modTransport_);
         onBlock(tickStart, tickEnd, bpm);
     }
 
@@ -106,11 +106,11 @@ class Effect {
     int32_t modKeyTrack() const { return mod_.keyTrack(); }
     /**
      * Before block(): the keyed mod's sound, the slot's seed for the random
-     * shapes, and what to add to the clock's tick for the song's position.
+     * shapes, and the transport: the song's position and whether it plays.
      */
-    void setModKey(const float *key, uint32_t seed, int64_t songOffset) {
+    void setModKey(const float *key, uint32_t seed, const ModTransport &transport) {
         mod_.setKey(key, seed);
-        modOffset_ = songOffset;
+        modTransport_ = transport;
     }
     bool modActive() const { return mod_.active(); }
 
@@ -278,7 +278,7 @@ class Effect {
     ParamSet params_;
     bool bypass_ = false;
     SlotMod mod_;
-    int64_t modOffset_ = 0;
+    ModTransport modTransport_;
     bool modFresh_ = true; // no glide on the next block: after a bypass, a reset or at the start
     int32_t glideIndex_[2] = {-1, -1};
     float glideWas_[2] = {0.0f, 0.0f};

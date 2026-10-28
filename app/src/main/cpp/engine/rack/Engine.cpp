@@ -42,9 +42,13 @@ void Engine::runInputChain() {
         R[i] = inputScratch[i * 2 + 1];
     }
     bool stereo = true;
+    // Last block's transport, as the clock range is.
+    ModTransport inputMod = modTransport;
+    inputMod.started = inputModStart;
+    inputModStart = false;
     for (int32_t s = 0; s < kInputSlots; ++s) {
         if (inputFx[s] == nullptr) continue;
-        if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, modTickOffset);
+        if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, inputMod);
         inputFx[s]->block(clock.blockStart(), clock.blockEnd(), clock.bpm());
         stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
     }
@@ -234,8 +238,11 @@ void Engine::renderBlock(const float *in, float *out) {
     }
 
     bool startedInLauncher = false;
+    modTransport.started = false;
     if (startPending) {
         startedInLauncher = transport.launcherMode();
+        modTransport.started = true;
+        inputModStart = true;
         if (transport.takeContinued()) {
             scheduler.resume();
         } else {
@@ -316,10 +323,21 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     // The inserts' mods follow the song's position, from where the scheduler
     // ended this block, so a loop or a scene jump inside it lands on the
-    // block's end. Clip mode has none, so it keeps the one it had: 0 from a
-    // stop, or the song's where it took over.
-    if (playing && !counting && !scheduler.launcherActive()) modTickOffset = scheduler.songTickOffset();
-    else if (startedInLauncher) modTickOffset = 0;
+    // block's end. Stopped or counting in, they run from where play will
+    // start: the start scene's tick, less the ticks the count-in has left so
+    // its last click lands on the song's phase. Clip mode has none, so it
+    // keeps the one it had: 0 from a start, or the song's where it took over.
+    if (!scheduler.launcherActive() && !transport.launcherMode()) {
+        if (playing && !counting) {
+            modTransport.songOffset = scheduler.songTickOffset();
+        } else {
+            const int64_t from = scheduler.songTickAtStartOf(transport.requestedStartScene());
+            const double left = counting && countInPerTick > 0.0 ? countInFrames / countInPerTick : 0.0;
+            modTransport.songOffset = counting ? from - std::llround(clock.phase() + left) : from;
+        }
+    } else if (startedInLauncher) {
+        modTransport.songOffset = 0;
+    }
 
     // 24 pulses per quarter note, which at 240 PPQN is exactly every tenth
     // tick at any tempo. The clock runs whether or not the transport does,
@@ -470,20 +488,20 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t s = 0; s < kSendSlots; ++s) {
         if (Effect *e = master.send(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 210u + s, modTickOffset);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 210u + s, modTransport);
         }
     }
     for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
         if (Effect *e = master.insert(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 200u + s, modTickOffset);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 200u + s, modTransport);
         }
     }
     for (int32_t g = 0; g < kGroupSlots; ++g) {
         for (int32_t s = 0; s < kGroupInsertSlots; ++s) {
             if (Effect *e = master.groupInsert(g, s)) {
                 e->setKey(keyFor(e->sidechainRack(), -1));
-                if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 220u + g * kGroupInsertSlots + s, modTickOffset);
+                if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 220u + g * kGroupInsertSlots + s, modTransport);
             }
         }
     }
@@ -619,7 +637,7 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTickOffset);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTransport);
         }
     }
     // A machine can listen too: Diction mouthing another track's sound.

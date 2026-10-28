@@ -175,8 +175,14 @@ class Engine : public Rack::ModifiedNoteSink {
      * before the copy into keyPrev.
      */
     const float *modKeyFor(int32_t source, bool beforeRacks = false) const;
-    /** Clock tick to song tick for the inserts' mods (SceneScheduler::songTickOffset). */
-    int64_t modTickOffset = 0;
+    /**
+     * The transport as the inserts' mods see it this block: the clock tick to
+     * song tick offset (SceneScheduler::songTickOffset) and whether play
+     * started this block.
+     */
+    ModTransport modTransport;
+    /** Play started since the input chain last ran, which is before the transport each block. */
+    bool inputModStart = false;
     /**
      * One rack's share of a block, a job on its own: the events held for it,
      * its keys, its render, and what it cost. Every rack it listens to has

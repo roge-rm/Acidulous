@@ -25,6 +25,7 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/rack/Engine.h>
 #include <sequencer/Song.h>
+#include <sequencer/TickClock.h>
 
 using namespace acidulous;
 using namespace acidulous::seq;
@@ -375,8 +376,11 @@ void aSceneStartsWhereTheSongHasIt() {
     for (const Case &c : cases) {
         const Run song = render(c.shape, c.rate, 0, firstBlocks + secondBlocks);
         const Run alone = render(c.shape, c.rate, 1, secondBlocks);
-        // The cutoff a few blocks in (the smoother has caught up), and the audio from there.
-        const size_t settle = 8;
+        // The cutoff once the smoother has caught up, and the audio from there.
+        // Alone, play jumps the knob to the hold's value; in the song the hold
+        // steps there like any other step, through the smoother, which takes
+        // some 40 blocks to land within a hair.
+        const size_t settle = 40;
         float worst = 0.0f, fromTop = 0.0f;
         for (size_t b = settle; b < alone.cutoff.size(); ++b) {
             worst = std::fmax(worst, std::fabs(std::log2(alone.cutoff[b] / song.cutoff[firstBlocks + b])));
@@ -395,6 +399,138 @@ void aSceneStartsWhereTheSongHasIt() {
         ok((std::string(c.name) + ": the cutoff follows the song").c_str(), worst < 0.02f && fromTop > 0.2f, d);
         ok((std::string(c.name) + ": and so does the sound").c_str(), db < -60.0, d);
     }
+}
+
+/**
+ * One SlotMod on a one-knob ParamSet, driven by a TickClock as the engine
+ * drives it: the knob reads the source straight (knob 0, depth 1).
+ */
+struct Probe {
+    static constexpr ParamDef kKnob[1] = {{"x", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""}};
+    SlotMod mod;
+    ParamSet ps;
+    TickClock clock;
+    Probe(int32_t source, float bpm, float attackMs = 10.0f) {
+        ps.init(kKnob, 1);
+        clock.setSampleRate(kSampleRate);
+        clock.setTempo(bpm);
+        int32_t n = 0;
+        const ParamDef *d = slotmod::defs(n);
+        mod.set(slotmod::Attack, d[slotmod::Attack].unmap(attackMs), &ps);
+        mod.set(slotmod::Release, d[slotmod::Release].unmap(10.0f), &ps);
+        mod.set(slotmod::Target1, stepped(1, kSlotModTargets + 1), &ps);
+        mod.set(slotmod::Depth1, 1.0f, &ps);
+        mod.set(slotmod::Source, stepped(source, slotmod::SourceCount), &ps);
+    }
+    /** One block of a steady [level] in; the knob after it. */
+    float step(float level, bool started = false) {
+        clock.advance(kBlockFrames);
+        ModTransport t;
+        t.started = started;
+        mod.block(clock.blockStart(), clock.bpm(), t);
+        float L[kBlockFrames], R[kBlockFrames];
+        std::fill(L, L + kBlockFrames, level);
+        std::fill(R, R + kBlockFrames, level);
+        mod.apply(L, R, kBlockFrames, true, ps);
+        ps.tick();
+        return ps.get(0);
+    }
+};
+
+/**
+ * A block is under a tick at most tempos, so many blocks cross none. The
+ * follower must rise through them, play must empty it whatever came before,
+ * and an LFO's position must move by the same fraction every block. The
+ * engine's block is kBlockFrames, so the tempos vary the blocks per tick.
+ */
+void blocksThatCrossNoTick() {
+    printf("- blocks that cross no tick: the follower rises, play empties it, the lfo's phase is smooth\n");
+    const float bpms[] = {60.0f, 90.0f, 120.0f, 150.0f, 180.0f, 240.0f};
+    const float level = 0.5f; // -6 dBFS
+    const float expect = 1.0f + 20.0f * std::log10(level) / 48.0f;
+    for (float bpm : bpms) {
+        Probe p(slotmod::Follow, bpm, 500.0f);
+        float at = p.step(level, true);
+        for (int32_t b = 1; b < 3 * kSampleRate / kBlockFrames; ++b) at = p.step(level);
+        char d[96];
+        std::snprintf(d, sizeof d, "%.4f, steady %.4f", at, expect);
+        ok((std::to_string(static_cast<int>(bpm)) + " bpm: a 500 ms attack reaches the level in 3 s").c_str(),
+           std::fabs(at - expect) < 0.01f, d);
+    }
+    // Play empties it: after a loud stop, a loud play, or a slow tempo where
+    // no tick passes in many blocks.
+    struct Before { const char *name; float bpm; };
+    const Before befores[] = {{"after a loud stop", 120.0f}, {"after loud play", 120.0f}, {"at 20 bpm", 20.0f}};
+    for (const Before &c : befores) {
+        Probe p(slotmod::Follow, c.bpm);
+        if (std::string(c.name) == "after loud play") p.step(0.9f, true);
+        for (int32_t b = 0; b < 500; ++b) p.step(0.9f);
+        const float loud = p.ps.get(0);
+        p.clock.reset();
+        const float at = p.step(0.0f, true);
+        char d[96];
+        std::snprintf(d, sizeof d, "%.4f before, %.6f at play", loud, at);
+        ok((std::string("play empties the follower ") + c.name).c_str(), loud > 0.5f && at == 0.0f, d);
+    }
+    for (float bpm : bpms) {
+        Probe p(slotmod::Lfo, bpm);
+        p.step(0.0f, true);
+        const double per = static_cast<double>(kBlockFrames) * bpm * kPPQN / (60.0 * kSampleRate);
+        double was = p.mod.position(), worst = 0.0;
+        int32_t still = 0;
+        for (int32_t b = 0; b < 2000; ++b) {
+            const int64_t tick = p.clock.blockEnd();
+            p.step(0.0f);
+            if (p.clock.blockEnd() == tick) ++still;
+            worst = std::fmax(worst, std::fabs(p.mod.position() - was - per));
+            was = p.mod.position();
+        }
+        char d[96];
+        std::snprintf(d, sizeof d, "%d of 2000 blocks cross no tick, step off by %.2e ticks", still, worst);
+        ok((std::to_string(static_cast<int>(bpm)) + " bpm: the lfo moves the same each block").c_str(), worst < 1e-5, d);
+    }
+}
+
+/**
+ * A count-in before a scene part way through the song: the LFO runs on the
+ * song's phase through the clicks, so it doesn't jump when the song starts.
+ */
+void aCountInLandsOnTheSong() {
+    printf("- a count-in runs the lfo on the phase the song starts with\n");
+    Mod m;
+    m.source = slotmod::Lfo;
+    m.rate = 15; // four bars, which the three-bar first scene doesn't fit
+    Fixture f(m);
+    auto snap = std::make_shared<SongSnapshot>(*f.snap);
+    SceneInfo first;
+    first.id = 7;
+    first.bars = 3;
+    first.repeat = 1;
+    first.ticksPerBar = kBar;
+    snap->scenes.insert(snap->scenes.begin(), first);
+    snap->clips.clear();
+    snap->clips.resize(static_cast<size_t>(snap->rackCount) * snap->scenes.size());
+    snap->setClip(kPad, 1, f.keep[0]);
+    f.engine.scheduler.swapSnapshot(snap.get());
+    f.snap = snap;
+    f.engine.panicFlag.store(true, std::memory_order_release);
+    float scratch[kBlockFrames * 2];
+    f.engine.renderBlock(nullptr, scratch);
+    f.engine.transport.setCountInBars(1);
+    f.engine.transport.setRecordArmed(true);
+    f.engine.transport.requestPlay(1);
+    std::vector<float> out, cutoff;
+    // One bar of count-in at 120 is 1500 blocks.
+    f.run(3000, out, &cutoff);
+    float atStart = 0.0f, elsewhere = 0.0f;
+    for (size_t b = 20; b + 1 < cutoff.size(); ++b) {
+        const float s = std::fabs(std::log2(cutoff[b + 1] / cutoff[b]));
+        if (b >= 1480 && b <= 1520) atStart = std::fmax(atStart, s);
+        else elsewhere = std::fmax(elsewhere, s);
+    }
+    char d[96];
+    std::snprintf(d, sizeof d, "largest step %.4f oct at the start, %.4f oct elsewhere", atStart, elsewhere);
+    ok("the cutoff doesn't jump as the song starts", atStart < 2.0f * elsewhere + 1e-4f, d);
 }
 
 /** The fixture's scene made [bars] long, round its two-bar clips; a one-scene song loops. */
@@ -523,7 +659,10 @@ void fastModsDoNotZipper(bool stereoIn) {
             const auto ref = zipperRender(type, k, 1, kZipBlocks, stereoIn);
             const double block = errorDb(zipperRender(type, k, kBlockFrames, kZipBlocks, stereoIn), ref);
             const double sliced = errorDb(zipperRender(type, k, Effect::modSlice, kZipBlocks, stereoIn), ref);
-            if (sliced > block + 1.0) ++worse;
+            // Past -20 dB once a block the render is no nearer the reference
+            // than another sound would be (a rate reducer's hold lands
+            // elsewhere), so a dB either way there says nothing.
+            if (sliced > block + 1.0 && block < -20.0) ++worse;
             if (block > kAudible && sliced <= kAudible) ++fixed;
             if (sliced > kAudible) {
                 ++stillLoud;
@@ -638,6 +777,8 @@ int main() {
     theMasterHasOne();
     aSceneStartsWhereTheSongHasIt();
     aLoopDoesNotDip();
+    blocksThatCrossNoTick();
+    aCountInLandsOnTheSong();
     fastModsDoNotZipper(true);
     fastModsDoNotZipper(false);
     printf("%d checks, %d failed\n", checks, failures);
