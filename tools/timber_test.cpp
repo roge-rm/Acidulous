@@ -5,6 +5,7 @@
 //   timber_test.sh                       the checks
 //   timber_test.sh measure PATCH REG     cents and level for every note of the range
 //   timber_test.sh wav PATCH OUT.wav     the bottom octave at register 0, 1 and 2
+//   timber_test.sh one PATCH NOTE REG OUT.wav   one held note
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/timber/Timber.h>
 
@@ -208,6 +209,63 @@ void wav(const BankPatch &patch, const std::string &path) {
     writeWav(path, all);
 }
 
+/**
+ * Notes that take another mode on a register and did before the bottom
+ * octave was opened up, above it. Patch, register, note.
+ */
+struct Known { const char *patch; int reg; int note; };
+constexpr Known kKnown[] = {
+    {"Flute", 2, 83}, {"Alto Flute", 2, 78}, {"Whisper Flute", 2, 83}, {"Traverso", 1, 80},
+    {"Overblown", 1, 73}, {"Overblown", 1, 74}, {"Overblown", 1, 83}, {"Overblown", 2, 83},
+    {"Recorder", 2, 88}, {"Tin Whistle", 1, 89}, {"Bass Flute", 1, 61}, {"Bass Flute", 2, 71},
+    // Moved here from 78/82 and 73/74/78 by the trim; Overblown overblows by design.
+    {"Overblown", 1, 77}, {"Overblown", 2, 84},
+};
+
+bool isKnown(const std::string &patch, int reg, int note) {
+    for (const Known &k : kKnown) {
+        if (patch == k.patch && reg == k.reg && note == k.note) return true;
+    }
+    return false;
+}
+
+/**
+ * A Flute note bent slowly through the instrument's end on the octave
+ * register: the level must not step where the vented tube passes the end.
+ */
+void bendAcross() {
+    std::printf("- a bend across the end of the instrument\n");
+    const BankPatch *p = findPatch("Flute");
+    Wind w(*p, {{"register", 1.0f}, {"vibrato", 0.0f}, {"swell", 0.0f}});
+    const ParamSet &ps = w.m->params();
+    // The octave needs a tube twice the note's, so the end is an octave over the body.
+    const double edge = 69.0 + 12.0 * std::log2(ps.target(ps.indexOf("body")) / 440.0) + 12.0;
+    const int note = static_cast<int>(std::lround(edge));
+    w.m->noteOn(static_cast<uint8_t>(note), 100);
+    w.play(0.6);
+    // Two semitones either side of the end over three seconds.
+    const double from = edge - 2.0 - note, to = edge + 2.0 - note, seconds = 3.0;
+    const int blocks = static_cast<int>(seconds * kRate / kBlock);
+    float L[kBlock], R[kBlock];
+    for (int b = 0; b < blocks; ++b) {
+        w.m->noteBend(static_cast<uint8_t>(note), static_cast<float>(from + (to - from) * b / blocks));
+        w.m->onBlock(0, 0, 120.0f);
+        w.m->render(L, R, kBlock);
+        w.out.insert(w.out.end(), L, L + kBlock);
+    }
+    // The level in 20 ms windows; the largest change from one to the next.
+    const size_t start = static_cast<size_t>(0.8 * kRate), win = kRate / 50;
+    double last = 0.0, jump = 0.0;
+    for (size_t i = start; i + win <= w.out.size(); i += win) {
+        double sum = 0.0;
+        for (size_t k = i; k < i + win; ++k) sum += double(w.out[k]) * w.out[k];
+        const double db = 10.0 * std::log10(sum / win + 1e-20);
+        if (i > start) jump = std::max(jump, std::fabs(db - last));
+        last = db;
+    }
+    check(jump < 0.5, "Flute's octave bent through the end, no step in level", fmt("largest 20 ms change %.2f dB", jump));
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -256,6 +314,9 @@ int main(int argc, char **argv) {
         if (!isJet(p) || p.low < 0) continue;
         for (int reg = 1; reg <= 2; ++reg) jobs.push_back({&p, reg});
     }
+    // Timber builds its parameter table on first use, unlocked, so build it
+    // here before the threads do.
+    { Wind first(*jobs.front().patch, {}); }
     std::atomic<size_t> next{0};
     std::vector<std::thread> pool;
     for (int t = 0; t < 8; ++t) {
@@ -275,21 +336,29 @@ int main(int argc, char **argv) {
     for (const Job &job : jobs) {
         const BankPatch &p = *job.patch;
         double worst = 0.0;
-        int at = -1, quiet = -1;
+        int at = -1, spoke = 0;
+        std::string fresh, mended;
         for (size_t i = 0; i < job.notes.size(); ++i) {
             const Reading &r = job.notes[i];
             const int n = p.low + static_cast<int>(i);
+            // A note whose fundamental is 6 dB under the whole sound has
+            // jumped to another mode or gone quiet.
             const bool speaks = r.note - r.rms > -6.0;
-            // The bottom octave, where the vented tube is longer than the
-            // instrument, has to speak on the register.
-            if (!speaks && n < job.bodyNote + 12 && quiet < 0) quiet = n;
-            if (speaks && std::fabs(r.cents) > std::fabs(worst)) { worst = r.cents; at = n; }
+            const bool known = isKnown(p.name, job.reg, n);
+            if (speaks) {
+                ++spoke;
+                if (std::fabs(r.cents) > std::fabs(worst)) { worst = r.cents; at = n; }
+                if (known) mended += fmt(" %d", n);
+            } else if (!known) {
+                fresh += fmt(" %d", n);
+            }
         }
-        check(std::fabs(worst) < 6.0, fmt("%s, register %d, within 6 cents", p.name.c_str(), job.reg).c_str(),
-              fmt("worst %+.1f cents at %d", worst, at));
-        check(quiet < 0, fmt("%s, register %d, the bottom octave speaks", p.name.c_str(), job.reg).c_str(),
-              quiet < 0 ? "" : fmt("not at %d", quiet));
+        check(spoke > 0 && std::fabs(worst) < 6.0, fmt("%s, register %d, within 6 cents", p.name.c_str(), job.reg).c_str(),
+              fmt("worst %+.1f cents at %d, %d notes", worst, at, spoke));
+        check(fresh.empty(), fmt("%s, register %d, every note speaks", p.name.c_str(), job.reg).c_str(),
+              fresh.empty() ? (mended.empty() ? "" : "known notes speak now:" + mended) : "not at" + fresh);
     }
+    bendAcross();
     std::printf("%d of %d checks failed\n", failures, checks);
     return failures == 0 ? 0 : 1;
 }

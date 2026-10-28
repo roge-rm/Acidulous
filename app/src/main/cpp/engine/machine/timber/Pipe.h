@@ -341,11 +341,19 @@ class Pipe {
         // worked out from the note and the size of the instrument.
         const float nominal = base * static_cast<float>(useMode) * period;
         // Past the instrument's end the vented tube stands in for it, as the
-        // lowest note the vent is scaled to. The wall loss cornered at the
-        // note and as deep as the instrument's keeps the next mode up (5/3 of
-        // the note on a twelfth) from taking over.
-        const bool past = useMode > 1 && nominal > whole * 1.02f;
-        const float body = past ? hz / static_cast<float>(useMode) : lowest;
+        // lowest note the vent is scaled to. The wall loss there is cornered
+        // at the note rather than the tube, which keeps the next mode up (5/3
+        // of the note on a twelfth) from taking over. The corner moves over
+        // 0.97..1.07 of the instrument's length, so a bend across the end
+        // doesn't step the tone.
+        const bool jetVent = excite == Jet && useMode > 1;
+        const float over = nominal / whole;
+        const float body = jetVent && over > 1.0f ? lowest / over : lowest;
+        float pastMix = 0.0f;
+        if (jetVent) {
+            const float t = clampf((over - 0.97f) / 0.1f, 0.0f, 1.0f);
+            pastMix = t * t * (3.0f - 2.0f * t);
+        }
 
         // The register vent, as a high pass on the loop. It stops the
         // partials below the one wanted, cornered between the tube's
@@ -380,7 +388,8 @@ class Pipe {
         // the tube's resonance multiplies any loss and a lowpass dulls the
         // tone a lot. See kWallDepth.
         const float tubeHz = hz / static_cast<float>(useMode);
-        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(past ? hz : tubeHz, 30.0f, sr * 0.45f) / sr);
+        const float wallHz = pastMix > 0.0f ? tubeHz * std::pow(static_cast<float>(useMode), pastMix) : tubeHz;
+        wallCoeff = 1.0f - std::exp(-6.28318530718f * clampf(wallHz, 30.0f, sr * 0.45f) / sr);
         wallDepth = clampf(kWallDepth * std::sqrt(lowest / std::max(tubeHz, 1.0f)), 0.0f, 0.6f);
         {
             float wr, wi;
