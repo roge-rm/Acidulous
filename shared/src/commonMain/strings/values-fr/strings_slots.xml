@@ -13,4 +13,7 @@
     <!-- A sidechain choice for a track number with no track there yet. -->
     <string name="slot_sidechain_empty">%d -</string>
     <string name="slot_steps">pas</string>
+    <!-- An insert's mod card: which of the effect's knobs the mod moves (1 or 2), and by how much. -->
+    <string name="slot_mod_target">cible %d</string>
+    <string name="slot_mod_depth">prof. %d</string>
 </resources>

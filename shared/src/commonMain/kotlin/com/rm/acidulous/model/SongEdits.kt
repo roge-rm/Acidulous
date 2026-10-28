@@ -234,10 +234,11 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
  * Puts a whole preset on one slot, replacing what was there.
  *
  * Like [withPatch] for a machine: anything the preset doesn't mention goes to
- * the effect's default, and the panel pushes those defaults itself.
+ * the effect's default, and the panel pushes those defaults itself. The
+ * slot's mod stays as it was; an effect preset doesn't carry one.
  */
 fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
-    withEffectSlot(slot) { it.copy(params = params, fromPatch = false) }
+    withEffectSlot(slot) { it.copy(params = InsertMod.withoutMod(params) + InsertMod.modOf(it.params), fromPatch = false) }
 
 /** The unit name the engine uses for a slot: "effect1".."effect4". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"

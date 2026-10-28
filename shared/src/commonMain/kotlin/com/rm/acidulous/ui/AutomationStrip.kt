@@ -376,6 +376,12 @@ fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
     }
 }
 
+/** A slot's mod settings as lanes once its mod is on, all but the step values. */
+private fun modLaneNames(fx: com.rm.acidulous.model.UnitSlot): List<String> =
+    if (!com.rm.acidulous.model.InsertMod.isOn(fx)) emptyList()
+    else com.rm.acidulous.engine.NativeEngine.effectParamInfo(com.rm.acidulous.model.InsertMod.TYPE)
+        .map { it.name }.filterNot { it.startsWith("mod_step") }
+
 fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
     com.rm.acidulous.engine.NativeEngine.machineParamNames(track.machine.type).map { laneKey("machine", it) } +
         (0 until com.rm.acidulous.model.MODIFIER_SLOTS).flatMap { slot ->
@@ -387,7 +393,7 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
         (0 until com.rm.acidulous.model.EFFECT_SLOTS).flatMap { slot ->
             val fx = track.effectAt(slot)
             if (fx.isEmpty) emptyList()
-            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass")
+            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass" + modLaneNames(fx))
                 .map { laneKey(com.rm.acidulous.model.effectUnit(slot), it) }
         } +
         listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) } +

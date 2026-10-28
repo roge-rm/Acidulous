@@ -41,6 +41,7 @@ import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.EFFECT_SLOTS
+import com.rm.acidulous.model.InsertMod
 import com.rm.acidulous.model.SIDECHAIN_PARAM
 import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.Patch
@@ -258,7 +259,8 @@ private fun SlotFace(
     /** Called with the binding once it exists, so a window can undo everything. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
-    val info = remember(kind, type) { kind.paramInfo(type) }
+    // An insert's mod settings ride in the same binding, so they record, lock and revert with the knobs.
+    val info = remember(kind, type) { kind.paramInfo(type) + if (kind == SlotKind.Effects) modInfo else emptyList() }
     val unit = kind.unit(slot)
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
     androidx.compose.runtime.SideEffect { onBinding?.invoke(b) }
@@ -276,7 +278,7 @@ private fun SlotFace(
                     patchNames = { PatchStore.list(key) },
                     onSave = { name ->
                         val at = kind.at(editor.song.tracks[trackIndex], slot)
-                        PatchStore.save(Patch(key, name, at.params, settings = at.settings))
+                        PatchStore.save(Patch(key, name, InsertMod.withoutMod(at.params), settings = at.settings))
                     },
                     onLoad = { name ->
                         PatchStore.load(key, name)?.let { patch ->
@@ -285,7 +287,8 @@ private fun SlotFace(
                             if (type == "Formula" && kind == SlotKind.Effects) {
                                 editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", patch.settings["formula"]) }
                             }
-                            b.applyAll(patch.params)
+                            // The slot's mod stays as it is.
+                            b.applyAll(InsertMod.withoutMod(patch.params) + modInfo.associate { it.name to b.value(it.name) })
                         }
                     },
                     factoryPatches = { PatchStore.factory(key) },
@@ -341,7 +344,8 @@ private fun SlotFace(
         // The arp's sixteen step toggles get their own row below, so they're
         // left out of the cards.
         val shown = info.filterNot {
-            type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
+            InsertMod.isModParam(it.name) ||
+                type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
                 type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name)
         }
@@ -358,6 +362,7 @@ private fun SlotFace(
                         if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
                     }
                 }
+                if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
                 // Turned, the steps are a card like the others, two lines of eight,
                 // since there's no height left for a strip under them.
                 if (type == "Arp" && wide) {
@@ -370,11 +375,21 @@ private fun SlotFace(
                 Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.Bottom,
-            ) { for (p in shown) control(p) }
+            ) {
+                for (p in shown) control(p)
+                if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
+            }
             if (type == "Arp") ArpSteps(b)
         }
     }
 }
+
+/** The tracks a keyed mod can follow, by name, as the sidechain lists them. */
+@Composable
+internal fun modTrackNames(editor: SongEditor): List<String> =
+    (0 until SIDECHAIN_STEPS - 1).map { i ->
+        editor.song.tracks.getOrNull(i)?.name ?: stringResource(Res.string.slot_sidechain_empty, i + 1)
+    }
 
 /** About two full slots: a header, a preset row and a row of knobs each. */
 private val SLOTS_PANEL_MAX_H = 300.dp
@@ -633,6 +648,8 @@ internal fun SongSlotFace(
     end: () -> Unit,
     /** A tap on a switch: one song edit, no gesture. */
     set: (String, Float) -> Unit,
+    /** The song's tracks for the slot's mod card, or null for no card. */
+    modTracks: List<String>? = null,
 ) {
     val control: @Composable (ParamInfo) -> Unit = { p ->
         val labels = switchLabels(type, p.name, p.steps)
@@ -667,6 +684,7 @@ internal fun SongSlotFace(
                 for (p in group) control(p)
             }
         }
+        if (modTracks != null) ModCard(type, modTracks, ModAccess(value, { start() }, change, end, set))
     }
 }
 

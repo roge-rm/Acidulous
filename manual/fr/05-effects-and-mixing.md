@@ -253,6 +253,37 @@ L’entrée latérale entend l’autre piste avant son fader et son muet, donc b
 la grosse caisse n’affaiblit pas l’effet, et une grosse caisse en muet sert
 encore de déclencheur.
 
+## Mod
+
+Chaque insertion a une carte **mod** qui tourne jusqu’à deux réglages de l’effet
+pour vous. Elle est sur les effets d’une piste et sur les effets de groupe,
+généraux, d’envoi et d’entrée du mixage.
+
+- **source** : non, **LFO**, **pas**, **suivre** (le niveau qui entre dans
+  l’effet) ou **piste** (le niveau d’une autre piste).
+- **LFO** a une **forme** et une **vitesse**. Les formes sont sinus, triangle,
+  rampe montante, rampe descendante, carré, s&h (une valeur au hasard tenue à
+  chaque cycle) et dérive (une valeur au hasard vers laquelle il glisse). Les
+  vitesses sont des valeurs de note, triolets et pointées comprises.
+- **pas** joue 8 ou 16 valeurs, une à chaque **vitesse**. Touchez ou glissez sur
+  les barres pour les régler.
+- **suivre** et **piste** ont une **attaque** et une **relâche**. **piste** entend
+  l’autre piste avant son fader et son muet, comme une entrée latérale, et avec
+  un bloc (environ 1,3 ms) de retard.
+- **cible 1** et **cible 2** choisissent les réglages, et chaque **prof.** dit de
+  combien et dans quel sens. Le LFO oscille des deux côtés du réglage. Les pas
+  et les suiveurs ne poussent que dans un sens, donc prenez une profondeur
+  négative pour baisser le réglage, comme un filtre qui se ferme à chaque coup
+  de grosse caisse.
+
+La mod part du réglage là où vous l’avez mis, donc vous pouvez encore le
+tourner, l’enregistrer ou lui dessiner une courbe. Le LFO et les pas suivent la
+position dans le morceau, donc ils tombent sur la mesure et un export sort
+pareil à chaque fois. Les réglages de la mod s’enregistrent et se verrouillent
+comme des réglages, et sont gardés avec le morceau, et avec un son pour les
+effets propres au son. Charger un préréglage d’effet garde la mod, et choisir un
+autre effet l’efface.
+
 ## Les deux envois
 
 Ils commencent avec une reverb et un delay, mais chacun peut tenir n’importe
