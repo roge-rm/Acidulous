@@ -5,7 +5,9 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.Timeout
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -22,12 +24,18 @@ import javax.sound.midi.spi.MidiDeviceProvider
  * same name, one each way, like Java Sound lists every device.
  */
 class JavaSoundMidiTest {
+    // Java Sound lists the platform's devices too, which on macOS is CoreMIDI.
+    // A test that hangs fails with the stuck thread's stack instead.
+    @get:Rule
+    val timeout: Timeout = Timeout.builder().withTimeout(15, TimeUnit.SECONDS).withLookingForStuckThread(true).build()
+
     private fun open(midi: JavaSoundMidi): MidiOpenDevice {
         val desc = midi.devices.first { it.name == "Loop" }
         val latch = CountDownLatch(1)
         var opened: MidiOpenDevice? = null
         midi.openDevice(desc) { opened = it; latch.countDown() }
-        assertTrue(latch.await(2, TimeUnit.SECONDS))
+        assertTrue("Loop didn't open within 2 seconds", latch.await(2, TimeUnit.SECONDS))
+        assertNotNull("Loop couldn't be opened", opened)
         return opened!!
     }
 
@@ -59,7 +67,7 @@ class JavaSoundMidiTest {
         device.connectOutputPort(0) { _, _, _, _ -> arrived += System.nanoTime() }
         val at = System.nanoTime() + 80_000_000L
         device.openInputPort(0)!!.send(byteArrayOf(0x80.toByte(), 60, 0), 0, 3, at)
-        val got = arrived.poll(2, TimeUnit.SECONDS)!!
+        val got = arrived.poll(2, TimeUnit.SECONDS) ?: throw AssertionError("nothing came back within 2 seconds")
         assertTrue("arrived ${(at - got) / 1_000_000} ms early", got >= at - 2_000_000L)
         device.close()
     }
