@@ -105,4 +105,9 @@
     <string name="update_get">get it</string>
     <!-- What TalkBack calls the line's close button. -->
     <string name="update_close">Close</string>
+    <!-- A line at the top of the song screen after a track was deleted that keyed some inserts' mods. -->
+    <plurals name="mods_lost_key">
+        <item quantity="one">%d mod lost its key track</item>
+        <item quantity="other">%d mods lost their key track</item>
+    </plurals>
 </resources>

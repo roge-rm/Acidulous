@@ -90,6 +90,8 @@ int main() {
                               "MountEffect 0 0 \"Delay\"\n"
                               "MountEffect 0 3 \"Chorus\"\n"
                               "SetParam 0 \"effect4\" \"bypass\" 1.0 false 0\n"
+                              "SetParam 0 \"effect4\" \"mod_source\" 0.5 false 0\n"
+                              "SetParam 0 \"effect4\" \"mod_depth2\" 0.125 false 0\n"
                               "MountMachine 1 \"Reflux\"\n"
                               "MountFrozen 1 7 \"zip:frozen/bass.wav\" 120.0 1920 96000 0 0.5\n"
                               "MountSend 0 \"Reverb\"\n"
@@ -103,6 +105,8 @@ int main() {
                               "SetParam 0 \"master\" \"clickvolume\" 0.3 false 0\n"
                               "SetParam 0 \"master\" \"g2gain\" 0.4 false 0\n"
                               "SetParam 0 \"master1\" \"bypass\" 1.0 false 0\n"
+                              "SetParam 0 \"master1\" \"mod_rate\" 0.75 false 0\n"
+                              "SetParam 0 \"send1\" \"mod_step3\" 0.375 false 0\n"
                               "MountGroupInsert 2 1 \"Eq\"\n"
                               "SetLoopSong false\n"
                               "SetSwingUnit 1\n";
@@ -159,6 +163,11 @@ int main() {
     check(std::string(h.mountedEffect(0, 3)) == "Chorus" && h.mountedEffect(0, 2)[0] == '\0' &&
               h.paramNormalized(0, "effect4", "bypass") == 1.0f && h.paramNormalized(0, "effect3", "bypass") == -1.0f,
           "a track's fourth insert mounts and is bypassed by lines, the third reads empty");
+    check(h.paramNormalized(0, "effect4", "mod_source") == 0.5f && h.paramNormalized(0, "effect4", "mod_depth2") == 0.125f &&
+              h.paramNormalized(0, "effect4", "mod_nonsense") == -1.0f && h.paramNormalized(0, "effect1", "mod_shape") == 0.0f,
+          "an insert's mod settings set by lines read back; unset ones read their default");
+    check(h.masterInsertParamNormalized(0, "mod_rate") == 0.75f && h.sendParamNormalized(0, "mod_step3") == 0.375f,
+          "the master's and the sends' inserts have a mod too");
     check(!h.loopSong(), "the song doesn't loop");
     check(h.swingUnit() == 1, "swing is on eighths");
 

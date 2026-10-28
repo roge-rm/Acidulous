@@ -99,3 +99,20 @@ fun UpdateReminder(modifier: Modifier = Modifier) {
         )
     }
 }
+
+/** A short line under the header saying what an edit did, with a close. */
+@Composable
+fun NoticeLine(text: String, onClose: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.fillMaxWidth().background(Acid.colors.card).padding(horizontal = 12.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Text(text, color = Acid.colors.text, fontSize = 13.sp, modifier = Modifier.weight(1f))
+        Text(
+            "×", color = Acid.colors.textDim, fontSize = 16.sp,
+            modifier = Modifier.clickable(onClick = onClose).button(stringResource(Res.string.update_close))
+                .padding(horizontal = 6.dp, vertical = 2.dp),
+        )
+    }
+}

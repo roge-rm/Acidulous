@@ -154,7 +154,9 @@ fun AutomationStrip(
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 ScaledMenu(menuScroll) {
-                    for (k in laneKeys) {
+                    // Lanes that hold data are listed even when nothing would offer them
+                    // now (a mod turned off, a step bar's drag), so they can be cleared.
+                    for (k in laneKeys + existing.filter { it !in laneKeys }) {
                         DropdownMenuItem(
                             text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
                             // Lanes can be cleared from the list, so any lane
@@ -376,6 +378,12 @@ fun ParamStrip(rack: Int, machineType: String, modifier: Modifier = Modifier) {
     }
 }
 
+/** A slot's mod settings as lanes once its mod is on, all but the step values. */
+private fun modLaneNames(fx: com.rm.acidulous.model.UnitSlot): List<String> =
+    if (!com.rm.acidulous.model.InsertMod.isOn(fx)) emptyList()
+    else com.rm.acidulous.engine.NativeEngine.effectParamInfo(com.rm.acidulous.model.InsertMod.TYPE)
+        .map { it.name }.filterNot { it.startsWith("mod_step") }
+
 fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
     com.rm.acidulous.engine.NativeEngine.machineParamNames(track.machine.type).map { laneKey("machine", it) } +
         (0 until com.rm.acidulous.model.MODIFIER_SLOTS).flatMap { slot ->
@@ -387,7 +395,7 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
         (0 until com.rm.acidulous.model.EFFECT_SLOTS).flatMap { slot ->
             val fx = track.effectAt(slot)
             if (fx.isEmpty) emptyList()
-            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass")
+            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass" + modLaneNames(fx))
                 .map { laneKey(com.rm.acidulous.model.effectUnit(slot), it) }
         } +
         listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) } +

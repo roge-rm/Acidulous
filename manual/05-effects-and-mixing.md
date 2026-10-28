@@ -235,6 +235,40 @@ The sidechain hears the other track before its fader and mute, so turning the
 kick down doesn't weaken the ducking, and a muted kick still works as a
 trigger.
 
+## Mod
+
+Every insert has a **mod** card that turns up to two of the effect's knobs for
+you. It's on a track's effects and on the group, master, send and input effects
+in the mixer.
+
+- **source**: off, **LFO**, **steps**, **follow** (the level going into the
+  effect) or **track** (another track's level).
+- **LFO** has a **shape** and a **rate**. The shapes are sine, triangle, ramp up,
+  ramp down, square, s&h (a random value held for each cycle) and drift (a
+  random value it glides to). The rates are note values, triplets and dotted
+  ones included.
+- **steps** plays 8 or 16 values, one each **rate**. Tap or drag the bars to set
+  them.
+- **follow** and **track** have an **attack** and a **release**. **track** hears
+  the other track before its fader and mute, like a sidechain, and a block
+  (about 1.3 ms) late.
+- **track** can be **none**, which hears nothing. Deleting a track sets every
+  mod listening to it to none, and a line under the header says how many. Undo
+  puts them back.
+- **target 1** and **target 2** pick the knobs, and each **depth** says how far
+  and which way. The LFO swings both sides of the knob. Steps and the followers
+  only push one way, so use a negative depth to pull the knob down, like a
+  filter that closes on every kick.
+
+The mod moves the knob from wherever you set it, so you can still turn it,
+record it or draw a lane for it. The LFO and steps follow the song position,
+so they line up with the bar, a scene played on its own or frozen moves as it
+does in the song, and an export comes out the same every time. A looped scene
+takes them back to the scene's start each time round. In the launcher they
+count from when you pressed play. The mod's own settings record and lock like knobs, and save with the song, and with
+a patch for the patch's own effects. Loading an effect preset keeps the mod,
+and choosing another effect clears it.
+
 ## The two sends
 
 They start as a reverb and a delay, but either can hold any effect. The send

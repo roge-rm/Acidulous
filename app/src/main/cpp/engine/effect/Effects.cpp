@@ -362,15 +362,60 @@ void Eq::reset() {
     for (int c = 0; c < 2; ++c) { low[c].reset(); mid[c].reset(); high[c].reset(); tiltLo[c].reset(); tiltHi[c].reset(); }
 }
 
-bool Eq::process(float *L, float *R, int32_t frames, bool stereoIn) {
+// Kept out of line, so process() compiles as it did before slicing and a
+// song without mods renders to the bit.
+__attribute__((noinline)) void Eq::remember() {
     const auto &p = params_;
-    const float tilt = p.get(Tilt) * 6.0f; // +-6 dB across the spectrum
-    for (int c = 0; c < 2; ++c) {
-        low[c].lowShelf(p.get(LowFreq), p.get(LowGain), sr);
-        mid[c].peak(p.get(MidFreq), p.get(MidGain), p.get(MidQ), sr);
-        high[c].highShelf(p.get(HighFreq), p.get(HighGain), sr);
-        tiltLo[c].lowShelf(650.0f, -tilt, sr);
-        tiltHi[c].highShelf(650.0f, tilt, sr);
+    lowFor[0] = p.get(LowFreq); lowFor[1] = p.get(LowGain);
+    midFor[0] = p.get(MidFreq); midFor[1] = p.get(MidGain); midFor[2] = p.get(MidQ);
+    highFor[0] = p.get(HighFreq); highFor[1] = p.get(HighGain);
+    tiltFor = p.get(Tilt);
+}
+
+__attribute__((noinline)) void Eq::designMoved() {
+    const auto &p = params_;
+    const float lf = p.get(LowFreq), lg = p.get(LowGain);
+    if (lf != lowFor[0] || lg != lowFor[1]) {
+        low[0].lowShelf(lf, lg, sr);
+        low[1].copyCoefficients(low[0]);
+    }
+    const float mf = p.get(MidFreq), mg = p.get(MidGain), mq = p.get(MidQ);
+    if (mf != midFor[0] || mg != midFor[1] || mq != midFor[2]) {
+        mid[0].peak(mf, mg, mq, sr);
+        mid[1].copyCoefficients(mid[0]);
+    }
+    const float hf = p.get(HighFreq), hg = p.get(HighGain);
+    if (hf != highFor[0] || hg != highFor[1]) {
+        high[0].highShelf(hf, hg, sr);
+        high[1].copyCoefficients(high[0]);
+    }
+    const float t = p.get(Tilt);
+    if (t != tiltFor) {
+        const float tilt = t * 6.0f;
+        tiltLo[0].lowShelf(650.0f, -tilt, sr);
+        tiltHi[0].highShelf(650.0f, tilt, sr);
+        tiltLo[1].copyCoefficients(tiltLo[0]);
+        tiltHi[1].copyCoefficients(tiltHi[0]);
+    }
+    remember();
+}
+
+bool Eq::process(float *L, float *R, int32_t frames, bool stereoIn) {
+    // A later slice of a block a mod glides across redesigns only the bands
+    // it moved, once for both channels.
+    if (subOffset_ > 0) {
+        designMoved();
+    } else {
+        const auto &p = params_;
+        const float tilt = p.get(Tilt) * 6.0f; // +-6 dB across the spectrum
+        for (int c = 0; c < 2; ++c) {
+            low[c].lowShelf(p.get(LowFreq), p.get(LowGain), sr);
+            mid[c].peak(p.get(MidFreq), p.get(MidGain), p.get(MidQ), sr);
+            high[c].highShelf(p.get(HighFreq), p.get(HighGain), sr);
+            tiltLo[c].lowShelf(650.0f, -tilt, sr);
+            tiltHi[c].highShelf(650.0f, tilt, sr);
+        }
+        remember();
     }
     const int chans = stereoIn ? 2 : 1;
     for (int c = 0; c < chans; ++c) {
@@ -502,8 +547,8 @@ bool Compressor::process(float *L, float *R, int32_t frames, bool stereoIn) {
     // The pump's own four, which aren't the LFOs' list: 1/16, 1/8, 1/4, 1/2.
     static constexpr float kPumpBeats[4] = {0.25f, 0.5f, 1.0f, 2.0f};
     const float beats = kPumpBeats[std::clamp(static_cast<int>(p.get(PumpRate) + 0.5f), 0, 3)];
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float slope = 1.0f - 1.0f / ratio;
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
@@ -608,8 +653,8 @@ bool Filter::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float cutoff = p.get(Cutoff), reso = p.get(Reso), lfoDepth = p.get(LfoDepth), envDepth = p.get(EnvDepth);
     const int mode = static_cast<int>(p.get(Mode) + 0.5f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(LfoRate) + 0.5f));
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float atk = dsp::onePoleCoeff(0.004f, sr), rel = dsp::onePoleCoeff(0.12f, sr);
     const int chans = stereoIn ? 2 : 1;
     for (int32_t i = 0; i < frames; ++i) {
@@ -719,7 +764,8 @@ bool Phaser::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
     const float depth = p.get(Depth), feedback = p.get(Feedback), spread = p.get(Spread), mix = p.get(Mix);
     const int stages = 2 * (static_cast<int>(p.get(Stages) + 0.5f) + 1);
-    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
+    const float phaserBeats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    const float phase = slicePhase(Lfo::phaseAt(tick, phaserBeats), Lfo::phaseInc(phaserBeats, bpm, sr));
     // Sweep 120 Hz .. 5 kHz, the right channel offset by up to half a cycle.
     for (int c = 0; c < 2; ++c) {
         float ph = phase + (c == 1 ? spread * 0.5f : 0.0f);
@@ -768,8 +814,8 @@ bool Flanger::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float feedback = p.get(Feedback) * (p.get(Negative) >= 0.5f ? -1.0f : 1.0f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
-    float phase = Lfo::phaseAt(tick, beats);
     const float inc = Lfo::phaseInc(beats, bpm, sr);
+    float phase = slicePhase(Lfo::phaseAt(tick, beats), inc);
     const float base = 0.0006f * sr, range = depth * 0.008f * sr; // 0.6 ms .. 8.6 ms
     for (int32_t i = 0; i < frames; ++i) {
         const float in[2] = {L[i], stereoIn ? R[i] : L[i]};
@@ -825,15 +871,16 @@ bool Chorus::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), spread = p.get(Spread), mix = p.get(Mix);
     const float driftAmt = p.get(Drift);
     const int voices = static_cast<int>(p.get(Voices) + 0.5f) + 2;
-    const float phase = Lfo::phaseAt(tick, Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f)));
+    const float chorusBeats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
+    const float phase = slicePhase(Lfo::phaseAt(tick, chorusBeats), Lfo::phaseInc(chorusBeats, bpm, sr));
 
     // 8 ms at the centre, swept by up to 5 ms either way. Much past 15 ms it
     // stops sounding like a chorus.
     const float centre = sr * 0.008f;
     const float swing = sr * 0.005f * depth;
     // One step of the random walk per block (about 750 Hz), slow enough to
-    // sound like tuning drift instead of noise.
-    for (int v = 0; v < 4; ++v) {
+    // sound like tuning drift instead of noise. Once a block, not once a slice.
+    for (int v = 0; v < 4 && subOffset_ == 0; ++v) {
         rng = rng * 1664525u + 1013904223u;
         const float step = (static_cast<float>(rng >> 9) * (1.0f / 4194304.0f) - 1.0f) * 0.02f;
         drift[v] = clampf(drift[v] * 0.995f + step, -1.0f, 1.0f);
@@ -888,12 +935,13 @@ bool Tremolo::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const float depth = p.get(Depth), pan = p.get(Pan), skew = p.get(Skew), mix = p.get(Mix);
     const int shape = static_cast<int>(p.get(Shape) + 0.5f);
     const float beats = Lfo::beatsOf(static_cast<int>(p.get(Rate) + 0.5f));
-    const float base = Lfo::phaseAt(tick, beats);
+    const float base0 = Lfo::phaseAt(tick, beats);
     // The phase advances per sample between blocks, using the same table as
     // the block phase so there's no step at block boundaries. `kBeats` is in
     // quarter notes, so a cycle is `beats * 60 / bpm` seconds.
     const float hz = bpm / (60.0f * beats);
     const float inc = hz / sr;
+    const float base = slicePhase(base0, inc);
 
     for (int32_t i = 0; i < frames; ++i) {
         float ph = base + inc * static_cast<float>(i);

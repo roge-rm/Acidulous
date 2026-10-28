@@ -81,6 +81,10 @@ class Eq final : public Effect {
   private:
     dsp::Biquad low[2], mid[2], high[2], tiltLo[2], tiltHi[2];
     float sr = 48000.0f;
+    /** What each band was designed from, so a later slice of a block redesigns only what moved. */
+    float lowFor[2] = {}, midFor[3] = {}, highFor[2] = {}, tiltFor = 0.0f;
+    void remember();
+    void designMoved();
 };
 
 class Distortion final : public Effect {
@@ -145,10 +149,10 @@ class Phaser final : public Effect {
     enum P { Rate, Depth, Feedback, Stages, Spread, Mix, Gain, Count };
     Phaser() { initParams(2.5f); }
     ACIDULOUS_EFFECT_COMMON(Phaser)
-    void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
+    void onBlock(int64_t tickStart, int64_t, float b) override { tick = tickStart; bpm = b; }
   private:
     dsp::Biquad ap[2][8];
-    float fb[2]{}, sr = 48000.0f;
+    float fb[2]{}, sr = 48000.0f, bpm = 120.0f;
     int64_t tick = 0;
 };
 
@@ -165,10 +169,10 @@ class Chorus final : public Effect {
     enum P { Rate, Depth, Voices, Spread, Drift, Mix, Gain, Count };
     Chorus() { initParams(5.0f); }
     ACIDULOUS_EFFECT_COMMON(Chorus)
-    void onBlock(int64_t tickStart, int64_t, float) override { tick = tickStart; }
+    void onBlock(int64_t tickStart, int64_t, float b) override { tick = tickStart; bpm = b; }
   private:
     dsp::DelayLine line[2];
-    float drift[4]{}, sr = 48000.0f;
+    float drift[4]{}, sr = 48000.0f, bpm = 120.0f;
     uint32_t rng = 0x9e3779b9u;
     int64_t tick = 0;
 };

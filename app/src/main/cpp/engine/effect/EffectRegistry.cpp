@@ -65,6 +65,8 @@ Effect *EffectRegistry::create(const char *typeName) {
 }
 
 const ParamDef *EffectRegistry::paramDefs(const char *typeName, int32_t &count) {
+    // Every insert's mod slot, read like an effect's table. Not an effect: create() refuses it.
+    if (typeName != nullptr && std::strcmp(typeName, kSlotModType) == 0) return slotmod::defs(count);
     // One probe instance per type, built on first use. The tables are static
     // inside each paramDefs(), the probe is just a way to reach them.
     static Effect *probes[kCount] = {};

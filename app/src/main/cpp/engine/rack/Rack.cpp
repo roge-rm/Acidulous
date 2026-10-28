@@ -356,7 +356,7 @@ void Rack::onBlock(int64_t tickStart, int64_t tickEnd, float bpm) {
         if (modifiers[s] != nullptr) modifiers[s]->run(tickStart, tickEnd, bpm, sinks[s]);
     }
     for (int32_t s = 0; s < kEffectSlots; ++s) {
-        if (effects[s] != nullptr) effects[s]->onBlock(tickStart, tickEnd, bpm);
+        if (effects[s] != nullptr) effects[s]->block(tickStart, tickEnd, bpm);
     }
     if (machine != nullptr) machine->onBlock(tickStart, tickEnd, bpm);
 }
@@ -721,9 +721,7 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
     case Unit::Effect4: {
         Effect *fx = effects[trackInsertSlot(unit)];
         if (fx == nullptr) break;
-        if (index == kEffectBypassIndex) fx->setBypass(v01 >= 0.5f);
-        else if (jump) fx->params().jump(index, v01);
-        else fx->params().set(index, v01);
+        fx->setParamAt(index, v01, jump);
         break;
     }
     case Unit::Mod1:

@@ -99,6 +99,7 @@ import com.rm.acidulous.ui.UiPrefs.withDefaultScale
 import com.rm.acidulous.model.changeMachine
 import com.rm.acidulous.model.deleteScene
 import com.rm.acidulous.model.deleteTrack
+import com.rm.acidulous.model.modsKeyedFrom
 import com.rm.acidulous.model.duplicateScene
 import com.rm.acidulous.model.duplicateTrack
 import com.rm.acidulous.model.emptyClipFor
@@ -182,6 +183,15 @@ fun MainScreen(
     modifier: Modifier = Modifier,
 ) {
     var dialog by remember { mutableStateOf<Dialog?>(null) }
+    // How many mods the last track delete left without a key, and which
+    // delete it was, so a second one restarts the timer.
+    var lostKeys by remember { mutableStateOf(0 to 0) }
+    LaunchedEffect(lostKeys) {
+        if (lostKeys.first > 0) {
+            kotlinx.coroutines.delay(NOTICE_MS)
+            lostKeys = 0 to lostKeys.second
+        }
+    }
     if (freezeStatus != null) {
         // Modal because the audio stream is down while a render runs.
         PlainDialog(title = stringResource(Res.string.main_freezing), onDismiss = {}, dismissLabel = "") {
@@ -383,7 +393,7 @@ fun MainScreen(
                 BarButton(
                     "\u21B6", Modifier.width(BarAnchor), enabled = editor.canUndoSong(),
                     description = stringResource(Res.string.a11y_undo),
-                ) { editor.undoSong() }
+                ) { editor.undoSong(); lostKeys = 0 to lostKeys.second }
                 // Mapping mode is on a long press of redo instead of its own
                 // button, there's no room for one.
                 BarButton(
@@ -455,7 +465,7 @@ fun MainScreen(
             if (!song.loopSong) editor.replace(song.copy(loopSong = true))
             onLoopScene(!loopScene)
         },
-        KeyAction.Undo to { if (editor.canUndoSong()) editor.undoSong() },
+        KeyAction.Undo to { if (editor.canUndoSong()) { editor.undoSong(); lostKeys = 0 to lostKeys.second } },
         KeyAction.Redo to { if (editor.canRedoSong()) editor.redoSong() },
         KeyAction.Panel to { showMixer = !showMixer },
         KeyAction.Save to { onSave() },
@@ -514,6 +524,9 @@ fun MainScreen(
             LoadMeter()
         }
         UpdateReminder()
+        if (lostKeys.first > 0) {
+            NoticeLine(pluralStringResource(Res.plurals.mods_lost_key, lostKeys.first, lostKeys.first), { lostKeys = 0 to lostKeys.second })
+        }
 
         // --- Song section -----------------------------------------------------------------
         // Saveable, so a rotation keeps the scroll position and zoom.
@@ -694,7 +707,11 @@ fun MainScreen(
                         onSettings = { dialog = Dialog.TrackSettings(index) },
                         onRename = { dialog = Dialog.RenameTrack(index) },
                         onDuplicate = { editor.editSong { it.duplicateTrack(index) } },
-                        onDelete = { editor.editSong { it.deleteTrack(index) } },
+                        onDelete = {
+                            val lost = editor.song.modsKeyedFrom(index)
+                            editor.editSong { it.deleteTrack(index) }
+                            if (lost > 0) lostKeys = lost to lostKeys.second + 1
+                        },
                         freezable = row.size, frozen = rowFrozen,
                         onFreeze = { onFreeze(row) },
                         onThaw = { onThaw(song.scenes.map { Freeze.Target(index, it.id) }) },
@@ -1512,6 +1529,8 @@ private val SCENE_H = 54.dp
  * the interface setting.
  */
 private val CellMinW = 48.dp
+/** How long a notice line stays up. */
+private const val NOTICE_MS = 5000L
 /** How far the fit can grow a cell in a desktop window, as a multiple of the base size. */
 private const val DesktopFitMax = 1.5f
 /** How much wider than tall a tablet's fitted cell can get, and the reverse. */

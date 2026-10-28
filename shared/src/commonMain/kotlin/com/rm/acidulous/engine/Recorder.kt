@@ -276,6 +276,11 @@ class Recorder {
                 val type = track.effectAt(com.rm.acidulous.model.effectSlotOf(unit) ?: 0).type
                 if (index == EFFECT_BYPASS_INDEX) "bypass"
                 else if (type.isEmpty()) null
+                else if (index <= com.rm.acidulous.model.InsertMod.INDEX_BASE) com.rm.acidulous.model.InsertMod.nameOfIndex(
+                    index, effectParamNames.getOrPut(com.rm.acidulous.model.InsertMod.TYPE) {
+                        NativeEngine.effectParamInfo(com.rm.acidulous.model.InsertMod.TYPE).map { it.name }
+                    },
+                )
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
             }
             "mod1", "mod2", "mod3" -> {

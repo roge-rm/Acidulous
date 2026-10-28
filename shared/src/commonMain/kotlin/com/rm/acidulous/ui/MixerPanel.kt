@@ -1075,11 +1075,16 @@ fun SongSlotDialog(
             var out = if (now.type != opened.type) withType(s, slot, opened.type) else s
             for ((n, v) in opened.params) out = withParam(out, slot, n, v)
             if (now.settings != opened.settings) out = out.withSlotSetting(-1, unitOf(slot), "formula", opened.settings["formula"])
+            // The mod too, including settings it didn't have when the window opened.
+            if (now.type == opened.type) {
+                for (p in modInfo) if (p.name !in opened.params && now.params[p.name] != null) out = withParam(out, slot, p.name, p.defaultNormalized)
+            }
             out
         }
         edits++
         if (now.type == opened.type) {
             for (p in info) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
+            for (p in modInfo) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
         }
     }
     PlainDialog(
@@ -1126,7 +1131,7 @@ fun SongSlotDialog(
                 // the effect's default instead of 0.
                 SongSlotFace(
                     send.type, info,
-                    value = { n -> send.params[n] ?: info.firstOrNull { it.name == n }?.defaultNormalized ?: 0f },
+                    value = { n -> send.params[n] ?: (info + modInfo).firstOrNull { it.name == n }?.defaultNormalized ?: 0f },
                     start = { editor.beginSongGesture() },
                     change = { n, nv ->
                         NativeEngine.setParam(0, unitOf(slot), n, nv, record = false)
@@ -1139,6 +1144,7 @@ fun SongSlotDialog(
                         editor.editSong { s -> withParam(s, slot, n, nv) }
                         edits++
                     },
+                    modTracks = modTrackNames(editor),
                 )
             }
         }

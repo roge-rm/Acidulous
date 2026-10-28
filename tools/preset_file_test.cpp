@@ -193,6 +193,9 @@ void host() {
     check(fxCount > 0, "Chorus has parameters");
     if (fxCount > 0) h.setParam(rack, "effect1", fxDefs[0].name, 0.625f, false);
     h.setParam(rack, "effect1", "bypass", 1.0f, false);
+    // A mod on the chorus, and none on the formula.
+    h.setParam(rack, "effect1", "mod_source", 0.25f, false);
+    h.setParam(rack, "effect1", "mod_target1", 2.0f / 64.0f, false);
     const std::string formulaError = h.loadEffectFormula(rack, "effect2", "x/2");
     check(formulaError.empty(), "a formula loads: " + formulaError);
     h.setParam(rack, "channel", "sendreverb", 0.25f, false);
@@ -213,8 +216,15 @@ void host() {
     check(p.chain.inserts.size() == 2, "both inserts");
     if (p.chain.inserts.size() == 2) {
         const PatchInsert &chorus = p.chain.inserts[0];
-        check(chorus.type == "Chorus" && chorus.bypass && static_cast<int32_t>(chorus.params.size()) == fxCount,
-              "the chorus, bypassed, with all its parameters");
+        int32_t modCount = 0;
+        slotmod::defs(modCount);
+        check(chorus.type == "Chorus" && chorus.bypass && static_cast<int32_t>(chorus.params.size()) == fxCount + modCount,
+              "the chorus, bypassed, with all its parameters and its mod's");
+        bool target = false;
+        for (const auto &kv : chorus.params) if (kv.first == "mod_target1") target = kv.second == 2.0f / 64.0f;
+        check(target, "the chorus's mod target");
+        check(p.chain.inserts[1].params.size() == static_cast<size_t>(EffectRegistry::paramDefs("Formula", modCount) ? modCount : 0),
+              "the formula, with no mod, saves none of the mod's");
         if (fxCount > 0 && !chorus.params.empty()) check(chorus.params[0].second == 0.625f, "the chorus's knob");
         check(p.chain.inserts[1].type == "Formula" && sameSet(p.chain.inserts[1].settings, {{"formula", "x/2"}}),
               "the formula");

@@ -725,6 +725,7 @@ object EngineSync {
             fxSlot != null -> track.effectAt(fxSlot).takeIf { !it.isEmpty }?.let { fx ->
                 if (name == "bypass") EngineParams.bool01(fx.bypass)
                 else fx.params[name] ?: effectTable(fx.type).firstOrNull { it.name == name }?.defaultNormalized
+                    ?: effectTable(com.rm.acidulous.model.InsertMod.TYPE).firstOrNull { it.name == name }?.defaultNormalized
             }
             modSlot != null -> track.modifierAt(modSlot).takeIf { !it.isEmpty }?.let { mod ->
                 if (name == "bypass") EngineParams.bool01(mod.bypass)
@@ -1013,6 +1014,7 @@ object EngineSync {
                 val fx = track.effectAt(slot)
                 if (fx.isEmpty) continue
                 for (p in effectTable(fx.type)) if (p.name !in fx.params) send(rack, effectUnit(slot), p.name, p.defaultNormalized)
+                modDefaults(rack, effectUnit(slot), fx.params, ::send)
             }
             for (slot in 0 until MODIFIER_SLOTS) {
                 val mod = track.modifierAt(slot)
@@ -1024,10 +1026,27 @@ object EngineSync {
             song.master.inserts.withIndex().map { masterInsertUnit(it.index) to it.value } +
             song.master.groups.withIndex().flatMap { (g, group) ->
                 group.inserts.withIndex().map { groupInsertUnit(g, it.index) to it.value }
-            }
+            } +
+            (0 until INPUT_SLOTS).map { inputUnit(it) to song.inputAt(it) }
         for ((unit, slot) in slots) {
             if (slot.isEmpty) continue
             for (p in effectTable(slot.type)) if (p.name !in slot.params) send(0, unit, p.name, p.defaultNormalized)
+            modDefaults(0, unit, slot.params, ::send)
+        }
+    }
+
+    /**
+     * A slot's mod settings the song doesn't name, back to their defaults, but
+     * only where the engine's differ: an effect kept from the last song keeps
+     * its mod, and sending all 27 for every slot would fill the queue. Within
+     * a hair, since a default read back through the curve can differ in the
+     * last bit.
+     */
+    private fun modDefaults(rack: Int, unit: String, params: Map<String, Float>, send: (Int, String, String, Float) -> Unit) {
+        for (p in effectTable(com.rm.acidulous.model.InsertMod.TYPE)) {
+            if (p.name in params) continue
+            val now = NativeEngine.paramNormalized(rack, unit, p.name)
+            if (kotlin.math.abs(now - p.defaultNormalized) > 1e-4f) send(rack, unit, p.name, p.defaultNormalized)
         }
     }
 
