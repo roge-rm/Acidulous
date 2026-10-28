@@ -716,8 +716,10 @@ void Rack::setParam(Unit unit, int32_t index, float v01, bool jump) {
         }
         break;
     case Unit::Effect1:
-    case Unit::Effect2: {
-        Effect *fx = effects[unit == Unit::Effect1 ? 0 : 1];
+    case Unit::Effect2:
+    case Unit::Effect3:
+    case Unit::Effect4: {
+        Effect *fx = effects[trackInsertSlot(unit)];
         if (fx == nullptr) break;
         if (index == kEffectBypassIndex) fx->setBypass(v01 >= 0.5f);
         else if (jump) fx->params().jump(index, v01);

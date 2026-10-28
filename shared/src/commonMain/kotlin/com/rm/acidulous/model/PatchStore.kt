@@ -41,7 +41,7 @@ data class Patch(
      */
     val version: Int = 1,
     /**
-     * Insert effects the patch puts on its track, at most [EFFECT_SLOTS], in
+     * Insert effects the patch puts on its track, at most [PATCH_INSERT_SLOTS], in
      * order. A factory patch lists only the values that differ from the
      * effect's defaults. See [PatchChain] for which slots they go in.
      */

@@ -1257,7 +1257,9 @@ Effect *Engine::effectAt(int32_t rack, Unit unit) {
     switch (unit) {
     case Unit::Effect1:
     case Unit::Effect2:
-        return rack >= 0 && rack < kRackCount ? racks[rack].currentEffect(unit == Unit::Effect1 ? 0 : 1) : nullptr;
+    case Unit::Effect3:
+    case Unit::Effect4:
+        return rack >= 0 && rack < kRackCount ? racks[rack].currentEffect(trackInsertSlot(unit)) : nullptr;
     case Unit::Send1:
     case Unit::Send2:
         return master.send(unit == Unit::Send1 ? 0 : 1);

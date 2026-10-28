@@ -87,14 +87,21 @@ enum class SlotKind(
 }
 
 /**
- * A track's two slots of one kind: pick a unit, bypass it, turn its knobs.
+ * A track's slots of one kind: pick a unit, bypass it, turn its knobs.
  * Knobs go through the same [ParamBinding] as a machine's, addressed to the
  * slot's unit name, so they record, automate and undo the same way.
+ *
+ * Four full inserts are taller than a phone can spare under the roll, so the
+ * slots scroll past about two full ones. An empty slot is one line.
  */
 @Composable
 fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier) {
     val types = remember(kind) { kind.types() }
-    Column(modifier.background(Acid.colors.panel).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(
+        modifier.background(Acid.colors.panel).heightIn(max = SLOTS_PANEL_MAX_H)
+            .verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
         for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor)
     }
 }
@@ -368,6 +375,9 @@ private fun SlotFace(
         }
     }
 }
+
+/** About two full slots: a header, a preset row and a row of knobs each. */
+private val SLOTS_PANEL_MAX_H = 300.dp
 
 /** Names too long for a knob's width, said shorter. */
 private val SHORT_LABELS = mapOf(

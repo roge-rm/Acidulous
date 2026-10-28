@@ -239,7 +239,7 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
 fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
     withEffectSlot(slot) { it.copy(params = params, fromPatch = false) }
 
-/** The unit name the engine uses for a slot: "effect1", "effect2". */
+/** The unit name the engine uses for a slot: "effect1".."effect4". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
 
 /** The unit a send bus's parameters use. */
@@ -387,7 +387,7 @@ fun Song.withSendBypass(slot: Int, bypass: Boolean): Song {
     return copy(master = master.copy(sends = list))
 }
 /**
- * The effect slot a unit names: a track insert ("effect1", "effect2", on
+ * The effect slot a unit names: a track insert ("effect1".."effect4", on
  * [rack]), a send, a master or group insert, or an input effect. Null if
  * there is no such slot.
  */
@@ -437,7 +437,7 @@ fun Song.withSlotSetting(rack: Int, unit: String, name: String, value: String?):
     return this
 }
 
-fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; else -> null }
+fun effectSlotOf(unit: String): Int? = when (unit) { "effect1" -> 0; "effect2" -> 1; "effect3" -> 2; "effect4" -> 3; else -> null }
 
 // --- The input chain ---------------------------------------------------------------
 

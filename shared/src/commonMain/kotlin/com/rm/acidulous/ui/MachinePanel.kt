@@ -301,7 +301,7 @@ class ParamBinding(
      * poll has returned. See [reset].
      */
     private val opened: androidx.compose.runtime.MutableState<Map<String, Float>?>,
-    /** Which unit on the rack the names address: "machine", "effect1", "effect2". */
+    /** Which unit on the rack the names address: "machine", "effect1".."effect4". */
     val unit: String = "machine",
     /** How a value lands in the document. */
     private val apply: (Track, String, Float) -> Track = { t, n, v -> t.withParam(n, v) },

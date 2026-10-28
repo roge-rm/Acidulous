@@ -1,8 +1,9 @@
 # Effects and mixing
 ## Inserts
 
-Each track has two insert effect slots. **fx** in the editor's bottom bar shows
-them in place of the machine panel.
+Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in
+the editor's bottom bar shows them in place of the machine panel. A patch's own
+effects only go in FX1 and FX2, so FX3 and FX4 are always yours.
 
 There are twenty-nine effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level

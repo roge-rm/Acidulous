@@ -37,7 +37,7 @@ object PresetEngine {
             // A machine patch's own inserts go in the first slots, its sends on the channel.
             Track(
                 id = "t-one", name = patch.name, machine = Machine(patch.machine, patch.params, patch.settings),
-                effects = patch.inserts.filter { !it.isEmpty && known(it.type) }.take(EFFECT_SLOTS).map { it.copy(fromPatch = true) },
+                effects = patch.inserts.filter { !it.isEmpty && known(it.type) }.take(PATCH_INSERT_SLOTS).map { it.copy(fromPatch = true) },
                 mixer = Mixer(sendReverb = patch.sendReverb ?: 0f, sendDelay = patch.sendDelay ?: 0f),
             )
         }

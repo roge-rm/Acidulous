@@ -230,7 +230,7 @@ object Freeze {
 
     /**
      * A hash of everything the freeze baked in: the machine, its parameters
-     * and settings, and both insert slots.
+     * and settings, and the insert slots.
      *
      * The clip has a hash of its own ([contentOf]). The mixer isn't included
      * because it stays live over a frozen track.
@@ -241,6 +241,8 @@ object Freeze {
         for ((k, v) in track.machine.settings.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.hashCode()
         for (slot in 0 until EFFECT_SLOTS) {
             val fx = track.effectAt(slot)
+            // Empty slots 3 and 4 add nothing, so freezes made with two slots stay current.
+            if (slot >= 2 && fx.type.isEmpty()) continue
             h = h * 31 + fx.type.hashCode() + if (fx.bypass) 7 else 0
             for ((k, v) in fx.params.entries.sortedBy { it.key }) h = h * 31 + k.hashCode() * 31 + v.toBits()
         }

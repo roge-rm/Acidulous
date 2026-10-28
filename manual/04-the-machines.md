@@ -74,15 +74,16 @@ of the panel opens the browser. Add your own patches in the tab at the end.
 ### Patches with effects
 
 Some patches bring their own effects: up to two inserts and their reverb and
-delay send levels. Loading one puts its inserts in the track's free slots.
-Loading the next patch takes away only the inserts the last one brought, so
-effects you added yourself stay. If both slots are taken by yours, the patch's
-insert is left out and the app says so. A patch's send levels last until you
+delay send levels. Loading one puts its inserts in the free slots of FX1 and
+FX2. Loading the next patch takes away only the inserts the last one brought, so
+effects you added yourself stay, and a patch never touches FX3 or FX4. If FX1
+and FX2 are both taken by yours, the patch's insert is left out and the app says
+so. A patch's send levels last until you
 load a patch without them, which puts your own levels back, or move a send
 yourself.
 
-When you save a patch, **with effects** saves the track's inserts and send
-levels with it. Turn it off to save only the machine.
+When you save a patch, **with effects** saves the track's FX1 and FX2 and its
+send levels with it. Turn it off to save only the machine.
 
 ### Sharing patches
 

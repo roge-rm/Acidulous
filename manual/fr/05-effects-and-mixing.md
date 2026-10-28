@@ -1,8 +1,10 @@
 # Effets et mixage
 ## Insertions
 
-Chaque piste a deux emplacements d’effet en insertion. **fx** dans la barre du
-bas de l’éditeur les affiche à la place du panneau de la machine.
+Chaque piste a quatre emplacements d’effet en insertion, joués dans l’ordre de
+FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place du
+panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc
+FX3 et FX4 sont toujours à vous.
 
 Il y a vingt-neuf effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
