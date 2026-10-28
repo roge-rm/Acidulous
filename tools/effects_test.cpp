@@ -14,6 +14,7 @@
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Magneto.h>
+#include <engine/effect/Reverb.h>
 #include <engine/effect/Spectral.h>
 #include <engine/machine/formulate/Expr.h>
 
@@ -1103,7 +1104,7 @@ void reverb() {
     for (size_t i = 24000; i < burst.size(); ++i) burst[i] = 0.0f;
 
     double roomLevel = 0.0;
-    for (int m = 0; m < 3; ++m) {
+    for (int m = 0; m < 6; ++m) {
         const std::string n = names[m];
         auto fx = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
         const auto wet = wetOf(run(*fx, burst).l, burst);
@@ -1111,12 +1112,14 @@ void reverb() {
         if (m == 0) roomLevel = level;
         else ok(n + ": about as loud as the room at its defaults", std::fabs(dB(level / roomLevel)) < 2.0,
                 num(dB(level / roomLevel)) + " dB");
-        // A bigger size rings longer.
+        // A bigger size rings longer. The space has no size; its room is checked below.
+        if (m != acidulous::effect::Reverb::Space) {
         auto small = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.2f}});
         auto big = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}});
         const double ts = fallTime(wetOf(run(*small, burst).l, burst), 24000 + 2400);
         const double tb = fallTime(wetOf(run(*big, burst).l, burst), 24000 + 2400);
         ok(n + ": size 0.8 rings longer than 0.2", tb > ts * 1.5, num(ts) + " s -> " + num(tb) + " s");
+        }
         // Damp takes the top off the tail.
         auto bright = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 0.0f}});
         auto dull = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 1.0f}});
@@ -1130,25 +1133,18 @@ void reverb() {
         ok(n + ": damp darkens the tail", hd < hb - 3.0, num(hb) + " -> " + num(hd) + " dB of top");
     }
 
-    // Spring, early and space play the room until they're built.
-    {
-        auto room = make("Reverb", {{"mix", 0.5f}});
-        const auto want = run(*room, burst).l;
-        for (int m = 3; m < 6; ++m) {
-            auto fx = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}});
-            ok(std::string(names[m]) + ": plays the room for now", worst(run(*fx, burst).l, want) == 0.0);
-        }
-    }
-
     // Every model, with freeze after two seconds or shimmer at the top, size
     // at the top and wobble on, for 30 s of bursts: finite and bounded.
     {
         auto in = noise(0.5f, 48000 * 30, 11);
         for (size_t i = 48000 * 2; i < in.size(); ++i) if ((i / 48000) % 4 != 0) in[i] = 0.0f;
-        for (int m = 0; m < 3; ++m) {
+        for (int m = 0; m < 6; ++m) {
             for (int frozen = 0; frozen < 2; ++frozen) {
+                // The model knobs at their tops too: the biggest tiled room, the top rate, all drip and knock.
                 auto fx = make("Reverb", {{"model", float(m)}, {"size", 1.0f}, {"shimmer", 1.0f}, {"mix", 1.0f},
-                                          {"wobble", 1.0f}, {"bloom", 0.5f}, {"duck", 0.5f}, {"distance", 0.5f}});
+                                          {"wobble", 1.0f}, {"bloom", 0.5f}, {"duck", 0.5f}, {"distance", 0.5f},
+                                          {"drip", 1.0f}, {"knock", 1.0f}, {"rate", 32000.0f}, {"width", 30.0f},
+                                          {"depth", 50.0f}, {"height", 15.0f}, {"position", 1.0f}, {"material", 0.0f}});
                 Stereo s{in, in};
                 for (size_t at = 0; at < in.size(); at += kBlock) {
                     if (frozen && at == 48000 * 2) set(*fx, "freeze", 1.0f);
@@ -1165,9 +1161,10 @@ void reverb() {
 
     // reset() makes the next render the same as the first, every model, with
     // everything that holds state switched on.
-    for (int m = 0; m < 3; ++m) {
+    for (int m = 0; m < 6; ++m) {
         auto fx = make("Reverb", {{"model", float(m)}, {"shimmer", 0.5f}, {"wobble", 0.6f}, {"bits", 10.0f},
-                                  {"crush", 3.0f}, {"gate", 0.3f}, {"duck", 0.5f}, {"distance", 0.4f}, {"bloom", 0.5f}});
+                                  {"crush", 3.0f}, {"gate", 0.3f}, {"duck", 0.5f}, {"distance", 0.4f}, {"bloom", 0.5f},
+                                  {"knock", 1.0f}});
         const auto in = hits(96000);
         const auto a = run(*fx, in);
         fx->reset();
@@ -1179,7 +1176,7 @@ void reverb() {
     {
         auto &q = EngineSettings::get().quality;
         const int was = q.load();
-        for (int m = 1; m < 3; ++m) {
+        for (int m = 1; m < 6; ++m) {
             q.store(1);
             auto full = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
             const double lf = rms(wetOf(run(*full, burst).l, burst), 12000, 48000);
@@ -1196,7 +1193,7 @@ void reverb() {
         // Four bars: a second of noise then a second of nothing, twice.
         auto in = noise(0.25f, 48000 * 4, 5);
         for (size_t i = 0; i < in.size(); ++i) if ((i / 48000) % 2 == 1) in[i] = 0.0f;
-        for (int m = 0; m < 3; ++m) {
+        for (int m = 0; m < 6; ++m) {
             auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}});
             auto ducked = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"size", 0.8f}, {"duck", 1.0f}, {"duckrel", 100.0f}});
             const auto a = wetOf(run(*plain, in).l, in), b = wetOf(run(*ducked, in).l, in);
@@ -1208,32 +1205,34 @@ void reverb() {
     }
 
     // Distance: later, more wet against the dry, less top.
-    for (int m = 0; m < 3; ++m) {
+    for (int m = 0; m < 6; ++m) {
         std::vector<float> click(96000, 0.0f);
         click[100] = 1.0f;
-        auto near = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
-        auto far = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"distance", 1.0f}});
+        auto near = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"knock", 0.0f}});
+        auto far = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"distance", 1.0f}, {"knock", 0.0f}});
         const auto a = wetOf(run(*near, click).l, click), b = wetOf(run(*far, click).l, click, 0.5f);
         const auto first = [](const std::vector<float> &x) {
             const double p = peak(x);
             for (size_t i = 0; i < x.size(); ++i) if (std::fabs(x[i]) > 0.05 * p) return double(i) / kRate;
             return 0.0;
         };
-        const auto top = [](const std::vector<float> &x) {
+        // Over the same stretch of tail: the far one starts 80 ms later.
+        const auto top = [](const std::vector<float> &x, size_t from) {
             std::vector<float> d(x.size());
             for (size_t i = 1; i < x.size(); ++i) d[i] = x[i] - x[i - 1];
-            return dB(rms(d, 4800, 48000) / rms(x, 4800, 48000));
+            return dB(rms(d, from, from + 43200) / rms(x, from, from + 43200));
         };
         const double later = (first(b) - first(a)) * 1000.0;
         // The wet against the dry: the far dry is half, so a louder wet shows twice.
         const double louder = dB(rms(b, 0, 96000) / 0.5 / rms(a, 0, 96000));
         ok(std::string(names[m]) + ": distance starts the tail later, louder against the dry and darker",
-           later > 50.0 && louder > 6.0 && top(b) < top(a) - 3.0,
-           num(later) + " ms later, " + num(louder) + " dB more wet, top " + num(top(a)) + " -> " + num(top(b)) + " dB");
+           // The spring has little over 4 kHz for the air loss to take.
+           later > 50.0 && louder > 6.0 && top(b, 4800 + 3840) < top(a, 4800) - (m == 3 ? 1.0 : 3.0),
+           num(later) + " ms later, " + num(louder) + " dB more wet, top " + num(top(a, 4800)) + " -> " + num(top(b, 4800 + 3840)) + " dB");
     }
 
     // Bloom: the tail starts thin and fills in.
-    for (int m = 0; m < 3; ++m) {
+    for (int m = 0; m < 6; ++m) {
         auto in = noise(0.25f, 48000 * 3, 9);
         auto plain = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}});
         auto bloom = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"bloom", 1.0f}});
@@ -1242,6 +1241,147 @@ void reverb() {
         const double late = dB(rms(b, 48000 * 2, 48000 * 3) / rms(a, 48000 * 2, 48000 * 3));
         ok(std::string(names[m]) + ": bloom starts thin and fills in by two seconds", early < -8.0 && late > -2.0,
            num(early) + " dB at the start, " + num(late) + " dB after two seconds");
+    }
+
+    // Knock: a hit shakes a low thump out of the spring, a sustained tone doesn't.
+    {
+        const auto low = [](const std::vector<float> &x, size_t from, size_t to) {
+            return rms(lowPass(lowPass(x, 90.0), 90.0), from, to);
+        };
+        std::vector<float> hit(96000, 0.0f);
+        for (size_t i = 24000; i < 24000 + 480; ++i) hit[i] = 0.8f * std::exp(-double(i - 24000) / 60.0) * ((i & 1) ? 1.0f : -1.0f);
+        auto soft = make("Reverb", {{"model", 3.0f}, {"mix", 1.0f}, {"knock", 0.0f}});
+        auto hard = make("Reverb", {{"model", 3.0f}, {"mix", 1.0f}, {"knock", 1.0f}});
+        const double a = low(wetOf(run(*soft, hit).l, hit), 24000, 48000);
+        const double b = low(wetOf(run(*hard, hit).l, hit), 24000, 48000);
+        ok("spring: knock thumps on a hit", dB(b / (a + 1e-9)) > 12.0, num(dB(b / (a + 1e-9))) + " dB more under 90 Hz");
+        // A 220 Hz tone faded in over 100 ms and held: no thump while it holds.
+        auto held = tone(220.0f, 0.5f, 96000);
+        for (size_t i = 0; i < 4800; ++i) held[i] *= float(i) / 4800.0f;
+        auto softT = make("Reverb", {{"model", 3.0f}, {"mix", 1.0f}, {"knock", 0.0f}});
+        auto hardT = make("Reverb", {{"model", 3.0f}, {"mix", 1.0f}, {"knock", 1.0f}});
+        const auto wa = wetOf(run(*softT, held).l, held), wb = wetOf(run(*hardT, held).l, held);
+        ok("spring: knock leaves a held tone alone", worst(wa, wb) == 0.0, num(worst(wa, wb)) + " apart");
+    }
+
+    // Drip spreads the chirp: in the first echoes a click's highs peak later than its lows.
+    {
+        std::vector<float> click(48000, 0.0f);
+        click[100] = 1.0f;
+        const auto peakAt = [](const std::vector<float> &x, double hz) {
+            double best = 0.0, at = 0.0;
+            for (size_t t = 30; t <= 80; t += 2) {
+                const size_t from = 100 + t * 48;
+                const double e = goertzel(x, hz, from, from + 192);
+                if (e > best) { best = e; at = double(t); }
+            }
+            return at;
+        };
+        const auto lag = [&](float drip) {
+            auto fx = make("Reverb", {{"model", 3.0f}, {"mix", 1.0f}, {"drip", drip}, {"knock", 0.0f}, {"damp", 0.0f}});
+            const auto w = wetOf(run(*fx, click).l, click);
+            return peakAt(w, 3600.0) - peakAt(w, 1000.0);
+        };
+        const double lo = lag(0.0), hi = lag(1.0);
+        ok("spring: drip brings the highs back later than the lows", hi > lo + 4.0,
+           num(lo) + " ms -> " + num(hi) + " ms behind");
+    }
+
+    // Early: a lower rate takes more of the top away and leaves images above it.
+    {
+        const auto top = [&](float rate) {
+            auto fx = make("Reverb", {{"model", 4.0f}, {"mix", 1.0f}, {"rate", rate}});
+            const auto w = wetOf(run(*fx, burst).l, burst);
+            return crossingsHz(w, 48000, 96000);
+        };
+        const double a = top(8000.0f), b = top(32000.0f);
+        ok("early: the rate changes the tail", std::fabs(a - b) > 50.0, num(a) + " Hz of crossings at 8k, " + num(b) + " at 32k");
+    }
+
+    // Space: a bigger room rings longer, curtains shorter than tile.
+    {
+        const auto tail = [&](float w, float d, float h, float mat) {
+            auto fx = make("Reverb", {{"model", 5.0f}, {"mix", 1.0f}, {"width", w}, {"depth", d}, {"height", h},
+                                      {"material", mat}});
+            return fallTime(wetOf(run(*fx, burst).l, burst), 24000 + 2400);
+        };
+        const double small = tail(4.0f, 5.0f, 3.0f, 1.0f), big = tail(25.0f, 40.0f, 12.0f, 1.0f);
+        ok("space: a bigger room rings longer", big > small * 2.0, num(small) + " s -> " + num(big) + " s");
+        const double tile = tail(9.0f, 14.0f, 4.5f, 0.0f), curtains = tail(9.0f, 14.0f, 4.5f, 3.0f);
+        ok("space: curtains ring shorter than tile", curtains < tile * 0.5, num(tile) + " s -> " + num(curtains) + " s");
+        // The first reflection: nearer the back wall, the back wall comes back sooner.
+        std::vector<float> click(48000, 0.0f);
+        click[100] = 1.0f;
+        const auto firstEr = [&](float pos) {
+            auto fx = make("Reverb", {{"model", 5.0f}, {"mix", 1.0f}, {"predelay", 0.0f}, {"position", pos}});
+            const auto w = wetOf(run(*fx, click).l, click);
+            const double p = peak(w);
+            for (size_t i = 0; i < w.size(); ++i) if (std::fabs(w[i]) > 0.3 * p) return double(i);
+            return 0.0;
+        };
+        ok("space: the reflections move with where you stand", firstEr(0.0f) != firstEr(1.0f),
+           num(firstEr(0.0f)) + " -> " + num(firstEr(1.0f)) + " samples");
+    }
+
+    // Space: moving the room while a tone plays doesn't click.
+    {
+        auto in = tone(330.0f, 0.4f, 96000);
+        auto fx = make("Reverb", {{"model", 5.0f}, {"mix", 1.0f}});
+        Stereo s{in, in};
+        for (size_t at = 0; at < in.size(); at += kBlock) {
+            if (at == 48000) {
+                set(*fx, "position", 1.0f);
+                set(*fx, "width", 25.0f);
+                set(*fx, "height", 2.0f);
+                set(*fx, "material", 3.0f);
+            }
+            fx->run(s.l.data() + at, s.r.data() + at, kBlock, false);
+        }
+        const auto w = wetOf(s.l, in);
+        const auto rough = [&](size_t from, size_t to) {
+            double m = 0.0;
+            for (size_t i = from; i < to; ++i) m = std::max(m, double(std::fabs(w[i] - 2.0f * w[i - 1] + w[i - 2])));
+            return m;
+        };
+        // A 330 Hz tone's second difference is about 0.002 of its level; a click is far over that.
+        const double before = rough(24000, 48000) / peak(w), after = rough(48000, 48000 + 9600) / peak(w);
+        ok("space: moving the room doesn't click", after < 0.01, num(before) + " -> " + num(after) + " of the peak");
+    }
+
+    // The model knobs do nothing on the other models.
+    for (int m = 0; m < 6; ++m) {
+        auto a = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}});
+        auto b = make("Reverb", {{"model", float(m)}, {"mix", 0.5f}, {"drip", m == 3 ? 0.5f : 0.9f},
+                                 {"knock", m == 3 ? 0.25f : 1.0f}, {"rate", m == 4 ? 16000.0f : 9000.0f},
+                                 {"width", m == 5 ? 9.0f : 20.0f}, {"depth", m == 5 ? 14.0f : 3.0f},
+                                 {"height", m == 5 ? 4.5f : 12.0f}, {"position", m == 5 ? 0.5f : 0.1f},
+                                 {"material", m == 5 ? 1.0f : 3.0f}});
+        ok(std::string(names[m]) + ": the other models' knobs change nothing",
+           worst(run(*a, hits(48000)).l, run(*b, hits(48000)).l) == 0.0);
+    }
+
+    // At 44.1 and 96 kHz too, every model with everything up stays finite.
+    for (int32_t rate : {44100, 96000}) {
+        for (int m = 0; m < 6; ++m) {
+            std::unique_ptr<Effect> fx(EffectRegistry::create("Reverb"));
+            fx->prepare(rate);
+            for (int32_t i = 0; i < fx->params().size(); ++i) {
+                const char *n = fx->params().def(i).name;
+                if (std::strcmp(n, "gain") == 0 || std::strcmp(n, "freeze") == 0 || std::strcmp(n, "gate") == 0 ||
+                    std::strcmp(n, "duck") == 0)
+                    continue;
+                fx->params().set(i, 1.0f);
+            }
+            fx->params().set(fx->params().indexOf("model"), float(m) / 5.0f);
+            fx->params().jumpAll();
+            auto in = noise(0.5f, size_t(rate) * 4, 13);
+            for (size_t i = size_t(rate); i < in.size(); ++i) in[i] = 0.0f;
+            Stereo s{in, in};
+            for (size_t at = 0; at + kBlock <= in.size(); at += kBlock) fx->run(s.l.data() + at, s.r.data() + at, kBlock, false);
+            const double tail = rms(s.l, size_t(rate) * 11 / 10, size_t(rate) * 16 / 10);
+            ok(std::string(names[m]) + " at " + std::to_string(rate) + " Hz, everything up: finite, bounded and ringing",
+               finite(s) && peak(s.l) < 4.0 && tail > 1e-3, "peak " + num(peak(s.l)) + ", tail " + num(tail));
+        }
     }
 
     // The new knobs at their defaults leave the room as it was: checked against

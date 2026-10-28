@@ -1,6 +1,8 @@
-# Reverb - a room, a plate and a hall, and the things that are not rooms.
+# Reverb - a room, a plate, a hall, a spring, an early digital box, a room
+# built from its size, and the things that are not rooms.
 #
-# `model` picks the tank: #0 room, #1 plate, #2 hall. `size` is the room and
+# `model` picks the tank: #0 room, #1 plate, #2 hall, #3 spring, #4 early,
+# #5 space. `size` is the room and
 # `damp` is what the walls are made of; `predelay` is how far you are from
 # them, and it is the control that keeps a big reverb from swallowing the
 # thing that caused it. `duck` drops the tail while the track plays,
@@ -8,7 +10,13 @@
 # slowly. The things that are not rooms are `freeze`, which holds the tail for
 # as long as you leave it, and `gate`, which cuts the tail off flat.
 #
-# Families: room, plate, hall, space, gate, shimmer, lofi.
+# The spring has `drip`, how far each echo chirps, and `knock`, how hard a
+# sharp hit shakes the tank. The early box has `rate`, the rate its tank runs
+# at. The space has no size: it has `width`, `depth` and `height` in metres,
+# `position`, where you stand from the front to the back, and the walls'
+# `material`: #0 tile, #1 plaster, #2 wood, #3 curtains.
+#
+# Families: room, plate, hall, spring, early, space, motion, gate, shimmer, lofi.
 
 machine fx.Reverb
 
@@ -163,7 +171,183 @@ patch "Bright Hall" family=hall
   predelay       20 ms
   mix            0.28
 
-patch "Ducked Plate" family=space
+patch Spring family=spring
+  # Three springs in a tank: every hit comes back as a run of chirping
+  # echoes, and a sharp one shakes the tank.
+  model          #3
+  size           0.45
+  damp           0.35
+  drip           0.5
+  knock          0.3
+  predelay       0 ms
+  mix            0.3
+
+patch "Short Spring" family=spring
+  # A small tank on a guitar amp: quick to die, a little drip.
+  model          #3
+  size           0.15
+  damp           0.4
+  drip           0.35
+  knock          0.2
+  predelay       0 ms
+  mix            0.25
+
+patch Drip family=spring
+  # The chirp at its longest: each echo pours down from the top.
+  model          #3
+  size           0.55
+  damp           0.2
+  drip           1.0
+  knock          0.2
+  predelay       0 ms
+  mix            0.4
+
+patch Knocked family=spring
+  # Every drum hit kicks the tank: a thump and a crash of springs.
+  model          #3
+  size           0.6
+  damp           0.3
+  drip           0.7
+  knock          1.0
+  predelay       0 ms
+  mix            0.35
+
+patch "Dark Spring" family=spring
+  # The springs through a dull tank, for under a vocal.
+  model          #3
+  size           0.5
+  damp           0.8
+  tone           3000 Hz
+  drip           0.45
+  knock          0.1
+  predelay       5 ms
+  mix            0.3
+
+patch "Early Digital" family=early
+  # A cheap digital reverb from the first boxes: short lines run at a low
+  # rate, grainy and a bit metallic.
+  model          #4
+  size           0.5
+  damp           0.35
+  rate           16000 Hz
+  predelay       10 ms
+  mix            0.3
+
+patch "Low Rate" family=early
+  # The tank at its slowest: dull, with the aliases hanging over the top.
+  model          #4
+  size           0.6
+  damp           0.3
+  rate           8000 Hz
+  predelay       15 ms
+  mix            0.35
+
+patch "Metal Box" family=early
+  # Small and bright, so the short lines ring like a can.
+  model          #4
+  size           0.2
+  damp           0.05
+  rate           24000 Hz
+  predelay       5 ms
+  mix            0.3
+
+patch "Digital Hall" family=early
+  # As big as the box goes, at its top rate.
+  model          #4
+  size           0.85
+  damp           0.4
+  rate           32000 Hz
+  predelay       30 ms
+  mix            0.35
+
+patch "Grain Hall" family=early
+  # A long tail at a low rate, coarse all the way down.
+  model          #4
+  size           0.9
+  damp           0.5
+  rate           11000 Hz
+  bits           #9
+  predelay       25 ms
+  mix            0.4
+
+patch "Living Room" family=space
+  # A small furnished room with a wooden floor.
+  model          #5
+  width          4.5 m
+  depth          6 m
+  height         2.6 m
+  position       0.6
+  material       #2
+  predelay       0 ms
+  mix            0.25
+
+patch Bathroom family=space
+  # Small and tiled: bright, and the walls come back at once.
+  model          #5
+  width          2.5 m
+  depth          3 m
+  height         2.5 m
+  position       0.5
+  material       #0
+  predelay       0 ms
+  mix            0.3
+
+patch Stairwell family=space
+  # Narrow and very tall, in plaster.
+  model          #5
+  width          3 m
+  depth          5 m
+  height         15 m
+  position       0.4
+  material       #1
+  predelay       0 ms
+  mix            0.3
+
+patch Studio family=space
+  # A treated room: curtains on the walls, a short soft tail.
+  model          #5
+  width          8 m
+  depth          11 m
+  height         4 m
+  position       0.4
+  material       #3
+  predelay       0 ms
+  mix            0.3
+
+patch "Wood Hall" family=space
+  # A big hall panelled in wood, from the middle of the seats.
+  model          #5
+  width          24 m
+  depth          40 m
+  height         13 m
+  position       0.55
+  material       #2
+  predelay       5 ms
+  mix            0.35
+
+patch "Car Park" family=space
+  # Huge, low and hard: a long flat concrete ceiling, close overhead.
+  model          #5
+  width          30 m
+  depth          50 m
+  height         3 m
+  position       0.3
+  material       #0
+  predelay       0 ms
+  mix            0.35
+
+patch "Stone Church" family=space
+  # Long, high and bare, heard from near the back.
+  model          #5
+  width          15 m
+  depth          45 m
+  height         15 m
+  position       0.85
+  material       #1
+  predelay       10 ms
+  mix            0.4
+
+patch "Ducked Plate" family=motion
   # A long plate that keeps out of the way: it drops while the track plays
   # and swells up in the gaps.
   model          #1
@@ -175,7 +359,7 @@ patch "Ducked Plate" family=space
   duck           0.7
   duckrel        400 ms
 
-patch "Ducked Hall" family=space
+patch "Ducked Hall" family=motion
   # A big hall under a busy part, ducked hard and slow to come back, so it
   # fills only the pauses.
   model          #2
@@ -186,7 +370,7 @@ patch "Ducked Hall" family=space
   duck           0.9
   duckrel        900 ms
 
-patch "Back Row" family=space
+patch "Back Row" family=motion
   # The room heard from the back: the direct sound smaller and further off,
   # the room louder, later and duller.
   size           0.5
@@ -196,7 +380,7 @@ patch "Back Row" family=space
   distance       0.7
   gain           3.8 dB
 
-patch "Far Hall" family=space
+patch "Far Hall" family=motion
   # The hall from far away, with the reflections late and quiet.
   model          #2
   size           0.7
@@ -206,7 +390,7 @@ patch "Far Hall" family=space
   distance       0.85
   gain           4.3 dB
 
-patch Bloom family=space
+patch Bloom family=motion
   # A hall that starts thin and fills in over the first couple of seconds of
   # a held note.
   model          #2
@@ -216,7 +400,7 @@ patch Bloom family=space
   mix            0.4
   bloom          0.8
 
-patch "Slow Plate" family=space
+patch "Slow Plate" family=motion
   # A plate that grows: each phrase comes in nearly dry and its tail swells
   # up behind it.
   model          #1
@@ -351,11 +535,3 @@ patch Seasick family=lofi
   wobble         1.0
   predelay       25 ms
   mix            0.4
-
-patch Spring family=lofi
-  # A small, boingy spring tank.
-  size           0.3
-  damp           0.5
-  tone           5000 Hz
-  wobble         0.5
-  mix            0.25

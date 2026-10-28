@@ -17,7 +17,18 @@ namespace acidulous::effect {
  *   - hall: eight delay lines mixed through a Householder matrix, with lows
  *     lasting longer than mids and highs, slow modulation on every line and
  *     early reflections in front.
- *   - spring, early, space: reserved, they play the room for now.
+ *   - spring: three springs, each a loop through a chain of stretched
+ *     allpasses that delays the highs more than the lows, so every echo comes
+ *     back as a chirp, the drip. `drip` sets how far the chirp spreads and
+ *     `knock` how hard a sharp hit shakes the tank: a low thump and a burst
+ *     of noise into the springs.
+ *   - early: four short lines and two allpasses run at `rate` (8 to 32 kHz),
+ *     fed by picking samples and held on the way out with no filtering, so the
+ *     tail is grainy and metallic.
+ *   - space: a room from its size. Early reflections by the image method from
+ *     `width`, `depth`, `height`, where you stand (`position`) and the walls'
+ *     `material`, and a tail whose decay comes from the room's volume and
+ *     absorption. The taps glide when the room changes.
  *
  * Shared by every model:
  *
@@ -39,7 +50,8 @@ class Reverb final : public Effect {
   public:
     // Appended after Gain, so old songs, patches and lanes keep their indices.
     enum P { Size, Damp, Tone, PreDelay, Mix, Freeze, Gate, Shimmer, Bits, Crush, Wobble, Gain,
-             Model, Duck, DuckRel, Distance, Bloom, Count };
+             Model, Duck, DuckRel, Distance, Bloom,
+             Drip, Knock, Rate, Width, Depth, Height, Position, Material, Count };
     enum ModelKind { Room, Plate, Hall, Spring, Early, Space, kModels };
     Reverb() { initParams(); }
     const char *typeName() const override { return "Reverb"; }
@@ -47,6 +59,14 @@ class Reverb final : public Effect {
     void prepare(int32_t sampleRate) override;
     void reset() override;
     bool process(float *L, float *R, int32_t frames, bool stereoIn) override;
+    /**
+     * The room's geometry rebuilds the space's taps, which glide by themselves;
+     * drip changes the spring's stage count and rate the early tank's lengths.
+     */
+    bool glides(int32_t index) const override {
+        return index != Width && index != Depth && index != Height && index != Position && index != Material &&
+               index != Drip && index != Rate;
+    }
 
     /** A plain circular buffer: whole-sample reads and wrapped fractional reads. */
     struct Line {
@@ -71,13 +91,22 @@ class Reverb final : public Effect {
     void roomSample(const Block &b, const float dry[2], float out[2]);
     void plateSample(const Block &b, const float dry[2], float out[2]);
     void hallSample(const Block &b, const float dry[2], float out[2]);
+    void springSample(const Block &b, const float dry[2], float out[2]);
+    void earlySample(const Block &b, const float dry[2], float out[2]);
+    void spaceSample(const Block &b, const float dry[2], float out[2]);
     float lofi(int c, float t, const Block &b);
     void shimmerStep(int c, float t, const Block &b);
     void clearRoom();
     void clearPlate();
     void clearHall();
+    void clearSpring();
+    void clearEarly();
+    void clearSpace();
     void updatePlate(float size, float damp, bool freeze);
     void updateHall(float size, float damp, bool freeze);
+    void updateSpring(float size, float damp, float drip, bool freeze, bool full);
+    void updateEarly(float size, float damp, float rate, bool freeze);
+    void updateSpace(float damp, bool freeze, bool full, int32_t frames);
 
     float sr = 48000.0f;
 
@@ -130,6 +159,53 @@ class Reverb final : public Effect {
     float haLen[kHallLines]{}, haGLow[kHallLines]{}, haGMid[kHallLines]{}, haGHigh[kHallLines]{};
     int32_t haLenDiff[2][2]{};
     float haScale = 1.0f, haLowCoeff = 0.0f, haHighCoeff = 0.0f;
+
+    // --- spring ---
+    // Three springs in lanes of four, so the chain's inner loop is one vector.
+    static constexpr int32_t kSprings = 3;
+    static constexpr int32_t kSpringStages = 48;
+    static constexpr int32_t kSpringSlots = 16;
+    /** Each stage's state, K samples deep, for every spring. */
+    float spChain[kSpringStages][kSpringSlots][4]{};
+    int32_t spIdx = 0, spK = 1, spStages = kSpringStages;
+    Line spLine[kSprings];
+    float spLp[4]{}, spOsc[kSprings][2]{}, spRot[kSprings][2]{};
+    float spHpX = 0.0f, spHpY = 0.0f, spInLp = 0.0f;
+    float spSizeWas = -1.0f, spDampWas = -1.0f, spDripWas = -1.0f;
+    bool spFreezeWas = false, spFullWas = true;
+    float spA[4]{}, spG[4]{}, spLen[kSprings]{}, spLpCoeff = 1.0f, spHpCoeff = 0.0f, spInCoeff = 1.0f;
+    // Knock: the transient detector, the thump and the burst.
+    float knFast = 0.0f, knSlow = 0.0f, thEnv = 0.0f, thAmp = 0.0f, thPhase = 0.0f, thHz = 0.0f, burstEnv = 0.0f;
+    int32_t knHold = 0, knCapture = 0;
+    uint32_t noiseState = 1;
+
+    // --- early ---
+    static constexpr int32_t kEarlyLines = 4;
+    Line eaLine[kEarlyLines], eaDiff[2][2];
+    float eaLp[kEarlyLines]{}, eaOsc[kEarlyLines][2]{}, eaRot[kEarlyLines][2]{};
+    float eaAcc = 0.0f, eaHeld[2]{}, eaSum[2]{};
+    int32_t eaCount = 0, eaLen[kEarlyLines]{}, eaLenDiff[2][2]{}, eaWobble = 0;
+    float eaG[kEarlyLines]{}, eaDampCoeff = 1.0f, eaInc = 1.0f;
+    float eaSizeWas = -1.0f, eaDampWas = -1.0f, eaRateWas = -1.0f;
+    bool eaFreezeWas = false;
+
+    // --- space ---
+    static constexpr int32_t kSpaceLines = 8;
+    /** Images up to the third reflection, less the direct path. */
+    static constexpr int32_t kSpaceTaps = 62;
+    Line spcIn, spcLine[kSpaceLines];
+    float spcLow[kSpaceLines]{}, spcHigh[kSpaceLines]{}, spcOsc[kSpaceLines][2]{}, spcRot[kSpaceLines][2]{};
+    float spcLen[kSpaceLines]{}, spcLenMid[kSpaceLines]{}, spcLenTo[kSpaceLines]{}, spcLenStep[kSpaceLines]{};
+    float spcGLow[kSpaceLines]{}, spcGMid[kSpaceLines]{}, spcGHigh[kSpaceLines]{};
+    // Taps a side: delay and gain now, where they're gliding to and the step per sample.
+    float tapD[2][kSpaceTaps]{}, tapG[2][kSpaceTaps]{}, tapDTo[2][kSpaceTaps]{}, tapGTo[2][kSpaceTaps]{};
+    int32_t tapO[2][kSpaceTaps]{};
+    float tapF[2][kSpaceTaps]{}, tapDMid[2][kSpaceTaps]{}, tapDStep[2][kSpaceTaps]{}, tapGStep[2][kSpaceTaps]{};
+    int32_t spcTaps = kSpaceTaps;
+    bool spcSnap = true, spcMoving = false;
+    float spcGeomWas[5]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
+    bool spcFullWas = true;
+    float spcErLp[2]{}, spcErCoeff = 1.0f, spcRt = 1.0f, spcRtHigh = 1.0f, spcRtLow = 1.0f;
 };
 
 } // namespace acidulous::effect

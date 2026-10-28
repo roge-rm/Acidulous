@@ -96,6 +96,64 @@ constexpr float kErGain[8] = {0.9f, -0.75f, 0.64f, 0.55f, -0.46f, 0.38f, -0.31f,
 constexpr float kHallIn = 0.5f, kHallOut = 0.15f, kHallErLevel = 0.03f;
 constexpr float kHallInject = 0.4f;
 
+// --- spring ---
+
+/** Where the springs' chirp sits: the stretched allpasses delay most here, and nothing above it gets in. */
+constexpr float kSpringFc = 4200.0f;
+/** Each spring's echo period at size 0.5, and its share of the dispersion. */
+constexpr float kSpringMs[3] = {38.3f, 45.1f, 53.9f};
+constexpr float kSpringA[3] = {1.0f, 0.96f, 1.03f};
+/** The stretched allpasses' coefficient: the higher, the more the delay gathers at the chirp's top. */
+constexpr float kSpringDisp = 0.7f;
+/** Size stretches the springs from this much of their length to that. */
+constexpr float kSpringScaleMin = 0.75f, kSpringScaleRange = 0.5f;
+/** The tank's driver passes little under this. */
+constexpr float kSpringHpHz = 150.0f;
+constexpr float kSpringIn = 0.5f, kSpringOut = 0.65f, kSpringInject = 0.5f;
+// Knock. How far the fast envelope must jump over the slow one, the least it
+// counts, and how long after one hit before the next and how long its peak is
+// taken over.
+constexpr float kKnockRatio = 2.0f, kKnockFloor = 0.02f, kKnockHoldS = 0.08f, kKnockCaptureS = 0.003f;
+/** The thump falls from the first pitch to the second and dies away over its decay. */
+constexpr float kThumpHz0 = 120.0f, kThumpHz1 = 48.0f, kThumpGlideS = 0.06f, kThumpDecayS = 0.18f;
+/** How loud the thump is out of the tank and into the springs, and the burst into the springs. */
+constexpr float kThumpOut = 0.35f, kThumpIn = 0.4f, kBurstIn = 0.8f, kBurstDecayS = 0.008f;
+
+// --- early ---
+
+constexpr float kEarlyMs[4] = {11.3f, 14.9f, 19.1f, 23.7f};
+constexpr float kEarlyDiffMs[2][2] = {{4.3f, 2.9f}, {4.9f, 3.3f}};
+constexpr float kEarlyDiffG = 0.65f;
+constexpr float kEarlyScaleMin = 0.6f, kEarlyScaleRange = 1.0f;
+constexpr float kEarlyModRate[4] = {0.13f, 0.17f, 0.23f, 0.29f};
+constexpr float kEarlyInSign[4] = {1, 1, -1, -1};
+/** The tank's converter: inputs are rounded to this many steps of full scale. */
+constexpr float kEarlySteps = 2048.0f;
+constexpr float kEarlyIn = 0.5f, kEarlyOut = 0.28f, kEarlyInject = 0.4f;
+constexpr float kEarlyRateMax = 32000.0f;
+
+// --- space ---
+
+/** Speed of sound, m/s. */
+constexpr float kSoundSpeed = 343.0f;
+// The walls: absorption, how much longer the lows and how much shorter the
+// highs last than the mids, and the cutoff the early reflections take.
+// Tile, plaster, wood, curtains.
+constexpr float kMatAlpha[4] = {0.02f, 0.06f, 0.12f, 0.55f};
+constexpr float kMatLow[4] = {1.1f, 1.2f, 1.0f, 1.3f};
+constexpr float kMatHigh[4] = {0.85f, 0.65f, 0.5f, 0.3f};
+constexpr float kMatErHz[4] = {12000.0f, 8000.0f, 5000.0f, 2500.0f};
+/** Absorption every room has besides its walls: air, openings, people. */
+constexpr float kRoomAlpha = 0.04f;
+/** The largest room, for sizing buffers. */
+constexpr float kSpaceMaxW = 30.0f, kSpaceMaxD = 50.0f, kSpaceMaxH = 15.0f;
+/** The tail's lines, as multiples of the mean free path, clamped to these times. */
+constexpr float kSpaceSpread[8] = {0.71f, 0.79f, 0.89f, 0.97f, 1.07f, 1.17f, 1.29f, 1.41f};
+constexpr float kSpaceMfpMin = 0.005f, kSpaceMfpMax = 0.05f;
+constexpr float kSpaceEr = 0.19f, kSpaceTailIn = 0.6f, kSpaceOut = 0.15f, kSpaceInject = 0.4f;
+/** How long the taps take to glide to a new room. */
+constexpr float kSpaceGlideS = 0.05f;
+
 // --- shared ---
 
 /** Modulation at default, and what wobble adds at the top, in seconds. */
@@ -180,6 +238,18 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         {"duckrel", 50.0f, 2000.0f, 300.0f, Curve::Exponential, 0, "ms"},
         {"distance", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"bloom", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // spring
+        {"drip", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"knock", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
+        // early
+        {"rate", 8000.0f, 32000.0f, 16000.0f, Curve::Exponential, 0, "Hz"},
+        // space
+        {"width", 2.0f, 30.0f, 9.0f, Curve::Exponential, 0, "m"},
+        {"depth", 2.0f, 50.0f, 14.0f, Curve::Exponential, 0, "m"},
+        {"height", 2.0f, 15.0f, 4.5f, Curve::Exponential, 0, "m"},
+        {"position", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // tile, plaster, wood, curtains
+        {"material", 0.0f, 3.0f, 1.0f, Curve::Stepped, 4, ""},
     };
     count = Count;
     return defs;
@@ -240,7 +310,52 @@ void Reverb::prepare(int32_t sampleRate) {
     }
     haLowCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * kHallLowHz), sr);
     haHighCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * kHallHighHz), sr);
-    plSizeWas = haSizeWas = -1.0f;
+
+    // Spring: K samples per stretched allpass puts the chirp's top at sr / 2K.
+    spK = std::clamp(static_cast<int32_t>(std::lround(sr / (2.0f * kSpringFc))), 1, kSpringSlots);
+    const float fc = sr / (2.0f * static_cast<float>(spK));
+    spInCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * fc), sr);
+    spHpCoeff = std::exp(-dsp::kTwoPi * kSpringHpHz / sr);
+    for (int s = 0; s < kSprings; ++s) {
+        const float most = kSpringMs[s] * 0.001f * sr * (kSpringScaleMin + kSpringScaleRange);
+        spLine[s].prepare(static_cast<int32_t>(most) + 2 * modRoom + 4);
+        const float w = dsp::kTwoPi * kHallModRate[s * 2 + 1] / sr;
+        spRot[s][0] = std::cos(w);
+        spRot[s][1] = std::sin(w);
+    }
+
+    // Early: sized for the top rate, the longest size and the most wobble.
+    const float eaMost = kEarlyRateMax * 0.001f * (kEarlyScaleMin + kEarlyScaleRange);
+    const int32_t eaWob = static_cast<int32_t>(kWobbleDepth * kEarlyRateMax) + 2;
+    for (int i = 0; i < kEarlyLines; ++i) eaLine[i].prepare(static_cast<int32_t>(kEarlyMs[i] * eaMost) + eaWob + 4);
+    for (int c = 0; c < 2; ++c)
+        for (int k = 0; k < 2; ++k) eaDiff[c][k].prepare(static_cast<int32_t>(kEarlyDiffMs[c][k] * eaMost) + 4);
+
+    // Space: the input line holds the latest reflection of the largest room,
+    // and the tail's lines the longest mean free path.
+    float far = 0.0f;
+    for (int nx = -3; nx <= 3; ++nx)
+        for (int ny = -3; ny <= 3; ++ny)
+            for (int nz = -3; nz <= 3; ++nz) {
+                if (std::abs(nx) + std::abs(ny) + std::abs(nz) > 3) continue;
+                const float dx = static_cast<float>(std::abs(nx) + 1) * kSpaceMaxW;
+                const float dy = static_cast<float>(std::abs(ny) + 1) * kSpaceMaxD;
+                const float dz = static_cast<float>(std::abs(nz) + 1) * kSpaceMaxH;
+                far = std::max(far, std::sqrt(dx * dx + dy * dy + dz * dz));
+            }
+    // A power of two, so a still room's taps wrap with a mask.
+    int32_t inSize = 1;
+    while (inSize < static_cast<int32_t>(far / kSoundSpeed * sr) + 8) inSize <<= 1;
+    spcIn.prepare(inSize);
+    for (int i = 0; i < kSpaceLines; ++i) {
+        spcLine[i].prepare(static_cast<int32_t>(kSpaceMfpMax * kSpaceSpread[i] * sr) + 2 * modRoom + 4);
+        const float w = dsp::kTwoPi * kHallModRate[7 - i] / sr;
+        spcRot[i][0] = std::cos(w);
+        spcRot[i][1] = std::sin(w);
+    }
+    plSizeWas = haSizeWas = spSizeWas = eaSizeWas = -1.0f;
+    eaRateWas = -1.0f;
+    spcGeomWas[0] = -1.0f;
     reset();
 }
 
@@ -276,10 +391,58 @@ void Reverb::clearHall() {
     for (auto &ch : haDiff) for (auto &l : ch) l.clear();
 }
 
+void Reverb::clearSpring() {
+    for (auto &st : spChain) for (auto &sl : st) for (float &v : sl) v = 0.0f;
+    spIdx = 0;
+    for (int s = 0; s < kSprings; ++s) {
+        spLine[s].clear();
+        const float ph = dsp::kTwoPi * static_cast<float>(s) * 0.29f;
+        spOsc[s][0] = std::cos(ph);
+        spOsc[s][1] = std::sin(ph);
+    }
+    for (float &v : spLp) v = 0.0f;
+    spHpX = spHpY = spInLp = 0.0f;
+    knFast = knSlow = thEnv = thAmp = thPhase = burstEnv = 0.0f;
+    thHz = kThumpHz0;
+    knHold = knCapture = 0;
+    noiseState = 0x2545f491u;
+}
+
+void Reverb::clearEarly() {
+    for (int i = 0; i < kEarlyLines; ++i) {
+        eaLine[i].clear();
+        eaLp[i] = 0.0f;
+        const float ph = dsp::kTwoPi * static_cast<float>(i) * 0.23f;
+        eaOsc[i][0] = std::cos(ph);
+        eaOsc[i][1] = std::sin(ph);
+    }
+    for (auto &ch : eaDiff) for (auto &l : ch) l.clear();
+    eaAcc = 0.0f;
+    eaHeld[0] = eaHeld[1] = eaSum[0] = eaSum[1] = 0.0f;
+    eaCount = 0;
+}
+
+void Reverb::clearSpace() {
+    spcIn.clear();
+    for (int i = 0; i < kSpaceLines; ++i) {
+        spcLine[i].clear();
+        spcLow[i] = spcHigh[i] = 0.0f;
+        const float ph = dsp::kTwoPi * static_cast<float>(i) * 0.41f;
+        spcOsc[i][0] = std::cos(ph);
+        spcOsc[i][1] = std::sin(ph);
+    }
+    spcErLp[0] = spcErLp[1] = 0.0f;
+    // The next block jumps to the room rather than gliding from the last one.
+    spcSnap = true;
+}
+
 void Reverb::reset() {
     clearRoom();
     clearPlate();
     clearHall();
+    clearSpring();
+    clearEarly();
+    clearSpace();
     for (auto &p : pre) p.clear();
     for (auto &p : preLong) p.clear();
     for (auto &l : shimmerLine) l.clear();
@@ -324,21 +487,26 @@ struct Reverb::Block {
     bool full;
     float modDepth, diffMul, erGain;
     float erAt[2][kHallEr];
+    // Spring: knock, its detector and the thump's and burst's rates.
+    float knock, knFastAtk, knFastRel, knSlowAtk, knSlowRel, thumpAtk, thumpDecay, thumpGlide, burstDecay;
 };
 
 bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const auto &p = params_;
-    int32_t model = static_cast<int32_t>(p.get(Model) + 0.5f);
-    // Spring, early and space are still to come and play the room.
-    if (model != Plate && model != Hall) model = Room;
+    const int32_t model = std::clamp(static_cast<int32_t>(p.get(Model) + 0.5f), 0, kModels - 1);
     const bool full = fullQuality();
     if (model != lastModel || full != lastFull) {
         // The tank coming in starts empty, or it would replay an old tail.
         // A quality switch keeps the room's tail, since its lean path reads the same lines.
         if (lastModel >= 0 && (model != lastModel || model != Room)) {
-            if (model == Room) clearRoom();
-            else if (model == Plate) clearPlate();
-            else clearHall();
+            switch (model) {
+                case Room: clearRoom(); break;
+                case Plate: clearPlate(); break;
+                case Hall: clearHall(); break;
+                case Spring: clearSpring(); break;
+                case Early: clearEarly(); break;
+                default: clearSpace(); break;
+            }
         }
         lastModel = model;
         lastFull = full;
@@ -415,6 +583,32 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             updateHall(size, p.get(Damp), b.freeze);
             run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { hallSample(bb, d, o); });
             for (auto &o : haOsc) renormalise(o);
+            break;
+        case Spring:
+            b.knock = p.get(Knock);
+            b.knFastAtk = dsp::onePoleCoeff(0.0002f, sr);
+            b.knFastRel = dsp::onePoleCoeff(0.02f, sr);
+            b.knSlowAtk = dsp::onePoleCoeff(0.004f, sr);
+            b.knSlowRel = dsp::onePoleCoeff(0.02f, sr);
+            b.thumpAtk = dsp::onePoleCoeff(0.001f, sr);
+            b.thumpDecay = std::exp(-1.0f / (kThumpDecayS * sr));
+            b.thumpGlide = dsp::onePoleCoeff(kThumpGlideS, sr);
+            b.burstDecay = std::exp(-1.0f / (kBurstDecayS * sr));
+            updateSpring(size, p.get(Damp), p.get(Drip), b.freeze, full);
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { springSample(bb, d, o); });
+            for (auto &o : spOsc) renormalise(o);
+            break;
+        case Early:
+            updateEarly(size, p.get(Damp), p.get(Rate), b.freeze);
+            // Wobble moves the lines by whole samples at the tank's rate.
+            eaWobble = static_cast<int32_t>(wobble * kWobbleDepth * eaInc * sr);
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { earlySample(bb, d, o); });
+            for (auto &o : eaOsc) renormalise(o);
+            break;
+        case Space:
+            updateSpace(p.get(Damp), b.freeze, full, frames);
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { spaceSample(bb, d, o); });
+            for (auto &o : spcOsc) renormalise(o);
             break;
         default:
             run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { roomSample(bb, d, o); });
@@ -728,6 +922,394 @@ void Reverb::hallSample(const Block &b, const float dry[2], float out[2]) {
 
     for (int c = 0; c < 2; ++c) {
         const float wet = o[c] * outScale + er[c] * b.erGain * (b.freeze ? 0.0f : 1.0f);
+        lp[c] += (wet - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Spring -------------------------------------------------------------------
+
+void Reverb::updateSpring(float size, float damp, float drip, bool freeze, bool full) {
+    if (size == spSizeWas && damp == spDampWas && drip == spDripWas && freeze == spFreezeWas && full == spFullWas) return;
+    spSizeWas = size;
+    spDampWas = damp;
+    spDripWas = drip;
+    spFreezeWas = freeze;
+    spFullWas = full;
+    // Drip is how many stages the springs run through: the chirp spreads with
+    // the count. Lean runs half as many.
+    const int32_t stages = 8 + static_cast<int32_t>(std::lround(drip * static_cast<float>(kSpringStages - 8)));
+    const int32_t was = spStages;
+    spStages = full ? stages : std::max(4, stages / 2);
+    // Stages coming back in start empty rather than with what they last held.
+    for (int32_t st = was; st < spStages; ++st)
+        for (auto &sl : spChain[st]) for (float &v : sl) v = 0.0f;
+    // 0.7 s to 4.9 s.
+    const float rt = 0.7f * std::pow(7.0f, size);
+    const float scale = kSpringScaleMin + kSpringScaleRange * size;
+    for (int s = 0; s < kSprings; ++s) {
+        spA[s] = kSpringDisp * kSpringA[s];
+        spLen[s] = kSpringMs[s] * 0.001f * sr * scale;
+        spG[s] = freeze ? 1.0f : decayGain(spLen[s] / sr, rt);
+    }
+    spA[3] = 0.0f;
+    spG[3] = 0.0f;
+    // Damping in the loop: the chirp's top down to half of it.
+    const float fc = sr / (2.0f * static_cast<float>(spK));
+    const float hz = fc * std::pow(0.5f, damp);
+    spLpCoeff = freeze ? 1.0f : dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * hz), sr);
+}
+
+void Reverb::springSample(const Block &b, const float dry[2], float out[2]) {
+    const float mono = 0.5f * (dry[0] + dry[1]);
+
+    // Knock: a hit that jumps well over the recent level shakes the tank. The
+    // strength is the hit's peak over its first few ms.
+    peakEnvelope(knFast, mono, b.knFastAtk, b.knFastRel);
+    peakEnvelope(knSlow, mono, b.knSlowAtk, b.knSlowRel);
+    knFast = undenormal(knFast);
+    knSlow = undenormal(knSlow);
+    if (knHold > 0) --knHold;
+    else if (b.knock > 0.0f && knFast > kKnockRatio * knSlow + kKnockFloor) {
+        knHold = static_cast<int32_t>(kKnockHoldS * sr);
+        knCapture = static_cast<int32_t>(kKnockCaptureS * sr);
+        if (thAmp < 0.01f) {
+            thPhase = 0.0f;
+            thHz = kThumpHz0;
+        }
+    }
+    if (knCapture > 0) {
+        --knCapture;
+        const float strength = std::min(1.0f, 2.0f * knFast) * b.knock;
+        thEnv = std::max(thEnv, strength);
+        burstEnv = std::max(burstEnv, strength);
+    }
+    float thump = 0.0f, burst = 0.0f;
+    if (thEnv > 1.0e-5f || thAmp > 1.0e-5f) {
+        thAmp += (thEnv - thAmp) * b.thumpAtk;
+        thEnv *= b.thumpDecay;
+        thHz += (kThumpHz1 - thHz) * b.thumpGlide;
+        thPhase += thHz / sr;
+        if (thPhase >= 1.0f) thPhase -= 1.0f;
+        thump = std::sin(thPhase * dsp::kTwoPi) * thAmp;
+    } else {
+        thEnv = thAmp = 0.0f;
+    }
+    if (burstEnv > 1.0e-5f) {
+        noiseState ^= noiseState << 13;
+        noiseState ^= noiseState >> 17;
+        noiseState ^= noiseState << 5;
+        burst = (static_cast<float>(noiseState & 0xffffff) / 8388608.0f - 1.0f) * burstEnv;
+        burstEnv *= b.burstDecay;
+    } else {
+        burstEnv = 0.0f;
+    }
+
+    // Into the tank: the driver's high-pass, then nothing over the chirp's top.
+    const float inGain = b.freeze ? 0.0f : 1.0f;
+    const float hp = spHpCoeff * (spHpY + mono - spHpX);
+    spHpX = mono;
+    spHpY = undenormal(hp);
+    spInLp = undenormal(spInLp + (hp - spInLp) * spInCoeff);
+    const float x = inGain * (spInLp * kSpringIn + burst * kBurstIn + thump * kThumpIn);
+
+    float o[4] = {0.0f, 0.0f, 0.0f, 0.0f}, v[4] = {0.0f, 0.0f, 0.0f, 0.0f}, a[4];
+    for (int s = 0; s < kSprings; ++s) {
+        rotate(spOsc[s], spRot[s]);
+        o[s] = spLine[s].frac(spLen[s] + b.modDepth * (1.0f + spOsc[s][1]));
+        const float inject = shimmerFb[s & 1] * b.shimmer * (1.0f - spG[s]) * kSpringInject;
+        v[s] = x + o[s] * spG[s] + inject;
+    }
+    for (int l = 0; l < 4; ++l) a[l] = spA[l] * b.diffMul;
+    // The chain: each stage is (a + z^-K) / (1 + a z^-K), its state K slots deep.
+    for (int32_t st = 0; st < spStages; ++st) {
+        float *slot = spChain[st][spIdx];
+        for (int l = 0; l < 4; ++l) {
+            const float old = slot[l];
+            const float w = undenormal(v[l] - a[l] * old);
+            slot[l] = w;
+            v[l] = a[l] * w + old;
+        }
+    }
+    if (++spIdx >= spK) spIdx = 0;
+    for (int s = 0; s < kSprings; ++s) {
+        spLp[s] = undenormal(spLp[s] + (v[s] - spLp[s]) * spLpCoeff);
+        spLine[s].write(spLp[s]);
+    }
+
+    const float outScale = kSpringOut;
+    const float wet[2] = {o[0] + 0.6f * o[2], o[1] - 0.6f * o[2]};
+    for (int c = 0; c < 2; ++c) {
+        const float t0 = wet[c] * outScale + thump * kThumpOut * inGain;
+        lp[c] += (t0 - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Early digital --------------------------------------------------------------
+
+void Reverb::updateEarly(float size, float damp, float rate, bool freeze) {
+    if (size == eaSizeWas && damp == eaDampWas && rate == eaRateWas && freeze == eaFreezeWas) return;
+    eaSizeWas = size;
+    eaDampWas = damp;
+    eaRateWas = rate;
+    eaFreezeWas = freeze;
+    const float r = std::min(rate, std::min(sr, kEarlyRateMax));
+    eaInc = r / sr;
+    const float scale = (kEarlyScaleMin + kEarlyScaleRange * size) * 0.001f * r;
+    // 0.4 s to 4.8 s.
+    const float rt = 0.4f * std::pow(12.0f, size);
+    for (int i = 0; i < kEarlyLines; ++i) {
+        eaLen[i] = std::max(2, static_cast<int32_t>(kEarlyMs[i] * scale));
+        eaG[i] = freeze ? 1.0f : decayGain(static_cast<float>(eaLen[i]) / r, rt);
+        const float w = dsp::kTwoPi * kEarlyModRate[i] / r;
+        eaRot[i][0] = std::cos(w);
+        eaRot[i][1] = std::sin(w);
+    }
+    for (int c = 0; c < 2; ++c)
+        for (int k = 0; k < 2; ++k) eaLenDiff[c][k] = std::max(1, static_cast<int32_t>(kEarlyDiffMs[c][k] * 0.001f * r));
+    // Damping at the tank's rate: near its top down to 1 kHz.
+    const float top = 0.4f * r;
+    const float hz = top * std::pow(1000.0f / top, damp);
+    eaDampCoeff = freeze ? 1.0f : dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * hz), r);
+}
+
+void Reverb::earlySample(const Block &b, const float dry[2], float out[2]) {
+    eaSum[0] += dry[0];
+    eaSum[1] += dry[1];
+    ++eaCount;
+    eaAcc += eaInc;
+    if (eaAcc >= 1.0f) {
+        eaAcc -= 1.0f;
+        // One tick of the tank. The input is the plain average of the samples
+        // since the last tick, rounded like a cheap converter.
+        const float inGain = b.freeze ? 0.0f : kEarlyIn / static_cast<float>(eaCount);
+        float in[2];
+        for (int c = 0; c < 2; ++c) {
+            float x = std::round(eaSum[c] * inGain * kEarlySteps) / kEarlySteps;
+            eaSum[c] = 0.0f;
+            for (int k = 0; k < (b.full ? 2 : 1); ++k) x = allpass(eaDiff[c][k], eaLenDiff[c][k], kEarlyDiffG * b.diffMul, x);
+            in[c] = x;
+        }
+        float y[kEarlyLines], z[kEarlyLines], sum = 0.0f;
+        for (int i = 0; i < kEarlyLines; ++i) {
+            int32_t d = eaLen[i];
+            if (eaWobble > 0) {
+                rotate(eaOsc[i], eaRot[i]);
+                d += static_cast<int32_t>(static_cast<float>(eaWobble) * (1.0f + eaOsc[i][1]));
+            }
+            y[i] = eaLine[i].at(std::min(d, eaLine[i].size));
+            eaLp[i] = undenormal(eaLp[i] + (y[i] - eaLp[i]) * eaDampCoeff);
+            z[i] = eaLp[i] * eaG[i];
+            sum += z[i];
+        }
+        const float h = sum * 0.5f;
+        for (int i = 0; i < kEarlyLines; ++i) {
+            const int c = i & 1;
+            const float inject = shimmerFb[c] * b.shimmer * (1.0f - eaG[i]) * kEarlyInject;
+            eaLine[i].write(undenormal(z[i] - h + in[c] * kEarlyInSign[i] + inject));
+        }
+        // Held until the next tick, with no smoothing.
+        eaHeld[0] = (y[0] - y[1] + y[2] - y[3]) * kEarlyOut;
+        eaHeld[1] = (y[0] + y[1] - y[2] - y[3]) * kEarlyOut;
+        eaCount = 0;
+    }
+    for (int c = 0; c < 2; ++c) {
+        lp[c] += (eaHeld[c] - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Space --------------------------------------------------------------------
+
+void Reverb::updateSpace(float damp, bool freeze, bool full, int32_t frames) {
+    const auto &p = params_;
+    const float W = p.get(Width), D = p.get(Depth), H = p.get(Height), pos = p.get(Position);
+    const int32_t mat = std::clamp(static_cast<int32_t>(p.get(Material) + 0.5f), 0, 3);
+    const float geom[5] = {W, D, H, pos, static_cast<float>(mat)};
+    if (!std::equal(geom, geom + 5, spcGeomWas) || full != spcFullWas) {
+        std::copy(geom, geom + 5, spcGeomWas);
+        spcFullWas = full;
+        // The source near the front, off centre; you stand on the centre line,
+        // `position` of the way from it to the back wall.
+        const float src[3] = {0.4f * W, std::clamp(0.15f * D, 0.3f, 3.0f), std::min(1.5f, 0.5f * H)};
+        const float ly = src[1] + (D - 0.3f - src[1]) * (0.1f + 0.9f * pos);
+        const float beta = std::sqrt(1.0f - kMatAlpha[mat]);
+        const float len[3] = {W, D, H};
+        // Images in order of their reflections: 6 first, 18 second, 38 third.
+        float energy[2] = {0.0f, 0.0f}, energyLean[2] = {0.0f, 0.0f};
+        for (int e = 0; e < 2; ++e) {
+            const float ear[3] = {0.5f * W + (e == 0 ? -0.09f : 0.09f), ly, std::min(1.7f, 0.6f * H)};
+            const float side = e == 0 ? -1.0f : 1.0f;
+            float r0 = 0.0f;
+            for (int a = 0; a < 3; ++a) r0 += (src[a] - ear[a]) * (src[a] - ear[a]);
+            r0 = std::max(0.5f, std::sqrt(r0));
+            int k = 0;
+            for (int order = 1; order <= 3; ++order) {
+                for (int nx = -order; nx <= order; ++nx) {
+                    for (int ny = -order; ny <= order; ++ny) {
+                        const int rest = order - std::abs(nx) - std::abs(ny);
+                        if (rest < 0) continue;
+                        for (int nz = -rest; nz <= rest; nz += rest == 0 ? 1 : 2 * rest) {
+                            const int n[3] = {nx, ny, nz};
+                            float d2 = 0.0f, dx = 0.0f;
+                            for (int a = 0; a < 3; ++a) {
+                                // Even images keep the source's side, odd ones mirror it.
+                                const float img = static_cast<float>(n[a]) * len[a] + ((n[a] & 1) ? len[a] - src[a] : src[a]);
+                                const float dd = img - ear[a];
+                                d2 += dd * dd;
+                                if (a == 0) dx = dd;
+                            }
+                            const float r = std::sqrt(d2);
+                            // Facing forward: an ear hears its own side louder.
+                            const float facing = 0.6f + 0.4f * side * dx / std::max(r, 0.01f);
+                            const float g = std::pow(beta, static_cast<float>(order)) * r0 / r * facing * kSpaceEr;
+                            tapDTo[e][k] = std::min(std::max(0.0f, (r - r0) / kSoundSpeed * sr) + 1.0f,
+                                                    static_cast<float>(spcIn.size - 2));
+                            tapGTo[e][k] = g;
+                            energy[e] += g * g;
+                            if (order < 3) energyLean[e] += g * g;
+                            ++k;
+                        }
+                    }
+                }
+            }
+            // Lean plays the first two orders, as loud as all three.
+            spcTaps = full ? kSpaceTaps : 24;
+            if (!full) {
+                const float comp = std::sqrt(energy[e] / std::max(energyLean[e], 1.0e-12f));
+                for (int j = 0; j < 24; ++j) tapGTo[e][j] *= comp;
+            }
+        }
+        // The tail: its decay from the volume, the surface and what the
+        // walls and the room take, with lines around the mean free path.
+        const float V = W * D * H, S = 2.0f * (W * D + W * H + D * H);
+        const float alpha = kMatAlpha[mat] + kRoomAlpha;
+        spcRt = std::clamp(0.161f * V / (-S * std::log(1.0f - alpha)), 0.12f, 15.0f);
+        spcRtLow = spcRt * kMatLow[mat];
+        spcRtHigh = spcRt * kMatHigh[mat];
+        const float mfp = std::clamp(4.0f * V / S / kSoundSpeed, kSpaceMfpMin, kSpaceMfpMax);
+        for (int i = 0; i < kSpaceLines; ++i) spcLenTo[i] = mfp * kSpaceSpread[i] * sr;
+        spcErCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * kMatErHz[mat]), sr);
+    }
+
+    // Glide towards the room: two one-poles per block, so a move starts and
+    // ends slowly, and a line within the block.
+    const float f = static_cast<float>(std::max(1, frames));
+    const float k = spcSnap ? 1.0f : 1.0f - std::exp(-f / (kSpaceGlideS * sr));
+    spcMoving = false;
+    for (int e = 0; e < 2; ++e) {
+        for (int j = 0; j < kSpaceTaps; ++j) {
+            // Close enough is there, so a still room skips the glide.
+            if (spcSnap || (std::fabs(tapDTo[e][j] - tapD[e][j]) < 1.0e-3f && std::fabs(tapGTo[e][j] - tapG[e][j]) < 1.0e-6f)) {
+                tapD[e][j] = tapDMid[e][j] = tapDTo[e][j];
+                tapG[e][j] = tapGTo[e][j];
+                tapDStep[e][j] = tapGStep[e][j] = 0.0f;
+                continue;
+            }
+            spcMoving = true;
+            tapDMid[e][j] += (tapDTo[e][j] - tapDMid[e][j]) * k;
+            tapDStep[e][j] = (tapDMid[e][j] - tapD[e][j]) * k / f;
+            tapGStep[e][j] = (tapGTo[e][j] - tapG[e][j]) * k / f;
+        }
+    }
+    if (!spcMoving) {
+        for (int e = 0; e < 2; ++e) {
+            for (int j = 0; j < kSpaceTaps; ++j) {
+                tapO[e][j] = static_cast<int32_t>(tapD[e][j]);
+                tapF[e][j] = tapD[e][j] - static_cast<float>(tapO[e][j]);
+            }
+        }
+    }
+    const float rtHigh = spcRtHigh * std::max(0.08f, 1.0f - 0.85f * damp);
+    for (int i = 0; i < kSpaceLines; ++i) {
+        if (spcSnap) spcLen[i] = spcLenMid[i] = spcLenTo[i];
+        spcLenMid[i] += (spcLenTo[i] - spcLenMid[i]) * k;
+        spcLenStep[i] = (spcLenMid[i] - spcLen[i]) * k / f;
+        // The decay for where the line will be at the end of the block.
+        const float s = (spcLen[i] + spcLenStep[i] * f) / sr;
+        spcGMid[i] = freeze ? 1.0f : decayGain(s, spcRt);
+        spcGLow[i] = freeze ? 1.0f : decayGain(s, spcRtLow);
+        spcGHigh[i] = freeze ? 1.0f : decayGain(s, rtHigh);
+    }
+    spcSnap = false;
+}
+
+void Reverb::spaceSample(const Block &b, const float dry[2], float out[2]) {
+    spcIn.write(0.5f * (dry[0] + dry[1]));
+    // The taps read the line directly: every delay is at least 1 and well
+    // inside it (see updateSpace), so only the wrap needs care.
+    const float *buf = spcIn.buf.data();
+    const int32_t size = spcIn.size;
+    const float wr = static_cast<float>(spcIn.wr), fsize = static_cast<float>(size);
+    const auto read = [&](float d) {
+        float pos = wr - d;
+        if (pos < 0.0f) pos += fsize;
+        if (!(pos < fsize)) pos = 0.0f;
+        const auto i0 = static_cast<int32_t>(pos);
+        const float fr = pos - static_cast<float>(i0);
+        const int32_t i1 = i0 + 1 >= size ? 0 : i0 + 1;
+        return buf[i0] + (buf[i1] - buf[i0]) * fr;
+    };
+    float er[2];
+    for (int e = 0; e < 2; ++e) {
+        float acc = 0.0f;
+        if (spcMoving) {
+            for (int32_t j = 0; j < spcTaps; ++j) {
+                tapD[e][j] += tapDStep[e][j];
+                tapG[e][j] += tapGStep[e][j];
+                acc += tapG[e][j] * read(tapD[e][j]);
+            }
+        } else {
+            // Still: whole and fractional parts worked out once a block.
+            const int32_t w = spcIn.wr, mask = size - 1;
+            for (int32_t j = 0; j < spcTaps; ++j) {
+                const int32_t o = tapO[e][j];
+                acc += tapG[e][j] * (buf[(w - o) & mask] + (buf[(w - o - 1) & mask] - buf[(w - o) & mask]) * tapF[e][j]);
+            }
+        }
+        spcErLp[e] = undenormal(spcErLp[e] + (acc - spcErLp[e]) * spcErCoeff);
+        er[e] = spcErLp[e];
+    }
+    // The reflections feed the tail, through the hall's kind of network.
+    const float inGain = b.freeze ? 0.0f : kSpaceTailIn;
+    const int n = b.full ? kSpaceLines : 4;
+    const int *act = b.full ? kHallAll : kHallLean;
+    float y[kSpaceLines], z[kSpaceLines];
+    float sum = 0.0f;
+    for (int k = 0; k < n; ++k) {
+        const int i = act[k];
+        spcLen[i] += spcLenStep[i];
+        rotate(spcOsc[i], spcRot[i]);
+        y[k] = spcLine[i].frac(spcLen[i] + b.modDepth * (1.0f + spcOsc[i][1]));
+        spcLow[i] = undenormal(spcLow[i] + (y[k] - spcLow[i]) * haLowCoeff);
+        spcHigh[i] = undenormal(spcHigh[i] + (y[k] - spcHigh[i]) * haHighCoeff);
+        z[k] = spcGHigh[i] * y[k] + (spcGMid[i] - spcGHigh[i]) * spcHigh[i] + (spcGLow[i] - spcGMid[i]) * spcLow[i];
+        sum += z[k];
+    }
+    // The lean lines still glide, so they're in place if quality comes back.
+    if (!b.full) for (int i : {0, 2, 5, 7}) spcLen[i] += spcLenStep[i];
+    const float h = sum * (2.0f / static_cast<float>(n));
+    const float inject = b.shimmer * kSpaceInject;
+    float o[2] = {0.0f, 0.0f};
+    for (int k = 0; k < n; ++k) {
+        const int i = act[k];
+        const int c = k & 1;
+        const float headroom = 1.0f - spcGMid[i];
+        spcLine[i].write(undenormal(z[k] - h + er[c] * inGain * kHallInSign[k] + shimmerFb[c] * inject * headroom));
+        o[0] += kHallRowL[k] * y[k];
+        o[1] += kHallRowR[k] * y[k];
+    }
+    const float outScale = kSpaceOut * (b.full ? 1.0f : 1.41f);
+    const float erLevel = b.freeze ? 0.0f : 1.0f - 0.85f * b.distance;
+    for (int c = 0; c < 2; ++c) {
+        const float wet = o[c] * outScale + er[c] * erLevel;
         lp[c] += (wet - lp[c]) * b.toneCoeff;
         const float t = lofi(c, lp[c], b);
         shimmerStep(c, t, b);
