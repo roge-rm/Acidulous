@@ -95,6 +95,12 @@ int main() {
                               "SetParam 0 \"send1\" \"size\" 0.25 false 0\n"
                               "SetParam 0 \"send2\" \"bypass\" 1.0 false 0\n"
                               "MountMasterInsert 0 \"Compressor\"\n"
+                              "SetParam 0 \"master\" \"volume\" 0.6 false 0\n"
+                              "SetParam 0 \"master\" \"limiteron\" 0.0 false 0\n"
+                              "SetParam 0 \"master\" \"limiterdrive\" 0.75 false 0\n"
+                              "SetParam 0 \"master\" \"clickvolume\" 0.3 false 0\n"
+                              "SetParam 0 \"master\" \"g2gain\" 0.4 false 0\n"
+                              "SetParam 0 \"master1\" \"bypass\" 1.0 false 0\n"
                               "MountGroupInsert 2 1 \"Eq\"\n"
                               "SetLoopSong false\n"
                               "SetSwingUnit 1\n";
@@ -136,6 +142,17 @@ int main() {
           "send 2 is bypassed, send 1 isn't");
     check(h.sendParamNormalized(0, "nonsense") == -1.0f && h.sendParamNormalized(2, "size") == -1.0f,
           "an unknown name or slot is -1");
+
+    const auto near = [&](float v, float want) { return std::fabs(v - want) < 1e-4f; };
+    check(near(h.masterParamNormalized("volume"), 0.6f) && h.masterParamNormalized("limiteron") == 0.0f &&
+              near(h.masterParamNormalized("limiterdrive"), 0.75f) && near(h.masterParamNormalized("clickvolume"), 0.3f) &&
+              near(h.masterParamNormalized("g2gain"), 0.4f),
+          "master volume, limiter, click and group gain read back what lines set");
+    check(h.masterParamNormalized("clickon") == 0.0f && h.masterParamNormalized("nonsense") == -1.0f,
+          "an untouched master param reads its default, an unknown name -1");
+    check(h.masterInsertParamNormalized(0, "bypass") == 1.0f && h.masterInsertParamNormalized(1, "bypass") == -1.0f &&
+              h.masterInsertParamNormalized(2, "bypass") == -1.0f,
+          "master insert 1 is bypassed, an empty or unknown slot is -1");
 
     check(!h.loopSong(), "the song doesn't loop");
     check(h.swingUnit() == 1, "swing is on eighths");
