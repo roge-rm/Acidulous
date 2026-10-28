@@ -29,6 +29,10 @@ object InsertMod {
     const val SOURCES = 5
     const val SHAPES = 7
 
+    /** [KEY] is a track, 0-based over this many steps. */
+    const val KEYS = 16
+    fun sourceValue(source: Int): Float = source.coerceIn(0, SOURCES - 1).toFloat() / (SOURCES - 1)
+
     /** A target is an effect parameter's index + 1 over this many steps; 0 is none. */
     const val TARGETS = 64
     const val MAX_STEPS = 16

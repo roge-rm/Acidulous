@@ -1075,17 +1075,15 @@ fun SongSlotDialog(
             var out = if (now.type != opened.type) withType(s, slot, opened.type) else s
             for ((n, v) in opened.params) out = withParam(out, slot, n, v)
             if (now.settings != opened.settings) out = out.withSlotSetting(-1, unitOf(slot), "formula", opened.settings["formula"])
+            // The mod too, including settings it didn't have when the window opened.
+            if (now.type == opened.type) {
+                for (p in modInfo) if (p.name !in opened.params && now.params[p.name] != null) out = withParam(out, slot, p.name, p.defaultNormalized)
+            }
             out
         }
         edits++
         if (now.type == opened.type) {
             for (p in info) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
-            // The mod too, including settings it didn't have when the window opened.
-            editor.editSong { s ->
-                var out = s
-                for (p in modInfo) if (now.params[p.name] != opened.params[p.name]) out = withParam(out, slot, p.name, opened.params[p.name] ?: p.defaultNormalized)
-                out
-            }
             for (p in modInfo) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
         }
     }

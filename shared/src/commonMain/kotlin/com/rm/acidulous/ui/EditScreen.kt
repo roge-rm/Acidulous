@@ -183,7 +183,9 @@ fun EditScreen(
     val hasSteps = track.machine.type == "Reflux"
     var laneKey by remember { mutableStateOf<String?>(null) }
     val slotTypes = track.effects.map { it.type } + track.modifiers.map { it.type }
-    val laneKeys = remember(track.machine.type, slotTypes) { automationKeysFor(track) }
+    // A slot's mod lanes are offered while its mod is on.
+    val modsOn = track.effects.map { com.rm.acidulous.model.InsertMod.isOn(it) }
+    val laneKeys = remember(track.machine.type, slotTypes, modsOn) { automationKeysFor(track) }
     var panel by remember { mutableStateOf(0) } // 0 machine, 1 effects, 2 mixer, all in the same space
     // Sideways, a mixer row's whole strip, shown over the roll beside the
     // mixer. It goes with the mixer.

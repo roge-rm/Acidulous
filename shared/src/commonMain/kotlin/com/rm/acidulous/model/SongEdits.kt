@@ -132,15 +132,18 @@ const val SIDECHAIN_PARAM = "sidechain"
 const val SIDECHAIN_STEPS = 17
 
 /**
- * Re-points every sidechain after tracks have moved.
+ * Re-points every sidechain and keyed mod after tracks have moved.
  *
  * A compressor, gate or filter that listens to another track stores it by
  * position: `sidechain` is 0 for its own input and 1..16 for a track, since
- * that's how the engine, lanes and controller mappings address it. So moving
- * tracks has to update it everywhere it can live: the inserts, the send
- * buses, a machine that listens (Diction talking), and any automation lane
- * on it. [f] takes and returns the 1-based
- * track, or 0.
+ * that's how the engine, lanes and controller mappings address it. An
+ * insert's mod keyed from a track stores it in `mod_key`, 0..15. So moving
+ * tracks has to update both everywhere they can live: the inserts, the send
+ * buses, the input's, a machine that listens (Diction talking), and any
+ * automation lane on them. [f] takes and returns the 1-based track, or 0.
+ *
+ * A mod keyed from a deleted track follows its own input instead, as a
+ * sidechain does.
  */
 fun Song.remapSidechains(f: (Int) -> Int): Song {
     val last = (SIDECHAIN_STEPS - 1).toFloat()
@@ -148,22 +151,47 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
         val k = (v01 * last).roundToInt()
         return if (k == 0) v01 else (f(k).coerceIn(0, SIDECHAIN_STEPS - 1) / last)
     }
+    val keyLast = (InsertMod.KEYS - 1).toFloat()
+    /** The key's new value, or null if its track is gone. */
+    fun remapKey(v01: Float): Float? {
+        val k = f((v01 * keyLast).roundToInt() + 1)
+        return if (k == 0) null else (k - 1).coerceIn(0, InsertMod.KEYS - 1) / keyLast
+    }
     fun UnitSlot.remapped(): UnitSlot {
-        val v = params[SIDECHAIN_PARAM] ?: return this
-        return copy(params = params + (SIDECHAIN_PARAM to remap(v)))
+        var p = params
+        p[SIDECHAIN_PARAM]?.let { p = p + (SIDECHAIN_PARAM to remap(it)) }
+        val isKeyed = ((p[InsertMod.SOURCE] ?: 0f) * (InsertMod.SOURCES - 1)).roundToInt() == InsertMod.KEYED
+        if (InsertMod.KEY in p || isKeyed) {
+            val was = p[InsertMod.KEY] ?: 0f
+            val now = remapKey(was)
+            p = when {
+                now != null -> if (now == was && InsertMod.KEY !in p) p else p + (InsertMod.KEY to now)
+                isKeyed -> p + (InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.FOLLOW))
+                else -> p
+            }
+        }
+        return if (p === params) this else copy(params = p)
     }
     val lane = ":$SIDECHAIN_PARAM"
+    val keyLane = ":${InsertMod.KEY}"
     return copy(
         tracks = tracks.map { t ->
             t.copy(
                 machine = t.machine.params[SIDECHAIN_PARAM]?.let { v -> t.machine.copy(params = t.machine.params + (SIDECHAIN_PARAM to remap(v))) } ?: t.machine,
                 effects = t.effects.map { it.remapped() },
                 clips = t.clips.mapValues { (_, c) ->
-                    if (c.automation.keys.none { it.endsWith(lane) }) c
+                    if (c.automation.keys.none { it.endsWith(lane) || it.endsWith(keyLane) }) c
                     else c.copy(automation = c.automation.mapValues { (key, l) ->
                         // A lock's "back to the knob" isn't a track number.
-                        if (!key.endsWith(lane)) l
-                        else l.copy(points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remap(it.value)) })
+                        when {
+                            key.endsWith(lane) ->
+                                l.copy(points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remap(it.value)) })
+                            // A point on a deleted track stays where it was.
+                            key.endsWith(keyLane) -> l.copy(
+                                points = l.points.map { if (it.value == LANE_BASE) it else it.copy(value = remapKey(it.value) ?: it.value) },
+                            )
+                            else -> l
+                        }
                     })
                 },
             )
@@ -173,6 +201,7 @@ fun Song.remapSidechains(f: (Int) -> Int): Song {
             inserts = master.inserts.map { it.remapped() },
             groups = master.groups.map { g -> g.copy(inserts = g.inserts.map { it.remapped() }) },
         ),
+        input = input.map { it.remapped() },
     )
 }
 

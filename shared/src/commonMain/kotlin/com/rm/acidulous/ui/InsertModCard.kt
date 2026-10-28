@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -41,9 +42,16 @@ internal class ModAccess(
     val change: (String, Float) -> Unit,
     val end: () -> Unit,
     val set: (String, Float) -> Unit,
+    /** A control's address for MIDI mapping, or null where the slot can't be mapped. */
+    val mapTarget: (String) -> String? = { null },
 )
 
-internal fun ParamBinding.modAccess() = ModAccess(::value, ::start, ::change, { end() }, ::set)
+internal fun ParamBinding.modAccess() =
+    ModAccess(::value, ::start, ::change, { end() }, ::set, { MapTargets.param(trackIndex, unit, it) })
+
+/** [name]'s control, mappable when the slot is. */
+@Composable
+private fun Modifier.mapped(a: ModAccess, name: String): Modifier = a.mapTarget(name)?.let { mappable(it) } ?: this
 
 /** The mod's own table, from the engine, once. */
 internal val modInfo: List<ParamInfo> by lazy { NativeEngine.effectParamInfo(InsertMod.TYPE) }
@@ -71,7 +79,7 @@ internal fun ModCard(type: String, trackNames: List<String>, a: ModAccess) {
             InsertMod.STEPS -> {
                 Choice(a, InsertMod.RATE, "rate", NOTE_RATES)
                 val length = if (a.value(InsertMod.LENGTH) >= 0.5f) 16 else 8
-                SwitchGrid(panelWord("length"), listOf("8", "16"), if (length == 16) 1 else 0) { i ->
+                SwitchGrid(panelWord("length"), listOf("8", "16"), if (length == 16) 1 else 0, Modifier.mapped(a, InsertMod.LENGTH)) { i ->
                     a.set(InsertMod.LENGTH, i.toFloat())
                 }
                 StepBars(a, length)
@@ -92,17 +100,19 @@ internal fun ModCard(type: String, trackNames: List<String>, a: ModAccess) {
             val at = InsertMod.targetIndex(a.value(name))
             val pos = targets.indexOf(at).coerceAtLeast(0)
             val labels = targets.map { if (it < 0) none else panelWord(effectInfo[it].name) }
-            CountKnob(
-                stringResource(Res.string.slot_mod_target, j), pos, targets.indices, labels[pos], Acid.colors.accent,
-                choices = labels, onStart = { a.start(name) }, onEnd = a.end,
-                pick = { i -> a.set(name, InsertMod.targetValue(targets[i])) },
-            ) { i -> a.change(name, InsertMod.targetValue(targets[i])) }
+            Box(Modifier.mapped(a, name)) {
+                CountKnob(
+                    stringResource(Res.string.slot_mod_target, j), pos, targets.indices, labels[pos], Acid.colors.accent,
+                    choices = labels, onStart = { a.start(name) }, onEnd = a.end,
+                    pick = { i -> a.set(name, InsertMod.targetValue(targets[i])) },
+                ) { i -> a.change(name, InsertMod.targetValue(targets[i])) }
+            }
             val depth = InsertMod.depth(j)
             val d = a.value(depth)
             Knob(
                 label = stringResource(Res.string.slot_mod_depth, j), value = d,
                 display = "%+d%%".format(((d * 2f - 1f) * 100f).roundToInt()),
-                modifier = panelKnobWidth(), accent = Acid.colors.accent,
+                modifier = Modifier.mapped(a, depth).then(panelKnobWidth()), accent = Acid.colors.accent,
                 onStart = { a.start(depth) }, onChange = { v -> a.change(depth, v) }, onEnd = a.end,
             )
         }
@@ -115,10 +125,12 @@ private fun Choice(a: ModAccess, name: String, label: String, labels: List<Strin
     val n = labels.size
     val idx = (a.value(name) * (n - 1)).roundToInt().coerceIn(0, n - 1)
     fun at(i: Int) = if (n > 1) i.toFloat() / (n - 1) else 0f
-    CountKnob(
-        panelWord(label), idx, 0 until n, labels[idx], choices = labels,
-        onStart = { a.start(name) }, onEnd = a.end, pick = { i -> a.set(name, at(i)) },
-    ) { i -> a.change(name, at(i)) }
+    Box(Modifier.mapped(a, name)) {
+        CountKnob(
+            panelWord(label), idx, 0 until n, labels[idx], choices = labels,
+            onStart = { a.start(name) }, onEnd = a.end, pick = { i -> a.set(name, at(i)) },
+        ) { i -> a.change(name, at(i)) }
+    }
 }
 
 @Composable
@@ -126,7 +138,7 @@ private fun Continuous(a: ModAccess, name: String, label: String) {
     val info = modInfo.firstOrNull { it.name == name } ?: return
     val v = a.value(name)
     Knob(
-        label = label, value = v, display = info.format(v), modifier = panelKnobWidth(),
+        label = label, value = v, display = info.format(v), modifier = Modifier.mapped(a, name).then(panelKnobWidth()),
         onStart = { a.start(name) }, onChange = { nv -> a.change(name, nv) }, onEnd = a.end,
     )
 }

@@ -154,7 +154,9 @@ fun AutomationStrip(
             val menuScroll = rememberScrollState()
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 ScaledMenu(menuScroll) {
-                    for (k in laneKeys) {
+                    // Lanes that hold data are listed even when nothing would offer them
+                    // now (a mod turned off, a step bar's drag), so they can be cleared.
+                    for (k in laneKeys + existing.filter { it !in laneKeys }) {
                         DropdownMenuItem(
                             text = { Text((if (k in existing) "● " else "  ") + nameOf(k), fontSize = 12.sp, fontFamily = FontFamily.Monospace) },
                             // Lanes can be cleared from the list, so any lane

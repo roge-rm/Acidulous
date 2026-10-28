@@ -62,4 +62,49 @@ class InsertModTest {
         assertEquals("mod_shape", InsertMod.nameOfIndex(InsertMod.INDEX_BASE - 1, names))
         assertEquals(null, InsertMod.nameOfIndex(-2, names))
     }
+
+    private fun key(track: Int) = track / (InsertMod.KEYS - 1f)
+    private fun keyedFrom(song: Song, on: Int, from: Int): Song = song.updateTrack(on) { t ->
+        val withLane = t.clips.mapValues { (_, c) ->
+            c.copy(automation = c.automation + (laneKey("effect1", InsertMod.KEY) to Lane(listOf(LanePoint(0, key(from)), LanePoint(10, LANE_BASE)))))
+        }
+        t.withEffect(0, "Filter")
+            .withEffectParam(0, InsertMod.SOURCE, InsertMod.sourceValue(InsertMod.KEYED))
+            .withEffectParam(0, InsertMod.KEY, key(from))
+            .copy(clips = withLane)
+    }
+
+    @Test
+    fun `a keyed mod follows its track when tracks move`() {
+        // Track 2 keyed from itself; a copy of track 1 goes in between.
+        val song = keyedFrom(Fixtures.song(), on = 1, from = 1).duplicateTrack(0)
+        val fx = song.tracks[2].effectAt(0)
+        assertEquals(key(2), fx.params[InsertMod.KEY])
+        assertEquals(InsertMod.sourceValue(InsertMod.KEYED), fx.params[InsertMod.SOURCE])
+        val lane = song.tracks[2].clips.values.first().automation.getValue(laneKey("effect1", InsertMod.KEY))
+        assertEquals(key(2), lane.points[0].value)
+        assertEquals(LANE_BASE, lane.points[1].value)
+    }
+
+    @Test
+    fun `a mod keyed from a deleted track follows its own input`() {
+        val song = keyedFrom(Fixtures.song(), on = 1, from = 0).deleteTrack(0)
+        val fx = song.tracks[0].effectAt(0)
+        assertEquals(InsertMod.sourceValue(InsertMod.FOLLOW), fx.params[InsertMod.SOURCE])
+        // And one keyed from a track after the deleted one moves up with it.
+        val other = keyedFrom(Fixtures.song(), on = 1, from = 1).deleteTrack(0)
+        assertEquals(key(0), other.tracks[0].effectAt(0).params[InsertMod.KEY])
+    }
+
+    @Test
+    fun `the input's and the master's keyed mods move too`() {
+        val keyed = mapOf(InsertMod.SOURCE to InsertMod.sourceValue(InsertMod.KEYED), InsertMod.KEY to key(1))
+        val base = Fixtures.song()
+        val song = base.copy(
+            input = listOf(UnitSlot("Filter", keyed)),
+            master = base.master.copy(inserts = listOf(UnitSlot("Filter", keyed))),
+        ).duplicateTrack(0)
+        assertEquals(key(2), song.input[0].params[InsertMod.KEY])
+        assertEquals(key(2), song.master.inserts[0].params[InsertMod.KEY])
+    }
 }

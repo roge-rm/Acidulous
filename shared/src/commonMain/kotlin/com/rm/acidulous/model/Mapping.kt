@@ -101,6 +101,8 @@ fun mappedParamInfo(track: Track, unit: String, name: String): com.rm.acidulous.
     val engine = com.rm.acidulous.engine.NativeEngine
     val list = when {
         unit == "machine" -> engine.machineParamInfo(track.machine.type)
+        // The slot's mod settings have a table of their own.
+        unit.startsWith("effect") && InsertMod.isModParam(name) -> engine.effectParamInfo(InsertMod.TYPE)
         unit.startsWith("effect") -> effectSlotOf(unit)?.let { engine.effectParamInfo(track.effectAt(it).type) }
         unit.startsWith("mod") -> modifierSlotOf(unit)?.let { engine.inputModParamInfo(track.modifierAt(it).type) }
         else -> null

@@ -1026,7 +1026,8 @@ object EngineSync {
             song.master.inserts.withIndex().map { masterInsertUnit(it.index) to it.value } +
             song.master.groups.withIndex().flatMap { (g, group) ->
                 group.inserts.withIndex().map { groupInsertUnit(g, it.index) to it.value }
-            }
+            } +
+            (0 until INPUT_SLOTS).map { inputUnit(it) to song.inputAt(it) }
         for ((unit, slot) in slots) {
             if (slot.isEmpty) continue
             for (p in effectTable(slot.type)) if (p.name !in slot.params) send(0, unit, p.name, p.defaultNormalized)
@@ -1037,12 +1038,15 @@ object EngineSync {
     /**
      * A slot's mod settings the song doesn't name, back to their defaults, but
      * only where the engine's differ: an effect kept from the last song keeps
-     * its mod, and sending all 27 for every slot would fill the queue.
+     * its mod, and sending all 27 for every slot would fill the queue. Within
+     * a hair, since a default read back through the curve can differ in the
+     * last bit.
      */
     private fun modDefaults(rack: Int, unit: String, params: Map<String, Float>, send: (Int, String, String, Float) -> Unit) {
         for (p in effectTable(com.rm.acidulous.model.InsertMod.TYPE)) {
             if (p.name in params) continue
-            if (NativeEngine.paramNormalized(rack, unit, p.name) != p.defaultNormalized) send(rack, unit, p.name, p.defaultNormalized)
+            val now = NativeEngine.paramNormalized(rack, unit, p.name)
+            if (kotlin.math.abs(now - p.defaultNormalized) > 1e-4f) send(rack, unit, p.name, p.defaultNormalized)
         }
     }
 
