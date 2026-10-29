@@ -216,9 +216,12 @@ void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float 
             tapL = line[0].read(d);
             tapR = line[1].read(d);
         }
+        // The fade is equal gain, not equal power. The samples it fades in
+        // here are read again in the next stretch's tail and faded out there,
+        // so their two gains must add up to 1 or the stretch ends build up in
+        // the feedback.
         if (revAt < revPrevTail) {
-            const float x = revAt / revPrevTail * 0.5f * dsp::kPi;
-            const float in = std::sin(x), out = std::cos(x);
+            const float in = revAt / revPrevTail, out = 1.0f - in;
             const float d = 2.0f * (revAt + revPrevLen) + 1.0f + drift;
             tapL = tapL * in + line[0].read(d) * out;
             tapR = tapR * in + line[1].read(d) * out;

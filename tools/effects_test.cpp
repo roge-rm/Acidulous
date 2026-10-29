@@ -864,6 +864,20 @@ void delayModes() {
         const double early = rms(out.l, 2 * kQuarter + 600, 2 * kQuarter + 6000), late = rms(out.l, 3 * kQuarter - 6000, 3 * kQuarter - 600);
         ok("reverse: with feedback the next pass runs forwards", late > 2.0 * early && late > 0.05, num(early) + " -> " + num(late));
     }
+    for (int rate : {48000, 96000}) {
+        for (float time : {3.0f, 7.0f}) {
+            // Reverse at full feedback must die away: 2 s of tone, then 38 s of silence.
+            auto fx = make("Delay", {{"mode", 3.0f}, {"feedback", 0.95f}, {"time", time}});
+            fx->prepare(rate);
+            const auto sec = static_cast<size_t>(rate);
+            std::vector<float> in(40 * sec, 0.0f);
+            for (size_t i = 0; i < 2 * sec; ++i) in[i] = 0.7f * static_cast<float>(std::sin(2.0 * M_PI * 185.0 * i / rate));
+            const auto out = run(*fx, in);
+            const double mid = rms(out.l, 19 * sec, 20 * sec), end = rms(out.l, 39 * sec, 40 * sec);
+            ok("reverse: full feedback dies away (time " + std::to_string(int(time)) + ", " + std::to_string(rate) + " Hz)",
+               finite(out) && end < 0.6 * mid && mid < 0.5, num(mid) + " -> " + num(end));
+        }
+    }
     for (int mode = 0; mode < 4; ++mode) {
         // Played, reset and played again, every mode comes out the same.
         auto fx = make("Delay", {{"mode", float(mode)}, {"feedback", 0.7f}, {"wobble", 0.5f}, {"time", 3.0f}});
