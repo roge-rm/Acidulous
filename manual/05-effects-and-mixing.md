@@ -15,8 +15,9 @@ Each effect has its own page below.
 
 - [**Delay**](05-effects-and-mixing/delay.md) - echoes on a note value: normal,
   ping-pong, multi-tap or reverse, and it can duck while you play.
-- [**Reverb**](05-effects-and-mixing/reverb.md) - a room that can also freeze,
-  gate, shimmer or crush itself down to 8 bits.
+- [**Reverb**](05-effects-and-mixing/reverb.md) - twelve models, from a room,
+  plate, hall or spring to a tuned tube, a drumhead or a howling room, with a
+  tail you can duck, push back, freeze, shimmer or crush.
 - [**Grain**](05-effects-and-mixing/grain.md) - a cloud of short slices of what
   the track just played, which can freeze.
 - [**Tape**](05-effects-and-mixing/tape.md) - a worn tape machine: wow,

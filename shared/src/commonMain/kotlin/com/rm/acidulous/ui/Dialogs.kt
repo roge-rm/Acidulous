@@ -657,16 +657,21 @@ private fun unit(u: Int) = if (u == 1) 1 else 0
  * A window's cards: stacked upright, each wrapping its controls, and side by
  * side when the phone is turned, each a row, like a machine's panel. A turned
  * window is wide but short, so a column of cards would need scrolling.
+ *
+ * [pack] packs the cards upright too, so a card of one or two knobs shares a
+ * line with its neighbour instead of taking a line to itself. Effect windows
+ * use it, since their cards change size with the effect and its model.
  */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-internal fun WindowCards(content: @Composable () -> Unit) {
-    // On a square phone the cards are packed. Each card is as wide as its
-    // controls, cards that fit side by side share a line, and a busy one
-    // still takes a line and wraps its controls like it does upright.
-    if (LocalDialogCompact.current && !LocalDialogWide.current) {
+internal fun WindowCards(pack: Boolean = false, content: @Composable () -> Unit) {
+    // On a square phone (or upright with pack) the cards are packed. Each
+    // card is as wide as its controls, cards that fit side by side share a
+    // line, and a busy one still takes a line and wraps its controls like it
+    // does upright.
+    if ((pack || LocalDialogCompact.current) && !LocalDialogWide.current) {
         androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides true, LocalCardsPacked provides true) {
-            PackedCards(4.dp, content)
+            PackedCards(if (LocalDialogCompact.current) 4.dp else 6.dp, content)
         }
         return
     }
@@ -701,6 +706,8 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
     val fit = LocalDialogFit.current
     val me = androidx.compose.runtime.remember { Any() }
     if (fit != null) androidx.compose.runtime.DisposableEffect(fit) { onDispose { fit.forget(me) } }
+    // Stacked cards wrap their controls, so a narrower card is a taller one.
+    val canNarrow = LocalPanelStacked.current
     androidx.compose.ui.layout.SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
         val width = constraints.maxWidth
         val space = gap.roundToPx()
@@ -718,17 +725,34 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
         val least = if ((fit?.probe ?: 0) > 0) parts.map { m ->
             runCatching { m.minIntrinsicWidth(androidx.compose.ui.unit.Constraints.Infinity) }.getOrDefault(0)
         } else null
-        val said = parts.map { it.measure(loose).width }
-        val natural = said.map { minOf(it, width) }
-        // Greedy lines of indices.
-        val lines = mutableListOf<MutableList<Int>>()
-        var used = 0
-        natural.forEachIndexed { i, w ->
-            val line = lines.lastOrNull()
-            if (line == null || used + space + w > width) {
-                lines += mutableListOf(i); used = w
-            } else {
-                line += i; used += space + w
+        val sized = parts.map { it.measure(loose) }
+        val said = sized.map { it.width }
+        val natural = said.map { minOf(it, width) }.toMutableList()
+        val lines = cardLines(natural, width, space).map { it.toMutableList() }.toMutableList()
+        // A small card left alone on a line joins the line before or after
+        // it, wrapped narrower, as long as that doesn't make the line taller:
+        // two knobs side by side become two knobs one over the other beside a
+        // card two lines tall.
+        if (canNarrow && lines.size > 1) {
+            fun used(line: List<Int>) = line.sumOf { natural[it] } + space * (line.size - 1)
+            val alone = lines.indices.filter { l -> lines[l].size == 1 && natural[lines[l][0]] * 2 <= width }
+            if (alone.isNotEmpty()) {
+                val tries = subcompose("narrow", content)
+                for (l in alone.reversed()) {
+                    val i = lines[l].singleOrNull() ?: continue
+                    // One try per card: a measurable measures once per pass.
+                    // The line before is tried first, then the one after.
+                    val other = listOf(l - 1, l + 1).firstOrNull { it in lines.indices && width - used(lines[it]) - space > 0 } ?: continue
+                    val room = width - used(lines[other]) - space
+                    val p = tries[i].measure(androidx.compose.ui.unit.Constraints(maxWidth = room))
+                    val tallest = lines[other].maxOf { sized[it].height }
+                    // Narrower has to mean wrapped, so taller. A card that
+                    // comes back the same height was squeezed, not wrapped.
+                    if (p.width >= room || p.height <= sized[i].height || p.height > tallest) continue
+                    natural[i] = p.width
+                    if (other < l) lines[other].add(i) else lines[other].add(0, i)
+                    lines.removeAt(l)
+                }
             }
         }
         // Each line's cards share out the leftover width in proportion. The
@@ -747,18 +771,9 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
         val tall = subcompose("heights", content).mapIndexed { i, m ->
             m.measure(androidx.compose.ui.unit.Constraints.fixedWidth(widths[i])).height
         }
-        // The same greedy lines at the reference width, for the window.
-        var widest = 0
-        run {
-            var lineW = -1
-            for (w in said.map { minOf(it, reference) }) {
-                if (lineW < 0 || lineW + space + w > reference) {
-                    widest = maxOf(widest, lineW); lineW = w
-                } else {
-                    lineW += space + w
-                }
-            }
-            widest = maxOf(widest, lineW)
+        // The same lines at the reference width, for the window.
+        val widest = said.map { minOf(it, reference) }.let { ws ->
+            cardLines(ws, reference, space).maxOfOrNull { l -> l.sumOf { ws[it] } + space * (l.size - 1) } ?: 0
         }
         fit?.tell(
             me,
@@ -783,6 +798,38 @@ private fun PackedCards(gap: Dp, content: @Composable () -> Unit) {
             }
         }
     }
+}
+
+/**
+ * Cards of these [widths] in order, in as few lines of [width] as they fit,
+ * shared out so the space left on each line is as even as it can be (the
+ * least sum of squared gaps). The lines are stretched to the width
+ * afterwards, so even lines mean no small card is left to stretch across a
+ * line by itself when it could have shared one.
+ */
+private fun cardLines(widths: List<Int>, width: Int, space: Int): List<List<Int>> {
+    val n = widths.size
+    if (n == 0) return emptyList()
+    fun lineW(from: Int, to: Int) = (from until to).sumOf { widths[it] } + space * (to - from - 1)
+    fun fits(from: Int, to: Int) = to - from == 1 || lineW(from, to) <= width
+    val inf = Int.MAX_VALUE
+    // For the first i cards: the fewest lines, then the least sum of squared gaps.
+    val lines = IntArray(n + 1) { inf }
+    val cost = LongArray(n + 1) { Long.MAX_VALUE }
+    val from = IntArray(n + 1) { -1 }
+    lines[0] = 0; cost[0] = 0
+    for (i in 1..n) for (j in i - 1 downTo 0) {
+        if (!fits(j, i)) break
+        if (lines[j] == inf) continue
+        val gap = (width - lineW(j, i)).coerceAtLeast(0).toLong()
+        val l = lines[j] + 1
+        val c = cost[j] + gap * gap
+        if (l < lines[i] || l == lines[i] && c < cost[i]) { lines[i] = l; cost[i] = c; from[i] = j }
+    }
+    val out = mutableListOf<List<Int>>()
+    var i = n
+    while (i > 0) { val j = from[i]; out.add(0, (j until i).toList()); i = j }
+    return out
 }
 
 /**

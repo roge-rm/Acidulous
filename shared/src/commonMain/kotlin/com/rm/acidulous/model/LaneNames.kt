@@ -34,6 +34,7 @@ private val WORDS = mapOf(
     "drv" to "drive", "sat" to "saturation", "q" to "Q", "pan" to "pan",
     "bypass" to "bypass", "gain" to "volume", "sendreverb" to "reverb send",
     "senddelay" to "delay send", "mix" to "mix", "rate" to "rate", "time" to "time",
+    "duckrel" to "duck release",
 )
 
 /** The engine's name for a parameter, spelled out as far as possible. */

@@ -23,6 +23,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -343,23 +344,27 @@ private fun SlotFace(
         }
         // The arp's sixteen step toggles get their own row below, so they're
         // left out of the cards.
+        val model = if (type == "Reverb") reverbModel(b.value("model")) else null
         val shown = info.filterNot {
             InsertMod.isModParam(it.name) ||
                 type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
-                type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name)
+                type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
+                model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects)
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
             // controls. `LocalPanelStacked` tells `Group` to wrap.
             val wide = LocalDialogWide.current
-            WindowCards {
+            WindowCards(pack = true) {
                 val pages = PAGES[type]
-                for ((title, group) in groupsFor(type, shown)) {
+                for ((title, group) in groupsFor(type, shown, model)) {
                     if (page >= 0 && pages != null && title !in pages[page]) continue
-                    Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                        for (p in group) control(p)
-                        if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
+                    key(title) {
+                        Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
+                            for (p in group) key(p.name) { control(p) }
+                            if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
+                        }
                     }
                 }
                 if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
@@ -376,7 +381,9 @@ private fun SlotFace(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
-                for (p in shown) control(p)
+                // The reverb's model first, then its own knobs, as its window has them.
+                val row = if (model != null) groupsFor(type, shown, model).flatMap { it.second } else shown
+                for (p in row) key(p.name) { control(p) }
                 if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
             }
             if (type == "Arp") ArpSteps(b)
@@ -460,6 +467,13 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "extra" to listOf("breathe"),
         "out" to listOf("gain"),
     ),
+    // The model's own knobs go in a card of their own after the first; see [groupsFor].
+    "Reverb" to listOf(
+        "tank" to listOf("model", "size", "damp", "tone", "predelay", "mix"),
+        "tail" to listOf("duck", "duckrel", "distance", "bloom"),
+        "extra" to listOf("freeze", "gate", "shimmer", "bits", "crush", "wobble"),
+        "out" to listOf("gain"),
+    ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
@@ -473,9 +487,12 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
  * Names the engine doesn't have are dropped, so a renamed parameter leaves a
  * smaller card instead of a broken one.
  */
-private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, List<ParamInfo>>> {
+private fun groupsFor(type: String, info: List<ParamInfo>, model: String? = null): List<Pair<String, List<ParamInfo>>> {
     val byName = info.associateBy { it.name }
-    val declared = PANEL_GROUPS[type] ?: return listOf("" to info)
+    val declared = PANEL_GROUPS[type]?.let { g ->
+        // The reverb's model knobs, in a card named after the model.
+        if (model != null) g.take(1) + (model to REVERB_MODEL_KNOBS[model].orEmpty()) + g.drop(1) else g
+    } ?: return listOf("" to info)
     val out = ArrayList<Pair<String, List<ParamInfo>>>()
     val taken = HashSet<String>()
     for ((title, names) in declared) {
@@ -487,6 +504,41 @@ private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, Li
     val rest = info.filter { it.name !in taken }
     if (rest.isNotEmpty()) out += "more" to rest
     return out
+}
+
+/** The reverb's models, in the engine's order (Reverb.h, ModelKind). */
+private val REVERB_MODELS = listOf(
+    "room", "plate", "hall", "spring", "early", "space", "tube", "string", "drumhead", "thunder", "howl", "flutter",
+)
+
+/** Each reverb model's own knobs. The rest are on every model. */
+private val REVERB_MODEL_KNOBS = mapOf(
+    "spring" to listOf("drip", "knock"),
+    "early" to listOf("rate"),
+    "space" to listOf("width", "depth", "height", "position", "material"),
+    "tube" to listOf("pitch", "follow", "open"),
+    "string" to listOf("pitch", "follow", "stiff", "pick"),
+    "drumhead" to listOf("tension", "snares"),
+    "thunder" to listOf("metal"),
+    "howl" to listOf("howl"),
+    "flutter" to listOf("walls"),
+)
+private val REVERB_OWN_KNOBS = REVERB_MODEL_KNOBS.values.flatten().toSet()
+
+/** The reverb's model, by name, from `model`'s normalised value. */
+private fun reverbModel(v: Float): String =
+    REVERB_MODELS[(v * (REVERB_MODELS.size - 1)).roundToInt().coerceIn(0, REVERB_MODELS.size - 1)]
+
+/**
+ * Whether the reverb shows a knob on this model: the shared ones, less size on
+ * space, which is sized in metres, and the model's own. `follow` tunes to the
+ * track's notes, so only a track's insert has it.
+ */
+private fun reverbShows(model: String, name: String, trackInsert: Boolean): Boolean = when {
+    name == "follow" && !trackInsert -> false
+    name == "size" -> model != "space"
+    name in REVERB_OWN_KNOBS -> name in REVERB_MODEL_KNOBS[model].orEmpty()
+    else -> true
 }
 
 /** The arp's pattern: sixteen compact step toggles in one row, the ones past `length` dimmed. */
@@ -634,6 +686,8 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "taps" && type == "Delay" -> listOf("2", "3", "4")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
+    name == "model" && type == "Reverb" -> REVERB_MODELS
+    name == "material" && type == "Reverb" -> listOf("tile", "plaster", "wood", "curtains")
     name == "speed" && type == "Rotary" -> listOf("brake", "slow", "fast")
     name == "tempo" && type == "Rotary" -> listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
     name == "freeze" && type == "Grain" -> listOf("off", "on")
@@ -681,9 +735,9 @@ internal fun SongSlotFace(
     modTracks: List<String>? = null,
 ) {
     val control: @Composable (ParamInfo) -> Unit = { p ->
-        val labels = switchLabels(type, p.name, p.steps)
+        val labels = switchLabels(type, p.name, p.steps)?.let { panelWords(it) }
         val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
-        val shortLabel = shortLabelOf(type, p.name)
+        val shortLabel = panelWord(shortLabelOf(type, p.name))
         val v = value(p.name)
         when {
             p.curve == 2 && labels != null && labels.size <= 4 -> SwitchGrid(
@@ -707,10 +761,15 @@ internal fun SongSlotFace(
             )
         }
     }
-    WindowCards {
-        for ((title, group) in groupsFor(type, info)) {
-            Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                for (p in group) control(p)
+    // A song slot never hears notes, so the reverb's `follow` isn't offered.
+    val model = if (type == "Reverb") reverbModel(value("model")) else null
+    val shown = if (model != null) info.filter { reverbShows(model, it.name, trackInsert = false) } else info
+    WindowCards(pack = true) {
+        for ((title, group) in groupsFor(type, shown, model)) {
+            key(title) {
+                Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
+                    for (p in group) key(p.name) { control(p) }
+                }
             }
         }
         if (modTracks != null) ModCard(type, modTracks, ModAccess(value, { start() }, change, end, set))

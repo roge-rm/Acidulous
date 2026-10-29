@@ -1145,7 +1145,7 @@ internal val LocalPanelStacked = androidx.compose.runtime.compositionLocalOf { f
 
 /**
  * Stacked cards sized to their controls instead of the line, so small ones can
- * share a line, as in a square phone's window. See [WindowCards].
+ * share a line, as in a square phone's window or an effect window. See [WindowCards].
  */
 internal val LocalCardsPacked = androidx.compose.runtime.compositionLocalOf { false }
 
@@ -1529,8 +1529,8 @@ internal fun Group(
     Column(
         Modifier.then(if (stacked && !packed) Modifier.fillMaxWidth() else Modifier)
             .clip(RoundedCornerShape(6.dp)).background(background)
-            // Packed (a square phone) uses less vertical padding.
-            .padding(horizontal = 6.dp, vertical = if (packed) 4.dp else 6.dp).together(),
+            // A square phone's packed cards use less vertical padding.
+            .padding(horizontal = 6.dp, vertical = if (packed && LocalDialogCompact.current) 4.dp else 6.dp).together(),
     ) {
         // A panel's English title is translated here, a window's card title
         // arrives translated and passes through.

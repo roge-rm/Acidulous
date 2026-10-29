@@ -234,6 +234,7 @@
     <string name="pw_crush_it_with_knob_a">écrasé par le bouton a</string>
     <string name="pw_cuica">cuíca</string>
     <string name="pw_cup">creux</string>
+    <string name="pw_curtains">rideaux</string>
     <string name="pw_curve">courbe</string>
     <string name="pw_cut">coupe</string>
     <string name="pw_cutoff">coupure</string>
@@ -288,6 +289,7 @@
     <string name="pw_down">bas</string>
     <string name="pw_down_up">bas-haut</string>
     <string name="pw_drift">dérive</string>
+    <string name="pw_drip">goutte</string>
     <string name="pw_drips">gouttes</string>
     <string name="pw_drive">satur.</string>
     <string name="pw_drive_heard">satur. écoutée</string>
@@ -302,6 +304,8 @@
     <string name="pw_dubbed">copié</string>
     <string name="pw_dubs">copies</string>
     <string name="pw_duck">atténuer</string>
+    <string name="pw_duck_release">relâche atténuation</string>
+    <string name="pw_duckrel">rel. att.</string>
     <string name="pw_dudy">dudy</string>
     <string name="pw_dulcimer">tympanon</string>
     <string name="pw_duty">rapport</string>
@@ -310,6 +314,7 @@
     <string name="pw_e4">e4</string>
     <string name="pw_e5">e5</string>
     <string name="pw_e6">e6</string>
+    <string name="pw_early">ancien</string>
     <string name="pw_east">orient</string>
     <string name="pw_echo">écho</string>
     <string name="pw_edge">biseau</string>
@@ -472,6 +477,7 @@
     <string name="pw_haas">haas</string>
     <string name="pw_hail">grêle</string>
     <string name="pw_half">demi</string>
+    <string name="pw_hall">hall</string>
     <string name="pw_halves">blanches</string>
     <string name="pw_hammer">marteau</string>
     <string name="pw_hand">main</string>
@@ -495,6 +501,7 @@
     <string name="pw_head_bump">bosse tête</string>
     <string name="pw_head">peau</string>
     <string name="pw_heard_from">écouté de</string>
+    <string name="pw_height">hauteur</string>
     <string name="pw_hi">aigu</string>
     <string name="pw_hi_tom">Tom aigu</string>
     <string name="pw_high">aigu</string>
@@ -517,6 +524,7 @@
     <string name="pw_how">comment</string>
     <string name="pw_how_many">combien</string>
     <string name="pw_how_much">combien</string>
+    <string name="pw_howl">larsen</string>
     <string name="pw_hp">HP</string>
     <string name="pw_hp12">HP12</string>
     <string name="pw_hp18">HP18</string>
@@ -580,6 +588,7 @@
     <string name="pw_kick_ducks">g. c. atténue</string>
     <string name="pw_kind">type</string>
     <string name="pw_kit">kit</string>
+    <string name="pw_knock">coup</string>
     <string name="pw_kouxian">kouxian</string>
     <string name="pw_l">L</string>
     <string name="pw_l_07c342">l</string>
@@ -676,6 +685,8 @@
     <string name="pw_marimba">marimba</string>
     <string name="pw_marwa">marwa</string>
     <string name="pw_master">général</string>
+    <string name="pw_material">matériau</string>
+    <string name="pw_mechanical">mécanique</string>
     <string name="pw_medium">support</string>
     <string name="pw_meend">meend</string>
     <string name="pw_mega">mega</string>
@@ -832,6 +843,7 @@
     <string name="pw_pitch1">haut1</string>
     <string name="pw_pitch2">haut2</string>
     <string name="pw_pitch3">haut3</string>
+    <string name="pw_plaster">plâtre</string>
     <string name="pw_plate">plaque</string>
     <string name="pw_play">jeu</string>
     <string name="pw_playback">lecture</string>
@@ -1081,6 +1093,7 @@
     <string name="pw_split_keys">séparation</string>
     <string name="pw_spray">dispers.</string>
     <string name="pw_spread">écart</string>
+    <string name="pw_spring">ressort</string>
     <string name="pw_sqr">car.</string>
     <string name="pw_square">carré</string>
     <string name="pw_squash">écraser</string>
@@ -1153,12 +1166,14 @@
     <string name="pw_table">table</string>
     <string name="pw_tables">tables</string>
     <string name="pw_tacks">punaises</string>
+    <string name="pw_tail">queue</string>
     <string name="pw_take">prise</string>
     <string name="pw_takes">prises</string>
     <string name="pw_talk">parler</string>
     <string name="pw_talking">aisselle</string>
     <string name="pw_tame">dompter</string>
     <string name="pw_tangent">tangente</string>
+    <string name="pw_tank">cuve</string>
     <string name="pw_tanpura">tanpura</string>
     <string name="pw_tape">Tape</string>
     <string name="pw_tape_e9b6c7">bande</string>
@@ -1187,6 +1202,7 @@
     <string name="pw_thunder">tonnerre</string>
     <string name="pw_tight">serré</string>
     <string name="pw_tighten">resserrer</string>
+    <string name="pw_tile">carreau</string>
     <string name="pw_tilt">Penché</string>
     <string name="pw_timbre">timbre</string>
     <string name="pw_time">temps</string>
@@ -1278,6 +1294,7 @@
     <string name="pw_wah_rate">vitesse du wah-wah</string>
     <string name="pw_wah_shape">forme du wah-wah</string>
     <string name="pw_walk">marche</string>
+    <string name="pw_walls">murs</string>
     <string name="pw_warble">babil</string>
     <string name="pw_warm">chaud</string>
     <string name="pw_warp">distors.</string>
@@ -1392,6 +1409,7 @@
     <string name="pw_kick_punch">punch g. caisse</string>
     <string name="pw_kick_level">niveau g. caisse</string>
     <string name="pw_snare_tune">accord. c. claire</string>
+    <string name="pw_snares">timbre</string>
     <string name="pw_snare_decay">déclin c. claire</string>
     <string name="pw_snare_tone">ton c. claire</string>
     <string name="pw_snare_level">niveau c. claire</string>
@@ -1476,6 +1494,7 @@
     <string name="pw_contacts">contacts</string>
     <string name="pw_drum_fast">tambour rapide</string>
     <string name="pw_drum_slow">tambour lent</string>
+    <string name="pw_drumhead">peau</string>
     <string name="pw_horn_fast">pavillon rapide</string>
     <string name="pw_horn_slow">pavillon lent</string>
     <string name="pw_lower_a_1">inf. A 1</string>

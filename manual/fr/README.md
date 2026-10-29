@@ -58,7 +58,7 @@
     - [Mouth](05-effects-and-mixing/mouth.md) : la gorge de Diction sur n’importe quelle piste : ce qui la traverse devient une voyelle.
     - [Phaser](05-effects-and-mixing/phaser.md) : deux à huit étages.
     - [Resonator](05-effects-and-mixing/resonator.md) : des cordes accordées dans une tonalité, qui résonnent avec la piste.
-    - [Reverb](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se figer, se couper, miroiter ou s’écraser.
+    - [Reverb](05-effects-and-mixing/reverb.md) : douze salles et choses qui résonnent, avec une queue à atténuer, éloigner ou figer.
     - [Rotary](05-effects-and-mixing/rotary.md) : la cabine à haut-parleur tournant de l’orgue, pour n’importe quelle piste.
     - [Shifter](05-effects-and-mixing/shifter.md) : un décalage de fréquence, pour des sons métalliques et désaccordés.
     - [Slicer](05-effects-and-mixing/slicer.md) : la piste coupée sur le tempo, certaines tranches répétées, inversées ou omises.
