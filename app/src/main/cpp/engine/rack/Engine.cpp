@@ -48,6 +48,7 @@ void Engine::runInputChain() {
     inputModStart = false;
     for (int32_t s = 0; s < kInputSlots; ++s) {
         if (inputFx[s] == nullptr) continue;
+        inputFx[s]->setTransport(inputMod);
         if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, inputMod);
         inputFx[s]->block(clock.blockStart(), clock.blockEnd(), clock.bpm());
         stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
@@ -488,12 +489,14 @@ void Engine::renderBlock(const float *in, float *out) {
     for (int32_t s = 0; s < kSendSlots; ++s) {
         if (Effect *e = master.send(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
+            e->setTransport(modTransport);
             if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 210u + s, modTransport);
         }
     }
     for (int32_t s = 0; s < kMasterInsertSlots; ++s) {
         if (Effect *e = master.insert(s)) {
             e->setKey(keyFor(e->sidechainRack(), -1));
+            e->setTransport(modTransport);
             if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 200u + s, modTransport);
         }
     }
@@ -501,6 +504,7 @@ void Engine::renderBlock(const float *in, float *out) {
         for (int32_t s = 0; s < kGroupInsertSlots; ++s) {
             if (Effect *e = master.groupInsert(g, s)) {
                 e->setKey(keyFor(e->sidechainRack(), -1));
+                e->setTransport(modTransport);
                 if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 220u + g * kGroupInsertSlots + s, modTransport);
             }
         }
@@ -637,6 +641,7 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
+            e->setTransport(modTransport);
             if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTransport);
         }
     }

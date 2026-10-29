@@ -40,13 +40,18 @@ class Delay final : public Effect {
     static constexpr int32_t kMaxTaps = 4;
     Delay() { initParams(); }
     ACIDULOUS_EFFECT_COMMON(Delay)
-    void onBlock(int64_t, int64_t, float bpm) override { this->bpm = bpm; }
+    void onBlock(int64_t tickStart, int64_t, float bpm) override;
   private:
     void runMultiTap(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff);
-    void runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff);
+    void runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff, int timeIdx,
+                    double ticksPerFrame);
     float wobbleDrift(float depth);
     float duckedMix(float inL, float inR);
     dsp::DelayLine line[2];
+    // Reverse reads from these, long enough for a whole 3 s stretch. Every
+    // mode writes them as it writes line, so a switch to or from reverse
+    // carries on with the same echoes.
+    dsp::ForgetfulDelayLine revLine[2];
     float readSamples = 24000.0f, lp[2]{}, duckEnv = 0.0f, wobblePhase = 0.0f, sr = 48000.0f, bpm = 120.0f;
     bool snapRead = true; // see reset()
     // Per-block, for the helpers: the knobs as process() read them.
@@ -54,9 +59,27 @@ class Delay final : public Effect {
     // Reverse: frames into the current stretch; its length and the tail it
     // plays on into the next, fixed when it starts; the same for the one
     // fading out.
-    float revAt = 0.0f, revLen = 0.0f, revTail = 0.0f, revPrevLen = 0.0f, revPrevTail = 0.0f;
+    float revAt = 0.0f, revLen = 0.0f, revTail = 0.0f, revPrevLen = 0.0f;
     bool revStart = true;
-    void startStretch();
+    // The fade into the current stretch: frames into it and its length. It
+    // fades from the stretch before, or from the other mode's tap at
+    // revFadeD frames back when reverse has just come on.
+    float revFadeAt = 0.0f, revFadeLen = 0.0f, revFadeD = 0.0f;
+    bool revFadeNormal = false;
+    // The current stretch's length in ticks; the clock jumped this block.
+    double revTicks = 0.0;
+    bool revJumped = false;
+    // The clock's tick to a fraction, moved on by the frames played and kept
+    // within a tick of the block's start; the stretch now playing as a count
+    // of stretches from the song's start.
+    double clock = 0.0;
+    bool synced = false;
+    int64_t revWindow = 0;
+    /** A stretch's length in ticks: the note value, halved until twice it fits the line. */
+    double stretchTicks(int timeIdx) const;
+    void startStretch(double ticks, double ticksPerFrame, float into);
+    /** How far a stretch may run before it starts over, so every read stays in revLine. */
+    float stretchLimit() const;
 };
 
 class Eq final : public Effect {

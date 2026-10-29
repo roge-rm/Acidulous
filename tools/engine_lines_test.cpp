@@ -271,6 +271,27 @@ F 1 2 3 4 5
         acidulous::lines::replay("acidulous-engine 3\nMountMachine 4 \"Filament\"\n", whole);
         check(whole.version == 3 && whole.calls + whole.skipped == 2, "an added line is replayed");
     }
+    // The Delay's pingpong switch, in any version: on is ping-pong (1/3 of
+    // the mode's four steps), off is normal, a lane's -1 stays.
+    {
+        Replay v4;
+        const std::string third = f9(1.0 / 3.0);
+        check(v4.upgradeLine("SetParam 2 \"effect1\" \"pingpong\" 1.0 false 0") == "SetParam 2 \"effect1\" \"mode\" " + third + " false 0",
+              "pingpong on becomes ping-pong");
+        check(v4.upgradeLine("SetParam -1 \"send2\" \"pingpong\" 0.0 true 1") == "SetParam -1 \"send2\" \"mode\" 0 true 1",
+              "pingpong off becomes normal");
+        check(v4.upgradeLine("SnapshotSetLane @0 2 1 \"Reflux\" \"effect1\" \"pingpong\" false f[6: 0.0 1.0 96.0 -1.0 192.0 0.2]") ==
+                  "SnapshotSetLane @0 2 1 \"Reflux\" \"effect1\" \"mode\" false f[6: 0.0 " + third + " 96.0 -1.0 192.0 0]",
+              "a pingpong lane becomes a mode lane");
+        const std::string mode = "SetParam 2 \"effect1\" \"mode\" 1.0 false 0";
+        check(v4.upgradeLine(mode) == mode, "a mode is left alone");
+        const std::string machine = "SetParam 2 \"machine\" \"pingpong\" 1.0 false 0";
+        check(v4.upgradeLine(machine) == machine, "a machine's pingpong is left alone");
+        Replay v3;
+        v3.version = 3;
+        check(v3.upgradeLine("SetParam 2 \"effect1\" \"pingpong\" 0.7 false 0") == "SetParam 2 \"effect1\" \"mode\" " + third + " false 0",
+              "a version 3 pingpong becomes ping-pong");
+    }
     u.upgradeLine("UnmountMachine 2");
     check(u.upgradeLine("SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0") == "SetParam 2 \"machine\" \"o1_wave\" 0.5 false 0",
           "an unmounted rack is left alone");

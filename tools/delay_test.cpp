@@ -102,6 +102,25 @@ int bufferTests() {
             }
         }
     }
+    // A forgotten line reads exactly as a cleared one, at every read length,
+    // however much of the old contents has been written over.
+    for (int32_t written : {0, 1, 2, 50, 95, 96, 97, 300}) {
+        acidulous::dsp::DelayLine cleared;
+        acidulous::dsp::ForgetfulDelayLine forgot;
+        cleared.prepare(96);
+        forgot.prepare(96);
+        for (int i = 0; i < 250; ++i) { cleared.write(1.0f + i); forgot.write(1.0f + i); }
+        cleared.clear();
+        forgot.forget();
+        for (int i = 0; i < written; ++i) { cleared.write(0.5f - i); forgot.write(0.5f - i); }
+        for (float samples = 0.5f; samples < 96.0f; samples += 0.125f) {
+            if (cleared.read(samples) != forgot.read(samples)) {
+                printf("  FAIL a forgotten line read %g at %g after %d writes, a cleared one %g\n",
+                       (double)forgot.read(samples), (double)samples, written, (double)cleared.read(samples));
+                return 1;
+            }
+        }
+    }
     // The string at every pitch, gliding, since a gliding loop length is what
     // hits the bad value.
     {

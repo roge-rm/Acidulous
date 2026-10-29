@@ -35,8 +35,9 @@ Un delay calé sur le morceau. **temps** est une valeur de note, donc un delay
 - Utilisez **atténuer** au lieu de baisser le mélange pour que le delay
   n’écrase pas une partie.
 - À l’envers sur une noire ou une blanche, le delay monte vers chaque temps.
-  Une tranche inversée part du début du morceau, donc elle reste sur le temps.
-  Une tranche de plus de 1,5 seconde (une mesure à 120) est jouée par moitiés.
+  Une tranche inversée part sur le temps du morceau, peu importe où la lecture
+  commence. Une tranche de plus de 3 secondes (une mesure sous 80) est jouée
+  par moitiés.
 - Trois têtes régulières dans une noire font un triolet; quatre têtes sur une
   blanche répètent chaque croche.
 - Sur un envoi, le delay est toujours 100 % traité, et le curseur d’envoi de

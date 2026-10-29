@@ -118,6 +118,10 @@ class ParamSet {
     void jumpAll() {
         for (int32_t i = 0; i < count; ++i) smooth[i].jump(defs[i].map(norm[i]));
     }
+    /** One block's step of parameter [index]'s smoother alone. */
+    void tickOne(int32_t index) {
+        if (index >= 0 && index < count) smooth[index].next();
+    }
     // Once per block, before reading.
     void tick() {
         for (int32_t i = 0; i < count; ++i) smooth[i].next();

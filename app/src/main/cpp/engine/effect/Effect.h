@@ -116,6 +116,8 @@ class Effect {
         modTransport_ = transport;
     }
     bool modActive() const { return mod_.active(); }
+    /** Before block(): the song's position, for an effect that lines up with the bar. */
+    void setTransport(const ModTransport &transport) { modTransport_ = transport; }
 
     /**
      * The rack this effect's detector listens to, e.g. a compressor on the
@@ -201,6 +203,13 @@ class Effect {
      */
     bool runModulated(float *L, float *R, int32_t frames, bool stereoIn) {
         mod_.apply(L, R, frames, stereoIn, params_);
+        // After a preroll the knobs hold last block's value, so this block glides from it as in the song.
+        const bool pre = mod_.prerolled();
+        float before[2] = {0.0f, 0.0f};
+        for (int32_t j = 0; j < 2 && pre; ++j) {
+            const int32_t t = mod_.target(j);
+            if (t >= 0 && t < params_.size()) before[j] = params_.get(t);
+        }
         params_.tick();
         int32_t idx[2];
         float from[2], to[2];
@@ -209,9 +218,10 @@ class Effect {
             const int32_t t = mod_.target(j);
             const bool valid = t >= 0 && t < params_.size() && !params_.isStepped(t) && (j == 0 || t != mod_.target(0));
             const float now = valid ? params_.get(t) : 0.0f;
-            if (valid && glides(t) && !modFresh_ && !mod_.snapped() && glideIndex_[j] == t && glideWas_[j] != now) {
+            const float was = pre ? before[j] : glideWas_[j];
+            if (valid && glides(t) && (pre || (!modFresh_ && glideIndex_[j] == t)) && !mod_.snapped() && was != now) {
                 idx[n] = t;
-                from[n] = glideWas_[j];
+                from[n] = was;
                 to[n] = now;
                 ++n;
             }

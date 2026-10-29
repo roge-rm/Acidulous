@@ -64,11 +64,14 @@ void Delay::prepare(int32_t sampleRate) {
     // The line's length is part of how a read rounds (see wrappedReadIndex),
     // so it stays as it was for songs made before the modes.
     for (auto &l : line) l.prepare(static_cast<int32_t>(sr * kMaxDelaySeconds) + 64);
+    // A stretch reads back up to twice its length and its tail.
+    for (auto &l : revLine) l.prepare(static_cast<int32_t>(2.0f * (kMaxDelaySeconds + kReverseFadeSeconds) * sr + kReverseDriftRoom) + 64);
     reset();
 }
 
 void Delay::reset() {
     for (auto &l : line) l.clear();
+    for (auto &l : revLine) l.forget();
     lp[0] = lp[1] = 0.0f;
     duckEnv = 0.0f;
     readSamples = clampf(kDelayBeats[3] * 60.0f / bpm * sr, 1.0f, sr * kMaxDelaySeconds);
@@ -79,9 +82,27 @@ void Delay::reset() {
     wobblePhase = 0.0f;
     revAt = 0.0f;
     revLen = revPrevLen = readSamples;
-    revTail = revPrevTail = 0.0f;
-    // The first stretch starts on the first block, at the time asked for.
+    revTail = 0.0f;
+    revFadeAt = revFadeLen = revFadeD = 0.0f;
+    revFadeNormal = false;
+    revTicks = 0.0;
+    revJumped = false;
     revStart = true;
+    clock = 0.0;
+    synced = false;
+    revWindow = 0;
+}
+
+void Delay::onBlock(int64_t tickStart, int64_t, float b) {
+    bpm = b;
+    // Ticks are whole, so the clock keeps its own fraction. A jump (play, a
+    // stop putting the clock back to 0) starts it from the block's tick.
+    const double start = static_cast<double>(tickStart);
+    if (!synced || clock < start - 1.0 || clock > start + 2.0) {
+        revJumped = synced;
+        clock = start;
+    } else clock = std::clamp(clock, start, start + 0.999999);
+    synced = true;
 }
 
 float Delay::wobbleDrift(float depth) {
@@ -111,18 +132,17 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool wobbling = wobbleDepth > 0.0f;
 
     if (snapRead) { readSamples = target; snapRead = false; }
-    // Each time the mode comes round to reverse, the first stretch starts on
-    // that block, with no fade from an older one.
+    // Each time the mode comes round to reverse, it starts part way into the
+    // stretch the song is in, fading from the echo the other mode played.
     if (mode != Reverse) revStart = true;
-    else if (revStart) {
-        revLen = revTail = revPrevTail = 0.0f;
-        revStart = false;
-    }
+    const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(sr));
     if (mode == MultiTap || mode == Reverse) {
         fb_ = fb; mix_ = mix; duck_ = duck; wobbleDepth_ = wobbleDepth;
         duckAtk_ = duckAtk; duckRel_ = duckRel; glide_ = glide;
         if (mode == MultiTap) runMultiTap(L, R, frames, stereoIn, target, toneCoeff);
-        else runReverse(L, R, frames, stereoIn, target, toneCoeff);
+        else runReverse(L, R, frames, stereoIn, target, toneCoeff, timeIdx, ticksPerFrame);
+        clock += frames * ticksPerFrame;
+        revJumped = false;
         return true;
     }
     // Normal and ping-pong: this loop is the delay as it always was, so
@@ -141,19 +161,20 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
         const float tapL = line[0].read(rd), tapR = line[1].read(rd);
         lp[0] += (tapL - lp[0]) * toneCoeff;
         lp[1] += (tapR - lp[1]) * toneCoeff;
-        if (pingPong) {
-            line[0].write(inL * 0.5f + inR * 0.5f + lp[1] * fb);
-            line[1].write(lp[0] * fb);
-        } else {
-            line[0].write(inL + lp[0] * fb);
-            line[1].write(inR + lp[1] * fb);
-        }
+        const float w0 = pingPong ? inL * 0.5f + inR * 0.5f + lp[1] * fb : inL + lp[0] * fb;
+        const float w1 = pingPong ? lp[0] * fb : inR + lp[1] * fb;
+        line[0].write(w0);
+        line[1].write(w1);
+        revLine[0].write(w0);
+        revLine[1].write(w1);
         // Duck: echoes stay under the dry signal and swell up in the gaps.
         const float env = peakEnvelope(duckEnv, (std::fabs(inL) + std::fabs(inR)) * 1.5f, duckAtk, duckRel);
         const float wet = mix * (1.0f - duck * clampf(env, 0.0f, 1.0f));
         L[i] = inL + tapL * wet;
         R[i] = inR + tapR * wet;
     }
+    clock += frames * ticksPerFrame;
+    revJumped = false;
     return true;
 }
 
@@ -193,65 +214,119 @@ void Delay::runMultiTap(float *L, float *R, int32_t frames, bool stereoIn, float
         // The right line keeps time too, so switching back to a two-line
         // mode doesn't play something old.
         line[1].write(feed);
+        revLine[0].write(feed);
+        revLine[1].write(feed);
         const float wet = duckedMix(inL, inR);
         L[i] = inL + outL * wet;
         R[i] = inR + outR * wet;
     }
 }
 
-void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff) {
+void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff, int timeIdx,
+                       double ticksPerFrame) {
+    // Stretches are counted from the song's start, so they fall on the same
+    // beats whether the song plays through or starts part way.
+    const double len = stretchTicks(timeIdx);
+    const double song = clock + static_cast<double>(modTransport_.songOffset);
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         readSamples += (target - readSamples) * glide_;
         const float drift = wobbleDrift(wobbleDepth_);
-        // Stretches start every `time`, so they stay on the beat they started
-        // on. Each plays a short tail on past its end, which the next fades
-        // in over.
-        if (revAt >= revLen) startStretch();
+        // Each stretch plays a short tail on past its end, which the next
+        // fades in over.
+        const double at = song + static_cast<double>(i) * ticksPerFrame;
+        const auto window = static_cast<int64_t>(std::floor(at / len));
+        // A stretch starts over on its line, and also part way in after a
+        // jump (a loop, a move) or a new length.
+        if (revStart || (revJumped && i == 0) || window != revWindow || len != revTicks) {
+            const auto into = static_cast<float>((at - static_cast<double>(window) * len) / ticksPerFrame);
+            startStretch(len, ticksPerFrame, into);
+            if (revStart) {
+                // Fade from the other mode's tap over this stretch's tail.
+                revFadeNormal = true;
+                revFadeD = readSamples;
+                revFadeAt = 0.0f;
+                revFadeLen = revTail;
+            }
+            revStart = false;
+            revWindow = window;
+        } else if (revAt >= stretchLimit()) {
+            // The clock stood still: carry on a stretch at a time.
+            startStretch(len, ticksPerFrame, 0.0f);
+        }
         // At t frames into a stretch, reading 2t back plays the stretch
         // before it from its end to its start.
         float tapL, tapR;
         {
             const float d = 2.0f * revAt + 1.0f + drift;
-            tapL = line[0].read(d);
-            tapR = line[1].read(d);
+            tapL = revLine[0].read(d);
+            tapR = revLine[1].read(d);
         }
         // The fade is equal gain, not equal power. The samples it fades in
         // here are read again in the next stretch's tail and faded out there,
         // so their two gains must add up to 1 or the stretch ends build up in
-        // the feedback.
-        if (revAt < revPrevTail) {
-            const float in = revAt / revPrevTail, out = 1.0f - in;
-            const float d = 2.0f * (revAt + revPrevLen) + 1.0f + drift;
-            tapL = tapL * in + line[0].read(d) * out;
-            tapR = tapR * in + line[1].read(d) * out;
+        // the feedback. The stretch fading out is read on from where it was.
+        if (revFadeAt < revFadeLen) {
+            const float in = revFadeAt / revFadeLen, out = 1.0f - in;
+            const float d = (revFadeNormal ? revFadeD : 2.0f * (revAt + revPrevLen) + 1.0f) + drift;
+            tapL = tapL * in + revLine[0].read(d) * out;
+            tapR = tapR * in + revLine[1].read(d) * out;
         }
+        revFadeAt += 1.0f;
         revAt += 1.0f;
         lp[0] += (tapL - lp[0]) * toneCoeff;
         lp[1] += (tapR - lp[1]) * toneCoeff;
-        line[0].write(inL + lp[0] * fb_);
-        line[1].write(inR + lp[1] * fb_);
+        const float w0 = inL + lp[0] * fb_, w1 = inR + lp[1] * fb_;
+        line[0].write(w0);
+        line[1].write(w1);
+        revLine[0].write(w0);
+        revLine[1].write(w1);
         const float wet = duckedMix(inL, inR);
         L[i] = inL + tapL * wet;
         R[i] = inR + tapR * wet;
     }
 }
 
-void Delay::startStretch() {
-    revPrevLen = revLen;
-    revPrevTail = revTail;
-    // A stretch reads up to twice its length back, so one longer than half
-    // the line is halved until it fits: a bar at a slow tempo plays back in
-    // halves or quarters, still on the beat.
-    const float room = static_cast<float>(line[0].capacity()) - kReverseDriftRoom;
-    float len = readSamples, tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
-    while (2.0f * (len + tail) > room) {
+double Delay::stretchTicks(int timeIdx) const {
+    // A note value longer than the line holds twice (a bar below 80 bpm) is
+    // halved until it fits, so it plays back in halves or quarters, still on
+    // the beat.
+    const float room = static_cast<float>(revLine[0].capacity()) - kReverseDriftRoom;
+    double ticks = static_cast<double>(kDelayBeats[timeIdx]) * kPPQN;
+    float len = kDelayBeats[timeIdx] * 60.0f / bpm * sr, tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
+    while (2.0f * (len + tail) > room && ticks > 1.0) {
         len *= 0.5f;
+        ticks *= 0.5;
         tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
     }
-    revLen = len;
-    revTail = tail;
-    revAt = 0.0f;
+    return ticks;
+}
+
+void Delay::startStretch(double ticks, double ticksPerFrame, float into) {
+    // The stretch ending is read on from where it is now, so its length is
+    // taken as where it was at the start of this one, [into] frames ago.
+    revPrevLen = revAt - into;
+    const float prevTail = revTail;
+    revLen = static_cast<float>(ticks / ticksPerFrame);
+    revTail = std::min(kReverseFadeSeconds * sr, 0.25f * revLen);
+    revAt = into;
+    revTicks = ticks;
+    revFadeNormal = false;
+    // On the line the old stretch's tail fades out from the new one's start.
+    // Part way in, the fade starts now and takes the new stretch's tail.
+    if (into < 1.0f) {
+        revFadeAt = into;
+        revFadeLen = prevTail;
+    } else {
+        revFadeAt = 0.0f;
+        revFadeLen = revTail;
+    }
+}
+
+float Delay::stretchLimit() const {
+    // A read goes back twice this plus a fade's tail, and wobble's drift.
+    const float room = static_cast<float>(revLine[0].capacity()) - kReverseDriftRoom;
+    return std::min(2.0f * revLen, 0.5f * room - kReverseFadeSeconds * sr - 2.0f);
 }
 
 // --- Eq ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <engine/core/Settings.h>
@@ -840,20 +841,103 @@ void delayModes() {
         ok("reverse: a whole stretch later it's gone (feedback 0)", peakIn(out.l, 2 * kQuarter + 600, 3 * kQuarter) < 1e-3,
            num(peakIn(out.l, 2 * kQuarter + 600, 3 * kQuarter)));
     }
-    {
-        // A bar at 120 is longer than the line holds twice, so it plays back in halves.
-        constexpr size_t kHalf = 2 * kQuarter;
-        std::vector<float> ramp(3 * kHalf, 0.0f);
-        for (size_t i = 0; i < kHalf; ++i) ramp[i] = 0.5f * static_cast<float>(i) / kHalf;
+    // A stretch up to the longest the line holds, 3 s, plays back whole:
+    // a bar at 120 and at 80. A bar at 60 is 4 s and plays in halves.
+    for (const auto &[bpm, beats, label] : {std::tuple{120.0f, 4.0, "a bar at 120 plays back whole"},
+                                            std::tuple{80.0f, 4.0, "a bar at 80 (3 s) plays back whole"},
+                                            std::tuple{60.0f, 2.0, "a bar at 60 plays back in halves"}}) {
+        const auto len = static_cast<size_t>(beats * 60.0 / bpm * kRate + 0.5);
+        std::vector<float> ramp(3 * len, 0.0f);
+        for (size_t i = 0; i < len; ++i) ramp[i] = 0.5f * static_cast<float>(i) / len;
         auto fx = make("Delay", {{"mode", 3.0f}, {"time", 7.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
-        const auto out = run(*fx, ramp);
+        const auto out = run(*fx, ramp, bpm);
         double sxy = 0.0, sxx = 0.0, syy = 0.0;
-        for (size_t t = 600; t < kHalf - 600; ++t) {
-            const double want = ramp[kHalf - 1 - t], got = out.l[kHalf + t];
+        for (size_t t = 600; t < len - 600; ++t) {
+            const double want = ramp[len - 1 - t], got = out.l[len + t];
             sxy += want * got; sxx += want * want; syy += got * got;
         }
-        ok("reverse: a bar too long for the line plays back in halves", sxy / std::sqrt(sxx * syy + 1e-30) > 0.999,
-           "correlation " + num(sxy / std::sqrt(sxx * syy + 1e-30)));
+        const double corr = sxy / std::sqrt(sxx * syy + 1e-30);
+        ok(std::string("reverse: ") + label, corr > 0.999, "correlation " + num(corr));
+    }
+    {
+        // Stretches fall on the song's bars, played from the start or from
+        // part way into a bar. Under a rising ramp each stretch's echo falls, and
+        // the fade into the next rises, so the lowest point is the bar line.
+        constexpr size_t kBar = 4 * kQuarter;
+        constexpr size_t kFrom = 124800; // 1.3 bars, on a whole tick
+        std::vector<float> ramp(6 * kBar);
+        for (size_t i = 0; i < ramp.size(); ++i) ramp[i] = 0.9f * static_cast<float>(i) / ramp.size();
+        // The echo alone: the output less the ramp, [from] frames into it.
+        auto lowest = [&](const std::vector<float> &x, size_t from, size_t to, size_t offset) {
+            size_t at = from;
+            for (size_t k = from; k < to; ++k)
+                if (x[k] - ramp[k + offset] < x[at] - ramp[at + offset]) at = k;
+            return at;
+        };
+        auto fx = make("Delay", {{"mode", 3.0f}, {"time", 7.0f}, {"feedback", 0.0f}, {"mix", 1.0f}});
+        const auto whole = run(*fx, ramp);
+        fx->reset();
+        const auto late = run(*fx, std::vector<float>(ramp.begin() + kFrom, ramp.end()), 120.0f, kFrom);
+        // As the engine starts part way: the clock from 0, the song's position as an offset.
+        fx->reset();
+        ModTransport moved;
+        moved.songOffset = static_cast<int64_t>(kFrom * kTicksPerBeat * 2 / static_cast<size_t>(kRate));
+        fx->setTransport(moved);
+        const auto offset = run(*fx, std::vector<float>(ramp.begin() + kFrom, ramp.end()));
+        std::string where;
+        bool onBars = true;
+        for (size_t bar = 4; bar <= 5; ++bar) {
+            const size_t a = lowest(whole.l, bar * kBar - kBar / 4, bar * kBar + kBar / 4, 0);
+            const size_t b = lowest(late.l, bar * kBar - kBar / 4 - kFrom, bar * kBar + kBar / 4 - kFrom, kFrom) + kFrom;
+            const size_t c = lowest(offset.l, bar * kBar - kBar / 4 - kFrom, bar * kBar + kBar / 4 - kFrom, kFrom) + kFrom;
+            const size_t found[3] = {a, b, c};
+            for (int k = 0; k < 3; ++k) {
+                onBars = onBars && found[k] + 2 >= bar * kBar && found[k] <= bar * kBar + 2;
+                where += (k == 0 ? " " : "/") + std::to_string(static_cast<long long>(found[k]) - static_cast<long long>(bar * kBar));
+            }
+        }
+        ok("reverse: stretches start on the bar, from the start or part way in", onBars, "off by" + where);
+    }
+    {
+        // A stretch that starts over part way in fades from where the old one
+        // was: a 3-beat song loop over 4-beat stretches (beats 2 to 5, so the
+        // jump back lands 2 beats into a stretch), and the time turned from a
+        // bar to a dotted quarter part way into one.
+        auto in = tone(331.7f, 0.4f, 336000);
+        // Faded in, so the tone's own start played backwards isn't a cut.
+        for (size_t i = 0; i < 4800; ++i) in[i] *= static_cast<float>(i) / 4800.0f;
+        // The worst second difference of the echo, as a share of its peak. A
+        // 330 Hz tone's is about 0.002; a hard cut is far over that.
+        auto rough = [&](const Stereo &s) {
+            double m = 0.0, p = 0.0;
+            for (size_t i = 2; i < in.size(); ++i) {
+                const double w0 = s.l[i] - in[i], w1 = s.l[i - 1] - in[i - 1], w2 = s.l[i - 2] - in[i - 2];
+                m = std::max(m, std::fabs(w0 - 2.0 * w1 + w2));
+                p = std::max(p, std::fabs(w0));
+            }
+            return p > 0.0 ? m / p : 1.0;
+        };
+        auto fx = make("Delay", {{"mode", 3.0f}, {"time", 7.0f}, {"feedback", 0.0f}, {"mix", 1.0f}, {"wobble", 0.0f}});
+        Stereo looped{in, in};
+        const double ticksPerFrame = kTicksPerBeat * 120.0 / 60.0 / kRate;
+        size_t song = 0;
+        for (size_t at = 0; at < in.size(); at += kBlock) {
+            if (song == 5 * kQuarter) song = 2 * kQuarter;
+            fx->onBlock(static_cast<int64_t>(song * ticksPerFrame), static_cast<int64_t>((song + kBlock) * ticksPerFrame), 120.0f);
+            fx->run(looped.l.data() + at, looped.r.data() + at, kBlock, false);
+            song += kBlock;
+        }
+        const double loop = rough(looped);
+        ok("reverse: a song loop off the stretch line doesn't click", loop < 0.02, num(loop) + " of the peak");
+        auto turned = make("Delay", {{"mode", 3.0f}, {"time", 7.0f}, {"feedback", 0.0f}, {"mix", 1.0f}, {"wobble", 0.0f}});
+        Stereo t{in, in};
+        for (size_t at = 0; at < in.size(); at += kBlock) {
+            if (at == 222016) set(*turned, "time", 5.0f);
+            turned->onBlock(static_cast<int64_t>(at * ticksPerFrame), static_cast<int64_t>((at + kBlock) * ticksPerFrame), 120.0f);
+            turned->run(t.l.data() + at, t.r.data() + at, kBlock, false);
+        }
+        const double time = rough(t);
+        ok("reverse: turning the time part way into a stretch doesn't click", time < 0.02, num(time) + " of the peak");
     }
     {
         // Feedback plays the reversed echo forwards again.

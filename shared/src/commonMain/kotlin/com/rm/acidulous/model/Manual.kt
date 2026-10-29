@@ -1426,7 +1426,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Bring **tone** down to a few kHz so long feedback fades into the background instead of piling up."),
         ManualBlock(ManualKind.Bullet, "Use **duck** instead of lowering the mix to stop the delay swamping a part."),
-        ManualBlock(ManualKind.Bullet, "Reverse on a quarter or a half note swells into each beat. A reverse stretch starts when the song starts, so it stays on the beat. One longer than 1.5 seconds (a bar at 120) plays back in halves."),
+        ManualBlock(ManualKind.Bullet, "Reverse on a quarter or a half note swells into each beat. A reverse stretch starts on the song's beat, so it's the same wherever play starts. One longer than 3 seconds (a bar below 80) plays back in halves."),
         ManualBlock(ManualKind.Bullet, "Three even taps in a quarter is a triplet; four taps over a half note repeats every eighth.", "Three even clicks in a quarter is a triplet; four clicks over a half note repeats every eighth."),
         ManualBlock(ManualKind.Bullet, "On a send the delay is always fully wet, and each track's send slider sets how much goes to it."),
     ))
@@ -3677,7 +3677,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Descendez **ton** à quelques kHz pour qu’une longue réinjection se fonde dans le fond au lieu de s’empiler."),
         ManualBlock(ManualKind.Bullet, "Utilisez **atténuer** au lieu de baisser le mélange pour que le delay n’écrase pas une partie."),
-        ManualBlock(ManualKind.Bullet, "À l’envers sur une noire ou une blanche, le delay monte vers chaque temps. Une tranche inversée part du début du morceau, donc elle reste sur le temps. Une tranche de plus de 1,5 seconde (une mesure à 120) est jouée par moitiés."),
+        ManualBlock(ManualKind.Bullet, "À l’envers sur une noire ou une blanche, le delay monte vers chaque temps. Une tranche inversée part sur le temps du morceau, peu importe où la lecture commence. Une tranche de plus de 3 secondes (une mesure sous 80) est jouée par moitiés."),
         ManualBlock(ManualKind.Bullet, "Trois têtes régulières dans une noire font un triolet; quatre têtes sur une blanche répètent chaque croche."),
         ManualBlock(ManualKind.Bullet, "Sur un envoi, le delay est toujours 100 % traité, et le curseur d’envoi de chaque piste règle combien lui arrive."),
     ))

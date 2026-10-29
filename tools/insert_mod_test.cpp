@@ -323,16 +323,18 @@ void theMasterHasOne() {
 }
 
 /**
- * The mod follows the song's position: scene 2 played on its own (or frozen,
- * which starts the same way) moves as it does when the song plays through
- * scene 1 into it. The pad is silent in scene 1, so only the mod has run.
+ * The mod follows the song's position: scene 2 played on its own, or frozen,
+ * moves as it does when the song plays through scene 1 into it, from the
+ * first block. The pad is silent in scene 1, so only the mod has run. The
+ * frozen start resets the rack by hand as EngineHost::freezeClip does.
  */
 void aSceneStartsWhereTheSongHasIt() {
     printf("- a scene played on its own moves as it does in the song\n");
     struct Run { std::vector<float> audio, cutoff; };
-    const auto render = [](int32_t shape, int32_t rate, int32_t fromScene, int32_t blocks) {
+    const auto render = [](int32_t source, int32_t shape, int32_t rate, int32_t fromScene, int32_t blocks,
+                           bool frozen = false) {
         Mod m;
-        m.source = slotmod::Lfo;
+        m.source = source;
         m.shape = shape;
         m.rate = rate;
         Fixture f(m);
@@ -355,9 +357,27 @@ void aSceneStartsWhereTheSongHasIt() {
         snap->setClip(kKick, 0, kick);
         f.engine.scheduler.swapSnapshot(snap.get());
         f.snap = snap;
-        f.engine.panicFlag.store(true, std::memory_order_release);
         float scratch[kBlockFrames * 2];
-        f.engine.renderBlock(nullptr, scratch);
+        if (frozen) {
+            f.engine.transport.setLoopScene(true);
+            f.engine.transport.requestStop();
+            f.engine.renderBlock(nullptr, scratch);
+            Rack &r = f.engine.racks[kPad];
+            r.allNotesOff();
+            r.clipPlayer.reset();
+            r.currentMachine()->reset();
+            r.currentMachine()->params().jumpAll();
+            for (int32_t sl = 0; sl < kEffectSlots; ++sl) {
+                if (Effect *e = r.currentEffect(sl)) {
+                    e->reset();
+                    e->params().jumpAll();
+                    e->resetMod();
+                }
+            }
+        } else {
+            f.engine.panicFlag.store(true, std::memory_order_release);
+            f.engine.renderBlock(nullptr, scratch);
+        }
         f.engine.transport.requestPlay(fromScene);
         // The pad's own sound after its inserts, so the kick's drift doesn't count.
         Run r;
@@ -370,25 +390,28 @@ void aSceneStartsWhereTheSongHasIt() {
     };
     // Three bars at 120 is 6 s = 4500 blocks (2880 ticks at 0.64 a block).
     const int32_t firstBlocks = 4500, secondBlocks = 1400;
-    struct Case { const char *name; int32_t shape, rate; };
-    const Case cases[] = {{"two-bar sine", slotmod::Sine, 14}, {"random hold on the beat", slotmod::RandomHold, 8},
-                          {"drift on the beat", slotmod::RandomSmooth, 8}};
+    struct Case { const char *name; int32_t source, shape, rate; bool frozen; };
+    const Case cases[] = {{"two-bar sine", slotmod::Lfo, slotmod::Sine, 14, false},
+                          {"random hold on the beat", slotmod::Lfo, slotmod::RandomHold, 8, false},
+                          {"drift on the beat", slotmod::Lfo, slotmod::RandomSmooth, 8, false},
+                          {"steps on the beat", slotmod::Steps, 0, 8, false},
+                          {"random hold on the beat, frozen", slotmod::Lfo, slotmod::RandomHold, 8, true},
+                          {"steps on the beat, frozen", slotmod::Steps, 0, 8, true}};
     for (const Case &c : cases) {
-        const Run song = render(c.shape, c.rate, 0, firstBlocks + secondBlocks);
-        const Run alone = render(c.shape, c.rate, 1, secondBlocks);
-        // The cutoff once the smoother has caught up, and the audio from there.
-        // Alone, play jumps the knob to the hold's value; in the song the hold
-        // steps there like any other step, through the smoother, which takes
-        // some 40 blocks to land within a hair.
-        const size_t settle = 40;
+        const Run song = render(c.source, c.shape, c.rate, 0, firstBlocks + secondBlocks);
+        const Run alone = render(c.source, c.shape, c.rate, 1, secondBlocks, c.frozen);
+        // From the first block: play runs the knob's smoother through the
+        // blocks before the scene, so it lands where the song has it. The
+        // steps land on the same step at the song's top, so only the lfos
+        // are checked against it.
         float worst = 0.0f, fromTop = 0.0f;
-        for (size_t b = settle; b < alone.cutoff.size(); ++b) {
+        for (size_t b = 0; b < alone.cutoff.size(); ++b) {
             worst = std::fmax(worst, std::fabs(std::log2(alone.cutoff[b] / song.cutoff[firstBlocks + b])));
             fromTop = std::fmax(fromTop, std::fabs(std::log2(alone.cutoff[b] / song.cutoff[b])));
         }
         double err = 0.0, sig = 0.0;
-        const size_t from = settle * kBlockFrames, base = static_cast<size_t>(firstBlocks) * kBlockFrames;
-        for (size_t i = from; i < alone.audio.size(); ++i) {
+        const size_t base = static_cast<size_t>(firstBlocks) * kBlockFrames;
+        for (size_t i = 0; i < alone.audio.size(); ++i) {
             const double d = alone.audio[i] - song.audio[base + i];
             err += d * d;
             sig += static_cast<double>(alone.audio[i]) * alone.audio[i];
@@ -396,8 +419,8 @@ void aSceneStartsWhereTheSongHasIt() {
         const double db = 10.0 * std::log10((err + 1e-30) / (sig + 1e-30));
         char d[128];
         std::snprintf(d, sizeof d, "cutoff within %.4f oct (%.2f oct from the top), audio %.1f dB", worst, fromTop, db);
-        ok((std::string(c.name) + ": the cutoff follows the song").c_str(), worst < 0.02f && fromTop > 0.2f, d);
-        ok((std::string(c.name) + ": and so does the sound").c_str(), db < -60.0, d);
+        ok((std::string(c.name) + ": the cutoff follows the song").c_str(), worst < 1e-4f && (c.source == slotmod::Steps || fromTop > 0.2f), d);
+        ok((std::string(c.name) + ": and so does the sound").c_str(), db < -120.0, d);
     }
 }
 
