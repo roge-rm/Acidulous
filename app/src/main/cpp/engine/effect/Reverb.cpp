@@ -203,6 +203,78 @@ float tapDelayFor(double d, double w) {
     return static_cast<float>(ask);
 }
 
+// --- drumhead ---
+
+/** The head's lowest mode at size 0.5 and tension 0.5; size moves it two octaves, tension three. */
+constexpr float kDrumHz = 160.0f;
+/** The mesh's lowest mode is its rate over this many times its junctions a side plus one. */
+constexpr float kMeshTune = 2.0f;
+/** Wobble at the top swings the mesh's rate by this much. */
+constexpr float kMeshWobble = 0.008f;
+constexpr float kMeshModRate = 0.41f;
+// Where the input lands, where the two pickups sit and where the snares touch, across the head.
+constexpr float kStrike[2][2] = {{0.35f, 0.3f}, {0.4f, 0.68f}};
+constexpr float kPickup[2][2] = {{0.3f, 0.62f}, {0.66f, 0.36f}};
+constexpr float kContact[3] = {0.25f, 0.5f, 0.75f};
+constexpr float kDrumIn = 0.5f, kDrumOut = 1.03f, kDrumInject = 0.5f, kMeshLeanScale = 0.885f;
+/** The links' low-pass at damp 1. */
+constexpr float kMeshDamp = 0.012f;
+/** How far the head must move before it reaches the wires, at snares 0 and 1. */
+constexpr float kSnareGap0 = 0.08f, kSnareGap1 = 0.03f;
+/** The buzz: how loud for how far past, its band and how fast it follows. */
+constexpr float kSnareGain = 3.0f, kSnareHpHz = 1800.0f, kSnareLpHz = 7500.0f, kSnareAtkS = 0.0003f, kSnareRelS = 0.012f;
+
+// --- thunder sheet ---
+
+/** The sheet's lowest mode at size 0.5, and how far up its highest sits. */
+constexpr float kThunderHz = 55.0f, kThunderSpan = 160.0f;
+/** The bands' tops, as multiples of the lowest mode: the hum, the body, the crash and the sizzle. */
+constexpr float kThBandTop[3] = {8.0f, 24.0f, 64.0f};
+/** The strike reaches modes under about this with little loss. */
+constexpr float kThunderStrikeHz = 250.0f;
+/** How fast a band's energy spills into the next, and the most a band takes in. */
+constexpr float kSpill = 16.0f, kSpillMax = 0.5f, kSpillFloor = 1e-9f;
+/** How much faster a loud band loses its energy, and the most it loses a sample, at 48 kHz. */
+constexpr float kDrain = 0.002f, kDrainMax = 0.0005f;
+/** No mode rings past this, so nothing runs away, and one under the floor stops: 240 dB down. */
+constexpr float kModeMax = 1.0f, kModeFloor = 1e-12f;
+constexpr float kThunderIn = 1.0f, kThunderOut = 0.075f, kThunderInject = 0.5f;
+/** Lean's half the modes, each side's sum made up to the full one's level. */
+constexpr float kThunderLeanOut = 1.19f;
+
+// --- howl ---
+
+/** The room's three lengths against the shortest, and the shortest at size 0.5, in metres. */
+constexpr float kHowlProp[3] = {1.59f, 1.26f, 1.0f};
+constexpr float kHowlMetres = 2.0f;
+/**
+ * At this howl the loop gain at the peak is 1, so it sustains; past it the modes near the peak grow by up to
+ * kHowlGrow dB a second. The loop gain for the lows stays under kHowlLowsMost.
+ */
+constexpr float kHowlEdge = 0.75f, kHowlGrow = 30.0f, kHowlLowsMost = 0.98f;
+/** The howl's wet is soft-limited here, and lower with distance, whose gain and wider sides
+ *  would take it over full scale. */
+constexpr float kHowlOutCeil = 0.45f, kHowlOutMost = 0.9f;
+/** The speaker's peak at size 0.5, moving with the room so the same modes sing, and the limiter's level. */
+constexpr float kHowlPeakHz = 650.0f, kHowlQ = 1.2f, kHowlCeil = 0.3f;
+constexpr float kHowlModRate[3] = {0.19f, 0.29f, 0.43f};
+constexpr float kHowlIn = 0.3f, kHowlOut = 0.53f, kHowlInject = 0.5f;
+
+// --- flutter ---
+
+/** The far wall's distance a side, against the near one's: the walls aren't quite parallel. */
+constexpr float kFlutterSkew = 1.012f;
+/** Where the second wall's echoes fall in the round trip, a side. */
+constexpr float kFlutterTap[2] = {0.37f, 0.63f};
+constexpr float kFlutterModRate[2] = {0.31f, 0.47f};
+constexpr float kFlutterIn = 0.4f, kFlutterOut = 0.47f, kFlutterInject = 0.5f;
+
+/** A small noise source, the same every render. */
+inline float whiteNoise(uint32_t &state) {
+    state = state * 1664525u + 1013904223u;
+    return static_cast<float>(static_cast<int32_t>(state)) * (1.0f / 2147483648.0f);
+}
+
 // --- shared ---
 
 /** Modulation at default, and what wobble adds at the top, in seconds. */
@@ -281,8 +353,8 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         {"crush", 1.0f, 32.0f, 1.0f, Curve::Exponential, 0, ""},
         {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
-        // room, plate, hall, spring, early, space, tube, string
-        {"model", 0.0f, 7.0f, 0.0f, Curve::Stepped, kModels, ""},
+        // room, plate, hall, spring, early, space, tube, string, drumhead, thunder, howl, flutter
+        {"model", 0.0f, 11.0f, 0.0f, Curve::Stepped, kModels, ""},
         {"duck", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"duckrel", 50.0f, 2000.0f, 300.0f, Curve::Exponential, 0, "ms"},
         {"distance", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
@@ -307,6 +379,15 @@ const ParamDef *Reverb::paramDefs(int32_t &count) const {
         // string
         {"stiff", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
         {"pick", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
+        // drumhead
+        {"tension", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"snares", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // thunder
+        {"metal", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        // howl
+        {"howl", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
+        // flutter: how far apart the walls are
+        {"walls", 0.25f, 20.0f, 2.0f, Curve::Exponential, 0, "m"},
     };
     count = Count;
     return defs;
@@ -422,6 +503,33 @@ void Reverb::prepare(int32_t sampleRate) {
     }
     wgHpCoeff = std::exp(-dsp::kTwoPi * kWaveHpHz / sr);
     wgWas[0] = -1.0f;
+    // Drumhead.
+    msRot[0] = std::cos(dsp::kTwoPi * kMeshModRate / sr);
+    msRot[1] = std::sin(dsp::kTwoPi * kMeshModRate / sr);
+    snHpCoeff = std::exp(-dsp::kTwoPi * kSnareHpHz / sr);
+    snLpCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * std::min(kSnareLpHz, 0.4f * sr)), sr);
+    msWas[0] = -1.0f;
+    // Thunder sheet.
+    thEnergyCoeff = dsp::onePoleCoeff(0.06f, sr);
+    thWas[0] = -1.0f;
+    // Howl: the longest line at the largest size and the most wobble.
+    const float hwMost = 2.0f * kHowlMetres * 2.0f * kHowlProp[0] / kSoundSpeed * sr * (1.0f + 2.0f * kWaveWobble);
+    for (int i = 0; i < kHowlLines; ++i) {
+        hwLine[i].prepare(static_cast<int32_t>(hwMost) + 8);
+        hwRot[i][0] = std::cos(dsp::kTwoPi * kHowlModRate[i] / sr);
+        hwRot[i][1] = std::sin(dsp::kTwoPi * kHowlModRate[i] / sr);
+    }
+    hwEnvAtk = dsp::onePoleCoeff(0.002f, sr);
+    hwEnvRel = dsp::onePoleCoeff(0.2f, sr);
+    hwWas[0] = -1.0f;
+    // Flutter: the walls at their furthest, the far one, and the most wobble.
+    const float flMost = 2.0f * 20.0f / kSoundSpeed * sr * kFlutterSkew * (1.0f + 2.0f * kWaveWobble);
+    for (int c = 0; c < kFlutterLines; ++c) {
+        flLine[c].prepare(static_cast<int32_t>(flMost) + 8);
+        flRot[c][0] = std::cos(dsp::kTwoPi * kFlutterModRate[c] / sr);
+        flRot[c][1] = std::sin(dsp::kTwoPi * kFlutterModRate[c] / sr);
+    }
+    flWas[0] = -1.0f;
     plSizeWas = haSizeWas = spSizeWas = eaSizeWas = -1.0f;
     eaRateWas = -1.0f;
     spcGeomWas[0] = -1.0f;
@@ -518,6 +626,46 @@ void Reverb::clearWave() {
     }
 }
 
+void Reverb::clearDrum() {
+    for (auto &buf : msIn) for (auto &port : buf) for (float &v : port) v = 0.0f;
+    for (auto &edge : msEdge) for (float &v : edge) v = 0.0f;
+    msCur = 0;
+    msAcc = 0.0f;
+    msInCount = 0;
+    for (int c = 0; c < 2; ++c) msInSum[c] = msPrev[c] = msNow[c] = 0.0f;
+    msOsc[0] = 1.0f;
+    msOsc[1] = 0.0f;
+    snPast = snEnv = snHpX = snHpY = snLp = 0.0f;
+    snNoise = 0x6b43a9b5u;
+}
+
+void Reverb::clearThunder() {
+    for (int k = 0; k < kThModes; ++k) thRe[k] = thIm[k] = 0.0f;
+    for (float &e : thEnergy) e = 0.0f;
+    thNoise = 0x3c6ef372u;
+}
+
+void Reverb::clearHowl() {
+    for (int i = 0; i < kHowlLines; ++i) {
+        hwLine[i].clear();
+        hwLp[i] = hwEnv[i] = 0.0f;
+        hwBp[i][0] = hwBp[i][1] = 0.0f;
+        const float ph = dsp::kTwoPi * static_cast<float>(i) * 0.33f;
+        hwOsc[i][0] = std::cos(ph);
+        hwOsc[i][1] = std::sin(ph);
+    }
+}
+
+void Reverb::clearFlutter() {
+    for (int c = 0; c < kFlutterLines; ++c) {
+        flLine[c].clear();
+        flLp[c] = 0.0f;
+        const float ph = dsp::kTwoPi * static_cast<float>(c) * 0.27f;
+        flOsc[c][0] = std::cos(ph);
+        flOsc[c][1] = std::sin(ph);
+    }
+}
+
 void Reverb::reset() {
     clearRoom();
     clearPlate();
@@ -526,6 +674,10 @@ void Reverb::reset() {
     clearEarly();
     clearSpace();
     clearWave();
+    clearDrum();
+    clearThunder();
+    clearHowl();
+    clearFlutter();
     heardNote = -1;
     heardHz = 440.0f;
     for (auto &p : pre) p.clear();
@@ -576,6 +728,10 @@ struct Reverb::Block {
     float knock, knFastAtk, knFastRel, knSlowAtk, knSlowRel, thumpAtk, thumpDecay, thumpGlide, burstDecay;
     // Tube and string: open's two tap weights, and wobble's swing as a share of the length.
     float wgOdd, wgFull, wgWob;
+    // Drumhead: wobble's swing of the mesh rate, and the snares' gap, level and envelope rates.
+    float msWob, snGap, snLevel, snAtk, snRel;
+    // Howl: how much of the loop goes through the speaker's peak; howl and flutter's wobble.
+    float hwMix, hwWob, flWob;
 };
 
 bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
@@ -593,6 +749,10 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
                 case Spring: clearSpring(); break;
                 case Early: clearEarly(); break;
                 case Space: clearSpace(); break;
+                case Drumhead: clearDrum(); break;
+                case Thunder: clearThunder(); break;
+                case HowlRoom: clearHowl(); break;
+                case Flutter: clearFlutter(); break;
                 default: clearWave(); break;
             }
         }
@@ -714,6 +874,35 @@ bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
             for (auto &o : wgOsc) renormalise(o);
             break;
         }
+        case Drumhead: {
+            updateDrum(size, p.get(Damp), b.freeze, full);
+            b.msWob = wobble * kMeshWobble;
+            const float snares = p.get(Snares);
+            b.snGap = kSnareGap0 + (kSnareGap1 - kSnareGap0) * snares;
+            b.snLevel = snares;
+            b.snAtk = dsp::onePoleCoeff(kSnareAtkS, sr);
+            b.snRel = dsp::onePoleCoeff(kSnareRelS, sr);
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { drumSample(bb, d, o); });
+            renormalise(msOsc);
+            break;
+        }
+        case Thunder:
+            updateThunder(size, p.get(Damp), b.freeze, full);
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { thunderSample(bb, d, o); });
+            break;
+        case HowlRoom:
+            updateHowl(size, p.get(Damp), b.freeze);
+            b.hwMix = b.freeze ? 0.0f : p.get(Howl);
+            b.hwWob = wobble * kWaveWobble;
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { howlSample(bb, d, o); });
+            for (auto &o : hwOsc) renormalise(o);
+            break;
+        case Flutter:
+            updateFlutter(size, p.get(Damp), b.freeze);
+            b.flWob = wobble * kWaveWobble;
+            run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { flutterSample(bb, d, o); });
+            for (auto &o : flOsc) renormalise(o);
+            break;
         case Space:
             updateSpace(p.get(Damp), b.freeze, full, frames);
             run(L, R, frames, stereoIn, b, [this](const Block &bb, const float *d, float *o) { spaceSample(bb, d, o); });
@@ -1588,6 +1777,354 @@ void Reverb::stringSample(const Block &b, const float dry[2], float out[2]) {
     if (lines == 1) y[1] = y[0];
     for (int c = 0; c < 2; ++c) {
         lp[c] += (y[c] * kStringOut * b.diffMul - lp[c]) * b.toneCoeff;
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Drumhead -------------------------------------------------------------------
+
+void Reverb::updateDrum(float size, float damp, bool freeze, bool full) {
+    const float tension = params_.get(Tension);
+    const float key[5] = {size, tension, damp, freeze ? 1.0f : 0.0f, full ? 1.0f : 0.0f};
+    if (std::equal(key, key + 5, msWas)) return;
+    std::copy(key, key + 5, msWas);
+    msN = full ? kMeshFull : kMeshLean;
+    const auto at = [&](const float rc[2]) {
+        const auto i = std::clamp(static_cast<int32_t>(rc[0] * static_cast<float>(msN)), 0, msN - 1);
+        const auto j = std::clamp(static_cast<int32_t>(rc[1] * static_cast<float>(msN)), 0, msN - 1);
+        return i * msN + j;
+    };
+    for (int c = 0; c < 2; ++c) {
+        msStrikeAt[c] = at(kStrike[c]);
+        msPickAt[c] = at(kPickup[c]);
+    }
+    for (int k = 0; k < 3; ++k) {
+        const float rc[2] = {0.5f, kContact[k]};
+        msTouchAt[k] = at(rc);
+    }
+    // The mesh's rate puts its lowest mode on the pitch, but it can't tick faster than the engine.
+    const float per = kMeshTune * static_cast<float>(msN + 1);
+    const float hz = std::min(kDrumHz * std::pow(4.0f, 0.5f - size) * std::pow(2.0f, 3.0f * (tension - 0.5f)),
+                              sr / (per * (1.0f + kMeshWobble)));
+    const float rate = hz * per;
+    msInc = rate / sr;
+    // 0.25 s to 4 s.
+    const float rt = 0.25f * std::pow(16.0f, size);
+    msLoss = freeze ? 1.0f : decayGain(1.0f / rate, rt);
+    msLoop = freeze ? 0.0f : 1.0f - decayGain(1.0f / hz, rt);
+    // Damp: the rim takes the highs.
+    msEdgeCoeff = freeze ? 1.0f : 1.0f - 0.6f * damp * damp;
+    // And every link a little, or the mesh's modes near a quarter of its rate, which barely move, never reach the rim.
+    msLinkDamp = freeze ? 0.0f : kMeshDamp * damp * damp;
+    // The lean mesh's modes are fewer and each louder.
+    msScale = full ? 1.0f : kMeshLeanScale;
+}
+
+void Reverb::drumTick(const Block &b) {
+    const int32_t n = msN;
+    const float inv = msInCount > 0 ? 1.0f / static_cast<float>(msInCount) : 0.0f;
+    const float x[2] = {msInSum[0] * inv, msInSum[1] * inv};
+    msInSum[0] = msInSum[1] = 0.0f;
+    msInCount = 0;
+    const float *inN = msIn[msCur][0], *inE = msIn[msCur][1], *inS = msIn[msCur][2], *inW = msIn[msCur][3];
+    float *toN = msIn[msCur ^ 1][0], *toE = msIn[msCur ^ 1][1], *toS = msIn[msCur ^ 1][2], *toW = msIn[msCur ^ 1][3];
+    const float loss = msLoss, ec = msEdgeCoeff, a = msLinkDamp;
+    const auto edge = [ec](float &e, float o) {
+        e = undenormal(e + (o - e) * ec);
+        return -e;
+    };
+    // Each junction: the waves in, averaged, are its motion; each wave out is that less the wave
+    // that came in on the same side. Out over the rim comes back inverted through the rim's low-pass.
+    for (int32_t i = 0; i < n; ++i) {
+        for (int32_t j = 0; j < n; ++j) {
+            const int32_t idx = i * n + j;
+            float v = 0.5f * (inN[idx] + inE[idx] + inS[idx] + inW[idx]);
+            if (idx == msStrikeAt[0]) v += x[0];
+            if (idx == msStrikeAt[1]) v += x[1];
+            v = undenormal(v);
+            const float oN = loss * (v - inN[idx]), oE = loss * (v - inE[idx]);
+            const float oS = loss * (v - inS[idx]), oW = loss * (v - inW[idx]);
+            // A link's low-pass: what it carries now, eased towards what it carried last tick.
+            if (i == 0) toN[idx] = edge(msEdge[0][j], oN); else toS[idx - n] = oN + a * (inS[idx - n] - oN);
+            if (j == n - 1) toE[idx] = edge(msEdge[1][i], oE); else toW[idx + 1] = oE + a * (inW[idx + 1] - oE);
+            if (i == n - 1) toS[idx] = edge(msEdge[2][j], oS); else toN[idx + n] = oS + a * (inN[idx + n] - oS);
+            if (j == 0) toW[idx] = edge(msEdge[3][i], oW); else toE[idx - 1] = oW + a * (inE[idx - 1] - oW);
+        }
+    }
+    // The pickups and the snares read the junctions as this tick moved them.
+    const auto motion = [&](int32_t idx) {
+        float v = 0.5f * (inN[idx] + inE[idx] + inS[idx] + inW[idx]);
+        if (idx == msStrikeAt[0]) v += x[0];
+        if (idx == msStrikeAt[1]) v += x[1];
+        return v;
+    };
+    for (int c = 0; c < 2; ++c) {
+        msPrev[c] = msNow[c];
+        msNow[c] = motion(msPickAt[c]);
+    }
+    float touch = 0.0f;
+    for (const int32_t idx : msTouchAt) touch = std::max(touch, std::fabs(motion(idx)));
+    snPast = std::max(0.0f, touch - b.snGap);
+    msCur ^= 1;
+}
+
+void Reverb::drumSample(const Block &b, const float dry[2], float out[2]) {
+    const float inGain = b.freeze ? 0.0f : kDrumIn;
+    for (int c = 0; c < 2; ++c) msInSum[c] += dry[c] * inGain + shimmerFb[c] * b.shimmer * msLoop * kDrumInject;
+    ++msInCount;
+    // The mesh ticks at its own rate; the input is averaged over a tick and the output drawn between ticks.
+    float inc = msInc;
+    if (b.msWob > 0.0f) {
+        rotate(msOsc, msRot);
+        inc *= 1.0f + b.msWob * msOsc[1];
+    }
+    msAcc += inc;
+    while (msAcc >= 1.0f) {
+        msAcc -= 1.0f;
+        drumTick(b);
+    }
+    // Snares: noise in the wires' band, as loud as the head went past them, so it buzzes with the head's motion.
+    float buzz = 0.0f;
+    if (b.snLevel > 0.0f) {
+        const float target = snPast * kSnareGain;
+        snEnv = undenormal(snEnv + (target - snEnv) * (target > snEnv ? b.snAtk : b.snRel));
+        const float nz = whiteNoise(snNoise);
+        const float hp = snHpCoeff * (snHpY + nz - snHpX);
+        snHpX = nz;
+        snHpY = undenormal(hp);
+        snLp = undenormal(snLp + (hp - snLp) * snLpCoeff);
+        buzz = snLp * snEnv * b.snLevel;
+    }
+    for (int c = 0; c < 2; ++c) {
+        const float y = (msPrev[c] + (msNow[c] - msPrev[c]) * msAcc) * msScale * kDrumOut + buzz;
+        lp[c] += (y * b.diffMul - lp[c]) * b.toneCoeff;
+        lp[c] = undenormal(lp[c]);
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Thunder sheet ---------------------------------------------------------------
+
+void Reverb::updateThunder(float size, float damp, bool freeze, bool full) {
+    const float metal = params_.get(Metal);
+    const float key[5] = {size, damp, metal, freeze ? 1.0f : 0.0f, full ? 1.0f : 0.0f};
+    if (std::equal(key, key + 5, thWas)) return;
+    std::copy(key, key + 5, thWas);
+    const float lo = kThunderHz * std::pow(4.0f, 0.5f - size);
+    // 0.6 s to 9 s at the bottom; damp shortens the modes up the range, per kHz.
+    const float rt = 0.6f * std::pow(15.0f, size);
+    const float perKHz = 0.05f + 2.0f * damp * damp;
+    // The modes spread from lo to kThunderSpan times it, sparse at the bottom and crowded at the top.
+    const float power = std::log(kThunderSpan) / std::log(static_cast<float>(kThModes));
+    // A thin sheet takes more of the strike's top.
+    const float strike = kThunderStrikeHz * (1.0f + 2.0f * metal);
+    for (int k = 0; k < kThModes; ++k) {
+        const float kf = static_cast<float>(k);
+        const float jitter = 1.0f + 0.03f * std::sin(kf * 16.7993f);
+        const float hz = lo * std::pow(kf + 1.0f, power) * jitter;
+        const float ratio = hz / lo;
+        thBand[k] = ratio < kThBandTop[0] ? 0 : ratio < kThBandTop[1] ? 1 : ratio < kThBandTop[2] ? 2 : 3;
+        if (hz > 0.45f * sr) {
+            thCos[k] = thSin[k] = thIn[k] = thNz[k] = 0.0f;
+            continue;
+        }
+        const float r = decayGain(1.0f / sr, rt / (1.0f + perKHz * hz * 0.001f));
+        // Fed in at sqrt(1 - r^2), so every mode rings at about the input's level whatever its decay.
+        const float norm = std::sqrt(1.0f - r * r);
+        const float w = dsp::kTwoPi * hz / sr, held = freeze ? 1.0f : r;
+        thCos[k] = held * std::cos(w);
+        thSin[k] = held * std::sin(w);
+        thIn[k] = kThunderIn * norm / std::sqrt(1.0f + (hz / strike) * (hz / strike));
+        thNz[k] = norm;
+        // Each side hears the modes at its own strengths and signs.
+        const float u = 0.5f + 0.5f * std::sin(kf * 7.31f), v = 0.5f + 0.5f * std::sin(kf * 3.17f + 1.0f);
+        thOutL[k] = (k & 1 ? -1.0f : 1.0f) * (0.6f + 0.4f * u);
+        thOutR[k] = (k % 3 == 0 ? -1.0f : 1.0f) * (0.6f + 0.4f * v);
+    }
+    thSpill = freeze ? 0.0f : kSpill * metal;
+    // The drain is per sample, so it's scaled to the rate.
+    thDrain = freeze ? 0.0f : kDrain * metal * 48000.0f / sr;
+    thDrainMax = kDrainMax * 48000.0f / sr;
+    thLoop = freeze ? 0.0f : 1.0f - decayGain(1.0f / lo, rt);
+    thStep = full ? 1 : 2;
+    thScale = full ? 1.0f : std::sqrt(2.0f);
+    thOutScale = full ? 1.0f : kThunderLeanOut;
+}
+
+void Reverb::thunderSample(const Block &b, const float dry[2], float out[2]) {
+    const float x = (b.freeze ? 0.0f : 0.5f * (dry[0] + dry[1])) +
+                    0.5f * (shimmerFb[0] + shimmerFb[1]) * b.shimmer * thLoop * kThunderInject;
+    // The louder a band rings the more noise it spills into the one above, and the faster it loses its own.
+    float spill[kThBands], keep[kThBands];
+    for (int band = 0; band < kThBands; ++band) {
+        // A spill too small to lift a mode over its floor is dropped, or its square underflows.
+        const float amount = band == 0 ? 0.0f : std::min(kSpillMax, thSpill * thEnergy[band - 1]);
+        spill[band] = amount < kSpillFloor ? 0.0f : amount * whiteNoise(thNoise);
+        keep[band] = 1.0f - std::min(thDrainMax, thDrain * thEnergy[band]);
+    }
+    float l = 0.0f, r = 0.0f, sum[kThBands]{};
+    for (int k = 0; k < kThModes; k += thStep) {
+        const int band = thBand[k];
+        const float c = thCos[k] * keep[band], s = thSin[k] * keep[band];
+        float re = c * thRe[k] - s * thIm[k] + x * thIn[k] + spill[band] * thNz[k];
+        float im = s * thRe[k] + c * thIm[k];
+        const float m2 = re * re + im * im;
+        if (m2 > kModeMax * kModeMax) {
+            const float g = kModeMax / std::sqrt(m2);
+            re *= g;
+            im *= g;
+        } else if (m2 < kModeFloor * kModeFloor) {
+            // A rotating mode this quiet rounds into a cycle that never dies, so it stops here.
+            re = im = 0.0f;
+        }
+        thRe[k] = re;
+        thIm[k] = im;
+        sum[band] += re;
+        l += thOutL[k] * re;
+        r += thOutR[k] * re;
+    }
+    for (int band = 0; band < kThBands; ++band) {
+        // Flushed, so e * e can't underflow where the FPU doesn't flush for us.
+        float e = sum[band] * thScale;
+        if (std::fabs(e) < 1e-15f) e = 0.0f;
+        const float energy = thEnergy[band] + (e * e - thEnergy[band]) * thEnergyCoeff;
+        thEnergy[band] = energy < 1e-30f ? 0.0f : energy;
+    }
+    const float y[2] = {l * thOutScale * kThunderOut, r * thOutScale * kThunderOut};
+    for (int c = 0; c < 2; ++c) {
+        lp[c] += (y[c] * b.diffMul - lp[c]) * b.toneCoeff;
+        lp[c] = undenormal(lp[c]);
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Howl -----------------------------------------------------------------------
+
+void Reverb::updateHowl(float size, float damp, bool freeze) {
+    const float howl = params_.get(Howl);
+    const float key[4] = {size, damp, howl, freeze ? 1.0f : 0.0f};
+    if (std::equal(key, key + 4, hwWas)) return;
+    std::copy(key, key + 4, hwWas);
+    // Half to twice the middle size.
+    const float metres = kHowlMetres * std::pow(2.0f, 2.0f * size - 1.0f);
+    // The peak moves with the room, so the same harmonics sing and size retunes them.
+    const float w0 = dsp::kTwoPi * std::min(kHowlPeakHz * kHowlMetres / metres, 0.4f * sr) / sr;
+    const float alpha = std::sin(w0) / (2.0f * kHowlQ);
+    hwB0 = alpha / (1.0f + alpha);
+    hwA1 = -2.0f * std::cos(w0) / (1.0f + alpha);
+    hwA2 = (1.0f - alpha) / (1.0f + alpha);
+    // 0.3 s to 3.6 s with no howl.
+    const float rt = 0.3f * std::pow(12.0f, size);
+    hwLpCoeff = freeze ? 1.0f : dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * 12000.0f * std::pow(1500.0f / 12000.0f, damp)), sr);
+    // The low-pass's loss at the peak is made up, so the loop gain there is what howl asks for.
+    // The lows, which pass outside the peak at (1 - howl), are kept under 1 while doing it.
+    const float atPeak = std::abs(std::complex<float>(hwLpCoeff) / (1.0f - (1.0f - hwLpCoeff) * std::polar(1.0f, -w0)));
+    const float lowsMost = howl < 1.0f ? kHowlLowsMost / (1.0f - howl) : 1e9f;
+    for (int i = 0; i < kHowlLines; ++i) {
+        // A round trip across the room on this axis.
+        hwD[i] = 2.0f * metres * kHowlProp[i] / kSoundSpeed * sr;
+        const float sec = hwD[i] / sr;
+        // Up to the edge howl stretches the ring towards forever; past it the loop grows.
+        const float db = howl <= kHowlEdge ? -60.0f * sec / rt * (1.0f - howl / kHowlEdge)
+                                           : kHowlGrow * sec * (howl - kHowlEdge) / (1.0f - kHowlEdge);
+        hwG[i] = freeze ? 1.0f : std::min(std::pow(10.0f, db / 20.0f) / atPeak, lowsMost);
+    }
+    hwLoop = freeze ? 0.0f : 1.0f - decayGain(hwD[kHowlLines - 1] / sr, rt);
+}
+
+void Reverb::howlSample(const Block &b, const float dry[2], float out[2]) {
+    static constexpr float kInSign[kHowlLines] = {1.0f, -1.0f, 1.0f};
+    static constexpr float kOutL[kHowlLines] = {1.0f, 1.0f, -1.0f};
+    static constexpr float kOutR[kHowlLines] = {1.0f, -1.0f, -1.0f};
+    const float in = (b.freeze ? 0.0f : 0.5f * (dry[0] + dry[1]) * kHowlIn) +
+                     0.5f * (shimmerFb[0] + shimmerFb[1]) * b.shimmer * hwLoop * kHowlInject;
+    const float m = b.hwMix;
+    float y[2] = {0.0f, 0.0f};
+    for (int i = 0; i < kHowlLines; ++i) {
+        float d = hwD[i];
+        if (b.hwWob > 0.0f) {
+            rotate(hwOsc[i], hwRot[i]);
+            d += b.hwWob * hwD[i] * hwOsc[i][1];
+        }
+        const float t = hwLine[i].frac(d);
+        // The speaker's peak: the more howl, the more of the loop goes through it. It runs
+        // with no howl too, so it's in step when howl comes back.
+        const float bp = hwB0 * t + hwBp[i][0];
+        hwBp[i][0] = undenormal(-hwA1 * bp + hwBp[i][1]);
+        hwBp[i][1] = undenormal(-hwB0 * t - hwA2 * bp);
+        const float v0 = (1.0f - m) * t + m * bp;
+        hwLp[i] = undenormal(hwLp[i] + (v0 - hwLp[i]) * hwLpCoeff);
+        float v = hwLp[i] * hwG[i];
+        // The limiter holds a singing mode at its level.
+        hwEnv[i] = undenormal(peakEnvelope(hwEnv[i], v, hwEnvAtk, hwEnvRel));
+        if (hwEnv[i] > kHowlCeil) v *= kHowlCeil / hwEnv[i];
+        hwLine[i].write(dsp::feedbackCeiling(v + in * kInSign[i]));
+        y[0] += kOutL[i] * t;
+        // The second microphone hears each line from another place along it.
+        if (b.full) y[1] += kOutR[i] * hwLine[i].frac(0.61f * d);
+    }
+    if (!b.full) y[1] = y[0];
+    const float ceil = std::min(kHowlOutCeil, kHowlOutMost / (b.wetGain * b.wetWidth));
+    for (int c = 0; c < 2; ++c) {
+        // A tail under 1e-15 is flushed, or its square in the tanh underflows.
+        float w = y[c] * kHowlOut * b.diffMul;
+        if (std::fabs(w) < 1e-15f) w = 0.0f;
+        lp[c] += (ceil * fastTanh(w / ceil) - lp[c]) * b.toneCoeff;
+        lp[c] = undenormal(lp[c]);
+        const float t = lofi(c, lp[c], b);
+        shimmerStep(c, t, b);
+        out[c] = t;
+    }
+}
+
+// --- Flutter --------------------------------------------------------------------
+
+void Reverb::updateFlutter(float size, float damp, bool freeze) {
+    const float walls = params_.get(Walls);
+    const float key[4] = {size, damp, walls, freeze ? 1.0f : 0.0f};
+    if (std::equal(key, key + 4, flWas)) return;
+    std::copy(key, key + 4, flWas);
+    // 0.15 s to 3 s.
+    const float rt = 0.15f * std::pow(20.0f, size);
+    const float cut = std::min(16000.0f * std::pow(1500.0f / 16000.0f, damp), 0.45f * sr);
+    flLpCoeff = freeze ? 1.0f : dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * cut), sr);
+    // The low-pass delays the lows by this much, so the line is that much shorter and the pitch holds.
+    const float lag = (1.0f - flLpCoeff) / flLpCoeff;
+    for (int c = 0; c < kFlutterLines; ++c)
+        flD[c] = std::max(2.0f, 2.0f * walls * (c == 0 ? 1.0f : kFlutterSkew) / kSoundSpeed * sr - lag);
+    flG = freeze ? 1.0f : decayGain(2.0f * walls / kSoundSpeed, rt);
+    flLoop = freeze ? 0.0f : 1.0f - flG;
+}
+
+void Reverb::flutterSample(const Block &b, const float dry[2], float out[2]) {
+    const int lines = b.full ? kFlutterLines : 1;
+    const float inGain = b.freeze ? 0.0f : kFlutterIn;
+    float y[2], first = 0.0f, firstD = 0.0f;
+    for (int c = 0; c < lines; ++c) {
+        const float in = b.full ? dry[c] : 0.5f * (dry[0] + dry[1]);
+        float d = flD[c];
+        if (b.flWob > 0.0f) {
+            rotate(flOsc[c], flRot[c]);
+            d += b.flWob * flD[c] * flOsc[c][1];
+        }
+        const float t = flLine[c].frac(d);
+        flLp[c] = undenormal(flLp[c] + (t - flLp[c]) * flLpCoeff);
+        flLine[c].write(dsp::feedbackCeiling(flLp[c] * flG + in * inGain + shimmerFb[c] * b.shimmer * flLoop * kFlutterInject));
+        // The other wall's echoes fall part way through each round trip.
+        y[c] = t + 0.7f * flLine[c].frac(kFlutterTap[c] * d);
+        first = t;
+        firstD = d;
+    }
+    if (lines == 1) y[1] = first + 0.7f * flLine[0].frac(kFlutterTap[1] * firstD);
+    for (int c = 0; c < 2; ++c) {
+        lp[c] += (y[c] * kFlutterOut * b.diffMul - lp[c]) * b.toneCoeff;
+        lp[c] = undenormal(lp[c]);
         const float t = lofi(c, lp[c], b);
         shimmerStep(c, t, b);
         out[c] = t;

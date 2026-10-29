@@ -1169,7 +1169,8 @@ void reverbWaves() {
     const auto ring = [](Effect &fx, size_t n, int side = 0) {
         std::vector<float> l(n, 0.0f), r(n, 0.0f);
         l[64] = r[64] = 1.0f;
-        for (size_t at = 0; at < n; at += kBlock) fx.run(l.data() + at, r.data() + at, kBlock, false);
+        for (size_t at = 0; at < n; at += kBlock)
+            fx.run(l.data() + at, r.data() + at, static_cast<int32_t>(std::min<size_t>(kBlock, n - at)), false);
         return side == 0 ? l : r;
     };
     auto &q = EngineSettings::get().quality;
@@ -1302,10 +1303,148 @@ void reverbWaves() {
     }
 }
 
+/** The strongest frequency between [lo] and [hi] over [from, to), to a hertz. */
+double strongestIn(const std::vector<float> &x, double lo, double hi, size_t from, size_t to) {
+    double best = 0.0, at = lo;
+    for (double f = lo; f <= hi; f += 1.0) {
+        const double v = strengthAt(x, f, from, to, kRate);
+        if (v > best) { best = v; at = f; }
+    }
+    return at;
+}
+
+/** Drumhead, thunder sheet, howl and flutter: what each is for. */
+void reverbBodies() {
+    const auto highPass = [](const std::vector<float> &x, double hz) {
+        const auto l = lowPass(lowPass(x, hz), hz);
+        std::vector<float> h(x.size());
+        for (size_t i = 0; i < x.size(); ++i) h[i] = x[i] - l[i];
+        return h;
+    };
+    // A kick: a sine falling from 150 Hz to 50 Hz, dying over 80 ms, at [at].
+    const auto kick = [](float amp, size_t n, size_t at) {
+        std::vector<float> k(n, 0.0f);
+        double ph = 0.0;
+        for (size_t i = at; i < std::min(n, at + 9600); ++i) {
+            const double t = double(i - at) / kRate;
+            ph += 2.0 * M_PI * (50.0 + 100.0 * std::exp(-t / 0.03)) / kRate;
+            k[i] = float(amp * std::exp(-t / 0.08) * std::sin(ph));
+        }
+        return k;
+    };
+
+    // Snares: the buzz is what the wires add, so with and without them, on a loud kick and a quiet one.
+    {
+        const auto buzz = [&](float amp, double &head) {
+            const auto k = kick(amp, 48000, 4800);
+            auto a = make("Reverb", {{"model", 8.0f}, {"mix", 1.0f}, {"snares", 0.0f}});
+            auto b = make("Reverb", {{"model", 8.0f}, {"mix", 1.0f}, {"snares", 1.0f}});
+            const auto wa = wetOf(run(*a, k).l, k), wb = wetOf(run(*b, k).l, k);
+            std::vector<float> d(wa.size());
+            for (size_t i = 0; i < d.size(); ++i) d[i] = wb[i] - wa[i];
+            head = rms(wa, 4800, 24000);
+            return rms(d, 4800, 24000);
+        };
+        double loudHead = 0.0, quietHead = 0.0;
+        const double loud = buzz(0.8f, loudHead), quiet = buzz(0.04f, quietHead);
+        ok("drumhead: a loud kick sets the snares off, a quiet one doesn't",
+           dB(loud / loudHead) > -10.0 && quiet < 1e-7,
+           num(dB(loud / loudHead)) + " dB of buzz on the loud one, " + num(quiet) + " rms on the quiet one");
+    }
+    // Tension tunes the head: the strongest ring under 2 kHz.
+    {
+        std::vector<float> click(48000, 0.0f);
+        click[100] = 1.0f;
+        const auto ringAt = [&](float tension) {
+            auto fx = make("Reverb", {{"model", 8.0f}, {"mix", 1.0f}, {"tension", tension}});
+            return strongestIn(wetOf(run(*fx, click).l, click), 30.0, 2000.0, 2400, 48000);
+        };
+        const double slack = ringAt(0.2f), tight = ringAt(0.8f);
+        // Three octaves over the knob, so 0.2 to 0.8 is 1.8 octaves.
+        ok("drumhead: tension raises the head's pitch", std::fabs(tight / slack / std::pow(2.0, 1.8) - 1.0) < 0.1,
+           num(slack) + " Hz -> " + num(tight) + " Hz");
+    }
+
+    // Thunder: the top grows after a hard hit, from the strike to a quarter second on, and not after a soft one.
+    {
+        const auto growth = [&](float amp) {
+            auto hit = noise(amp, 72000, 4);
+            for (size_t i = 0; i < hit.size(); ++i) if (i < 4800 || i >= 4800 + 960) hit[i] = 0.0f;
+            auto fx = make("Reverb", {{"model", 9.0f}, {"mix", 1.0f}});
+            const auto h = highPass(wetOf(run(*fx, hit).l, hit), 2500.0);
+            return dB(rms(h, 4800 + 12000, 4800 + 16800) / rms(h, 4800 + 960, 4800 + 3360));
+        };
+        const double hard = growth(0.8f), soft = growth(0.08f);
+        ok("thunder: a hard hit blooms into the highs, a soft one doesn't", hard > 6.0 && soft < 0.0 && hard > soft + 10.0,
+           num(soft) + " dB soft, " + num(hard) + " dB hard, over 2.5 kHz at 0.25 s against the strike");
+        // Metal 0 doesn't spill at all.
+        const auto growthAt = [&](float metal) {
+            auto hit = noise(0.8f, 72000, 4);
+            for (size_t i = 0; i < hit.size(); ++i) if (i < 4800 || i >= 4800 + 960) hit[i] = 0.0f;
+            auto fx = make("Reverb", {{"model", 9.0f}, {"mix", 1.0f}, {"metal", metal}});
+            const auto h = highPass(wetOf(run(*fx, hit).l, hit), 2500.0);
+            return dB(rms(h, 4800 + 12000, 4800 + 16800) / rms(h, 4800 + 960, 4800 + 3360));
+        };
+        const double gong = growthAt(0.0f), sheet = growthAt(1.0f);
+        ok("thunder: more metal blooms more", sheet > gong + 10.0, num(gong) + " dB at 0, " + num(sheet) + " dB at 1");
+    }
+
+    // Howl: half a second of noise, then nothing. Turned up, the room sings on, bounded and pitched,
+    // and size moves the pitch: the peak follows the room, so the same harmonics sing.
+    {
+        const auto sing = [&](float howl, float size, double &last, double &top, double &pitched) {
+            auto in = noise(0.5f, 48000 * 8, 7);
+            for (size_t i = 24000; i < in.size(); ++i) in[i] = 0.0f;
+            auto fx = make("Reverb", {{"model", 10.0f}, {"mix", 1.0f}, {"howl", howl}, {"size", size}});
+            const auto s = run(*fx, in);
+            const auto w = wetOf(s.l, in);
+            last = rms(w, 48000 * 7, 48000 * 8);
+            top = std::max(peak(s.l), peak(s.r));
+            const double f = strongestIn(w, 100.0, 3000.0, 48000 * 7, 48000 * 8);
+            pitched = strengthAt(w, f, 48000 * 7, 48000 * 8, kRate) / (last + 1e-12);
+            return f;
+        };
+        double lastS, topS, pS, lastB, topB, pB, lastQ, topQ, pQ;
+        const double small = sing(1.0f, 0.3f, lastS, topS, pS), big = sing(1.0f, 0.7f, lastB, topB, pB);
+        sing(0.3f, 0.7f, lastQ, topQ, pQ);
+        ok("howl: turned up, the room holds a drone seven seconds on, bounded",
+           lastS > 0.05 && lastB > 0.05 && topS < 1.0 && topB < 1.0,
+           "last second " + num(lastS) + " and " + num(lastB) + ", peak " + num(std::max(topS, topB)));
+        // A sine reads about 0.35 here and noise near 0.
+        ok("howl: the drone is pitched", pS > 0.1 && pB > 0.1, num(pS) + " and " + num(pB) + " of a sine");
+        const double want = std::pow(2.0, 0.8);
+        ok("howl: size retunes the drone", std::fabs(small / big / want - 1.0) < 0.1,
+           num(small) + " Hz -> " + num(big) + " Hz, " + num(small / big) + " against " + num(want));
+        ok("howl: at its default the room dies away", lastQ < 1e-4, "last second " + num(lastQ));
+    }
+
+    // Flutter: the pitch is the round trip between the walls.
+    {
+        auto &q = EngineSettings::get().quality;
+        const int was = q.load();
+        double worstCents = 0.0;
+        for (int quality : {1, 0}) {
+            q.store(quality);
+            for (float walls : {0.5f, 1.0f, 3.0f}) {
+                std::vector<float> click(96000, 0.0f);
+                click[100] = 1.0f;
+                auto fx = make("Reverb", {{"model", 11.0f}, {"mix", 1.0f}, {"walls", walls}, {"size", 0.8f}, {"damp", 0.0f}});
+                const auto w = wetOf(run(*fx, click).l, click);
+                const double want = 343.0 / (2.0 * walls);
+                const double off = cents(peakNear(w, want, 100.0, 4800, 96000, kRate), want);
+                if (std::fabs(off) > std::fabs(worstCents)) worstCents = off;
+            }
+        }
+        q.store(was);
+        ok("flutter: the pitch follows the walls", std::fabs(worstCents) < 2.0, "worst " + num(worstCents) + " cents");
+    }
+}
+
 void reverb() {
     printf("- reverb\n");
-    const char *names[] = {"room", "plate", "hall", "spring", "early", "space", "tube", "string"};
-    constexpr int kModels = 8;
+    const char *names[] = {"room", "plate", "hall", "spring", "early", "space", "tube", "string",
+                           "drumhead", "thunder", "howl", "flutter"};
+    constexpr int kModels = 12;
     // A half-second burst of noise, then four and a half seconds of tail.
     auto burst = noise(0.25f, 240000, 3);
     for (size_t i = 24000; i < burst.size(); ++i) burst[i] = 0.0f;
@@ -1327,9 +1466,10 @@ void reverb() {
         const double tb = fallTime(wetOf(run(*big, burst).l, burst), 24000 + 2400);
         ok(n + ": size 0.8 rings longer than 0.2", tb > ts * 1.5, num(ts) + " s -> " + num(tb) + " s");
         }
-        // Damp takes the top off the tail.
-        auto bright = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 0.0f}});
-        auto dull = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 1.0f}});
+        // Damp takes the top off the tail. Howl's tail is the speaker's peak, which damp leaves
+        // where it is, so its bare room is checked.
+        auto bright = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 0.0f}, {"howl", m == 10 ? 0.0f : 0.3f}});
+        auto dull = make("Reverb", {{"model", float(m)}, {"mix", 1.0f}, {"damp", 1.0f}, {"howl", m == 10 ? 0.0f : 0.3f}});
         const auto high = [&](Effect &e) {
             const auto w = wetOf(run(e, burst).l, burst);
             std::vector<float> d(w.size());
@@ -1347,12 +1487,15 @@ void reverb() {
         for (size_t i = 48000 * 2; i < in.size(); ++i) if ((i / 48000) % 4 != 0) in[i] = 0.0f;
         for (int m = 0; m < kModels; ++m) {
             for (int frozen = 0; frozen < 2; ++frozen) {
-                // The model knobs at their tops too: the biggest tiled room, the top rate, all drip and knock.
+                // The model knobs at their tops too: the biggest tiled room, the top rate, all drip and knock,
+                // the tightest head with all its snares, the thinnest sheet, all the howl and the widest walls.
                 auto fx = make("Reverb", {{"model", float(m)}, {"size", 1.0f}, {"shimmer", 1.0f}, {"mix", 1.0f},
                                           {"wobble", 1.0f}, {"bloom", 0.5f}, {"duck", 0.5f}, {"distance", 0.5f},
                                           {"drip", 1.0f}, {"knock", 1.0f}, {"rate", 32000.0f}, {"width", 30.0f},
                                           {"depth", 50.0f}, {"height", 15.0f}, {"position", 1.0f}, {"material", 0.0f},
-                                          {"pitch", -36.0f}, {"open", 1.0f}, {"stiff", 1.0f}, {"pick", 1.0f}});
+                                          {"pitch", -36.0f}, {"open", 1.0f}, {"stiff", 1.0f}, {"pick", 1.0f},
+                                          {"tension", 1.0f}, {"snares", 1.0f}, {"metal", 1.0f}, {"howl", 1.0f},
+                                          {"walls", 20.0f}});
                 Stereo s{in, in};
                 for (size_t at = 0; at < in.size(); at += kBlock) {
                     if (frozen && at == 48000 * 2) set(*fx, "freeze", 1.0f);
@@ -1372,7 +1515,7 @@ void reverb() {
     for (int m = 0; m < kModels; ++m) {
         auto fx = make("Reverb", {{"model", float(m)}, {"shimmer", 0.5f}, {"wobble", 0.6f}, {"bits", 10.0f},
                                   {"crush", 3.0f}, {"gate", 0.3f}, {"duck", 0.5f}, {"distance", 0.4f}, {"bloom", 0.5f},
-                                  {"knock", 1.0f}});
+                                  {"knock", 1.0f}, {"snares", 0.6f}, {"metal", 0.8f}, {"howl", 0.9f}});
         const auto in = hits(96000);
         const auto a = run(*fx, in);
         fx->reset();
@@ -1564,9 +1707,12 @@ void reverb() {
                                  {"knock", m == 3 ? 0.25f : 1.0f}, {"rate", m == 4 ? 16000.0f : 9000.0f},
                                  {"width", m == 5 ? 9.0f : 20.0f}, {"depth", m == 5 ? 14.0f : 3.0f},
                                  {"height", m == 5 ? 4.5f : 12.0f}, {"position", m == 5 ? 0.5f : 0.1f},
-                                 {"material", m == 5 ? 1.0f : 3.0f}, {"pitch", m >= 6 ? 0.0f : 7.0f},
-                                 {"follow", m >= 6 ? 0.0f : 1.0f}, {"open", m == 6 ? 0.0f : 0.8f},
-                                 {"stiff", m == 7 ? 0.2f : 0.9f}, {"pick", m == 7 ? 0.25f : 0.8f}});
+                                 {"material", m == 5 ? 1.0f : 3.0f}, {"pitch", m == 6 || m == 7 ? 0.0f : 7.0f},
+                                 {"follow", m == 6 || m == 7 ? 0.0f : 1.0f}, {"open", m == 6 ? 0.0f : 0.8f},
+                                 {"stiff", m == 7 ? 0.2f : 0.9f}, {"pick", m == 7 ? 0.25f : 0.8f},
+                                 {"tension", m == 8 ? 0.5f : 0.9f}, {"snares", m == 8 ? 0.0f : 1.0f},
+                                 {"metal", m == 9 ? 0.5f : 1.0f}, {"howl", m == 10 ? 0.3f : 1.0f},
+                                 {"walls", m == 11 ? 2.0f : 0.5f}});
         b->onNote(40, 440.0f * std::pow(2.0f, -29.0f / 12.0f));
         ok(std::string(names[m]) + ": the other models' knobs change nothing",
            worst(run(*a, hits(48000)).l, run(*b, hits(48000)).l) == 0.0);
@@ -1597,6 +1743,7 @@ void reverb() {
     }
 
     reverbWaves();
+    reverbBodies();
 
     // The new knobs at their defaults leave the room as it was: checked against
     // master by tools/match_master.sh. Here, at least, they cost nothing.

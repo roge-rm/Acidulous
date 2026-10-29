@@ -40,6 +40,25 @@ namespace acidulous::effect {
  *     Both are tuned by `pitch`, in semitones from middle C, or from the
  *     track's last note when `follow` is on. Two lines a hair apart, one a
  *     side, at full quality; one at lean.
+ *   - drumhead: a struck skin, a square mesh of junctions passing waves to
+ *     their neighbours, so it rings in a drum's crowded, out of tune modes.
+ *     `size` is the drum, bigger for lower and longer, and `tension` tunes the
+ *     head. `snares` puts wires under it: when the head moves past them they
+ *     buzz, so a kick through it sets the snare off and a quiet note doesn't.
+ *     The mesh ticks at a rate set by the pitch, so a small mesh rings low.
+ *   - thunder: a metal sheet, a bank of modes from low to high in four bands.
+ *     The louder a band rings, the faster its energy spills into the band
+ *     above, so a hard hit hums first and blooms into a crash after it, and a
+ *     soft one only hums. `metal` is how readily it spills, from a heavy gong
+ *     to a thin sheet; `size` lowers the sheet and lengthens its ring.
+ *   - howl: a room with a microphone in feedback. Three loops for the room's
+ *     length, width and height, each through the speaker's peak and a
+ *     limiter. Turning `howl` up lets the modes near the peak ring longer,
+ *     then sing and hold, so any input turns into drones in the room's tuning.
+ *     `size` retunes them.
+ *   - flutter: two parallel walls, the echo bouncing between them heard as a
+ *     pitch. `walls` is how far apart they are, from a quarter metre (a high
+ *     ring) to twenty (a slow flutter).
  *
  * Shared by every model:
  *
@@ -63,8 +82,9 @@ class Reverb final : public Effect {
     enum P { Size, Damp, Tone, PreDelay, Mix, Freeze, Gate, Shimmer, Bits, Crush, Wobble, Gain,
              Model, Duck, DuckRel, Distance, Bloom,
              Drip, Knock, Rate, Width, Depth, Height, Position, Material,
-             Pitch, Follow, Open, Stiff, Pick, Count };
-    enum ModelKind { Room, Plate, Hall, Spring, Early, Space, Tube, String, kModels };
+             Pitch, Follow, Open, Stiff, Pick,
+             Tension, Snares, Metal, Howl, Walls, Count };
+    enum ModelKind { Room, Plate, Hall, Spring, Early, Space, Tube, String, Drumhead, Thunder, HowlRoom, Flutter, kModels };
     Reverb() { initParams(); }
     const char *typeName() const override { return "Reverb"; }
     const ParamDef *paramDefs(int32_t &count) const override;
@@ -74,11 +94,11 @@ class Reverb final : public Effect {
     /**
      * The room's geometry rebuilds the space's taps, which glide by themselves;
      * drip changes the spring's stage count and rate the early tank's lengths;
-     * pitch and stiff retune the tube's and string's loops.
+     * pitch and stiff retune the tube's and string's loops; metal rebuilds the sheet's 48 modes.
      */
     bool glides(int32_t index) const override {
         return index != Width && index != Depth && index != Height && index != Position && index != Material &&
-               index != Drip && index != Rate && index != Pitch && index != Stiff;
+               index != Drip && index != Rate && index != Pitch && index != Stiff && index != Metal;
     }
     /** The track's last note, for `follow`. */
     void onNote(int32_t note, float hz) override { heardNote = note; heardHz = hz; }
@@ -111,6 +131,11 @@ class Reverb final : public Effect {
     void spaceSample(const Block &b, const float dry[2], float out[2]);
     void tubeSample(const Block &b, const float dry[2], float out[2]);
     void stringSample(const Block &b, const float dry[2], float out[2]);
+    void drumSample(const Block &b, const float dry[2], float out[2]);
+    void thunderSample(const Block &b, const float dry[2], float out[2]);
+    void howlSample(const Block &b, const float dry[2], float out[2]);
+    void flutterSample(const Block &b, const float dry[2], float out[2]);
+    void drumTick(const Block &b);
     float lofi(int c, float t, const Block &b);
     void shimmerStep(int c, float t, const Block &b);
     void clearRoom();
@@ -120,12 +145,20 @@ class Reverb final : public Effect {
     void clearEarly();
     void clearSpace();
     void clearWave();
+    void clearDrum();
+    void clearThunder();
+    void clearHowl();
+    void clearFlutter();
     void updatePlate(float size, float damp, bool freeze);
     void updateHall(float size, float damp, bool freeze);
     void updateSpring(float size, float damp, float drip, bool freeze, bool full);
     void updateEarly(float size, float damp, float rate, bool freeze);
     void updateSpace(float damp, bool freeze, bool full, int32_t frames);
     void updateWave(bool string, float size, float damp, bool freeze, bool full);
+    void updateDrum(float size, float damp, bool freeze, bool full);
+    void updateThunder(float size, float damp, bool freeze, bool full);
+    void updateHowl(float size, float damp, bool freeze);
+    void updateFlutter(float size, float damp, bool freeze);
 
     float sr = 48000.0f;
 
@@ -249,6 +282,54 @@ class Reverb final : public Effect {
     /** The track's last note-on, or -1 for none since reset(). */
     int32_t heardNote = -1;
     float heardHz = 440.0f;
+
+    // --- drumhead ---
+    /** Junctions a side at full quality and at lean. */
+    static constexpr int32_t kMeshFull = 12, kMeshLean = 8;
+    static constexpr int32_t kMeshCells = kMeshFull * kMeshFull;
+    /** The waves coming into each junction from the north, east, south and west, now and next tick. */
+    float msIn[2][4][kMeshCells]{};
+    int32_t msCur = 0, msN = kMeshFull;
+    /** The edge's low-pass, one per edge port: north, east, south, west. */
+    float msEdge[4][kMeshFull]{};
+    float msAcc = 0.0f, msInSum[2]{}, msPrev[2]{}, msNow[2]{}, msOsc[2]{}, msRot[2]{};
+    int32_t msInCount = 0;
+    float msInc = 0.1f, msLoss = 1.0f, msEdgeCoeff = 1.0f, msLinkDamp = 0.0f, msScale = 1.0f, msLoop = 0.0f;
+    float msWas[5]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
+    /** Junction indices: where the input lands, the pickups, where the snares touch. */
+    int32_t msStrikeAt[2]{}, msPickAt[2]{}, msTouchAt[3]{};
+    // Snares: how far past the wires the head went on the last tick, the buzz's envelope, filters and noise.
+    float snPast = 0.0f, snEnv = 0.0f, snHpX = 0.0f, snHpY = 0.0f, snLp = 0.0f, snHpCoeff = 0.0f, snLpCoeff = 1.0f;
+    uint32_t snNoise = 1;
+
+    // --- thunder sheet ---
+    static constexpr int32_t kThBands = 4, kThModes = 48;
+    float thRe[kThModes]{}, thIm[kThModes]{};
+    /** Which band each mode is in, by its frequency. */
+    int32_t thBand[kThModes]{};
+    float thCos[kThModes]{}, thSin[kThModes]{}, thIn[kThModes]{}, thNz[kThModes]{}, thOutL[kThModes]{}, thOutR[kThModes]{};
+    /** Each band's energy, followed. */
+    float thEnergy[kThBands]{};
+    float thEnergyCoeff = 0.0f, thLoop = 0.0f, thSpill = 0.0f, thDrain = 0.0f, thDrainMax = 0.0f, thScale = 1.0f, thOutScale = 1.0f;
+    float thWas[5]{-1.0f, -1.0f, -1.0f, -1.0f, -1.0f};
+    int32_t thStep = 1;
+    uint32_t thNoise = 1;
+
+    // --- howl ---
+    static constexpr int32_t kHowlLines = 3;
+    Line hwLine[kHowlLines];
+    float hwLp[kHowlLines]{}, hwBp[kHowlLines][2]{}, hwEnv[kHowlLines]{}, hwOsc[kHowlLines][2]{}, hwRot[kHowlLines][2]{};
+    float hwD[kHowlLines]{}, hwG[kHowlLines]{}, hwLpCoeff = 1.0f, hwPeak = 0.0f, hwLoop = 0.0f;
+    // The speaker's peak, a band-pass with 0 dB at its centre.
+    float hwB0 = 0.0f, hwA1 = 0.0f, hwA2 = 0.0f, hwEnvAtk = 1.0f, hwEnvRel = 1.0f;
+    float hwWas[4]{-1.0f, -1.0f, -1.0f, -1.0f};
+
+    // --- flutter ---
+    static constexpr int32_t kFlutterLines = 2;
+    Line flLine[kFlutterLines];
+    float flLp[kFlutterLines]{}, flOsc[kFlutterLines][2]{}, flRot[kFlutterLines][2]{};
+    float flD[kFlutterLines]{}, flG = 0.0f, flLpCoeff = 1.0f, flLoop = 0.0f;
+    float flWas[4]{-1.0f, -1.0f, -1.0f, -1.0f};
 };
 
 } // namespace acidulous::effect
