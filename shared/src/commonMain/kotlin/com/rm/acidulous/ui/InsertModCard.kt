@@ -29,7 +29,7 @@ import com.rm.acidulous.model.SIDECHAIN_PARAM
 import com.rm.acidulous.res.*
 import com.rm.acidulous.ui.theme.Acid
 import com.rm.acidulous.util.format
-import org.jetbrains.compose.resources.stringResource
+import com.rm.acidulous.res.stringResource
 import kotlin.math.roundToInt
 
 /**

@@ -851,7 +851,11 @@ internal val LocalStackedPerLine = androidx.compose.runtime.compositionLocalOf {
 /** A fixed width when stacked, upright a knob is whatever width it needs. */
 @Composable
 internal fun panelKnobWidth(): Modifier =
-    if (LocalPanelStacked.current) Modifier.width(StackedKnobW) else Modifier
+    if (LocalPanelStacked.current) Modifier.width(stackedKnobW()) else Modifier
+
+/** [StackedKnobW] for the dial in use: the dial and the same 6 dp of air. */
+@Composable
+internal fun stackedKnobW(): Dp = StackedKnobW - 52.dp + LocalKnobDial.current
 
 @Composable
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
@@ -892,10 +896,10 @@ internal fun PanelOnOff(b: ParamBinding, name: String, label: String = name) {
 internal fun ToggleSquare(label: String, on: Boolean, modifier: Modifier = Modifier, onChange: (Boolean) -> Unit) {
     val col = Acid.colors
     val state = stringArrayResource(Res.array.off_on)[if (on) 1 else 0]
-    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) stackedKnobW() else LocalKnobDial.current), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
         Box(
-            modifier.size(52.dp)
+            modifier.size(LocalKnobDial.current)
                 .clip(RoundedCornerShape(5.dp))
                 .background(if (on) col.green else col.control)
                 .border(1.dp, if (on) col.green else col.lineStrong, RoundedCornerShape(5.dp))
@@ -919,10 +923,10 @@ internal fun ToggleSquare(label: String, on: Boolean, modifier: Modifier = Modif
 internal fun ButtonSquare(label: String, word: String, lit: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val col = Acid.colors
     val name = if (label.isEmpty()) word else stringResource(Res.string.a11y_named, label, word)
-    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) stackedKnobW() else LocalKnobDial.current), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
         Box(
-            modifier.widthIn(min = 52.dp).height(52.dp)
+            modifier.widthIn(min = LocalKnobDial.current).height(LocalKnobDial.current)
                 .clip(RoundedCornerShape(5.dp))
                 .background(if (lit) col.green else col.control)
                 .border(1.dp, if (lit) col.green else col.lineStrong, RoundedCornerShape(5.dp))
@@ -948,11 +952,11 @@ internal fun ButtonSquare(label: String, word: String, lit: Boolean, modifier: M
 @Composable
 internal fun PairSquare(label: String, words: List<String>, idx: Int, modifier: Modifier = Modifier, onPick: (Int) -> Unit) {
     val col = Acid.colors
-    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) StackedKnobW else 52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.widthIn(min = if (LocalPanelStacked.current) stackedKnobW() else LocalKnobDial.current), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(label, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1, modifier = Modifier.silent())
         // As wide as a knob's dial, or as its longest word needs.
         Column(
-            modifier.widthIn(min = 52.dp).width(IntrinsicSize.Max).height(52.dp),
+            modifier.widthIn(min = LocalKnobDial.current).width(IntrinsicSize.Max).height(LocalKnobDial.current),
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
             words.forEachIndexed { i, word ->
@@ -1023,7 +1027,7 @@ internal fun SwitchGrid(
             // other how tall to be and can agree on something absurd (a
             // three-way switch came out 490 dp tall and pushed the roll off
             // screen). The cap is a knob's height.
-            .heightIn(max = PanelControlH).fillMaxHeight().together(),
+            .heightIn(max = LocalControlH.current).fillMaxHeight().together(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // Announced as part of each cell's name instead.
@@ -1034,7 +1038,7 @@ internal fun SwitchGrid(
         // move. Every column is at least as wide as a knob's dial, so a short
         // word doesn't make a thin button.
         Column(
-            Modifier.widthIn(min = 52.dp * cols + 1.dp * (cols - 1)).width(IntrinsicSize.Max).weight(1f)
+            Modifier.widthIn(min = LocalKnobDial.current * cols + 1.dp * (cols - 1)).width(IntrinsicSize.Max).weight(1f)
                 .clip(RoundedCornerShape(4.dp)).background(Acid.colors.card),
             verticalArrangement = Arrangement.spacedBy(1.dp),
         ) {
@@ -1448,6 +1452,12 @@ internal fun PanelStepKnob(b: ParamBinding, name: String, labels: List<String>, 
  */
 internal val PanelControlH = 100.dp
 
+/** The space between controls on a stacked card's line: less in a busy window; see LocalKnobDial. */
+internal val LocalKnobGap = androidx.compose.runtime.compositionLocalOf { 6.dp }
+
+/** [PanelControlH] where it's drawn: less in a window with smaller dials and tighter text; see LocalKnobDial. */
+internal val LocalControlH = androidx.compose.runtime.compositionLocalOf { PanelControlH }
+
 /**
  * A column of buttons in a group, where knobs would otherwise go.
  *
@@ -1578,8 +1588,9 @@ internal fun Group(
  */
 @Composable
 private fun EvenLines(modifier: Modifier, perLine: Int, centred: Boolean, content: @Composable () -> Unit) {
+    val knobGap = LocalKnobGap.current
     androidx.compose.ui.layout.Layout(content, modifier) { measurables, constraints ->
-        val gap = 6.dp.roundToPx()
+        val gap = knobGap.roundToPx()
         val lineGap = 4.dp.roundToPx()
         val loose = constraints.copy(minWidth = 0, minHeight = 0)
         val placeables = measurables.map { it.measure(loose) }

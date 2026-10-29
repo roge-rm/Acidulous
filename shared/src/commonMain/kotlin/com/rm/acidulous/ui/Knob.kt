@@ -97,13 +97,20 @@ internal suspend fun AwaitPointerEventScope.swallowRest() {
     }
 }
 
+/**
+ * How big a knob's dial is, and the squares and switches that line up with
+ * it. 52 dp everywhere but a window too busy to fit at that size, which
+ * provides a smaller one for its cards.
+ */
+internal val LocalKnobDial = androidx.compose.runtime.compositionLocalOf { 52.dp }
+
 @Composable
 fun Knob(
     label: String,
     value: Float,
     display: String,
     modifier: Modifier = Modifier,
-    size: Dp = 52.dp,
+    size: Dp = LocalKnobDial.current,
     accent: Color = Acid.colors.teal,
     onStart: () -> Unit = {},
     onChange: (Float) -> Unit,

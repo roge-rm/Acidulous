@@ -993,11 +993,12 @@ fun EditScreen(
         // strip, so it keeps the column.
         val barInStrip = com.rm.acidulous.AppHost.current.onDesktop && landscape &&
             panel == 0 && kind != MachineKind.Audio
-        val panelSlot: @Composable (bar: Boolean, body: Boolean) -> Unit = { bar, body ->
+        // fxMax is how tall the fx slots may be; the upright layout works it out from the screen below.
+        val panelSlot: @Composable (bar: Boolean, body: Boolean, fxMax: Dp) -> Unit = { bar, body, fxMax ->
         androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow) {
         // The machine panel (knobs go to the engine as gestures and into the document as undo
         // steps), or behind the fx toggle the track's two insert slots.
-        if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp)) }
+        if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp), fxMax) }
         else if (panel == 2) {
             if (body) MixerPanel(
                 song, editor, rackPeaks, masterPeak, clickOn, onClick, Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -1088,7 +1089,7 @@ fun EditScreen(
                 if (barInStrip) Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
                     // The bar gives way to the fold mark, and a bare stretch
                     // before the mark is always left to drag by.
-                    Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false) }
+                    Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false, FX_PANEL_MAX_H) }
                     Spacer(Modifier.weight(1f).widthIn(min = PadsGrabMin))
                     FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
                 } else FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
@@ -1131,7 +1132,7 @@ fun EditScreen(
                 ) {
                     // The machine and patch on a desktop, see barInStrip. It
                     // gives way before the wheel does.
-                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false) }
+                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false, FX_PANEL_MAX_H) }
                     if (touchable) TouchWheel(
                         value = pressure, accent = Acid.colors.pink, vertical = false,
                         // No label, the ridges and its place in the row say
@@ -1272,7 +1273,7 @@ fun EditScreen(
                         // cards.
                         if (panel == 0 && !barInStrip) Column(
                             Modifier.width(PATCH_W).fillMaxHeight(),
-                        ) { panelSlot(true, false) }
+                        ) { panelSlot(true, false, FX_PANEL_MAX_H) }
                         Box(Modifier.weight(1f).fillMaxHeight()) {
                             Column(Modifier.fillMaxSize()) {
                                 gridSlot()
@@ -1296,7 +1297,7 @@ fun EditScreen(
                         // Two knobs wide on every screen size.
                         if (!panelFolded || panel != 0) Column(
                             Modifier.width(CONTROL_W).fillMaxHeight(),
-                        ) { panelSlot(false, true) }
+                        ) { panelSlot(false, true, FX_PANEL_MAX_H) }
                     }
                     keysSlot(
                         keysH,
@@ -1330,7 +1331,7 @@ fun EditScreen(
                         keysSlot(keysH, Modifier)
                     } else {
                         Box(Modifier.fillMaxWidth().heightIn(max = (total - SquareRollMin).coerceAtLeast(0.dp))) {
-                            Column { panelSlot(true, true) }
+                            Column { panelSlot(true, true, FX_PANEL_MAX_H) }
                         }
                     }
                 }
@@ -1339,11 +1340,19 @@ fun EditScreen(
         } else {
             // The bar is outside the padding so it reaches the screen edges
             // like the arranger's. Everything above keeps its margins.
-            Column(Modifier.fillMaxWidth().weight(1f).then(pad)) {
+            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
+            // The fx slots take what the lanes and the roll's floor leave,
+            // never less than they always had.
+            val lanes = (if (noteFolded || kind == MachineKind.Audio) 24.dp else LaneH) + (if (autoFolded) 24.dp else LaneH)
+            val keysTaken = if (kind == MachineKind.Audio) 0.dp
+                else if (UiPrefs.keysFolded) (if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H)
+                else (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale * (if (large) LARGE_KEYS else 1f) * keysStretch
+            val fxPanelMax = (maxHeight - lanes - keysTaken - FxRollMin).coerceAtLeast(FX_PANEL_MAX_H)
+            Column(Modifier.fillMaxSize().then(pad)) {
                 gridSlot()
                 if (kind != MachineKind.Audio) noteLaneSlot(LaneH)
                 automationSlot(LaneH)
-                panelSlot(true, true)
+                panelSlot(true, true, fxPanelMax)
                 // Upright the instrument can be dragged taller too, with the
                 // same handle as in landscape. The height comes from the roll,
                 // so the drag stops when the roll hits its floor. It's a
@@ -1376,6 +1385,7 @@ fun EditScreen(
                         onEnd = { UiPrefs.chooseKeysStretch(keysStretch) },
                     ),
                 )
+            }
             }
             footerSlot()
         }
@@ -1450,6 +1460,12 @@ private val RollMinH = 96.dp
 
 /** The smallest roll the square editor leaves, whatever is under it. */
 private val SquareRollMin = 140.dp
+
+/** The fx slots' height where nothing works out a bigger one: about two full slots. */
+private val FX_PANEL_MAX_H = 300.dp
+
+/** What the roll keeps upright when the fx slots grow into a tall screen, the keyboard's strip included. */
+private val FxRollMin = 200.dp
 
 /**
  * The keyboard's share of the square editor's height, not counting header and
