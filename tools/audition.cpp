@@ -1277,14 +1277,20 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * What an effect is fed: two bars of music made by the app's own machines,
  * then silence for the tails. Most effects get a band (drums, bass and
  * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
- * a single line they can follow, Rotary an organ, Gate the band over a
+ * a single line they can follow, Reverb sparse hits with gaps, Rotary an organ, Gate the band over a
  * little hiss to take out, Deesser a voice and Midside the band with a
- * piano spread wide. Returns the stereo source; it stops at `stop`.
+ * piano spread wide. Returns the stereo source; it stops at `stop`, and the
+ * silence after it is longer for a reverb.
  */
+/** The pitched notes in the last effect source, frame and note, for an effect that follows them. */
+std::vector<std::pair<int64_t, int>> gSourceNotes;
+
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
+    gSourceNotes.clear();
     const float bars = 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
-    const int64_t frames = stop + secondsToFrames(3.0f);
+    // A reverb gets longer to ring out, since a big hall outlasts three seconds.
+    const int64_t frames = stop + secondsToFrames(effect == "Reverb" ? 6.0f : 3.0f);
     std::vector<float> out(static_cast<size_t>(frames) * 2, 0.0f);
     const auto add = [&](const std::vector<float> &part, float gain) {
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
@@ -1322,6 +1328,19 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             out[i * 2] = voice[i];
             out[i * 2 + 1] = voice[i];
         }
+    } else if (effect == "Reverb") {
+        // Sparse hits with gaps, so the tail has room to ring: a snare alone,
+        // a kick and snare, a short chord stab, three single notes, then
+        // silence.
+        add(renderPart("Hexbeat", "Squared", {
+            {0.0f, 0.25f, 38, 110}, {2.0f, 0.25f, 36, 110}, {2.0f, 0.25f, 38, 100},
+        }, bpm, frames), 0.8f);
+        const std::vector<Hit> notes = {
+            {4.0f, 0.25f, 57, 95}, {4.0f, 0.25f, 60, 95}, {4.0f, 0.25f, 64, 95}, {4.0f, 0.25f, 67, 95},
+            {6.0f, 0.2f, 76, 90}, {6.5f, 0.2f, 79, 85}, {7.0f, 0.2f, 72, 90},
+        };
+        add(renderPart("Trinity", "Electric Piano", notes, bpm, frames), 0.7f);
+        for (const Hit &h : notes) gSourceNotes.emplace_back(secondsToFrames(h.beat * 60.0f / bpm), h.note);
     } else {
         // Hexbeat's kit: kick 36, snare 38, closed hat 43, open hat 44.
         std::vector<Hit> drums;
@@ -1412,6 +1431,9 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        // The notes starting in this block, as the rack hands them on.
+        for (const auto &[frame, note] : gSourceNotes)
+            if (frame >= at && frame < at + kBlock) fx->onNote(note, 440.0f * std::pow(2.0f, (static_cast<float>(note) - 69.0f) / 12.0f));
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {

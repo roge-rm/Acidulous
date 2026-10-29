@@ -1090,15 +1090,10 @@ fun SongSlotDialog(
             for (p in modInfo) NativeEngine.setParam(0, unitOf(slot), p.name, opened.params[p.name] ?: p.defaultNormalized, record = false)
         }
     }
-    PlainDialog(
-        title,
-        onDismiss = { revert(); onDismiss() },
-        dismissLabel = stringResource(Res.string.cancel),
-        confirmLabel = stringResource(Res.string.ok),
-        onConfirm = onDismiss,
-    ) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+    // What the slot holds, as a menu. Turned or on a square phone it sits in
+    // the header beside the title, so the cards get its line.
+    val typeMenu: @Composable () -> Unit = {
+        Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 TextButton(onClick = { menu = true }) {
                     Text(stringResource(Res.string.mixer_menu, if (send.isEmpty) stringResource(Res.string.mixer_none) else send.type), color = c.accent, fontSize = 13.sp)
                 }
@@ -1117,6 +1112,22 @@ fun SongSlotDialog(
                         })
                     }
                 }
+        }
+    }
+    PlainDialog(
+        title,
+        onDismiss = { revert(); onDismiss() },
+        dismissLabel = stringResource(Res.string.cancel),
+        confirmLabel = stringResource(Res.string.ok),
+        onConfirm = onDismiss,
+        wideHeader = typeMenu,
+        // The reverb with its mod on is taller than the usual cap; the window
+        // still stops at the screen.
+        maxBodyHeight = if (send.type == "Reverb") 720.dp else 560.dp,
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (!LocalDialogHeaderRow.current) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { typeMenu() }
             }
             if (send.type == "Formula") {
                 val unit = unitOf(slot)

@@ -30,11 +30,11 @@ constexpr float kCoupPush = 0.8f, kCoupFalls = 0.06f;
 /** How long the strings ring once the wheel stops bowing them, seconds. */
 constexpr float kStringT60 = 2.5f, kStoppedT60 = 0.15f;
 /**
- * The two melody strings, tuned 3 cents apart: the second plays 6 dB under
- * the first so they beat about 7 dB deep rather than 10. Both are lifted so
- * the pair holds the same average power as two at full.
+ * The two melody strings, tuned 3 cents apart: the second plays 12 dB under
+ * the first so they beat about 4 dB deep. Both are lifted so the pair holds
+ * the same average power as two at full: sqrt(2 / (1 + 0.25^2)).
  */
-constexpr float kMelodyFirst = 1.2649111f, kMelodySecond = 0.5f * kMelodyFirst;
+constexpr float kMelodyFirst = 1.3719887f, kMelodySecond = 0.25f * kMelodyFirst;
 /** The nudge that starts a string on the wheel. */
 constexpr float kKick = 0.6f;
 /** How hard the wheel pushes the strings. */

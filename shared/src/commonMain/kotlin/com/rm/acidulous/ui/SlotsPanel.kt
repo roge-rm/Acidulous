@@ -23,6 +23,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.engine.NativeEngine
@@ -93,19 +95,30 @@ enum class SlotKind(
  * slot's unit name, so they record, automate and undo the same way.
  *
  * Four full inserts are taller than a phone can spare under the roll, so the
- * slots scroll past about two full ones. An empty slot is one line.
+ * slots scroll past what the screen leaves them. An empty slot is one line.
  */
 @Composable
-fun SlotsPanel(kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier) {
+fun SlotsPanel(
+    kind: SlotKind, track: Track, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier,
+    /** The most it may take, from the screen; see [SLOTS_PANEL_MAX_H]. */
+    maxHeight: androidx.compose.ui.unit.Dp = SLOTS_PANEL_MAX_H,
+) {
     val types = remember(kind) { kind.types() }
-    Column(
-        modifier.background(Acid.colors.panel).heightIn(max = SLOTS_PANEL_MAX_H)
-            .verticalScrollWithBar(rememberScrollState()).padding(6.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor)
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.background(Acid.colors.panel)) {
+        // The patch picker joins the header line when the panel is wide
+        // enough for both, which saves a line per slot.
+        val roomy = this.maxWidth >= SlotHeaderPickerW
+        Column(
+            Modifier.heightIn(max = maxHeight).verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor, pickerInHeader = roomy)
+        }
     }
 }
+
+/** How wide a panel has to be for a slot's patch picker to share its header line. */
+private val SlotHeaderPickerW = 360.dp
 
 /**
  * One slot on its own, for the chip that opens it: choose the type, switch
@@ -213,6 +226,8 @@ private fun SlotRow(
     onRevert: ((() -> Unit) -> Unit)? = null,
     /** One page of the unit's cards, or all of them when -1; see [PAGES]. */
     page: Int = -1,
+    /** Put the patch picker on the header line; a panel with the room. */
+    pickerInHeader: Boolean = false,
 ) {
     val fx = kind.at(track, slot)
     // The bypass as the window found it. Bypass isn't a parameter, so it's not
@@ -223,7 +238,9 @@ private fun SlotRow(
     // folded down to its one line.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
-        if (!(wrap && LocalDialogHeaderRow.current)) Row(
+        val face = !fx.isEmpty && !minimized
+        val headerHere = !wrap && pickerInHeader && face && kind.patchKey?.invoke(fx.type) != null && kind.loadPatch != null
+        if (!(wrap && LocalDialogHeaderRow.current) && !headerHere) Row(
             if (wrap) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
             // Centred in a window. Packed left in a panel so it lines up with the
@@ -236,8 +253,13 @@ private fun SlotRow(
         ) {
             SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized) { minimized = !minimized }
         }
-        if (!fx.isEmpty && !minimized) {
-            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page) { b ->
+        if (face) {
+            val header: (@Composable (@Composable () -> Unit) -> Unit)? = if (headerHere) { picker ->
+                Row(Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized, { minimized = !minimized }, picker)
+                }
+            } else null
+            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header) { b ->
                 onRevert?.invoke {
                     b.resetAll()
                     if (fx.bypass != openedBypass) {
@@ -256,6 +278,8 @@ private fun SlotFace(
     wrap: Boolean = false,
     /** Which of [PAGES]' pages to show, or all when -1. */
     page: Int = -1,
+    /** The slot's header line, given the patch picker to draw on it; null to draw the picker on a line of its own. */
+    header: (@Composable (@Composable () -> Unit) -> Unit)? = null,
     /** Called with the binding once it exists, so a window can undo everything. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
@@ -272,7 +296,7 @@ private fun SlotFace(
         val key = kind.patchKey?.invoke(type)
         val load = kind.loadPatch
         if (key != null && load != null) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            val picker: @Composable () -> Unit = {
                 PatchPicker(
                     title = type,
                     patchNames = { PatchStore.list(key) },
@@ -298,6 +322,7 @@ private fun SlotFace(
                     owner = "$key:$slot",
                 )
             }
+            if (header != null) header(picker) else Row(verticalAlignment = Alignment.CenterVertically) { picker() }
         }
         // A Formula effect's formula: words, so a field rather than a knob.
         if (type == "Formula" && kind == SlotKind.Effects) {
@@ -343,23 +368,27 @@ private fun SlotFace(
         }
         // The arp's sixteen step toggles get their own row below, so they're
         // left out of the cards.
+        val model = if (type == "Reverb") reverbModel(b.value("model")) else null
         val shown = info.filterNot {
             InsertMod.isModParam(it.name) ||
                 type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
-                type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name)
+                type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
+                model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects)
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
             // controls. `LocalPanelStacked` tells `Group` to wrap.
             val wide = LocalDialogWide.current
-            WindowCards {
+            BusyCards(type) { perLine ->
                 val pages = PAGES[type]
-                for ((title, group) in groupsFor(type, shown)) {
+                for ((title, group) in groupsFor(type, shown, model)) {
                     if (page >= 0 && pages != null && title !in pages[page]) continue
-                    Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                        for (p in group) control(p)
-                        if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
+                    key(title) {
+                        Group(title, perLine = perLine, centred = true, background = Acid.colors.cardAlt) {
+                            for (p in group) key(p.name) { control(p) }
+                            if (type == "Chord" && title == "memory") LearnChord(b, trackIndex, unit, editor, slot, kind)
+                        }
                     }
                 }
                 if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
@@ -376,7 +405,9 @@ private fun SlotFace(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalAlignment = Alignment.Bottom,
             ) {
-                for (p in shown) control(p)
+                // The reverb's model first, then its own knobs, as its window has them.
+                val row = if (model != null) groupsFor(type, shown, model).flatMap { it.second } else shown
+                for (p in row) key(p.name) { control(p) }
                 if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
             }
             if (type == "Arp") ArpSteps(b)
@@ -391,7 +422,7 @@ internal fun modTrackNames(editor: SongEditor): List<String> =
         editor.song.tracks.getOrNull(i)?.name ?: stringResource(Res.string.slot_sidechain_empty, i + 1)
     }
 
-/** About two full slots: a header, a preset row and a row of knobs each. */
+/** About two full slots: a header and a row of knobs each. The editor passes more upright when the screen has it. */
 private val SLOTS_PANEL_MAX_H = 300.dp
 
 /** Names too long for a knob's width, said shorter. */
@@ -460,6 +491,14 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "extra" to listOf("breathe"),
         "out" to listOf("gain"),
     ),
+    // The model's own knobs go in a card of their own after the first; see [groupsFor].
+    // The gain ends the tail card rather than taking a card of its own, and
+    // the tail comes last so the mod card after it can share its line.
+    "Reverb" to listOf(
+        "tank" to listOf("model", "size", "damp", "tone", "predelay", "mix"),
+        "extra" to listOf("freeze", "gate", "shimmer", "bits", "crush", "wobble"),
+        "tail" to listOf("duck", "duckrel", "distance", "bloom", "gain"),
+    ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
@@ -473,9 +512,12 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
  * Names the engine doesn't have are dropped, so a renamed parameter leaves a
  * smaller card instead of a broken one.
  */
-private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, List<ParamInfo>>> {
+private fun groupsFor(type: String, info: List<ParamInfo>, model: String? = null): List<Pair<String, List<ParamInfo>>> {
     val byName = info.associateBy { it.name }
-    val declared = PANEL_GROUPS[type] ?: return listOf("" to info)
+    val declared = PANEL_GROUPS[type]?.let { g ->
+        // The reverb's model knobs, in a card named after the model.
+        if (model != null) g.take(1) + (model to REVERB_MODEL_KNOBS[model].orEmpty()) + g.drop(1) else g
+    } ?: return listOf("" to info)
     val out = ArrayList<Pair<String, List<ParamInfo>>>()
     val taken = HashSet<String>()
     for ((title, names) in declared) {
@@ -487,6 +529,70 @@ private fun groupsFor(type: String, info: List<ParamInfo>): List<Pair<String, Li
     val rest = info.filter { it.name !in taken }
     if (rest.isNotEmpty()) out += "more" to rest
     return out
+}
+
+/**
+ * An effect window's cards, packed. The reverb has the most knobs of any
+ * effect, so its window draws smaller dials and puts as many on a line as fit,
+ * which keeps every model on one screen without scrolling.
+ */
+@Composable
+private fun BusyCards(type: String, content: @Composable (perLine: Int) -> Unit) {
+    if (type != "Reverb") {
+        WindowCards(pack = true) { content(4) }
+        return
+    }
+    // The theme's text sits in 24 sp lines, so a knob's 9 sp label and value
+    // take 24 dp each. Lines just taller than the words save most of a knob's height.
+    val tight = androidx.compose.material3.LocalTextStyle.current.merge(
+        androidx.compose.ui.text.TextStyle(lineHeight = 1.3.em),
+    )
+    androidx.compose.runtime.CompositionLocalProvider(
+        LocalKnobDial provides BusyDial,
+        LocalControlH provides BusyDial + 24.dp,
+        LocalKnobGap provides 4.dp,
+        androidx.compose.material3.LocalTextStyle provides tight,
+    ) {
+        WindowCards(pack = true) { content(8) }
+    }
+}
+
+/** The dial in a busy effect window; see [BusyCards]. 48 dp knobs, wide enough for "predelay". */
+private val BusyDial = 42.dp
+
+/** The reverb's models, in the engine's order (Reverb.h, ModelKind). */
+private val REVERB_MODELS = listOf(
+    "room", "plate", "hall", "spring", "early", "space", "tube", "string", "drumhead", "thunder", "howl", "flutter",
+)
+
+/** Each reverb model's own knobs. The rest are on every model. */
+private val REVERB_MODEL_KNOBS = mapOf(
+    "spring" to listOf("drip", "knock"),
+    "early" to listOf("rate"),
+    "space" to listOf("width", "depth", "height", "position", "material"),
+    "tube" to listOf("pitch", "follow", "open"),
+    "string" to listOf("pitch", "follow", "stiff", "pick"),
+    "drumhead" to listOf("tension", "snares"),
+    "thunder" to listOf("metal"),
+    "howl" to listOf("howl"),
+    "flutter" to listOf("walls"),
+)
+private val REVERB_OWN_KNOBS = REVERB_MODEL_KNOBS.values.flatten().toSet()
+
+/** The reverb's model, by name, from `model`'s normalised value. */
+private fun reverbModel(v: Float): String =
+    REVERB_MODELS[(v * (REVERB_MODELS.size - 1)).roundToInt().coerceIn(0, REVERB_MODELS.size - 1)]
+
+/**
+ * Whether the reverb shows a knob on this model: the shared ones, less size on
+ * space, which is sized in metres, and the model's own. `follow` tunes to the
+ * track's notes, so only a track's insert has it.
+ */
+private fun reverbShows(model: String, name: String, trackInsert: Boolean): Boolean = when {
+    name == "follow" && !trackInsert -> false
+    name == "size" -> model != "space"
+    name in REVERB_OWN_KNOBS -> name in REVERB_MODEL_KNOBS[model].orEmpty()
+    else -> true
 }
 
 /** The arp's pattern: sixteen compact step toggles in one row, the ones past `length` dimmed. */
@@ -634,6 +740,8 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "taps" && type == "Delay" -> listOf("2", "3", "4")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
+    name == "model" && type == "Reverb" -> REVERB_MODELS
+    name == "material" && type == "Reverb" -> listOf("tile", "plaster", "wood", "curtains")
     name == "speed" && type == "Rotary" -> listOf("brake", "slow", "fast")
     name == "tempo" && type == "Rotary" -> listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
     name == "freeze" && type == "Grain" -> listOf("off", "on")
@@ -681,9 +789,9 @@ internal fun SongSlotFace(
     modTracks: List<String>? = null,
 ) {
     val control: @Composable (ParamInfo) -> Unit = { p ->
-        val labels = switchLabels(type, p.name, p.steps)
+        val labels = switchLabels(type, p.name, p.steps)?.let { panelWords(it) }
         val accent = if (p.name in EXTRA[type].orEmpty()) Acid.colors.accent else Acid.colors.teal
-        val shortLabel = shortLabelOf(type, p.name)
+        val shortLabel = panelWord(shortLabelOf(type, p.name))
         val v = value(p.name)
         when {
             p.curve == 2 && labels != null && labels.size <= 4 -> SwitchGrid(
@@ -707,10 +815,15 @@ internal fun SongSlotFace(
             )
         }
     }
-    WindowCards {
-        for ((title, group) in groupsFor(type, info)) {
-            Group(title, perLine = 4, centred = true, background = Acid.colors.cardAlt) {
-                for (p in group) control(p)
+    // A song slot never hears notes, so the reverb's `follow` isn't offered.
+    val model = if (type == "Reverb") reverbModel(value("model")) else null
+    val shown = if (model != null) info.filter { reverbShows(model, it.name, trackInsert = false) } else info
+    BusyCards(type) { perLine ->
+        for ((title, group) in groupsFor(type, shown, model)) {
+            key(title) {
+                Group(title, perLine = perLine, centred = true, background = Acid.colors.cardAlt) {
+                    for (p in group) key(p.name) { control(p) }
+                }
             }
         }
         if (modTracks != null) ModCard(type, modTracks, ModAccess(value, { start() }, change, end, set))
@@ -726,6 +839,8 @@ internal fun SongSlotFace(
 private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
     kind: SlotKind, track: Track, trackIndex: Int, slot: Int, types: List<String>, editor: SongEditor,
     fixedType: String?, wrap: Boolean, minimized: Boolean = false, onMinimize: () -> Unit = {},
+    /** Drawn after the bypass, like the slot's patch picker when the panel has room for it on this line. */
+    extra: (@Composable () -> Unit)? = null,
 ) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
@@ -759,6 +874,7 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                 ) { Text(stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass), color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
                 // Folding is only offered in a panel, where space is short. A window
                 // exists to show the face, so it doesn't get the fold mark.
+                extra?.invoke()
                 if (!wrap) {
                     Spacer(Modifier.weight(1f))
                     TextButton(

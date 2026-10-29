@@ -9,6 +9,7 @@
 
 #include <engine/effect/Effects.h>
 #include <engine/effect/FromMachines.h>
+#include <engine/effect/Reverb.h>
 
 using namespace acidulous;
 using namespace acidulous::effect;
@@ -40,7 +41,8 @@ Stereo run(Fx &fx, const std::vector<float> &in, float bpm = 120.0f) {
     for (size_t at = 0; at < in.size(); at += kBlock) {
         const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, in.size() - at));
         fx.onBlock(0, 0, bpm);
-        fx.run(s.l.data() + at, s.r.data() + at, n, false);
+        // Through the base, since Reverb has a private run of its own that hides it.
+        static_cast<Effect &>(fx).run(s.l.data() + at, s.r.data() + at, n, false);
     }
     return s;
 }
@@ -259,7 +261,11 @@ void shifterFeedbackDiesAway() {
     ok("the note stopped, it dies away", tail < 1e-3, d);
 }
 
-/** The send delay and reverb on their defaults, and with every knob at the top: a note stopped, they must die away. */
+/**
+ * The send delay and reverb on their defaults must die away within 27 s of a note stopping. With every
+ * knob at the top the delay holds a bar at 0.95 feedback and +24 dB, so it only has to keep falling:
+ * the last second at 60 s under 0.6 of the one at 30 s.
+ */
 template <typename Fx>
 void diesAway(const char *what, bool allUp) {
     Fx fx;
@@ -268,12 +274,19 @@ void diesAway(const char *what, bool allUp) {
     if (allUp) for (int32_t i = 0; i < fx.params().size(); ++i) fx.params().set(i, 1.0f);
     fx.params().jumpAll();
     std::vector<float> in = tone(185.0f, 0.7f, static_cast<size_t>(kRate * 2));
-    in.resize(static_cast<size_t>(kRate * 30), 0.0f);
+    const int32_t seconds = allUp ? 60 : 30;
+    in.resize(static_cast<size_t>(kRate * seconds), 0.0f);
     Stereo out = run(fx, in);
-    const double tail = rms(out.l, static_cast<size_t>(kRate * 29), static_cast<size_t>(kRate * 30));
-    char d[64];
-    std::snprintf(d, sizeof d, "rms after 27 s %.5f", tail);
-    ok(what, tail < 1e-2, d);
+    const double tail = rms(out.l, static_cast<size_t>(kRate * (seconds - 1)), static_cast<size_t>(kRate * seconds));
+    char d[96];
+    if (allUp) {
+        const double before = rms(out.l, static_cast<size_t>(kRate * 29), static_cast<size_t>(kRate * 30));
+        std::snprintf(d, sizeof d, "rms %.5f at 30 s, %.5f at 60 s", before, tail);
+        ok(what, std::isfinite(tail) && tail < 0.6 * before, d);
+    } else {
+        std::snprintf(d, sizeof d, "rms after 27 s %.5f", tail);
+        ok(what, tail < 1e-2, d);
+    }
 }
 void sendsDieAway() {
     printf("- the sends\n");

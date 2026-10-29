@@ -128,6 +128,12 @@ void Rack::toMachine(uint8_t status, uint8_t d1, uint8_t d2, bool live) {
             d1 = static_cast<uint8_t>(to);
             const int32_t fixed = static_cast<int32_t>(std::lround(channel.target(Velocity)));
             if (fixed > 0) d2 = static_cast<uint8_t>(std::min(fixed, 127));
+            // The inserts hear the note too, for anything tuned to it.
+            // Their pitch comes from the same tuning the machine plays in.
+            float hz = 440.0f * std::pow(2.0f, (static_cast<float>(to) - 69.0f) / 12.0f);
+            const int t = tuningIndex.load(std::memory_order_acquire);
+            if (t >= 0) hz *= tuningTables[t][to];
+            for (Effect *e : effects) if (e != nullptr) e->onNote(to, hz);
         } else if (k == 0x80 || k == 0x90) {
             const uint8_t played = d1 & 0x7f;
             d1 = sentTo[played];

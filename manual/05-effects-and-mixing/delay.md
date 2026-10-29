@@ -32,8 +32,8 @@ stays a dotted eighth when the tempo changes.
   instead of piling up.
 - Use **duck** instead of lowering the mix to stop the delay swamping a part.
 - Reverse on a quarter or a half note swells into each beat. A reverse
-  stretch starts when the song starts, so it stays on the beat. One longer
-  than 1.5 seconds (a bar at 120) plays back in halves.
+  stretch starts on the song's beat, so it's the same wherever play starts.
+  One longer than 3 seconds (a bar below 80) plays back in halves.
 - Three even taps in a quarter is a triplet; four taps over a half note
   repeats every eighth.
 - On a send the delay is always fully wet, and each track's send slider sets how

@@ -168,10 +168,12 @@ class SlotMod {
             // puts it back to 0): start from here, as a render does.
             clock_ = start;
             snap_ = true;
+            preroll_ = true;
         } else {
             clock_ = guess < start ? start : (guess >= start + 1.0 ? start + 0.999999 : guess);
         }
         synced_ = true;
+        per_ = per;
         tick_ = clock_ + static_cast<double>(t.songOffset);
     }
 
@@ -187,13 +189,8 @@ class SlotMod {
     void apply(const float *L, const float *R, int32_t frames, bool stereo, ParamSet &params) {
         float m = 0.0f;
         switch (source_) {
-        case slotmod::Lfo: m = lfo(); break;
-        case slotmod::Steps: {
-            const double len = static_cast<double>(beats_) * kPPQN;
-            const auto at = static_cast<int64_t>(std::floor(tick_ / len));
-            m = step_[static_cast<int32_t>(((at % length_) + length_) % length_)];
-            break;
-        }
+        case slotmod::Lfo:
+        case slotmod::Steps: m = at(tick_); break;
         case slotmod::Follow: {
             float peak = 0.0f;
             for (int32_t i = 0; i < frames; ++i) peak = std::fmax(peak, std::fabs(L[i]));
@@ -209,12 +206,32 @@ class SlotMod {
         }
         default: return;
         }
-        snapped_ = snap_;
         const int32_t n = params.size();
         const int32_t t0 = target_[0], t1 = target_[1];
-        if (t0 >= 0 && t0 < n) params.offset(t0, m * (depth_[0] + (t1 == t0 ? depth_[1] : 0.0f)), snap_);
-        if (t1 >= 0 && t1 < n && t1 != t0) params.offset(t1, m * depth_[1], snap_);
+        const bool v0 = t0 >= 0 && t0 < n, v1 = t1 >= 0 && t1 < n && t1 != t0;
+        const float d0 = depth_[0] + (t1 == t0 ? depth_[1] : 0.0f), d1 = depth_[1];
+        // A play start or a jump with a source that is only the position: run
+        // the knobs' smoothers through the blocks before this one, so the
+        // block lands where playing into it would have it rather than at the
+        // value itself. A scene played alone or frozen then starts as the
+        // song has it.
+        prerolled_ = snap_ && preroll_ && (source_ == slotmod::Lfo || source_ == slotmod::Steps);
+        if (prerolled_) {
+            for (int32_t k = kPreroll; k >= 1; --k) {
+                const float p = at(tick_ - static_cast<double>(k) * per_);
+                if (v0) params.offset(t0, p * d0, k == kPreroll);
+                if (v1) params.offset(t1, p * d1, k == kPreroll);
+                if (k == kPreroll) continue;
+                if (v0) params.tickOne(t0);
+                if (v1) params.tickOne(t1);
+            }
+        }
+        const bool jump = snap_ && !prerolled_;
+        snapped_ = jump;
+        if (v0) params.offset(t0, m * d0, jump);
+        if (v1) params.offset(t1, m * d1, jump);
         snap_ = false;
+        preroll_ = false;
     }
 
     /** A panic or a render's start: the follower empties and the next block lands without a glide. */
@@ -224,9 +241,13 @@ class SlotMod {
         tick_ = 0.0;
         synced_ = false;
         snap_ = true;
+        preroll_ = false;
     }
     /** A step lock jumped a knob; the offset jumps with it rather than gliding back on. */
-    void jumpNext() { snap_ = true; }
+    void jumpNext() {
+        snap_ = true;
+        preroll_ = false;
+    }
     bool targets(int32_t index) const { return index >= 0 && (index == target_[0] || index == target_[1]); }
     /** Target [j] (0 or 1) as an effect parameter index, or -1. */
     int32_t target(int32_t j) const { return target_[j]; }
@@ -234,6 +255,8 @@ class SlotMod {
     double position() const { return tick_; }
     /** Whether this block's apply() jumped its targets rather than gliding. */
     bool snapped() const { return snapped_; }
+    /** Whether this block's apply() ran the smoothers in from before; the knobs hold last block's value. */
+    bool prerolled() const { return prerolled_; }
 
   private:
     static float coeff(float ms) {
@@ -250,10 +273,19 @@ class SlotMod {
         z ^= z >> 31;
         return static_cast<float>(z >> 40) / 16777216.0f;
     }
+    /** The LFO's or the steps' value at song tick [tick]. */
+    float at(double tick) const {
+        if (source_ == slotmod::Steps) {
+            const double len = static_cast<double>(beats_) * kPPQN;
+            const auto i = static_cast<int64_t>(std::floor(tick / len));
+            return step_[static_cast<int32_t>(((i % length_) + length_) % length_)];
+        }
+        return lfo(tick);
+    }
     /** -1..1, from the position. */
-    float lfo() const {
+    float lfo(double tick) const {
         const double len = static_cast<double>(beats_) * kPPQN;
-        const double cycles = tick_ / len;
+        const double cycles = tick / len;
         const auto n = static_cast<int64_t>(std::floor(cycles));
         const auto p = static_cast<float>(cycles - static_cast<double>(n));
         switch (shape_) {
@@ -292,11 +324,16 @@ class SlotMod {
     float depth_[2] = {0.0f, 0.0f};
     float step_[kSlotModSteps]{};
 
+    /** Blocks a preroll runs: the smoother (0.35 a block) is within 1e-7 of its target by then. */
+    static constexpr int32_t kPreroll = 40;
     double clock_ = 0.0; // the clock's tick, which a loop in the song doesn't move
+    double per_ = 0.0;   // ticks a block
     double tick_ = 0.0;  // the song's
     bool synced_ = false; // clock_ follows the clock
     bool snap_ = true;
     bool snapped_ = true;
+    bool preroll_ = false;   // the next snap is a resync to the position, not a step lock
+    bool prerolled_ = false;
     float env_ = 0.0f;
     const float *keyBuf_ = nullptr;
     uint32_t seed_ = 0;

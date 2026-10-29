@@ -58,7 +58,7 @@
     - [Mouth](05-effects-and-mixing/mouth.md) - Diction's throat on any track: it shapes whatever goes through into a vowel.
     - [Phaser](05-effects-and-mixing/phaser.md) - two to eight stages.
     - [Resonator](05-effects-and-mixing/resonator.md) - strings tuned to a key, ringing in sympathy with the track.
-    - [Reverb](05-effects-and-mixing/reverb.md) - a room that can also freeze, gate, shimmer or crush itself.
+    - [Reverb](05-effects-and-mixing/reverb.md) - twelve rooms and things that ring, with a tail you can duck, push back or freeze.
     - [Rotary](05-effects-and-mixing/rotary.md) - the organ's rotating speaker cabinet, for any track.
     - [Shifter](05-effects-and-mixing/shifter.md) - frequency shifting, for metallic and detuned sounds.
     - [Slicer](05-effects-and-mixing/slicer.md) - the track cut on the tempo, some slices repeated, reversed or dropped.

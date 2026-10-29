@@ -148,8 +148,11 @@ def from_panels():
 def from_engine():
     exe = ROOT / "build/param_names"
     src = ROOT / "tools/param_names.cpp"
-    if not exe.exists() or exe.stat().st_mtime < src.stat().st_mtime:
-        lib = subprocess.run([str(ROOT / "tools/host_engine.sh")], capture_output=True, text=True, check=True).stdout.strip()
+    # The archive is rebuilt when the engine changes, and the names are read from it,
+    # so a new parameter shows up here without anyone touching param_names.cpp.
+    lib = subprocess.run([str(ROOT / "tools/host_engine.sh")], capture_output=True, text=True, check=True).stdout.strip()
+    newest = max(src.stat().st_mtime, pathlib.Path(lib).stat().st_mtime)
+    if not exe.exists() or exe.stat().st_mtime < newest:
         subprocess.run(["g++", "-O1", "-std=c++17", "-I", str(ROOT / "app/src/main/cpp"), str(src), lib, "-o", str(exe)], check=True)
     words = set()
     for line in subprocess.run([str(exe)], capture_output=True, text=True, check=True).stdout.splitlines():

@@ -64,11 +64,14 @@ void Delay::prepare(int32_t sampleRate) {
     // The line's length is part of how a read rounds (see wrappedReadIndex),
     // so it stays as it was for songs made before the modes.
     for (auto &l : line) l.prepare(static_cast<int32_t>(sr * kMaxDelaySeconds) + 64);
+    // A stretch reads back up to twice its length and its tail.
+    for (auto &l : revLine) l.prepare(static_cast<int32_t>(2.0f * (kMaxDelaySeconds + kReverseFadeSeconds) * sr + kReverseDriftRoom) + 64);
     reset();
 }
 
 void Delay::reset() {
     for (auto &l : line) l.clear();
+    for (auto &l : revLine) l.forget();
     lp[0] = lp[1] = 0.0f;
     duckEnv = 0.0f;
     readSamples = clampf(kDelayBeats[3] * 60.0f / bpm * sr, 1.0f, sr * kMaxDelaySeconds);
@@ -79,9 +82,27 @@ void Delay::reset() {
     wobblePhase = 0.0f;
     revAt = 0.0f;
     revLen = revPrevLen = readSamples;
-    revTail = revPrevTail = 0.0f;
-    // The first stretch starts on the first block, at the time asked for.
+    revTail = 0.0f;
+    revFadeAt = revFadeLen = revFadeD = 0.0f;
+    revFadeNormal = false;
+    revTicks = 0.0;
+    revJumped = false;
     revStart = true;
+    clock = 0.0;
+    synced = false;
+    revWindow = 0;
+}
+
+void Delay::onBlock(int64_t tickStart, int64_t, float b) {
+    bpm = b;
+    // Ticks are whole, so the clock keeps its own fraction. A jump (play, a
+    // stop putting the clock back to 0) starts it from the block's tick.
+    const double start = static_cast<double>(tickStart);
+    if (!synced || clock < start - 1.0 || clock > start + 2.0) {
+        revJumped = synced;
+        clock = start;
+    } else clock = std::clamp(clock, start, start + 0.999999);
+    synced = true;
 }
 
 float Delay::wobbleDrift(float depth) {
@@ -111,18 +132,17 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const bool wobbling = wobbleDepth > 0.0f;
 
     if (snapRead) { readSamples = target; snapRead = false; }
-    // Each time the mode comes round to reverse, the first stretch starts on
-    // that block, with no fade from an older one.
+    // Each time the mode comes round to reverse, it starts part way into the
+    // stretch the song is in, fading from the echo the other mode played.
     if (mode != Reverse) revStart = true;
-    else if (revStart) {
-        revLen = revTail = revPrevTail = 0.0f;
-        revStart = false;
-    }
+    const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(sr));
     if (mode == MultiTap || mode == Reverse) {
         fb_ = fb; mix_ = mix; duck_ = duck; wobbleDepth_ = wobbleDepth;
         duckAtk_ = duckAtk; duckRel_ = duckRel; glide_ = glide;
         if (mode == MultiTap) runMultiTap(L, R, frames, stereoIn, target, toneCoeff);
-        else runReverse(L, R, frames, stereoIn, target, toneCoeff);
+        else runReverse(L, R, frames, stereoIn, target, toneCoeff, timeIdx, ticksPerFrame);
+        clock += frames * ticksPerFrame;
+        revJumped = false;
         return true;
     }
     // Normal and ping-pong: this loop is the delay as it always was, so
@@ -141,19 +161,20 @@ bool Delay::process(float *L, float *R, int32_t frames, bool stereoIn) {
         const float tapL = line[0].read(rd), tapR = line[1].read(rd);
         lp[0] += (tapL - lp[0]) * toneCoeff;
         lp[1] += (tapR - lp[1]) * toneCoeff;
-        if (pingPong) {
-            line[0].write(inL * 0.5f + inR * 0.5f + lp[1] * fb);
-            line[1].write(lp[0] * fb);
-        } else {
-            line[0].write(inL + lp[0] * fb);
-            line[1].write(inR + lp[1] * fb);
-        }
+        const float w0 = pingPong ? inL * 0.5f + inR * 0.5f + lp[1] * fb : inL + lp[0] * fb;
+        const float w1 = pingPong ? lp[0] * fb : inR + lp[1] * fb;
+        line[0].write(w0);
+        line[1].write(w1);
+        revLine[0].write(w0);
+        revLine[1].write(w1);
         // Duck: echoes stay under the dry signal and swell up in the gaps.
         const float env = peakEnvelope(duckEnv, (std::fabs(inL) + std::fabs(inR)) * 1.5f, duckAtk, duckRel);
         const float wet = mix * (1.0f - duck * clampf(env, 0.0f, 1.0f));
         L[i] = inL + tapL * wet;
         R[i] = inR + tapR * wet;
     }
+    clock += frames * ticksPerFrame;
+    revJumped = false;
     return true;
 }
 
@@ -193,289 +214,119 @@ void Delay::runMultiTap(float *L, float *R, int32_t frames, bool stereoIn, float
         // The right line keeps time too, so switching back to a two-line
         // mode doesn't play something old.
         line[1].write(feed);
+        revLine[0].write(feed);
+        revLine[1].write(feed);
         const float wet = duckedMix(inL, inR);
         L[i] = inL + outL * wet;
         R[i] = inR + outR * wet;
     }
 }
 
-void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff) {
+void Delay::runReverse(float *L, float *R, int32_t frames, bool stereoIn, float target, float toneCoeff, int timeIdx,
+                       double ticksPerFrame) {
+    // Stretches are counted from the song's start, so they fall on the same
+    // beats whether the song plays through or starts part way.
+    const double len = stretchTicks(timeIdx);
+    const double song = clock + static_cast<double>(modTransport_.songOffset);
     for (int32_t i = 0; i < frames; ++i) {
         const float inL = L[i], inR = stereoIn ? R[i] : L[i];
         readSamples += (target - readSamples) * glide_;
         const float drift = wobbleDrift(wobbleDepth_);
-        // Stretches start every `time`, so they stay on the beat they started
-        // on. Each plays a short tail on past its end, which the next fades
-        // in over.
-        if (revAt >= revLen) startStretch();
+        // Each stretch plays a short tail on past its end, which the next
+        // fades in over.
+        const double at = song + static_cast<double>(i) * ticksPerFrame;
+        const auto window = static_cast<int64_t>(std::floor(at / len));
+        // A stretch starts over on its line, and also part way in after a
+        // jump (a loop, a move) or a new length.
+        if (revStart || (revJumped && i == 0) || window != revWindow || len != revTicks) {
+            const auto into = static_cast<float>((at - static_cast<double>(window) * len) / ticksPerFrame);
+            startStretch(len, ticksPerFrame, into);
+            if (revStart) {
+                // Fade from the other mode's tap over this stretch's tail.
+                revFadeNormal = true;
+                revFadeD = readSamples;
+                revFadeAt = 0.0f;
+                revFadeLen = revTail;
+            }
+            revStart = false;
+            revWindow = window;
+        } else if (revAt >= stretchLimit()) {
+            // The clock stood still: carry on a stretch at a time.
+            startStretch(len, ticksPerFrame, 0.0f);
+        }
         // At t frames into a stretch, reading 2t back plays the stretch
         // before it from its end to its start.
         float tapL, tapR;
         {
             const float d = 2.0f * revAt + 1.0f + drift;
-            tapL = line[0].read(d);
-            tapR = line[1].read(d);
+            tapL = revLine[0].read(d);
+            tapR = revLine[1].read(d);
         }
-        if (revAt < revPrevTail) {
-            const float x = revAt / revPrevTail * 0.5f * dsp::kPi;
-            const float in = std::sin(x), out = std::cos(x);
-            const float d = 2.0f * (revAt + revPrevLen) + 1.0f + drift;
-            tapL = tapL * in + line[0].read(d) * out;
-            tapR = tapR * in + line[1].read(d) * out;
+        // The fade is equal gain, not equal power. The samples it fades in
+        // here are read again in the next stretch's tail and faded out there,
+        // so their two gains must add up to 1 or the stretch ends build up in
+        // the feedback. The stretch fading out is read on from where it was.
+        if (revFadeAt < revFadeLen) {
+            const float in = revFadeAt / revFadeLen, out = 1.0f - in;
+            const float d = (revFadeNormal ? revFadeD : 2.0f * (revAt + revPrevLen) + 1.0f) + drift;
+            tapL = tapL * in + revLine[0].read(d) * out;
+            tapR = tapR * in + revLine[1].read(d) * out;
         }
+        revFadeAt += 1.0f;
         revAt += 1.0f;
         lp[0] += (tapL - lp[0]) * toneCoeff;
         lp[1] += (tapR - lp[1]) * toneCoeff;
-        line[0].write(inL + lp[0] * fb_);
-        line[1].write(inR + lp[1] * fb_);
+        const float w0 = inL + lp[0] * fb_, w1 = inR + lp[1] * fb_;
+        line[0].write(w0);
+        line[1].write(w1);
+        revLine[0].write(w0);
+        revLine[1].write(w1);
         const float wet = duckedMix(inL, inR);
         L[i] = inL + tapL * wet;
         R[i] = inR + tapR * wet;
     }
 }
 
-void Delay::startStretch() {
-    revPrevLen = revLen;
-    revPrevTail = revTail;
-    // A stretch reads up to twice its length back, so one longer than half
-    // the line is halved until it fits: a bar at a slow tempo plays back in
-    // halves or quarters, still on the beat.
-    const float room = static_cast<float>(line[0].capacity()) - kReverseDriftRoom;
-    float len = readSamples, tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
-    while (2.0f * (len + tail) > room) {
+double Delay::stretchTicks(int timeIdx) const {
+    // A note value longer than the line holds twice (a bar below 80 bpm) is
+    // halved until it fits, so it plays back in halves or quarters, still on
+    // the beat.
+    const float room = static_cast<float>(revLine[0].capacity()) - kReverseDriftRoom;
+    double ticks = static_cast<double>(kDelayBeats[timeIdx]) * kPPQN;
+    float len = kDelayBeats[timeIdx] * 60.0f / bpm * sr, tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
+    while (2.0f * (len + tail) > room && ticks > 1.0) {
         len *= 0.5f;
+        ticks *= 0.5;
         tail = std::min(kReverseFadeSeconds * sr, 0.25f * len);
     }
-    revLen = len;
-    revTail = tail;
-    revAt = 0.0f;
+    return ticks;
 }
 
-// --- Reverb -----------------------------------------------------------------------
-
-namespace {
-// Freeverb's tunings at 44.1 kHz, scaled in prepare(). The right channel is
-// offset by 23 samples for width.
-constexpr int kCombBase[8] = {1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617};
-constexpr int kAllpassBase[4] = {556, 441, 341, 225};
-constexpr float kSizeStretchMax = 1.9f;
-
-/** The tail's typical level, which the bit crusher quantises against. */
-constexpr float kReverbNominal = 0.25f;
-/**
- * How much of the shifted tail goes back into each comb. Found by testing
- * every room size. The worst case is the smallest room, since it has the most
- * headroom under unity and so gets injected hardest. 0.15 stays stable and
- * still gives a clearly audible shimmer.
- */
-constexpr float kCombInject = 0.15f;
-
-// Keeps the comb stores out of denormals, so the reverb renders the same
-// whatever the FPU's flush-to-zero flag is set to.
-inline float undenormal(float v) {
-    static constexpr float kTiny = 1.0e-20f;
-    return v + kTiny - kTiny;
-}
-} // namespace
-
-const ParamDef *Reverb::paramDefs(int32_t &count) const {
-    static const ParamDef defs[Count] = {
-        {"size", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
-        {"damp", 0.0f, 1.0f, 0.4f, Curve::Linear, 0, ""},
-        {"tone", 500.0f, 18000.0f, 9000.0f, Curve::Exponential, 0, "Hz"},
-        {"predelay", 0.0f, 200.0f, 10.0f, Curve::Linear, 0, "ms"},
-        {"mix", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
-        {"freeze", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
-        {"gate", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"shimmer", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"bits", 1.0f, 16.0f, 16.0f, Curve::Stepped, 16, ""},
-        {"crush", 1.0f, 32.0f, 1.0f, Curve::Exponential, 0, ""},
-        {"wobble", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
-        {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
-    };
-    count = Count;
-    return defs;
-}
-
-void Reverb::prepare(int32_t sampleRate) {
-    sr = static_cast<float>(sampleRate);
-    const float scale = sr / 44100.0f;
-    for (int c = 0; c < 2; ++c) {
-        for (int i = 0; i < 8; ++i) {
-            combs[c][i].len = static_cast<int32_t>(static_cast<float>(kCombBase[i]) * scale) + (c == 1 ? 23 : 0);
-            combs[c][i].line.prepare(static_cast<int32_t>(static_cast<float>(combs[c][i].len) * kSizeStretchMax) + 8);
-        }
-        for (int i = 0; i < 4; ++i) {
-            aps[c][i].len = static_cast<int32_t>(static_cast<float>(kAllpassBase[i]) * scale) + (c == 1 ? 23 : 0);
-            aps[c][i].line.prepare(aps[c][i].len + 8);
-        }
-        pre[c].prepare(static_cast<int32_t>(sr * 0.21f));
-        // Longer than the shimmer window, so the read point can slide without
-        // catching the write head.
-        shimmerLine[c].prepare(static_cast<int32_t>(sr * 0.12f));
+void Delay::startStretch(double ticks, double ticksPerFrame, float into) {
+    // The stretch ending is read on from where it is now, so its length is
+    // taken as where it was at the start of this one, [into] frames ago.
+    revPrevLen = revAt - into;
+    const float prevTail = revTail;
+    revLen = static_cast<float>(ticks / ticksPerFrame);
+    revTail = std::min(kReverseFadeSeconds * sr, 0.25f * revLen);
+    revAt = into;
+    revTicks = ticks;
+    revFadeNormal = false;
+    // On the line the old stretch's tail fades out from the new one's start.
+    // Part way in, the fade starts now and takes the new stretch's tail.
+    if (into < 1.0f) {
+        revFadeAt = into;
+        revFadeLen = prevTail;
+    } else {
+        revFadeAt = 0.0f;
+        revFadeLen = revTail;
     }
-    reset();
 }
 
-void Reverb::reset() {
-    for (auto &ch : combs) for (auto &c : ch) { c.line.clear(); c.store = 0.0f; }
-    for (auto &ch : aps) for (auto &a : ch) a.line.clear();
-    for (auto &p : pre) p.clear();
-    for (auto &l : shimmerLine) l.clear();
-    for (int c = 0; c < 2; ++c) {
-        shimmerPhase[c] = 0.0f;
-        shimmerFb[c] = 0.0f;
-        shimDcX[c] = 0.0f;
-        shimDcY[c] = 0.0f;
-        shimLp[c] = 0.0f;
-        crushAcc[c] = 0.0f;
-        crushHeld[c] = 0.0f;
-    }
-    wobblePhase = 0.0f;
-    lp[0] = lp[1] = 0.0f;
-    gateEnv = 0.0f;
-    gateHold = 0;
-    inputEnv = 0.0f;
-}
-
-bool Reverb::process(float *L, float *R, int32_t frames, bool stereoIn) {
-    const auto &p = params_;
-    const bool freeze = p.get(Freeze) >= 0.5f;
-    const float size = p.get(Size);
-    const float stretch = 1.0f + (kSizeStretchMax - 1.0f) * size;
-    const float fb = freeze ? 1.0f : 0.72f + 0.26f * size;
-    const float damp = freeze ? 0.0f : p.get(Damp) * 0.6f;
-    const float inGain = freeze ? 0.0f : 0.015f;
-    const float mix = p.get(Mix), gate = p.get(Gate);
-    const float preSamples = clampf(p.get(PreDelay) * 0.001f * sr, 1.0f, sr * 0.2f);
-    const float toneCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * p.get(Tone)), sr);
-    const float envAtk = dsp::onePoleCoeff(0.001f, sr), envRel = dsp::onePoleCoeff(0.05f, sr);
-    const float gateRel = dsp::onePoleCoeff(0.006f, sr);
-    const int32_t holdSamples = static_cast<int32_t>((0.04f + gate * 0.5f) * sr);
-    const float shimmer = p.get(Shimmer);
-    const int32_t bits = static_cast<int32_t>(p.get(Bits) + 0.5f);
-    const float crush = p.get(Crush);
-    const float wobble = p.get(Wobble);
-    // The shimmer window. The read point slides through it to come out an
-    // octave up, with two taps half a window apart for the crossfade.
-    const float shimWin = sr * 0.045f;
-    // The shimmer's own damping. Brighter rooms let it climb further.
-    const float shimDamp = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * (1200.0f + 2400.0f * (1.0f - damp))), sr);
-    // Combs drift by up to a couple of ms each, so the tail never settles into
-    // a fixed comb pattern.
-    const float wobbleInc = 0.23f / sr;
-    const float wobbleDepth = wobble * sr * 0.0015f;
-    const bool wobbling = wobbleDepth > 0.0f;
-
-    // Lean quality uses half the combs and allpasses, for a thinner but
-    // cheaper tail. The sum is scaled up so a lean room isn't quieter.
-    const int32_t nCombs = fullQuality() ? kCombs : kCombs / 2;
-    const int32_t nAps = fullQuality() ? kAps : kAps / 2;
-    const float combScale = static_cast<float>(kCombs) / static_cast<float>(nCombs);
-
-    for (int32_t i = 0; i < frames; ++i) {
-        const float inL = L[i], inR = stereoIn ? R[i] : L[i];
-        pre[0].write(inL);
-        pre[1].write(inR);
-        const float dry[2] = {pre[0].read(preSamples), pre[1].read(preSamples)};
-        float out[2];
-        for (int c = 0; c < 2; ++c) {
-            const float x = dry[c] * inGain;
-            float acc = 0.0f;
-            int combIndex = 0;
-            for (int32_t ci = 0; ci < nCombs; ++ci) {
-                Comb &comb = combs[c][ci];
-                // Each comb wobbles on its own phase. Without the offset they'd
-                // all lengthen together, which is a pitch bend. Only computed
-                // when wobble is on, since it's sixteen sines a sample.
-                float drift = 0.0f;
-                if (wobbling) {
-                    const float ph = wobblePhase + static_cast<float>(combIndex) * 0.125f +
-                                     (c == 1 ? 0.5f : 0.0f);
-                    drift = wobbleDepth * std::sin((ph - std::floor(ph)) * dsp::kTwoPi);
-                }
-                const float y = comb.line.read(static_cast<float>(comb.len) * stretch + drift);
-                comb.store = undenormal(y * (1.0f - damp) + comb.store * damp);
-                // The shimmer uses only the headroom left under unity
-                // (1 - fb), or the loop gain goes above one and blows up. So
-                // a frozen reverb (fb = 1) can't shimmer. kCombInject accounts
-                // for the shimmer going into every comb.
-                comb.line.write(x + comb.store * fb +
-                                shimmerFb[c] * shimmer * (1.0f - fb) * kCombInject);
-                acc += y;
-                ++combIndex;
-            }
-            for (int32_t ai = 0; ai < nAps; ++ai) {
-                Allpass &ap = aps[c][ai];
-                const float y = ap.line.read(static_cast<float>(ap.len));
-                ap.line.write(acc + y * 0.5f);
-                acc = y - acc;
-            }
-            acc *= combScale;
-            lp[c] += (acc - lp[c]) * toneCoeff;
-            float t = lp[c];
-
-            // Lo-fi tail: quantised and sample-held after the room and before
-            // the mix, so the dry signal isn't affected.
-            if (bits < 16) {
-                const float step = kReverbNominal / static_cast<float>(1 << bits);
-                t = std::round(t / step) * step;
-            }
-            if (crush > 1.001f) {
-                crushAcc[c] += 1.0f / crush;
-                if (crushAcc[c] >= 1.0f) { crushAcc[c] -= 1.0f; crushHeld[c] = t; }
-                t = crushHeld[c];
-            }
-
-            // Shimmer: the tail read back an octave up, into the combs.
-            if (shimmer > 0.0f) {
-                shimmerLine[c].write(t);
-                // The delay shrinks by one sample per sample, so the read
-                // point moves at twice the rate and the tail comes back an
-                // octave up. Adding instead would hold the read point still.
-                shimmerPhase[c] -= 1.0f / shimWin;
-                while (shimmerPhase[c] < 0.0f) shimmerPhase[c] += 1.0f;
-                float ph2 = shimmerPhase[c] + 0.5f;
-                if (ph2 >= 1.0f) ph2 -= 1.0f;
-                const float g1 = std::sin(shimmerPhase[c] * 3.14159265f);
-                const float g2 = std::sin(ph2 * 3.14159265f);
-                const float shifted = shimmerLine[c].read(shimmerPhase[c] * shimWin + 2.0f) * g1 +
-                                      shimmerLine[c].read(ph2 * shimWin + 2.0f) * g2;
-                // Remove DC before it goes round again. The shifter passes DC
-                // unchanged, so it would build up in the loop. A one-pole
-                // blocker at about 5 Hz stops it.
-                const float dc = shifted - shimDcX[c] + 0.9995f * shimDcY[c];
-                shimDcX[c] = shifted;
-                shimDcY[c] = dc;
-                // Low-pass it every time round. Each pass moves the tail up an
-                // octave, so without damping it would climb forever. NaNs are
-                // dropped here too, since a feedback path would keep them.
-                const float bounded = std::isfinite(dc) ? clampf(dc, -2.0f, 2.0f) : 0.0f;
-                shimLp[c] += (bounded - shimLp[c]) * shimDamp;
-                // Soft-limit the feedback. No fixed injection amount is safe
-                // for every room size, so the limiter is what keeps the loop
-                // bounded, like a shimmer pedal.
-                shimmerFb[c] = undenormal(fastTanh(shimLp[c] * 1.6f) * 0.55f);
-            } else {
-                shimmerFb[c] = 0.0f;
-            }
-            out[c] = t;
-        }
-        wobblePhase += wobbleInc;
-        if (wobblePhase >= 1.0f) wobblePhase -= 1.0f;
-        // Gate: lets the tail through for a hold time after each hit, then
-        // cuts it. The classic gated drum room.
-        float g = 1.0f;
-        if (gate > 0.0f) {
-            const float env = peakEnvelope(inputEnv, (std::fabs(inL) + std::fabs(inR)), envAtk, envRel);
-            if (env > 0.05f) { gateHold = holdSamples; gateEnv = 1.0f; }
-            if (gateHold > 0) --gateHold; else gateEnv += (0.0f - gateEnv) * gateRel;
-            g = gateEnv;
-        }
-        L[i] = inL + out[0] * mix * g;
-        R[i] = inR + out[1] * mix * g;
-    }
-    return true;
+float Delay::stretchLimit() const {
+    // A read goes back twice this plus a fade's tail, and wobble's drift.
+    const float room = static_cast<float>(revLine[0].capacity()) - kReverseDriftRoom;
+    return std::min(2.0f * revLen, 0.5f * room - kReverseFadeSeconds * sr - 2.0f);
 }
 
 // --- Eq ---------------------------------------------------------------------------

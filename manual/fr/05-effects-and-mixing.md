@@ -17,8 +17,10 @@ Chaque effet a sa propre page ci-dessous.
 - [**Delay**](05-effects-and-mixing/delay.md) : des échos sur une valeur de
   note, normaux, en ping-pong, à plusieurs têtes ou à l’envers, qui peuvent
   s’atténuer pendant que vous jouez.
-- [**Reverb**](05-effects-and-mixing/reverb.md) : une salle qui peut aussi se
-  figer, se couper, miroiter ou s’écraser jusqu’à 8 bits.
+- [**Reverb**](05-effects-and-mixing/reverb.md) : douze modèles, d’une salle,
+  d’une plaque, d’un hall ou d’un ressort à un tube accordé, une peau de
+  tambour ou une salle qui hurle, avec une queue qu’on peut atténuer,
+  éloigner, figer, faire miroiter ou écraser.
 - [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
   ce que la piste vient de jouer, qui peut se figer.
 - [**Tape**](05-effects-and-mixing/tape.md) : un magnétophone usé, avec
