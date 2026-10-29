@@ -444,6 +444,28 @@ void lifecycle() {
     }
 }
 
+/** How deep the two melody strings beat on a held note, dB: the swing of a 50 ms RMS over eight seconds, drones and dog off. */
+double beating(int note) {
+    Pipes g({{"model", Gurdy}, {"drones", 0.0f}, {"dog", 0.0f}, {"drift", 0.0f}});
+    g.f->noteOn(static_cast<uint8_t>(note), 100);
+    g.play(10.0);
+    double lo = 1e9, hi = -1e9;
+    for (double t = 2.0; t + 0.05 <= 10.0; t += 0.01) {
+        const double r = g.rms(t, t + 0.05);
+        lo = std::min(lo, r);
+        hi = std::max(hi, r);
+    }
+    return hi - lo;
+}
+
+void melodyBeat() {
+    std::printf("- the melody strings beating\n");
+    for (int note : {57, 69, 76}) {
+        const double d = beating(note);
+        check(d > 2.5 && d < 5.5, fmt("note %d beats about 4 dB deep", note).c_str(), fmt("%.1f dB", d));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -454,6 +476,7 @@ int main() {
     fingers();
     dog();
     lifecycle();
+    melodyBeat();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }
