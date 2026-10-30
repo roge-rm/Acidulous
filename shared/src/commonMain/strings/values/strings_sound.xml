@@ -146,4 +146,31 @@
     <string name="sound_edit">edit</string>
     <string name="sound_rename">rename</string>
     <string name="sound_rename_title">Rename</string>
+    <!-- Capturing a room's impulse for Venue -->
+    <string name="sound_capture_room">capture a room…</string>
+    <string name="room_title">Capture a room</string>
+    <string name="room_level_card">level</string>
+    <string name="room_tone">test tone</string>
+    <string name="room_level">level</string>
+    <string name="room_sweep_card">sweep</string>
+    <string name="room_length">length</string>
+    <string name="room_repeats">repeats</string>
+    <string name="room_sweep">sweep</string>
+    <string name="room_stop">stop</string>
+    <string name="room_sweeping">sweeping %1$d%%  peak %2$.2f</string>
+    <string name="room_working">working it out…</string>
+    <string name="room_clipped">The input clipped: turn the level down and sweep again.</string>
+    <string name="room_result_card">result</string>
+    <string name="room_trim">trim</string>
+    <!-- Length, mono or stereo, signal to noise, and how late the sound came back. -->
+    <string name="room_readout">%1$.2f s · %2$s · S/N %3$.0f dB · %4$.0f ms late</string>
+    <string name="room_listen">listen</string>
+    <string name="room_save">save</string>
+    <string name="room_saved">Saved as %1$s.</string>
+    <string name="room_saved_button">saved</string>
+    <string name="room_tab_capture">capture</string>
+    <string name="room_tab_rooms">your rooms</string>
+    <string name="room_none">No rooms yet. Capture one on the first tab.</string>
+    <string name="room_failed">No impulse: %1$s.</string>
+    <string name="room_default_name">room %1$d</string>
 </resources>

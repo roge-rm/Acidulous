@@ -1,4 +1,5 @@
 #include "Venue.h"
+#include <engine/core/Handover.h>
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
@@ -120,6 +121,13 @@ void Venue::prepare(int32_t sampleRate) {
 
 void Venue::retire(VenueImpulse *&x) {
     if (x == nullptr) return;
+    if (retirer_ != nullptr) {
+        // Straight to the engine's deleter thread, so ~17 MB isn't held until the next swap.
+        x->next = nullptr;
+        retirer_->retire(x, deleteAs<VenueImpulse>);
+        x = nullptr;
+        return;
+    }
     x->next = spent;
     spent = x;
     x = nullptr;

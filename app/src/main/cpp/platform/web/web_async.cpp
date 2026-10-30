@@ -14,6 +14,21 @@ extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadNexusPatch(jniweb::Aren
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadNexusPatch(acid_jni_env(), nullptr, rack, spec))); });
 }
 
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeRoomAnalyse(JNIEnv *, jobject, jfloatArray);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeRoomAnalyse(jniweb::Arena *arena, jfloatArray picture) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeRoomAnalyse(acid_jni_env(), nullptr, picture))); });
+}
+
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeRoomListen(JNIEnv *, jobject, jint);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeRoomListen(jniweb::Arena *arena, jint frames) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeRoomListen(acid_jni_env(), nullptr, frames))); });
+}
+
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeRoomSave(JNIEnv *, jobject, jstring, jint);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeRoomSave(jniweb::Arena *arena, jstring path, jint frames) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeRoomSave(acid_jni_env(), nullptr, path, frames))); });
+}
+
 extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeCompCell(JNIEnv *, jobject, jint, jlong, jint, jfloat, jstring, jfloatArray);
 extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeCompCell(jniweb::Arena *arena, jint rack, jlong sceneId, jint frames, jfloat bpm, jstring path, jfloatArray peakOut) {
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeCompCell(acid_jni_env(), nullptr, rack, sceneId, frames, bpm, path, peakOut))); });

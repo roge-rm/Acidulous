@@ -9,6 +9,8 @@
 // An insert effect in a rack slot. Same lifecycle rules as Machine.
 namespace acidulous {
 
+class Retirer;
+
 // Bypass is addressed like a parameter (unit effect1/2, this index) so the UI,
 // automation lanes and recording treat it as one, without it living in every
 // effect's table.
@@ -35,6 +37,8 @@ class Effect {
      * thread. Effects that hold none refuse by handing the new one back.
      */
     virtual void *swapObject(int32_t /*slot*/, void *object) { return object; }
+    /** Set by the engine as it mounts the effect: where it can send what it's done with. Audio thread. */
+    void setRetirer(Retirer *r) { retirer_ = r; }
     /**
      * Whether a mod on parameter [index] glides across the block in slices.
      * An effect returns false for a knob that rebuilds a table or a cabinet,
@@ -289,6 +293,8 @@ class Effect {
     int32_t blockFramesOf(int32_t frames) const { return subBlock_ > 0 ? subBlock_ : frames; }
 
     ParamSet params_;
+    // Null when not mounted by an engine (a test, say).
+    Retirer *retirer_ = nullptr;
     bool bypass_ = false;
     SlotMod mod_;
     ModTransport modTransport_;

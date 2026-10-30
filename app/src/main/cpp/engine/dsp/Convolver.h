@@ -48,8 +48,9 @@ class Convolver {
         int32_t offset = 0;  // first tap
         int32_t parts = 0;
         bool spread = false; // run in shares rather than at once
-        // Per partition: left re, left im, right re, right im, P+1 bins each.
-        // A mono impulse stores the left only.
+        // Per partition, P+1 slots of left re, left im, right re, right im, side
+        // by side, each slot one bin of the half spectrum (see forSlots() for
+        // which). A mono impulse stores the left pair only.
         std::vector<float> h;
         int32_t hStride = 0;
         // The delay line of input spectra, the same layout, one slot per partition.
@@ -60,9 +61,6 @@ class Convolver {
         // Twiddles for each pass, laid out end to end: a pass of span len
         // starts at len/2 - 1.
         std::vector<float> twc, tws;
-        // Bin k sits at rev[k] after the forward transform, which leaves its
-        // output in bit-reversed order; the inverse takes it in that order.
-        std::vector<int32_t> rev;
 
         // The job in progress.
         bool busy = false;

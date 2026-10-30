@@ -54,17 +54,24 @@ private fun yourImpulses(): List<String> {
 
 /**
  * Venue's impulse card: which impulse it plays, a list of ours and yours to
- * pick from, and "open…" to bring in a WAV, FLAC or AIFF file, which is
- * copied into your impulses and picked.
+ * pick from, "open…" to bring in a WAV, FLAC or AIFF file, which is
+ * copied into your impulses and picked, and "capture…" to record a room's.
  */
 @Composable
 internal fun VenueImpulseCard(impulse: String, onPick: (String) -> Unit) {
-    Group("impulse", perLine = 2, centred = true, background = Acid.colors.cardAlt) {
+    Group("impulse", perLine = 3, centred = true, background = Acid.colors.cardAlt) {
         VenueImpulseControls(impulse, onPick)
     }
 }
 
-/** The card's two buttons. */
+/**
+ * The room capture window open on a screen, as what to do with a saved
+ * impulse; null when it's closed. The edit screen provides one above its
+ * upright and turned layouts. Null means each card keeps its own.
+ */
+internal val LocalRoomCapture = androidx.compose.runtime.compositionLocalOf<androidx.compose.runtime.MutableState<((String) -> Unit)?>?> { null }
+
+/** The card's buttons: the room, "open…" and "capture…". */
 @Composable
 internal fun VenueImpulseControls(impulse: String, onPick: (String) -> Unit) {
     val c = Acid.colors
@@ -100,7 +107,7 @@ internal fun VenueImpulseControls(impulse: String, onPick: (String) -> Unit) {
         val scroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
             ScaledMenu(scroll) {
-                val yours = remember { yourImpulses() }
+                val yours = remember(menu) { yourImpulses() }
                 @Composable
                 fun heading(text: String) = Text(
                     text, color = c.teal, fontSize = 10.sp,
@@ -125,6 +132,13 @@ internal fun VenueImpulseControls(impulse: String, onPick: (String) -> Unit) {
         }
     }
     ButtonSquare("", stringResource(Res.string.venue_open), lit = false) { picker(IMPULSE_TYPES) }
+    // The edit screen holds the capture window above its layouts, so a turn keeps it open.
+    val held = LocalRoomCapture.current
+    var capturing by remember { mutableStateOf(false) }
+    ButtonSquare("", stringResource(Res.string.venue_capture), lit = false) {
+        if (held != null) held.value = onPick else capturing = true
+    }
+    if (held == null && capturing) RoomCaptureDialog(onDismiss = { capturing = false }, onSaved = onPick)
     failed?.let { why ->
         Text(stringResource(Res.string.venue_open_failed, why), color = c.red, fontSize = 10.sp, maxLines = 2)
     }

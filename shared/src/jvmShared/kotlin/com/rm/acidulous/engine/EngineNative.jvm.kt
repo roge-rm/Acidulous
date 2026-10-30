@@ -57,6 +57,22 @@ internal actual object EngineNative {
     actual external fun nativeCaptureOverflowed(): Boolean
     actual external fun nativeCaptureDeaf(): Boolean
     actual external fun nativeCapturedFrames(): Long
+    actual external fun nativeRoomTone(on: Boolean, levelDb: Float)
+    actual external fun nativeRoomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String
+    actual external fun nativeRoomSweepStop()
+    actual external fun nativeRoomClose()
+    actual external fun nativeRoomSweepState(): Int
+    actual external fun nativeRoomSweepProgress(): Float
+    actual external fun nativeRoomSweepPeak(): Float
+    @JvmName("nativeRoomAnalyse")
+    private external fun blocking_nativeRoomAnalyse(picture: FloatArray): String
+    actual suspend fun nativeRoomAnalyse(picture: FloatArray): String = blocking_nativeRoomAnalyse(picture)
+    @JvmName("nativeRoomListen")
+    private external fun blocking_nativeRoomListen(frames: Int): String
+    actual suspend fun nativeRoomListen(frames: Int): String = blocking_nativeRoomListen(frames)
+    @JvmName("nativeRoomSave")
+    private external fun blocking_nativeRoomSave(path: String, frames: Int): String
+    actual suspend fun nativeRoomSave(path: String, frames: Int): String = blocking_nativeRoomSave(path, frames)
     @JvmName("nativeCompCell")
     private external fun blocking_nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
     actual suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String = blocking_nativeCompCell(rack, sceneId, frames, bpm, path, peakOut)

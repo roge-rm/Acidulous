@@ -210,6 +210,7 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
     var message by remember { mutableStateOf("") }
     var lastFile by remember { mutableStateOf<File?>(null) }
     var opened by remember { mutableStateOf("") }
+    var capturingRoom by remember { mutableStateOf(false) }
     var havePermission by setup::havePermission
     // The input device. 0 is the platform's default.
     var device by remember { mutableStateOf(UiPrefs.inputDevice) }
@@ -339,9 +340,14 @@ private fun RecordPage(setup: InputSetup, withInput: Boolean, samples: File, edi
                 UiPrefs.chooseRecordBits(if (it == 0) 16 else 24)
             }
             if (fromInput && opened.isNotEmpty()) Box(Modifier.cardLine()) { Readout(opened, good = true) }
+            // A room's impulse for Venue, saved into your impulses.
+            if (fromInput && havePermission && !recording) {
+                ButtonSquare("", stringResource(Res.string.sound_capture_room), lit = false) { capturingRoom = true }
+            }
         }
         if (withInput) InputCard(setup, editor)
     }
+    if (capturingRoom) RoomCaptureDialog(onDismiss = { capturingRoom = false })
 }
 
 /** The input: gain and monitor, the effects recorded into a take, and the tuner. */

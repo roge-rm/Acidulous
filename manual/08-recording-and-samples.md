@@ -14,6 +14,8 @@ pad on Forage, a loop for Dice, a buffer for Pollen or a take for Molt.
   - **printed into the take** holds two effects that are recorded into the
     file, like a guitar amp. Effects on a track can be changed any time
     instead.
+  - **capture a room…** records the room you're in as an impulse for Venue,
+    saved into your impulses, where you can also hear, rename and delete them. See Venue in the effects chapter.
 - **Edit** - play the take back, trim the ends, set the level and cut low
   rumble. **norm** and **rev** at the top normalise and reverse the whole file.
   Changes show and play straight away. **apply** writes them to the file, and

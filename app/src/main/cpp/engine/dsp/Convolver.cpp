@@ -6,16 +6,44 @@
 
 namespace acidulous::dsp {
 
+// Clang won't vectorise float loops for 32-bit ARM on its own, since NEON
+// flushes denormals; we flush them anyway, so these loops ask for it.
+#if defined(__clang__)
+#define VECTORISE _Pragma("clang loop vectorize(enable)")
+#else
+#define VECTORISE
+#endif
+
 namespace {
-// A job's phases, in order, and what a unit of each costs, roughly in
-// multiplies, so the shares come out even.
+// A job's phases, in order, and what a unit of each costs relative to the
+// others, measured on a Cortex-A53, so the shares come out even.
 enum Phase { Gather, Forward, Unpack, Mac, Pack, Inverse, Output, kPhases };
-constexpr int64_t kWeight[kPhases] = {1, 3, 3, 4, 3, 3, 1};
-// Unpacking and packing jump between bin k and N-k, which in a transform
-// bigger than the cache costs several times more, measured.
-int64_t weightOf(int32_t phase, int32_t fft) {
-    if ((phase == Unpack || phase == Pack) && fft > 8192) return 15;
-    return kWeight[phase];
+constexpr int64_t kWeight[kPhases] = {2, 3, 3, 4, 3, 3, 3};
+
+// Bins per run of the multiply-accumulate.
+constexpr int32_t kMacBins = 256;
+
+// Calls f(slot, p, q) for slots [from, to) of a half spectrum of P + 1 bins.
+// The forward transform leaves bin k and its mirror N - k at bit-reversed
+// positions p and q. Slot 0 holds bin 0 alone (p = q = 0), slot P bin N/2
+// alone (p = q = 1), and slot s, with b the highest power of two in s, the
+// pair at s + b and 5b - 1 - s, which mirror each other within one block of
+// positions. A run of slots so reads one stream forwards and one backwards.
+template <typename F>
+inline void forSlots(int32_t P, int64_t from, int64_t to, F &&f) {
+    auto s = static_cast<int32_t>(from);
+    while (s < to) {
+        if (s == 0 || s == P) {
+            const int32_t p = s == 0 ? 0 : 1;
+            f(s, p, p);
+            ++s;
+            continue;
+        }
+        int32_t b = 1;
+        while (2 * b <= s) b *= 2;
+        const auto end = static_cast<int32_t>(std::min<int64_t>(to, 2 * b));
+        for (; s < end; ++s) f(s, s + b, 5 * b - 1 - s);
+    }
 }
 
 int32_t log2Of(int32_t v) {
@@ -65,13 +93,6 @@ Convolver::Convolver(const float *left, const float *right, int32_t frames, int3
                 s.tws[static_cast<size_t>(len / 2 - 1 + k)] = static_cast<float>(std::sin(a));
             }
         }
-        s.rev.resize(static_cast<size_t>(s.fft));
-        for (int32_t i = 0, j = 0; i < s.fft; ++i) {
-            s.rev[static_cast<size_t>(i)] = j;
-            int32_t bit = s.fft >> 1;
-            for (; j & bit; bit >>= 1) j ^= bit;
-            j |= bit;
-        }
 
         // Each partition's spectrum, scaled by 1/2 for the unpacking and 1/N
         // for the inverse transform, so neither costs a multiply later.
@@ -87,19 +108,18 @@ Convolver::Convolver(const float *left, const float *right, int32_t frames, int3
             }
             forward(s, 0, static_cast<int64_t>(s.fft / 2) * s.bits);
             float *h = s.h.data() + static_cast<size_t>(j) * s.hStride;
-            const int32_t mask = s.fft - 1;
-            for (int32_t k = 0; k < bins; ++k) {
-                const auto pk = static_cast<size_t>(s.rev[static_cast<size_t>(k)]);
-                const auto pn = static_cast<size_t>(s.rev[static_cast<size_t>((s.fft - k) & mask)]);
-                const float zr = s.re[pk], zi = s.im[pk];
-                const float cr = s.re[pn], ci = -s.im[pn];
-                h[k] = (zr + cr) * scale;
-                h[bins + k] = (zi + ci) * scale;
+            const int32_t step = stereo_ ? 4 : 2;
+            forSlots(size, 0, bins, [&](int32_t k, int32_t pk, int32_t pn) {
+                const float zr = s.re[static_cast<size_t>(pk)], zi = s.im[static_cast<size_t>(pk)];
+                const float cr = s.re[static_cast<size_t>(pn)], ci = -s.im[static_cast<size_t>(pn)];
+                float *hk = h + static_cast<size_t>(k) * step;
+                hk[0] = (zr + cr) * scale;
+                hk[1] = (zi + ci) * scale;
                 if (stereo_) {
-                    h[2 * bins + k] = (zi - ci) * scale;
-                    h[3 * bins + k] = -(zr - cr) * scale;
+                    hk[2] = (zi - ci) * scale;
+                    hk[3] = -(zr - cr) * scale;
                 }
-            }
+            });
         }
         biggest = size;
         stages_.push_back(std::move(s));
@@ -146,6 +166,7 @@ void Convolver::process(const float *inL, const float *inR, float *outL, float *
         hist_[1][pos] = hist_[1][pos + kGrid] = xr;
         const float *hl = hist_[0] + pos + 1, *hr = hist_[1] + pos + 1;
         float yl = 0.0f, yr = 0.0f;
+        VECTORISE
         for (int32_t k = 0; k < kGrid; ++k) {
             yl += direct_[0][k] * hl[k];
             yr += direct_[1][k] * hr[k];
@@ -191,7 +212,7 @@ void Convolver::begin(Stage &s) {
     s.done = 0;
     s.share = 0;
     s.total = 0;
-    for (int32_t p = 0; p < kPhases; ++p) s.total += phaseUnits(s, p) * weightOf(p, s.fft);
+    for (int32_t p = 0; p < kPhases; ++p) s.total += phaseUnits(s, p) * kWeight[p];
 }
 
 int64_t Convolver::phaseUnits(const Stage &s, int32_t phase) const {
@@ -215,7 +236,7 @@ void Convolver::advance(Stage &s, int64_t target) {
             s.index = 0;
             continue;
         }
-        const int64_t w = weightOf(s.phase, s.fft);
+        const int64_t w = kWeight[s.phase];
         const int64_t n = std::min(left, (target - s.done + w - 1) / w);
         runPhase(s, s.phase, s.index, s.index + n);
         s.index += n;
@@ -227,6 +248,7 @@ namespace {
 // One run of butterflies at k0..k1 of a group, the halves at a and c.
 inline void difRun(float *__restrict ar, float *__restrict ai, float *__restrict cr, float *__restrict ci,
                    const float *__restrict wc, const float *__restrict ws, int32_t k0, int32_t k1) {
+    VECTORISE
     for (int32_t k = k0; k < k1; ++k) {
         const float xr = ar[k], xi = ai[k], yr = cr[k], yi = ci[k];
         const float dr = xr - yr, di = xi - yi;
@@ -238,6 +260,7 @@ inline void difRun(float *__restrict ar, float *__restrict ai, float *__restrict
 }
 inline void ditRun(float *__restrict ar, float *__restrict ai, float *__restrict cr, float *__restrict ci,
                    const float *__restrict wc, const float *__restrict ws, int32_t k0, int32_t k1) {
+    VECTORISE
     for (int32_t k = k0; k < k1; ++k) {
         const float yr = cr[k] * wc[k] - ci[k] * ws[k];
         const float yi = cr[k] * ws[k] + ci[k] * wc[k];
@@ -280,28 +303,31 @@ inline void pass(float *re, float *im, const float *twc, const float *tws, int32
     }
 }
 
-// Partition [j]'s product into the accumulators: rows are left re, left im,
-// right re, right im, [bins] apart.
-template <bool kFirst>
-inline void macRun(float *__restrict lr, float *__restrict li, float *__restrict rr, float *__restrict ri,
-                   const float *__restrict ar, const float *__restrict ai, const float *__restrict br,
-                   const float *__restrict bi, const float *__restrict hlr, const float *__restrict hli,
-                   const float *__restrict hrr, const float *__restrict hri, int32_t k0, int32_t k1) {
+// Partition [j]'s product into the accumulators. [acc] and [x] hold left re,
+// left im, right re, right im for each bin in turn; [h] the same, or only the
+// left pair for a mono impulse.
+template <bool kFirst, bool kStereo>
+inline void macRun(float *__restrict acc, const float *__restrict x, const float *__restrict h, int32_t k0,
+                   int32_t k1) {
+    constexpr int32_t hs = kStereo ? 4 : 2, hr = kStereo ? 2 : 0;
+    VECTORISE
     for (int32_t k = k0; k < k1; ++k) {
-        const float pl = ar[k] * hlr[k] - ai[k] * hli[k];
-        const float ql = ar[k] * hli[k] + ai[k] * hlr[k];
-        const float pr = br[k] * hrr[k] - bi[k] * hri[k];
-        const float qr = br[k] * hri[k] + bi[k] * hrr[k];
+        const float ar = x[4 * k], ai = x[4 * k + 1], br = x[4 * k + 2], bi = x[4 * k + 3];
+        const float hlr = h[hs * k], hli = h[hs * k + 1], hrr = h[hs * k + hr], hri = h[hs * k + hr + 1];
+        const float pl = ar * hlr - ai * hli;
+        const float ql = ar * hli + ai * hlr;
+        const float pr = br * hrr - bi * hri;
+        const float qr = br * hri + bi * hrr;
         if (kFirst) {
-            lr[k] = pl;
-            li[k] = ql;
-            rr[k] = pr;
-            ri[k] = qr;
+            acc[4 * k] = pl;
+            acc[4 * k + 1] = ql;
+            acc[4 * k + 2] = pr;
+            acc[4 * k + 3] = qr;
         } else {
-            lr[k] += pl;
-            li[k] += ql;
-            rr[k] += pr;
-            ri[k] += qr;
+            acc[4 * k] += pl;
+            acc[4 * k + 1] += ql;
+            acc[4 * k + 2] += pr;
+            acc[4 * k + 3] += qr;
         }
     }
 }
@@ -335,7 +361,7 @@ void Convolver::inverse(Stage &s, int64_t from, int64_t to) {
 }
 
 void Convolver::runPhase(Stage &s, int32_t phase, int64_t from, int64_t to) {
-    const int32_t P = s.size, N = s.fft, bins = P + 1;
+    const int32_t P = s.size, bins = P + 1;
     float *re = s.re.data(), *im = s.im.data();
     switch (phase) {
     case Gather: {
@@ -358,36 +384,41 @@ void Convolver::runPhase(Stage &s, int32_t phase, int64_t from, int64_t to) {
     case Unpack: {
         // Two real spectra out of one complex one: A is 2X(left), B 2X(right).
         float *slot = s.fdl.data() + static_cast<size_t>(s.head) * 4 * bins;
-        const int32_t *rev = s.rev.data();
-        for (int64_t k = from; k < to; ++k) {
-            const int32_t pk = rev[k], pn = rev[(N - k) & (N - 1)];
+        forSlots(P, from, to, [=](int32_t k, int32_t pk, int32_t pn) {
             const float zr = re[pk], zi = im[pk], cr = re[pn], ci = -im[pn];
-            slot[k] = zr + cr;
-            slot[bins + k] = zi + ci;
-            slot[2 * bins + k] = zi - ci;
-            slot[3 * bins + k] = -(zr - cr);
-        }
+            float *sk = slot + 4 * k;
+            sk[0] = zr + cr;
+            sk[1] = zi + ci;
+            sk[2] = zi - ci;
+            sk[3] = -(zr - cr);
+        });
         break;
     }
     case Mac: {
+        // In runs of kMacBins bins, every partition for one run before the
+        // next, so the run's accumulators stay in cache.
+        const int64_t parts = s.activeParts;
         int64_t u = from;
         while (u < to) {
-            const auto j = static_cast<int32_t>(u / bins);
-            int32_t k = static_cast<int32_t>(u % bins);
-            const int32_t endK = static_cast<int32_t>(std::min<int64_t>(bins, k + (to - u)));
+            const auto run = static_cast<int32_t>(u / (parts * kMacBins));
+            const int32_t k0 = run * kMacBins;
+            const int32_t width = std::min(kMacBins, bins - k0);
+            const int64_t r = u - parts * k0;
+            const auto j = static_cast<int32_t>(r / width);
+            int32_t k = k0 + static_cast<int32_t>(r % width);
+            const int32_t endK = static_cast<int32_t>(std::min<int64_t>(k0 + width, k + (to - u)));
             u += endK - k;
             int32_t slotIndex = s.head - j;
             if (slotIndex < 0) slotIndex += s.parts;
             const float *x = s.fdl.data() + static_cast<size_t>(slotIndex) * 4 * bins;
-            const float *hl = s.h.data() + static_cast<size_t>(j) * s.hStride;
-            const float *hr = stereo_ ? hl + 2 * bins : hl;
+            const float *h = s.h.data() + static_cast<size_t>(j) * s.hStride;
             float *acc = s.acc.data();
             if (j == 0) {
-                macRun<true>(acc, acc + bins, acc + 2 * bins, acc + 3 * bins, x, x + bins, x + 2 * bins, x + 3 * bins,
-                             hl, hl + bins, hr, hr + bins, k, endK);
+                if (stereo_) macRun<true, true>(acc, x, h, k, endK);
+                else macRun<true, false>(acc, x, h, k, endK);
             } else {
-                macRun<false>(acc, acc + bins, acc + 2 * bins, acc + 3 * bins, x, x + bins, x + 2 * bins, x + 3 * bins,
-                              hl, hl + bins, hr, hr + bins, k, endK);
+                if (stereo_) macRun<false, true>(acc, x, h, k, endK);
+                else macRun<false, false>(acc, x, h, k, endK);
             }
         }
         break;
@@ -395,18 +426,16 @@ void Convolver::runPhase(Stage &s, int32_t phase, int64_t from, int64_t to) {
     case Pack: {
         // conj(L + iR) on the way back, so the forward transform inverts it.
         const float *acc = s.acc.data();
-        const int32_t *rev = s.rev.data();
-        for (int64_t k = from; k < to; ++k) {
-            const float ar = acc[k], ai = acc[bins + k], br = acc[2 * bins + k], bi = acc[3 * bins + k];
-            const int32_t pk = rev[k];
+        forSlots(P, from, to, [=](int32_t k, int32_t pk, int32_t pn) {
+            const float *ak = acc + 4 * k;
+            const float ar = ak[0], ai = ak[1], br = ak[2], bi = ak[3];
             re[pk] = ar - bi;
             im[pk] = -ai - br;
-            if (k > 0 && k < P) {
-                const int32_t pn = rev[N - k];
+            if (pn != pk) {
                 re[pn] = ar + bi;
                 im[pn] = ai - br;
             }
-        }
+        });
         break;
     }
     case Output: {

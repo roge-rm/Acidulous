@@ -119,8 +119,9 @@ void Engine::renderBlock(const float *in, float *out) {
         // Reset the clip players' pass count and free-roll seed. A render
         // panics first, so this is where "from the beginning" happens.
         scheduler.resetClipPlayers();
-        // Panic means silence, so stop any audition too.
+        // Panic means silence, so stop any audition and room tone or sweep too.
         audition.stop();
+        roomSweep.cancel();
         for (auto &n : mpeChannelNote) n = -1;
         for (int32_t r = 0; r < kRackCount; ++r) {
             racks[r].allNotesOff();
@@ -518,6 +519,11 @@ void Engine::renderBlock(const float *in, float *out) {
 
     const auto tMaster = std::chrono::steady_clock::now();
 
+    // A room sweep or its level tone takes the output over, so the song is
+    // muted, and records the raw input from this same block. Never in an
+    // export or freeze, which would eat the sweep and print it.
+    const bool sweeping = !hostAside && roomSweep.process(in, out, kBlockFrames);
+
     // Monitoring is after the master so it's heard at the master's level,
     // and isn't recorded when capturing the input.
     const InputBus &bus = InputBus::get();
@@ -551,10 +557,10 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     // After the capture, like the monitor, so auditioning a file doesn't
     // get recorded into the take.
-    audition.mix(out, kBlockFrames);
+    if (!sweeping) audition.mix(out, kBlockFrames);
 
     const float monitor = monitorLevel.load(std::memory_order_relaxed);
-    if (monitor > 0.0001f && bus.live()) {
+    if (monitor > 0.0001f && bus.live() && !sweeping) {
         const float *src = bus.block();
         for (int32_t i = 0; i < kBlockFrames * 2; ++i) out[i] += src[i] * monitor;
     }
@@ -1333,6 +1339,17 @@ Effect *Engine::effectAt(int32_t rack, Unit unit) {
 }
 
 void Engine::applyMount(const Mount &m) {
+    switch (m.kind) {
+    case Mount::Kind::Effect:
+    case Mount::Kind::Input:
+    case Mount::Kind::Send:
+    case Mount::Kind::MasterInsert:
+    case Mount::Kind::GroupInsert:
+        if (m.object != nullptr) static_cast<Effect *>(m.object)->setRetirer(&retirer);
+        break;
+    default:
+        break;
+    }
     switch (m.kind) {
     case Mount::Kind::Machine:
         if (m.rack >= 0 && m.rack < kRackCount) {

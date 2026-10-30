@@ -11,6 +11,7 @@
 #include <engine/machine/nexus/Nexus.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <android/log.h>
 #include <cstdio>
@@ -36,6 +37,7 @@
 #include <engine/format/AudioDecoder.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Venue.h>
+#include <engine/dsp/RoomCapture.h>
 #include <engine/core/Take.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -2710,6 +2712,144 @@ float EngineHost::capturedSeconds() const {
 int64_t EngineHost::capturedFrames() const { return sEngine.capture.frames(); }
 float EngineHost::capturedPeak() const { return sEngine.capture.peak(); }
 bool EngineHost::captureOverflowed() const { return sEngine.capture.overflowed(); }
+
+namespace {
+// How long each pass is left to ring out after its sweep, seconds.
+constexpr float kRoomTailSeconds = 6.0f;
+// The longest sweep and the most passes, the capture window's range. The
+// analysis peaks at about 90 MB at these.
+constexpr float kRoomMaxSweepSeconds = 10.0f;
+constexpr int kRoomMaxRepeats = 4;
+// The impulse from the last sweep, for listening to and saving.
+std::mutex sRoomLock;
+dsp::room::Impulse sRoom;
+
+float fromDb(float db) { return std::pow(10.0f, std::clamp(db, -60.0f, 0.0f) / 20.0f); }
+} // namespace
+
+void EngineHost::roomTone(bool on, float levelDb) {
+    if (on) {
+        sEngine.roomSweep.startTone(fromDb(levelDb));
+    } else if (sEngine.roomSweep.current() == RoomSweep::Tone) {
+        sEngine.roomSweep.stop();
+    }
+}
+
+std::string EngineHost::roomSweepStart(float seconds, int repeats, float levelDb) {
+    if (!sAudio.isInputRunning()) return "audio input is not open";
+    std::lock_guard<std::mutex> hold(sRoomLock);
+    sEngine.roomSweep.stop();
+    dsp::room::SweepSpec spec;
+    spec.rate = kSampleRate;
+    spec.sweepFrames = static_cast<int32_t>(std::clamp(seconds, 1.0f, kRoomMaxSweepSeconds) * kSampleRate);
+    spec.tailFrames = static_cast<int32_t>(kRoomTailSeconds * kSampleRate);
+    spec.repeats = std::clamp(repeats, 1, kRoomMaxRepeats);
+    if (!sEngine.roomSweep.prepare(spec, fromDb(levelDb))) return "a sweep is already playing";
+    sRoom = dsp::room::Impulse();
+    sEngine.roomSweep.start();
+    return "";
+}
+
+void EngineHost::roomSweepStop() { sEngine.roomSweep.stop(); }
+
+void EngineHost::roomClose() {
+    std::lock_guard<std::mutex> hold(sRoomLock);
+    sEngine.roomSweep.release();
+    sRoom = dsp::room::Impulse();
+}
+int EngineHost::roomSweepState() const { return sEngine.roomSweep.current(); }
+float EngineHost::roomSweepProgress() const { return sEngine.roomSweep.progress(); }
+float EngineHost::roomSweepPeak() const { return sEngine.roomSweep.recordedPeak(); }
+
+std::string EngineHost::roomAnalyse(float *picture, int columns) {
+    std::lock_guard<std::mutex> hold(sRoomLock);
+    if (sEngine.roomSweep.current() != RoomSweep::Done) return "there is no sweep to use|0|0|0|0|0|0";
+    const std::vector<float> &rec = sEngine.roomSweep.recording();
+    sRoom = dsp::room::deconvolve(rec.data(), static_cast<int64_t>(rec.size() / 2), sEngine.roomSweep.sweepSpec());
+    if (!sRoom.error.empty()) return sRoom.error + "|0|0|0|0|0|0";
+    const std::vector<float> shape = dsp::room::picture(sRoom, columns);
+    std::copy(shape.begin(), shape.end(), picture);
+    char out[160];
+    std::snprintf(out, sizeof(out), "|%d|%d|%d|%d|%.1f|%d", sRoom.frames(), sRoom.autoFrames, sRoom.directFrame,
+                  sRoom.latencyFrames, static_cast<double>(sRoom.snrDb), sRoom.stereo() ? 2 : 1);
+    return out;
+}
+
+std::string EngineHost::roomListen(int frames) {
+    std::vector<float> l, r;
+    {
+        std::lock_guard<std::mutex> hold(sRoomLock);
+        if (sRoom.frames() <= 0) return "there is nothing to play";
+        dsp::room::finish(sRoom, frames, l, r);
+    }
+    if (r.empty()) r = l;
+    // A 3 ms click of noise, heard dry and then through the room.
+    constexpr int32_t kClick = kSampleRate * 3 / 1000;
+    float click[kClick];
+    uint32_t seed = 12345u;
+    for (int32_t i = 0; i < kClick; ++i) {
+        seed = seed * 1664525u + 1013904223u;
+        const float v = static_cast<float>(seed >> 9) * (2.0f / 8388608.0f) - 1.0f;
+        click[i] = v * std::exp(-4.0f * static_cast<float>(i) / kClick);
+    }
+    const auto n = static_cast<int32_t>(l.size());
+    const int32_t gap = kSampleRate / 2;
+    std::vector<float> pcm(static_cast<size_t>(gap + n + kClick) * 2, 0.0f);
+    for (int32_t i = 0; i < kClick; ++i) pcm[static_cast<size_t>(i) * 2] = pcm[static_cast<size_t>(i) * 2 + 1] = 0.5f * click[i];
+    float peak = 0.0f;
+    std::vector<float> wet(static_cast<size_t>(n + kClick) * 2, 0.0f);
+    for (int32_t i = 0; i < n + kClick; ++i) {
+        float a = 0.0f, b = 0.0f;
+        for (int32_t k = 0; k < kClick; ++k) {
+            const int32_t j = i - k;
+            if (j < 0 || j >= n) continue;
+            a += click[k] * l[static_cast<size_t>(j)];
+            b += click[k] * r[static_cast<size_t>(j)];
+        }
+        wet[static_cast<size_t>(i) * 2] = a;
+        wet[static_cast<size_t>(i) * 2 + 1] = b;
+        peak = std::max(peak, std::max(std::fabs(a), std::fabs(b)));
+    }
+    const float g = peak > 0.0f ? 0.5f / peak : 0.0f;
+    for (size_t i = 0; i < wet.size(); ++i) pcm[static_cast<size_t>(gap) * 2 + i] += wet[i] * g;
+    sEngine.audition.play(pcm.data(), static_cast<int64_t>(pcm.size() / 2));
+    return "";
+}
+
+std::string EngineHost::roomSave(const std::string &path, int frames) {
+    std::vector<float> l, r;
+    {
+        std::lock_guard<std::mutex> hold(sRoomLock);
+        if (sRoom.frames() <= 0) return "there is nothing to save";
+        dsp::room::finish(sRoom, frames, l, r);
+    }
+    std::string error;
+    const std::string tmp = path + ".part";
+    {
+        WavWriter writer;
+        if (!writer.open(tmp, kSampleRate, 24, error)) return error.empty() ? "that file couldn't be written" : error;
+        std::vector<float> block(static_cast<size_t>(kBlockFrames) * 2);
+        const auto n = static_cast<int32_t>(l.size());
+        for (int32_t at = 0; at < n; at += kBlockFrames) {
+            const int32_t m = std::min(kBlockFrames, n - at);
+            for (int32_t i = 0; i < m; ++i) {
+                const auto s = static_cast<size_t>(at + i);
+                block[static_cast<size_t>(i) * 2] = l[s];
+                block[static_cast<size_t>(i) * 2 + 1] = r.empty() ? l[s] : r[s];
+            }
+            writer.write(block.data(), m);
+        }
+        if (!writer.close()) {
+            std::remove(tmp.c_str());
+            return "that file couldn't be finished";
+        }
+    }
+    if (std::rename(tmp.c_str(), path.c_str()) != 0) {
+        std::remove(tmp.c_str());
+        return "that file couldn't be written";
+    }
+    return "";
+}
 
 void EngineHost::panic() { sEngine.panicFlag.store(true, std::memory_order_release); }
 void EngineHost::setCountInBars(int32_t bars) { sEngine.transport.setCountInBars(bars); }

@@ -80,7 +80,7 @@ class Venue final : public Effect {
     VenueImpulse *old = nullptr;     // rings out on silence, fading
     VenueImpulse *pending = nullptr; // waits for the fade to end
     bool hasPending = false;
-    VenueImpulse *spent = nullptr;   // handed back on the next swap
+    VenueImpulse *spent = nullptr;   // handed back on the next swap, when there is no retirer
     float fade = 0.0f, fadeStep = 0.0f;
     // 1 with an impulse, 0 without; ramps so the dry level doesn't jump.
     float presence = 0.0f, presenceStep = 0.0f;

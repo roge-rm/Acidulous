@@ -472,6 +472,9 @@ fun EditScreen(
     // The patch window open in the panel, kept here above the two layouts so
     // turning the phone doesn't close it. See [LocalPatchWindow].
     val patchWindow = remember(trackIndex) { mutableStateOf<String?>(null) }
+    // The same for a Venue's capture window. See [LocalRoomCapture].
+    val roomCapture = remember(trackIndex) { mutableStateOf<((String) -> Unit)?>(null) }
+    roomCapture.value?.let { saved -> RoomCaptureDialog(onDismiss = { roomCapture.value = null }, onSaved = saved) }
     // modifier carries the Scaffold's system bar padding. Without it the footer
     // sits under the navigation bar and its taps become Back.
     Column(modifier.fillMaxSize().background(Acid.colors.bg)) {
@@ -995,7 +998,7 @@ fun EditScreen(
             panel == 0 && kind != MachineKind.Audio
         // fxMax is how tall the fx slots may be; the upright layout works it out from the screen below.
         val panelSlot: @Composable (bar: Boolean, body: Boolean, fxMax: Dp) -> Unit = { bar, body, fxMax ->
-        androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow) {
+        androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow, LocalRoomCapture provides roomCapture) {
         // The machine panel (knobs go to the engine as gestures and into the document as undo
         // steps), or behind the fx toggle the track's two insert slots.
         if (panel == 1) { if (body) SlotsPanel(SlotKind.Effects, track, trackIndex, editor, Modifier.fillMaxWidth().padding(top = 4.dp), fxMax) }

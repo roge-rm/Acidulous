@@ -1169,6 +1169,7 @@ fun TabbedDialog(
     /** Spacing between the items a page puts in itself. */
     spacing: Dp = 6.dp,
     confirmLabel: String = "",
+    confirmEnabled: Boolean = true,
     onConfirm: (() -> Unit)? = null,
     /** The body's own row, for the header when there's room; see [PlainDialog]. */
     wideHeader: (@Composable () -> Unit)? = null,
@@ -1195,7 +1196,7 @@ fun TabbedDialog(
     ) else emptyList()
     DialogShell(
         title, onDismiss, dismissLabel, maxBodyHeight,
-        confirmLabel = confirmLabel, onConfirm = onConfirm, chips = tabs, wideHeader = wideHeader, keys = keys,
+        confirmLabel = confirmLabel, confirmEnabled = confirmEnabled, onConfirm = onConfirm, chips = tabs, wideHeader = wideHeader, keys = keys,
     ) {
         TallestOf(selected, pages, spacing)
     }

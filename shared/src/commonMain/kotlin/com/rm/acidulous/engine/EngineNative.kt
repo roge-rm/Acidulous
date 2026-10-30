@@ -51,6 +51,16 @@ internal expect object EngineNative {
     fun nativeCaptureOverflowed(): Boolean
     fun nativeCaptureDeaf(): Boolean
     fun nativeCapturedFrames(): Long
+    fun nativeRoomTone(on: Boolean, levelDb: Float)
+    fun nativeRoomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String
+    fun nativeRoomSweepStop()
+    fun nativeRoomClose()
+    fun nativeRoomSweepState(): Int
+    fun nativeRoomSweepProgress(): Float
+    fun nativeRoomSweepPeak(): Float
+    suspend fun nativeRoomAnalyse(picture: FloatArray): String
+    suspend fun nativeRoomListen(frames: Int): String
+    suspend fun nativeRoomSave(path: String, frames: Int): String
     suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
     fun nativeArmCapture(rack: Int)
     fun nativeCaptureMarks(out: LongArray): Int

@@ -587,6 +587,37 @@ class EngineHost {
     bool captureOverflowed() const;
 
     /**
+     * Capturing a room (see engine/core/RoomSweep.h, dsp/RoomCapture.h).
+     * The level check is a 1 kHz tone at [levelDb] out of the master.
+     */
+    void roomTone(bool on, float levelDb);
+    /**
+     * Plays a sweep of [seconds] at [levelDb], [repeats] times, each with the
+     * ring-out after it, in place of the song, and records the input. ""
+     * or what went wrong.
+     */
+    std::string roomSweepStart(float seconds, int repeats, float levelDb);
+    /** Stops the tone or the sweep. */
+    void roomSweepStop();
+    /** Stops and frees the sweep, its recording and the impulse. Not the audio thread. */
+    void roomClose();
+    /** 0 idle, 1 the tone, 2 sweeping, 3 recorded. */
+    int roomSweepState() const;
+    float roomSweepProgress() const;
+    /** The loudest input sample in the sweep so far. */
+    float roomSweepPeak() const;
+    /**
+     * Deconvolves the recorded sweep and keeps the impulse for listening and
+     * saving. Fills [picture] with its peaks in dB, one per column.
+     * Returns "error|frames|autoFrames|directFrame|latencyFrames|snrDb|channels".
+     */
+    std::string roomAnalyse(float *picture, int columns);
+    /** Plays a click through the impulse cut to [frames]. */
+    std::string roomListen(int frames);
+    /** Writes the impulse cut to [frames] as a WAV at [path]. */
+    std::string roomSave(const std::string &path, int frames);
+
+    /**
      * The rack a recording is for, or -1 for none.
      *
      * Only the armed rack gets its boundaries stamped (see `CaptureMarks`),

@@ -11,6 +11,7 @@
 #include <engine/core/InputBus.h>
 #include <engine/core/Handover.h>
 #include <engine/core/Messages.h>
+#include <engine/core/RoomSweep.h>
 #include <engine/core/RtQueue.h>
 #include <engine/core/HostTimebase.h>
 #include <engine/core/Timebase.h>
@@ -286,6 +287,8 @@ class Engine : public Rack::ModifiedNoteSink {
     std::atomic<int32_t> armedRack{kNoRack};
     /** Playing one file to hear what it is (see engine/core/Audition.h). */
     Audition audition;
+    /** Capturing a room: a sweep out, the input in (see engine/core/RoomSweep.h). */
+    RoomSweep roomSweep;
 
     /**
      * Stop everything now. Set from any thread and acted on at the next block

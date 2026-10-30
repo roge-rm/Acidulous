@@ -631,3 +631,27 @@ fun groupParam(name: String): Pair<Int, String>? {
     val m = Regex("g([1-9])(gain|pan)").matchEntire(name) ?: return null
     return (m.groupValues[1].toInt() - 1) to m.groupValues[2]
 }
+
+/**
+ * Every Venue playing the impulse [old] plays [new] instead, for a room that was
+ * renamed (the new path) or deleted (""). The song is returned as it was when none does.
+ */
+fun Song.withImpulseChanged(old: String, new: String): Song {
+    var changed = false
+    val f: (UnitSlot) -> UnitSlot = { s ->
+        if (s.type == VenueRooms.TYPE && s.settings[VenueRooms.SETTING] == old) {
+            changed = true
+            s.copy(settings = s.settings + (VenueRooms.SETTING to new))
+        } else s
+    }
+    val next = copy(
+        tracks = tracks.map { t -> t.copy(effects = t.effects.map(f)) },
+        input = input.map(f),
+        master = master.copy(
+            sends = master.sends.map(f),
+            inserts = master.inserts.map(f),
+            groups = master.groups.map { g -> g.copy(inserts = g.inserts.map(f)) },
+        ),
+    )
+    return if (changed) next else this
+}

@@ -146,4 +146,31 @@
     <string name="sound_edit">modifier</string>
     <string name="sound_rename">renommer</string>
     <string name="sound_rename_title">Renommer</string>
+    <!-- Capturing a room's impulse for Venue -->
+    <string name="sound_capture_room">capter une salle…</string>
+    <string name="room_title">Capter une salle</string>
+    <string name="room_level_card">niveau</string>
+    <string name="room_tone">son test</string>
+    <string name="room_level">niveau</string>
+    <string name="room_sweep_card">balayage</string>
+    <string name="room_length">durée</string>
+    <string name="room_repeats">répétitions</string>
+    <string name="room_sweep">balayer</string>
+    <string name="room_stop">arrêter</string>
+    <string name="room_sweeping">balayage %1$d %%  crête %2$.2f</string>
+    <string name="room_working">calcul en cours…</string>
+    <string name="room_clipped">L’entrée a saturé : baissez le niveau et balayez de nouveau.</string>
+    <string name="room_result_card">résultat</string>
+    <string name="room_trim">coupe</string>
+    <!-- Length, mono or stereo, signal to noise, and how late the sound came back. -->
+    <string name="room_readout">%1$.2f s · %2$s · S/B %3$.0f dB · %4$.0f ms de retard</string>
+    <string name="room_listen">écouter</string>
+    <string name="room_save">enregistrer</string>
+    <string name="room_saved">Enregistrée sous %1$s.</string>
+    <string name="room_saved_button">enregistrée</string>
+    <string name="room_tab_capture">capter</string>
+    <string name="room_tab_rooms">vos salles</string>
+    <string name="room_none">Aucune salle encore. Captez-en une sous le premier onglet.</string>
+    <string name="room_failed">Pas de réponse impulsionnelle : %1$s.</string>
+    <string name="room_default_name">salle %1$d</string>
 </resources>

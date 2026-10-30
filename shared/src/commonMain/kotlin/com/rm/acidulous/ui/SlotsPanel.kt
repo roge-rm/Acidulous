@@ -314,14 +314,12 @@ private fun SlotFace(
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
     androidx.compose.runtime.SideEffect { onBinding?.invoke(b) }
     // A Venue's impulse is a setting, not a knob, so it's read from the song.
-    var impulseEdits by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val venue = type == VenueRooms.TYPE && kind == SlotKind.Effects
-    val impulse = if (!venue) "" else impulseEdits.let {
-        editor.song.slotOf(trackIndex, unit)?.let { VenueRooms.impulseOf(it) } ?: VenueRooms.DEFAULT
+    val impulse = if (!venue) "" else {
+        editor.observedSong.slotOf(trackIndex, unit)?.let { VenueRooms.impulseOf(it) } ?: VenueRooms.DEFAULT
     }
     val pickImpulse: (String) -> Unit = { new ->
         editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, new) }
-        impulseEdits++
     }
     // The panel follows the engine, which already holds what the document
     // pushed, so there's nothing to seed here.
@@ -349,7 +347,6 @@ private fun SlotFace(
                             // So does a Venue's impulse.
                             if (type == VenueRooms.TYPE && kind == SlotKind.Effects) {
                                 editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, patch.settings[VenueRooms.SETTING]) }
-                                impulseEdits++
                             }
                             // The slot's mod stays as it is.
                             b.applyAll(InsertMod.withoutMod(patch.params) + modInfo.associate { it.name to b.value(it.name) })

@@ -210,6 +210,8 @@ object EngineSync {
      * start.
      */
     fun forgetEngine() {
+        // The host keeps its decoded impulses across a restart; any slot not a Venue after it lets go of its own.
+        com.rm.acidulous.util.locked(orphanImpulses) { orphanImpulses.addAll(live.loadedImpulses.keys) }
         live.clear()
         synced = null
     }
@@ -327,7 +329,8 @@ object EngineSync {
             if (slot !in 0 until EFFECT_SLOTS) continue
             m.mountedEffects[rack][slot] = null
             m.loadedEffectFormulas.remove(effectFormulaKey(rack, effectUnit(slot)))
-            m.loadedImpulses.remove(effectFormulaKey(rack, effectUnit(slot)))
+            val key = effectFormulaKey(rack, effectUnit(slot))
+            if (m.loadedImpulses.remove(key) != null && m.live) com.rm.acidulous.util.locked(orphanImpulses) { orphanImpulses.add(key) }
         }
     }
 
@@ -592,6 +595,8 @@ object EngineSync {
     private val impulseLoader = com.rm.acidulous.util.SerialWorker("Acidulous.Impulses")
     /** The newest build asked for, by slot key, so older ones still queued are skipped. */
     private val impulseAsked = HashMap<String, Int>()
+    /** Venue slots built before the engine was forgotten, so the host may still hold their files. */
+    private val orphanImpulses = HashSet<String>()
 
     /** How long a shape knob has to rest before the impulse is built again. */
     private const val IMPULSE_SETTLE_MS = 150L
@@ -610,7 +615,19 @@ object EngineSync {
             val key = effectFormulaKey(rack, unit)
             val slot = if (mountedType == VenueRooms.TYPE) song.slotOf(rack, unit) else null
             if (slot == null || slot.type != VenueRooms.TYPE) {
-                m.loadedImpulses.remove(key)
+                val had = m.loadedImpulses.remove(key) != null
+                val orphan = m.live && com.rm.acidulous.util.locked(orphanImpulses) { orphanImpulses.remove(key) }
+                if (had || orphan) {
+                    // Lets the host drop the decoded file, and skips any build still queued.
+                    val ask = com.rm.acidulous.util.locked(impulseAsked) {
+                        ((impulseAsked[key] ?: 0) + 1).also { if (m.live) impulseAsked[key] = it }
+                    }
+                    val drop: suspend () -> Unit = drop@{
+                        if (m.live && com.rm.acidulous.util.locked(impulseAsked) { impulseAsked[key] } != ask) return@drop
+                        NativeEngine.loadImpulse(maxOf(rack, 0), unit, "", 1f, 1f, 1f)
+                    }
+                    if (m.live) impulseLoader.execute(drop) else com.rm.acidulous.util.runNow(drop)
+                }
                 continue
             }
             val impulse = VenueRooms.impulseOf(slot)

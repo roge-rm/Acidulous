@@ -64,6 +64,7 @@
     <string name="venue_rooms">salles</string>
     <string name="venue_yours">les vôtres</string>
     <string name="venue_open">ouvrir…</string>
+    <string name="venue_capture">capter…</string>
     <string name="venue_open_failed">Ce fichier n’a pas pu être lu (%s).</string>
 
     <!-- Formulate -->

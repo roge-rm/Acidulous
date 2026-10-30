@@ -64,6 +64,7 @@
     <string name="venue_rooms">rooms</string>
     <string name="venue_yours">yours</string>
     <string name="venue_open">open…</string>
+    <string name="venue_capture">capture…</string>
     <string name="venue_open_failed">That file couldn\'t be read (%s).</string>
 
     <!-- Formulate -->
