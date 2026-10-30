@@ -19,8 +19,9 @@ import kotlinx.serialization.json.Json
  *     engine/<n>.txt     the engine calls that apply patch n to a fresh track 1 (engine lines)
  *
  * Settings that name files: sample, slice_sample, pNN_sample, sf2, zones
- * (the first field of each line), voice and morphvoice. Built-in assets
- * aren't settings, so nothing of theirs is copied.
+ * (the first field of each line), voice and morphvoice, and on an effect,
+ * the patch's own or one of its inserts, impulse. Built-in assets and
+ * Venue's own rooms aren't files, so nothing of theirs is copied.
  *
  * engine/ is there only when the platform can record (not the browser).
  * Its lines name media as zip:media/..., files that are in the zip as they
@@ -50,11 +51,11 @@ object PresetFile {
     /** Whether a setting of this name holds a path to one of the user's files. */
     fun isMediaKey(key: String): Boolean =
         key == "sample" || key == "slice_sample" || key.endsWith("_sample") || key == "sf2" || key == "zones" ||
-            key == VoiceBank.SETTING || key == VoiceBank.SETTING_MORPH
+            key == VoiceBank.SETTING || key == VoiceBank.SETTING_MORPH || key == VenueRooms.SETTING
 
     /** Every path a setting holds, in the form it's stored. */
     private fun pathsOf(key: String, value: String): List<String> = when {
-        value.isEmpty() -> emptyList()
+        value.isEmpty() || value.startsWith(VenueRooms.FACTORY) -> emptyList()
         key == "zones" -> value.split('\n').map { it.substringBefore('|') }.filter { it.isNotEmpty() }
         else -> listOf(value)
     }
@@ -63,7 +64,7 @@ object PresetFile {
     private fun mapPaths(settings: Map<String, String>, map: (String) -> String): Map<String, String> =
         settings.mapValues { (key, value) ->
             when {
-                value.isEmpty() || !isMediaKey(key) -> value
+                value.isEmpty() || !isMediaKey(key) || value.startsWith(VenueRooms.FACTORY) -> value
                 key == "zones" -> value.split('\n').joinToString("\n") { line ->
                     val rest = line.substringAfter('|', "")
                     val path = line.substringBefore('|')
@@ -97,9 +98,10 @@ object PresetFile {
             val entries = mutableListOf<String>()
             for ((i, patch) in patches.withIndex()) {
                 val n = i + 1
-                val rewritten = mapPathsPacking(patch, userRoot, zip, packed, missing)
+                val rewritten = mapPathsPacking(patch.name, patch.settings, userRoot, zip, packed, missing)
+                val inserts = patch.inserts.map { it.copy(settings = mapPathsPacking(patch.name, it.settings, userRoot, zip, packed, missing)) }
                 zip.add("patches/$n.json", json.encodeToString(Patch.serializer(), patch.copy(
-                    machine = key, settings = rewritten, version = RateMigration.PATCH_VERSION,
+                    machine = key, settings = rewritten, inserts = inserts, version = RateMigration.PATCH_VERSION,
                 )).encodeToByteArray())
                 entries += "patches/$n.json"
                 val recorded = engine?.invoke(patch)
@@ -118,20 +120,20 @@ object PresetFile {
         return Written(out, patches.size, packed.size, missing, withEngine, unportable.toList())
     }
 
-    /** Packs the files [patch] names into [zip] (once each) and returns its settings pointing at them. */
+    /** Packs the files [settings] of the patch [name] name into [zip] (once each) and returns them pointing there. */
     private fun mapPathsPacking(
-        patch: Patch, userRoot: File, zip: ZipWriter, packed: MutableSet<String>, missing: MutableList<String>,
-    ): Map<String, String> = mapPaths(patch.settings) { path ->
+        name: String, settings: Map<String, String>, userRoot: File, zip: ZipWriter, packed: MutableSet<String>, missing: MutableList<String>,
+    ): Map<String, String> = mapPaths(settings) { path ->
         val voice = VoiceBank.nameOf(path)
         when {
-            path.startsWith("/") || path.contains("..") -> { missing += "${patch.name}: $path"; path }
+            path.startsWith("/") || path.contains("..") -> { missing += "$name: $path"; path }
             voice != null -> {
                 // The voice's own files, where the engine lines find them: media/voices/<name>/.
-                if (voice == "." || voice == ".." || VoiceBank.load(VoiceBank.folderOf(userRoot, voice)) == null) { missing += "${patch.name}: $path"; return@mapPaths path }
+                if (voice == "." || voice == ".." || VoiceBank.load(VoiceBank.folderOf(userRoot, voice)) == null) { missing += "$name: $path"; return@mapPaths path }
                 for (rel in VoiceBank.filesOf(userRoot, path)) {
-                    if (rel.startsWith("/") || rel.contains("..")) missing += "${patch.name}: $rel"
+                    if (rel.startsWith("/") || rel.contains("..")) missing += "$name: $rel"
                     else if (File(userRoot, rel).isFile) { if (packed.add(MEDIA + rel)) zip.addFile(MEDIA + rel, File(userRoot, rel)) }
-                    else missing += "${patch.name}: $rel"
+                    else missing += "$name: $rel"
                 }
                 MEDIA + path
             }
@@ -140,7 +142,7 @@ object PresetFile {
                 if (packed.add(entry)) zip.addFile(entry, File(userRoot, path))
                 entry
             }
-            else -> { missing += "${patch.name}: $path"; path }
+            else -> { missing += "$name: $path"; path }
         }
     }
 
@@ -188,7 +190,7 @@ object PresetFile {
 
         // Each media entry a patch names, to where it ended up under the user folder.
         val wanted = linkedSetOf<String>()
-        for (p in migrated) for ((k, v) in p.settings) if (isMediaKey(k)) for (path in pathsOf(k, v)) {
+        for (p in migrated) for (settings in listOf(p.settings) + p.inserts.map { it.settings }) for ((k, v) in settings) if (isMediaKey(k)) for (path in pathsOf(k, v)) {
             if (path in names && path.startsWith(MEDIA) && !path.contains("..")) wanted += path
         }
         val placed = HashMap<String, String>()
@@ -227,13 +229,13 @@ object PresetFile {
             val name = freeName(p.name.ifBlank { m.unit }, taken)
             taken += PatchStore.fileName(name).lowercase()
             // A file that isn't in the zip is left as a plain relative path; anything that could point elsewhere is cleared.
-            val settings = mapPaths(p.settings) { path ->
+            fun place(settings: Map<String, String>) = mapPaths(settings) { path ->
                 placed[path] ?: if (path.startsWith("/") || path.contains("..") || path.startsWith(MEDIA)) {
                     missing += "$name: $path"
                     ""
                 } else path
             }
-            PatchStore.save(p.copy(name = name, settings = settings))
+            PatchStore.save(p.copy(name = name, settings = place(p.settings), inserts = p.inserts.map { it.copy(settings = place(it.settings)) }))
             added += name
         }
         return Imported(m.kind, m.unit, added, placed.size, missing)

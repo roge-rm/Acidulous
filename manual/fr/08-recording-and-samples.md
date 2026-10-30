@@ -16,6 +16,8 @@ pour Pollen ou une prise pour Molt.
   - **gravé dans la prise** contient deux effets enregistrés dans le fichier,
     comme un ampli de guitare. Les effets d’une piste, eux, peuvent être changés
     n’importe quand.
+  - **capter une salle…** enregistre la salle où vous êtes comme impulsion
+    pour Venue, dans vos impulsions, où vous pouvez aussi les écouter, les renommer et les supprimer. Voyez Venue au chapitre des effets.
 - **modifier** - réécoutez la prise, coupez les bouts, réglez le niveau et
   coupez le grondement grave. **norm** et **inv** en haut normalisent et
   inversent tout le fichier. Les changements s’affichent et jouent tout de

@@ -26,6 +26,7 @@ jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(JNIEnv *, jobje
 jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(JNIEnv *, jobject, jint, jstring);
 jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadFormula(JNIEnv *, jobject, jint, jstring, jstring, jstring, jstring);
 jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadEffectFormula(JNIEnv *, jobject, jint, jstring, jstring);
+jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadImpulse(JNIEnv *, jobject, jint, jstring, jstring, jfloat, jfloat, jfloat);
 jstring Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(JNIEnv *, jobject, jint, jfloatArray);
 void Java_com_rm_acidulous_engine_EngineNative_nativeClearFrozen(JNIEnv *, jobject);
 jstring Java_com_rm_acidulous_engine_EngineNative_nativeMountFrozen(JNIEnv *, jobject, jint, jlong, jstring, jfloat, jint, jint, jint, jfloat);
@@ -219,6 +220,18 @@ bool callLoadEffectFormula(Reader &in, Replay &r) {
     return true;
 }
 
+bool callLoadImpulse(Reader &in, Replay &r) {
+    const jint rack = r.rack(in.i32());
+    const jstring unit = r.unit(in.str());
+    const jstring path = in.path();
+    const jfloat length01 = in.f32();
+    const jfloat decay01 = in.f32();
+    const jfloat stretch01 = in.f32();
+    if (!in.finish()) return false;
+    r.said("LoadImpulse", Java_com_rm_acidulous_engine_EngineNative_nativeLoadImpulse(r.env, nullptr, rack, unit, path, length01, decay01, stretch01));
+    return true;
+}
+
 bool callBuildCloud(Reader &in, Replay &r) {
     const jint rack = r.rack(in.i32());
     const jfloatArray spectrum01 = in.floats();
@@ -377,6 +390,7 @@ const Call kCalls[] = {
     {"LoadReel", callLoadReel},
     {"LoadFormula", callLoadFormula},
     {"LoadEffectFormula", callLoadEffectFormula},
+    {"LoadImpulse", callLoadImpulse},
     {"BuildCloud", callBuildCloud},
     {"ClearFrozen", callClearFrozen},
     {"MountFrozen", callMountFrozen},
@@ -392,6 +406,6 @@ const Call kCalls[] = {
     {"SnapshotCommit", callSnapshotCommit},
     {"SnapshotAbandon", callSnapshotAbandon},
 };
-const int kCallCount = 34;
+const int kCallCount = 35;
 
 } // namespace acidulous::lines

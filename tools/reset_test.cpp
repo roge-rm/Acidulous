@@ -21,6 +21,7 @@
 #include <memory>
 #include "audition_material.h"
 #include "patchbank.h"
+#include "venue_impulse.h"
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -322,6 +323,8 @@ Result checkEffect(const char *name, const Patch *patch = nullptr) {
     Effect *e = EffectRegistry::create(name);
     if (e == nullptr) return r;
     e->prepare(kRate);
+    // Venue is dry without an impulse: it gets a made-up room.
+    if (std::strcmp(name, "Venue") == 0) e->swapObject(0, venue_harness::room(1.5).release());
     apply(e->params(), patch);
     std::vector<float> a, b, other;
     panicE(e); pass(e, a);

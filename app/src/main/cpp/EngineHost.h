@@ -2,6 +2,7 @@
 #include <engine/dsp/Loudness.h>
 #include <atomic>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <sequencer/Clip.h>
@@ -416,6 +417,17 @@ class EngineHost {
      */
     std::string loadEffectFormula(int rack, const std::string &unit, const std::string &formula);
 
+    /**
+     * Reads an impulse (any file decodeAudio reads), shapes it with a
+     * Venue's length, decay and stretch, given normalised as the knobs hold
+     * them, builds it and hands it to the Venue in [unit]'s slot ([rack] for
+     * a track insert). The file stays decoded for the slot, so building it
+     * again with another shape doesn't read it again. An empty path takes
+     * the impulse away. Returns "" or what went wrong.
+     */
+    std::string loadImpulse(int rack, const std::string &unit, const std::string &path, float length01, float decay01,
+                            float stretch01);
+
     // --- Freeze ---------------------------------------------------------
   private:
     mutable std::mutex macroNamesLock_;
@@ -575,6 +587,37 @@ class EngineHost {
     bool captureOverflowed() const;
 
     /**
+     * Capturing a room (see engine/core/RoomSweep.h, dsp/RoomCapture.h).
+     * The level check is a 1 kHz tone at [levelDb] out of the master.
+     */
+    void roomTone(bool on, float levelDb);
+    /**
+     * Plays a sweep of [seconds] at [levelDb], [repeats] times, each with the
+     * ring-out after it, in place of the song, and records the input. ""
+     * or what went wrong.
+     */
+    std::string roomSweepStart(float seconds, int repeats, float levelDb);
+    /** Stops the tone or the sweep. */
+    void roomSweepStop();
+    /** Stops and frees the sweep, its recording and the impulse. Not the audio thread. */
+    void roomClose();
+    /** 0 idle, 1 the tone, 2 sweeping, 3 recorded. */
+    int roomSweepState() const;
+    float roomSweepProgress() const;
+    /** The loudest input sample in the sweep so far. */
+    float roomSweepPeak() const;
+    /**
+     * Deconvolves the recorded sweep and keeps the impulse for listening and
+     * saving. Fills [picture] with its peaks in dB, one per column.
+     * Returns "error|frames|autoFrames|directFrame|latencyFrames|snrDb|channels".
+     */
+    std::string roomAnalyse(float *picture, int columns);
+    /** Plays a click through the impulse cut to [frames]. */
+    std::string roomListen(int frames);
+    /** Writes the impulse cut to [frames] as a WAV at [path]. */
+    std::string roomSave(const std::string &path, int frames);
+
+    /**
      * The rack a recording is for, or -1 for none.
      *
      * Only the armed rack gets its boundaries stamped (see `CaptureMarks`),
@@ -680,6 +723,14 @@ class EngineHost {
     std::string mountedEffectType[kRackCount][kEffectSlots];
     /** The formula last loaded into each insert, kept for rackPatch. Cleared when the slot is mounted again. */
     std::string effectFormula_[kRackCount][kEffectSlots];
+    // Each Venue slot's impulse as read and normalised, by (rack, unit), for
+    // building again with another shape.
+    struct ImpulseSource {
+        std::string path;
+        std::shared_ptr<const SampleData> data;
+    };
+    std::mutex impulseMtx_;
+    std::map<std::pair<int, int>, ImpulseSource> impulses_;
     /** The last machine and inserts queued per rack, to tell when the audio thread has them. Never dereferenced. */
     const void *queuedMachine_[16] = {};
     const void *queuedEffect_[kRackCount][kEffectSlots] = {};

@@ -597,6 +597,7 @@
     <string name="pw_high">high</string>
     <string name="pw_high_cut">high cut</string>
     <string name="pw_high_pass">high pass</string>
+    <string name="pw_highcut">highcut</string>
     <string name="pw_highfreq">highfreq</string>
     <string name="pw_highgain">highgain</string>
     <string name="pw_highland">highland</string>
@@ -639,6 +640,7 @@
     <string name="pw_ice">ice</string>
     <string name="pw_ignore">ignore</string>
     <string name="pw_ii">II</string>
+    <string name="pw_impulse">impulse</string>
     <string name="pw_in">in</string>
     <string name="pw_in_gain">in gain</string>
     <string name="pw_in_r">in R</string>
@@ -764,6 +766,7 @@
     <string name="pw_low_cut">low cut</string>
     <string name="pw_low_pass">low pass</string>
     <string name="pw_low_tom">Low Tom</string>
+    <string name="pw_lowcut">lowcut</string>
     <string name="pw_lower">lower</string>
     <string name="pw_lower_a">lower A</string>
     <string name="pw_lower_a_1">lower A 1</string>
@@ -1519,6 +1522,7 @@
     <string name="pw_velocity">velocity</string>
     <string name="pw_velspread">velspread</string>
     <string name="pw_vent">vent</string>
+    <string name="pw_venue">Venue</string>
     <string name="pw_vib">vib</string>
     <string name="pw_vib_delay">vib delay</string>
     <string name="pw_vib_depth">vib depth</string>

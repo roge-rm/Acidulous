@@ -149,23 +149,40 @@ object SongBundle {
         }
     }
 
+    /** [value] with every token [referenced] would find that names a renamed file pointing at its new name. */
+    private fun repointValue(value: String, renamed: Map<String, String>): String =
+        // Token by token, on the same separators `referenced` uses, so
+        // "samples/a.wav" is never matched inside "samples/a.wav2".
+        Regex("[^\n|,]+").replace(value) { m ->
+            val token = m.value
+            val trimmed = token.trim()
+            renamed[trimmed]?.let { token.replace(trimmed, it) } ?: token
+        }
+
+    private fun repointSlot(slot: UnitSlot, renamed: Map<String, String>): UnitSlot =
+        if (slot.settings.isEmpty()) slot else slot.copy(settings = slot.settings.mapValues { (_, v) -> repointValue(v, renamed) })
+
+    /** Every effect slot's settings in [song]: track inserts, sends, master and group inserts, input effects. */
+    private fun effectSettings(song: Song): List<Map<String, String>> =
+        (song.tracks.flatMap { it.effects } + song.master.sends + song.master.inserts +
+            song.master.groups.flatMap { it.inserts } + song.input).map { it.settings }
+
     /** The song, with every setting and take that named a renamed file pointing at its new name. */
     fun repoint(song: Song, renamed: Map<String, String>): Song = song.copy(
+        master = song.master.copy(
+            sends = song.master.sends.map { repointSlot(it, renamed) },
+            inserts = song.master.inserts.map { repointSlot(it, renamed) },
+            groups = song.master.groups.map { g -> g.copy(inserts = g.inserts.map { repointSlot(it, renamed) }) },
+        ),
+        input = song.input.map { repointSlot(it, renamed) },
         tracks = song.tracks.map { t ->
             t.copy(clips = t.clips.mapValues { (_, clip) ->
                 val audio = clip.audio ?: return@mapValues clip
                 clip.copy(audio = audio.copy(lanes = audio.lanes.map { take ->
                     take?.let { renamed[it.file.trim()]?.let { name -> it.copy(file = name) } ?: it }
                 }))
-            }, machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) ->
-                // Token by token, on the same separators `referenced` uses, so
-                // "samples/a.wav" is never matched inside "samples/a.wav2".
-                Regex("[^\n|,]+").replace(value) { m ->
-                    val token = m.value
-                    val trimmed = token.trim()
-                    renamed[trimmed]?.let { token.replace(trimmed, it) } ?: token
-                }
-            }))
+            }, machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) -> repointValue(value, renamed) }),
+                effects = t.effects.map { repointSlot(it, renamed) })
         },
     )
 
@@ -189,6 +206,14 @@ object SongBundle {
                     val file = take?.file?.trim() ?: continue
                     if (file.isNotEmpty() && !file.startsWith("/") && File(userRoot, file).isFile) found += file
                 }
+            }
+        }
+        // Effects name files too, like a Venue's impulse.
+        for (settings in effectSettings(song)) for (value in settings.values) {
+            for (token in value.split('\n', '|', ',')) {
+                val candidate = token.trim()
+                if (candidate.isEmpty() || candidate.startsWith("/")) continue
+                if (File(userRoot, candidate).isFile) found += candidate
             }
         }
         return found.toList()

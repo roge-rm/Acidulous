@@ -14,6 +14,7 @@
 #include "Smash.h"
 #include "Spectral.h"
 #include "Tape.h"
+#include "Venue.h"
 #include "amp/Amp.h"
 #include <cstring>
 
@@ -56,6 +57,7 @@ const Entry kEntries[] = {
     {"Transient", make<effect::Transient>},
     {"Midside", make<effect::MidSide>},
     {"Deesser", make<effect::DeEsser>},
+    {"Venue", make<effect::Venue>},
 };
 constexpr int32_t kCount = sizeof(kEntries) / sizeof(kEntries[0]);
 

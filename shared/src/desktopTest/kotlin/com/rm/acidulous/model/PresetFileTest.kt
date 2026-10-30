@@ -130,6 +130,32 @@ class PresetFileTest {
     }
 
     @Test
+    fun venueImpulsesTravelInEffectPatchesAndMachinePatchInserts() = phone { mine ->
+        put(mine.root, "impulses/hall.wav", 1, 2)
+        put(mine.root, "impulses/plate.wav", 3)
+        val fx = Patch("fx.Venue", "Hall", params, settings = mapOf(VenueRooms.SETTING to "impulses/hall.wav"))
+        val room = Patch("fx.Venue", "Room", params, settings = mapOf(VenueRooms.SETTING to VenueRooms.DEFAULT))
+        val fxWritten = write(mine, "fx.Venue", listOf(fx, room), "venue.acpreset")
+        assertEquals("a factory room isn't missing", emptyList<String>(), fxWritten.missing)
+        assertEquals(1, fxWritten.media)
+        val synth = Patch(
+            "Trinity", "Plated", params,
+            inserts = listOf(UnitSlot(VenueRooms.TYPE, settings = mapOf(VenueRooms.SETTING to "impulses/plate.wav"))),
+        )
+        val synthWritten = write(mine, "Trinity", listOf(synth), "synth.acpreset")
+        assertEquals(1, synthWritten.media)
+        phone { theirs ->
+            read(theirs, fxWritten.file)!!
+            read(theirs, synthWritten.file)!!
+            assertEquals("impulses/hall.wav", PatchStore.loadUser("fx.Venue", "Hall")!!.settings[VenueRooms.SETTING])
+            assertEquals(VenueRooms.DEFAULT, PatchStore.loadUser("fx.Venue", "Room")!!.settings[VenueRooms.SETTING])
+            assertEquals("impulses/plate.wav", PatchStore.loadUser("Trinity", "Plated")!!.inserts[0].settings[VenueRooms.SETTING])
+            assertArrayEquals(byteArrayOf(1, 2), File(theirs.root, "impulses/hall.wav").readBytes())
+            assertArrayEquals(byteArrayOf(3), File(theirs.root, "impulses/plate.wav").readBytes())
+        }
+    }
+
+    @Test
     fun clashingNamesAndFilesGetANumber() = phone { mine ->
         val root = mine.root
         put(root, "samples/hit.wav", 1, 2, 3)

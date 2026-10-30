@@ -1603,4 +1603,8 @@
     <string name="pw_all_env_decay">déclin env (tous)</string>
     <string name="pw_decay_n">déclin %d</string>
     <string name="pw_cutoff_n">coupure %d</string>
+    <string name="pw_highcut">coupe-haut</string>
+    <string name="pw_impulse">impulsion</string>
+    <string name="pw_lowcut">coupe-bas</string>
+    <string name="pw_venue">Venue</string>
 </resources>

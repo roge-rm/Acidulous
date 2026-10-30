@@ -85,6 +85,36 @@ private fun raw_nativeCaptureDeaf(env: Int): Int =
 private fun raw_nativeCapturedFrames(env: Int): Long =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeCapturedFrames(env, 0)")
 
+private fun raw_nativeRoomTone(env: Int, on: Int, levelDb: Float): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomTone(env, 0, on, levelDb)")
+
+private fun raw_nativeRoomSweepStart(env: Int, seconds: Float, repeats: Int, levelDb: Float): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomSweepStart(env, 0, seconds, repeats, levelDb)")
+
+private fun raw_nativeRoomSweepStop(env: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomSweepStop(env, 0)")
+
+private fun raw_nativeRoomClose(env: Int): Unit =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomClose(env, 0)")
+
+private fun raw_nativeRoomSweepState(env: Int): Int =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomSweepState(env, 0)")
+
+private fun raw_nativeRoomSweepProgress(env: Int): Float =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomSweepProgress(env, 0)")
+
+private fun raw_nativeRoomSweepPeak(env: Int): Float =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeRoomSweepPeak(env, 0)")
+
+private fun async_nativeRoomAnalyse(arena: Int, picture: Int): Int =
+    js("globalThis.acid._acid_async_nativeRoomAnalyse(arena, picture)")
+
+private fun async_nativeRoomListen(arena: Int, frames: Int): Int =
+    js("globalThis.acid._acid_async_nativeRoomListen(arena, frames)")
+
+private fun async_nativeRoomSave(arena: Int, path: Int, frames: Int): Int =
+    js("globalThis.acid._acid_async_nativeRoomSave(arena, path, frames)")
+
 private fun async_nativeCompCell(arena: Int, rack: Int, sceneId: Long, frames: Int, bpm: Float, path: Int, peakOut: Int): Int =
     js("globalThis.acid._acid_async_nativeCompCell(arena, rack, sceneId, frames, bpm, path, peakOut)")
 
@@ -312,6 +342,9 @@ private fun async_nativeLoadFormula(arena: Int, rack: Int, formula: Int, arp: In
 
 private fun async_nativeLoadEffectFormula(arena: Int, rack: Int, unit: Int, formula: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadEffectFormula(arena, rack, unit, formula)")
+
+private fun async_nativeLoadImpulse(arena: Int, rack: Int, unit: Int, path: Int, length01: Float, decay01: Float, stretch01: Float): Int =
+    js("globalThis.acid._acid_async_nativeLoadImpulse(arena, rack, unit, path, length01, decay01, stretch01)")
 
 private fun async_nativeBuildCloud(arena: Int, rack: Int, spectrum01: Int): Int =
     js("globalThis.acid._acid_async_nativeBuildCloud(arena, rack, spectrum01)")
@@ -753,6 +786,79 @@ internal actual object EngineNative {
         val raw_ = raw_nativeCapturedFrames(Jni.env)
         val result_ = raw_
         Jni.release()
+        return result_
+    }
+
+    actual fun nativeRoomTone(on: Boolean, levelDb: Float) {
+        raw_nativeRoomTone(Jni.env, if (on) 1 else 0, levelDb)
+        Jni.release()
+    }
+
+    actual fun nativeRoomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String {
+        val raw_ = raw_nativeRoomSweepStart(Jni.env, seconds, repeats, levelDb)
+        val result_ = Jni.readString(raw_)
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeRoomSweepStop() {
+        raw_nativeRoomSweepStop(Jni.env)
+        Jni.release()
+    }
+
+    actual fun nativeRoomClose() {
+        raw_nativeRoomClose(Jni.env)
+        Jni.release()
+    }
+
+    actual fun nativeRoomSweepState(): Int {
+        val raw_ = raw_nativeRoomSweepState(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeRoomSweepProgress(): Float {
+        val raw_ = raw_nativeRoomSweepProgress(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual fun nativeRoomSweepPeak(): Float {
+        val raw_ = raw_nativeRoomSweepPeak(Jni.env)
+        val result_ = raw_
+        Jni.release()
+        return result_
+    }
+
+    actual suspend fun nativeRoomAnalyse(picture: FloatArray): String {
+        val arena_ = Jni.openArena()
+        val jpicture = Jni.floats(picture)
+        val ticket_ = async_nativeRoomAnalyse(arena_, jpicture)
+        Jni.await(ticket_)
+        Jni.copyBack(jpicture, picture)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeRoomListen(frames: Int): String {
+        val arena_ = Jni.openArena()
+        val ticket_ = async_nativeRoomListen(arena_, frames)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeRoomSave(path: String, frames: Int): String {
+        val arena_ = Jni.openArena()
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeRoomSave(arena_, jpath, frames)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
         return result_
     }
 
@@ -1347,6 +1453,17 @@ internal actual object EngineNative {
         val junit = Jni.string(unit)
         val jformula = Jni.string(formula)
         val ticket_ = async_nativeLoadEffectFormula(arena_, rack, junit, jformula)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String {
+        val arena_ = Jni.openArena()
+        val junit = Jni.string(unit)
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeLoadImpulse(arena_, rack, junit, jpath, length01, decay01, stretch01)
         Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)

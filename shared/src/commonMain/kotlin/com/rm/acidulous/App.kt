@@ -49,6 +49,7 @@ import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.engine.Recorder
 import com.rm.acidulous.engine.uniqueIn
+import com.rm.acidulous.model.withImpulseChanged
 import com.rm.acidulous.model.DemoSong
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.PatchStore
@@ -2035,6 +2036,7 @@ fun App(modifier: Modifier = Modifier) {
 
     androidx.compose.runtime.CompositionLocalProvider(
         com.rm.acidulous.ui.LocalSongMappings provides song.mappings,
+        com.rm.acidulous.ui.LocalRoomChanged provides { old, new -> editor.editSong { it.withImpulseChanged(old, new) } },
     ) {
     /**
      * The system back button goes back a screen, and only leaves the app from

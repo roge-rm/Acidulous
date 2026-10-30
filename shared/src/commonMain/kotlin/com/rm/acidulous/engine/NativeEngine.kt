@@ -464,6 +464,14 @@ object NativeEngine {
         EngineNative.nativeLoadEffectFormula(rack, unit, formula)
 
     /**
+     * Reads the impulse at [path], shapes it with a Venue's length, decay and
+     * stretch (normalised) and hands it to the Venue in [unit]'s slot. An
+     * empty path takes it away. Returns "" or what went wrong.
+     */
+    suspend fun loadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String =
+        EngineNative.nativeLoadImpulse(rack, unit, path, length01, decay01, stretch01)
+
+    /**
      * Build and mount Cumulus's tables for a rack. Slow, so worker only.
      * [spectrum01] is the spectrum parameters in table order, NaN for any
      * the song never set. Passed in rather than read from the engine, which
@@ -704,6 +712,40 @@ object NativeEngine {
     fun setInputGain(gain: Float) = EngineNative.nativeSetInputGain(gain)
     fun setMonitorLevel(level: Float) = EngineNative.nativeSetMonitorLevel(level)
 
+    /**
+     * Capturing a room. The level check plays a 1 kHz tone at [levelDb] in
+     * place of the song; the sweep plays [seconds] of sweep [repeats] times,
+     * each with six seconds to ring out, and records the input.
+     */
+    fun roomTone(on: Boolean, levelDb: Float) = EngineNative.nativeRoomTone(on, levelDb)
+    fun roomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String =
+        EngineNative.nativeRoomSweepStart(seconds, repeats, levelDb)
+    fun roomSweepStop() = EngineNative.nativeRoomSweepStop()
+    /** Frees the sweep, its recording and the impulse. Waits for an analysis, so not on the UI thread. */
+    fun roomClose() = EngineNative.nativeRoomClose()
+    /** 0 idle, 1 the tone, 2 sweeping, 3 recorded. */
+    val roomSweepState: Int get() = EngineNative.nativeRoomSweepState()
+    val roomSweepProgress: Float get() = EngineNative.nativeRoomSweepProgress()
+    /** The loudest input sample in the sweep so far. */
+    val roomSweepPeak: Float get() = EngineNative.nativeRoomSweepPeak()
+    /**
+     * Turns the recorded sweep into an impulse, kept in the engine, and fills
+     * [picture] with its peaks in dB. Null and the reason when it fails.
+     */
+    suspend fun roomAnalyse(picture: FloatArray): Pair<RoomImpulse?, String> {
+        val f = EngineNative.nativeRoomAnalyse(picture).split('|')
+        if (f.size < 7 || f[0].isNotEmpty()) return null to f[0]
+        return RoomImpulse(
+            frames = f[1].toIntOrNull() ?: 0, autoFrames = f[2].toIntOrNull() ?: 0,
+            directFrame = f[3].toIntOrNull() ?: 0, latencyFrames = f[4].toIntOrNull() ?: 0,
+            snrDb = f[5].toFloatOrNull() ?: 0f, channels = f[6].toIntOrNull() ?: 1,
+        ) to ""
+    }
+    /** Plays a click through the impulse cut to [frames]. */
+    suspend fun roomListen(frames: Int): String = EngineNative.nativeRoomListen(frames)
+    /** Writes the impulse cut to [frames] to [path] as a WAV. */
+    suspend fun roomSave(path: String, frames: Int): String = EngineNative.nativeRoomSave(path, frames)
+
     /** [source] 0 is the input, 1 is the output. Returns "" or an error. */
     fun startCapture(path: String, source: Int): String = EngineNative.nativeStartCapture(path, source)
     fun stopCapture() = EngineNative.nativeStopCapture()
@@ -846,3 +888,14 @@ object NativeEngine {
     fun readWorkerWaitPeakUs(): Int = EngineNative.nativeReadWorkerWaitPeakUs()
 
 }
+
+/** An impulse captured from a room, as the engine found it. Frames at 48 kHz. */
+data class RoomImpulse(
+    val frames: Int,
+    /** Where its tail meets the noise floor. */
+    val autoFrames: Int,
+    val directFrame: Int,
+    val latencyFrames: Int,
+    val snrDb: Float,
+    val channels: Int,
+)

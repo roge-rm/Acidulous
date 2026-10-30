@@ -68,6 +68,7 @@
     - [Tape](05-effects-and-mixing/tape.md) : un magnétophone usé, et un bouton d’arrêt.
     - [Transient](05-effects-and-mixing/transient.md) : le début de chaque coup et la résonance après, plus fort ou plus doux.
     - [Tremolo](05-effects-and-mixing/tremolo.md) : le volume sur un LFO, ou un panoramique automatique.
+    - [Venue](05-effects-and-mixing/venue.md) : place la piste dans une salle, d’après un enregistrement de la façon dont la salle répond.
     - [Width](05-effects-and-mixing/width.md) : plus large, plus étroit, mono sous une fréquence ou tourné.
 6. [Les modificateurs](06-modifiers.md)
 7. [MIDI et jeu avec d’autres](07-midi-and-sync.md)

@@ -37,6 +37,49 @@ class SongBundleTest {
         }
     }
 
+    /** A Venue in every kind of effect slot, each naming its own impulse, and one on a factory room. */
+    private fun venues(): Song {
+        fun venue(impulse: String) = UnitSlot(VenueRooms.TYPE, settings = mapOf(VenueRooms.SETTING to impulse))
+        val base = song()
+        return base.copy(
+            tracks = base.tracks.map { it.copy(effects = listOf(UnitSlot(), venue("impulses/track.wav"), venue(VenueRooms.DEFAULT))) },
+            master = base.master.copy(
+                sends = listOf(venue("impulses/send.wav"), UnitSlot("Delay")),
+                inserts = listOf(venue("impulses/master.wav")),
+                groups = listOf(MixGroup(inserts = listOf(venue("impulses/group.wav")))),
+            ),
+            input = listOf(venue("impulses/input.wav")),
+        )
+    }
+
+    @Test
+    fun impulsesInEveryEffectSlotTravelAndFactoryRoomsDoNot() = withRoot { root ->
+        val names = listOf("track", "send", "master", "group", "input")
+        File(root, "impulses").mkdirs()
+        for ((i, n) in names.withIndex()) File(root, "impulses/$n.wav").writeBytes(byteArrayOf(i.toByte()))
+        val song = venues()
+        assertEquals(names.map { "impulses/$it.wav" }.toSet(), SongBundle.referenced(song, root).toSet())
+        val out = File(root, "rooms.zip")
+        assertEquals(5, SongBundle.write(song, root, out))
+        withRoot { other ->
+            // Their own send impulse differs, so the song's is renamed and followed.
+            File(other, "impulses").mkdirs()
+            File(other, "impulses/send.wav").writeBytes(byteArrayOf(42))
+            val back = runBlocking { SongBundle.read(out, other) }!!
+            for ((i, n) in names.withIndex()) {
+                val at = if (n == "send") "impulses/send (2).wav" else "impulses/$n.wav"
+                assertArrayEquals(byteArrayOf(i.toByte()), File(other, at).readBytes())
+            }
+            assertEquals("impulses/track.wav", back.tracks[0].effects[1].settings[VenueRooms.SETTING])
+            assertEquals(VenueRooms.DEFAULT, back.tracks[0].effects[2].settings[VenueRooms.SETTING])
+            assertEquals("impulses/send (2).wav", back.master.sends[0].settings[VenueRooms.SETTING])
+            assertEquals("impulses/master.wav", back.master.inserts[0].settings[VenueRooms.SETTING])
+            assertEquals("impulses/group.wav", back.master.groups[0].inserts[0].settings[VenueRooms.SETTING])
+            assertEquals("impulses/input.wav", back.input[0].settings[VenueRooms.SETTING])
+            assertArrayEquals("theirs is untouched", byteArrayOf(42), File(other, "impulses/send.wav").readBytes())
+        }
+    }
+
     @Test
     fun yourOwnFileOfTheSameNameIsNotWrittenOver() = withRoot { root ->
         File(root, "samples").mkdirs()

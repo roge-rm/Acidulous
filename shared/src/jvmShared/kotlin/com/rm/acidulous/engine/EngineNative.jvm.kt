@@ -57,6 +57,22 @@ internal actual object EngineNative {
     actual external fun nativeCaptureOverflowed(): Boolean
     actual external fun nativeCaptureDeaf(): Boolean
     actual external fun nativeCapturedFrames(): Long
+    actual external fun nativeRoomTone(on: Boolean, levelDb: Float)
+    actual external fun nativeRoomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String
+    actual external fun nativeRoomSweepStop()
+    actual external fun nativeRoomClose()
+    actual external fun nativeRoomSweepState(): Int
+    actual external fun nativeRoomSweepProgress(): Float
+    actual external fun nativeRoomSweepPeak(): Float
+    @JvmName("nativeRoomAnalyse")
+    private external fun blocking_nativeRoomAnalyse(picture: FloatArray): String
+    actual suspend fun nativeRoomAnalyse(picture: FloatArray): String = blocking_nativeRoomAnalyse(picture)
+    @JvmName("nativeRoomListen")
+    private external fun blocking_nativeRoomListen(frames: Int): String
+    actual suspend fun nativeRoomListen(frames: Int): String = blocking_nativeRoomListen(frames)
+    @JvmName("nativeRoomSave")
+    private external fun blocking_nativeRoomSave(path: String, frames: Int): String
+    actual suspend fun nativeRoomSave(path: String, frames: Int): String = blocking_nativeRoomSave(path, frames)
     @JvmName("nativeCompCell")
     private external fun blocking_nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
     actual suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String = blocking_nativeCompCell(rack, sceneId, frames, bpm, path, peakOut)
@@ -328,6 +344,16 @@ internal actual object EngineNative {
         EngineLines.sent++
         EngineLines.writer?.call("LoadEffectFormula") { int(rack); str(unit); str(formula) }
         val result_ = jni_nativeLoadEffectFormula(rack, unit, formula)
+        return result_
+    }
+    @JvmName("nativeLoadImpulse")
+    private external fun jni_nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String
+    actual suspend fun nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadImpulse") { int(rack); str(unit); path(path); float(length01); float(decay01); float(stretch01) }; return "" }
+        EngineLines.sent++
+        EngineLines.writer?.call("LoadImpulse") { int(rack); str(unit); path(path); float(length01); float(decay01); float(stretch01) }
+        val result_ = jni_nativeLoadImpulse(rack, unit, path, length01, decay01, stretch01)
         return result_
     }
     @JvmName("nativeBuildCloud")

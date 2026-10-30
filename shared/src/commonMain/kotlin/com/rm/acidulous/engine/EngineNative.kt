@@ -51,6 +51,16 @@ internal expect object EngineNative {
     fun nativeCaptureOverflowed(): Boolean
     fun nativeCaptureDeaf(): Boolean
     fun nativeCapturedFrames(): Long
+    fun nativeRoomTone(on: Boolean, levelDb: Float)
+    fun nativeRoomSweepStart(seconds: Float, repeats: Int, levelDb: Float): String
+    fun nativeRoomSweepStop()
+    fun nativeRoomClose()
+    fun nativeRoomSweepState(): Int
+    fun nativeRoomSweepProgress(): Float
+    fun nativeRoomSweepPeak(): Float
+    suspend fun nativeRoomAnalyse(picture: FloatArray): String
+    suspend fun nativeRoomListen(frames: Int): String
+    suspend fun nativeRoomSave(path: String, frames: Int): String
     suspend fun nativeCompCell(rack: Int, sceneId: Long, frames: Int, bpm: Float, path: String, peakOut: FloatArray): String
     fun nativeArmCapture(rack: Int)
     fun nativeCaptureMarks(out: LongArray): Int
@@ -127,6 +137,7 @@ internal expect object EngineNative {
     fun nativeSetCacheRoot(path: String)
     suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String // line
     suspend fun nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String // line
+    suspend fun nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String // line path=path
     suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String // line
     suspend fun nativeFreezeClip(rack: Int, sceneId: Long, path: String, tailSeconds: Float): String
     suspend fun nativeLoadFrozen(rack: Int, sceneIds: LongArray, paths: Array<String>, bpms: FloatArray, ticks: IntArray, tails: IntArray): String

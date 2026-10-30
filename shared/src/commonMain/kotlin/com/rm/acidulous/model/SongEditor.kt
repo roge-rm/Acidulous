@@ -245,6 +245,9 @@ class SongEditor(
         onChange(song, true)
     }
 
+    /** [song], read so a composable showing part of it follows edits, undo and redo. */
+    val observedSong: Song get() = if (historyChanges >= 0) song else song
+
     fun canUndoSong(): Boolean = historyChanges >= 0 && songUndo.isNotEmpty()
     fun canRedoSong(): Boolean = historyChanges >= 0 && songRedo.isNotEmpty()
 
