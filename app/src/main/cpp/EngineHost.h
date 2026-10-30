@@ -2,6 +2,7 @@
 #include <engine/dsp/Loudness.h>
 #include <atomic>
 #include <cstdint>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <sequencer/Clip.h>
@@ -416,6 +417,17 @@ class EngineHost {
      */
     std::string loadEffectFormula(int rack, const std::string &unit, const std::string &formula);
 
+    /**
+     * Reads an impulse (any file decodeAudio reads), shapes it with a
+     * Venue's length, decay and stretch, given normalised as the knobs hold
+     * them, builds it and hands it to the Venue in [unit]'s slot ([rack] for
+     * a track insert). The file stays decoded for the slot, so building it
+     * again with another shape doesn't read it again. An empty path takes
+     * the impulse away. Returns "" or what went wrong.
+     */
+    std::string loadImpulse(int rack, const std::string &unit, const std::string &path, float length01, float decay01,
+                            float stretch01);
+
     // --- Freeze ---------------------------------------------------------
   private:
     mutable std::mutex macroNamesLock_;
@@ -680,6 +692,14 @@ class EngineHost {
     std::string mountedEffectType[kRackCount][kEffectSlots];
     /** The formula last loaded into each insert, kept for rackPatch. Cleared when the slot is mounted again. */
     std::string effectFormula_[kRackCount][kEffectSlots];
+    // Each Venue slot's impulse as read and normalised, by (rack, unit), for
+    // building again with another shape.
+    struct ImpulseSource {
+        std::string path;
+        std::shared_ptr<const SampleData> data;
+    };
+    std::mutex impulseMtx_;
+    std::map<std::pair<int, int>, ImpulseSource> impulses_;
     /** The last machine and inserts queued per rack, to tell when the audio thread has them. Never dereferenced. */
     const void *queuedMachine_[16] = {};
     const void *queuedEffect_[kRackCount][kEffectSlots] = {};

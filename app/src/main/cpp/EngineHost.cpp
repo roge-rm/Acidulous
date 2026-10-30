@@ -34,6 +34,8 @@
 #include <engine/format/Sf2Reader.h>
 #include <engine/core/Slices.h>
 #include <engine/format/AudioDecoder.h>
+#include <engine/effect/EffectRegistry.h>
+#include <engine/effect/Venue.h>
 #include <engine/core/Take.h>
 #include <engine/machine/forage/Forage.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -2210,8 +2212,61 @@ std::string EngineHost::loadEffectFormula(int rack, const std::string &unit, con
     // Handed over before the mount: on failure the retry deletes it.
     mount.object = expr.release();
     mount.deleter = deleteAs<machine::formulate::Expr>;
+    mount.machineType = "Formula";
     if (!mountObjectWithRetry(mount)) return "mount queue full";
     if (track) effectFormula_[rack][trackInsertSlot(u)] = formula;
+    return "";
+}
+
+std::string EngineHost::loadImpulse(int rack, const std::string &unit, const std::string &path, float length01,
+                                    float decay01, float stretch01) {
+    const Unit u = unitFromName(unit);
+    const bool track = trackInsertSlot(u) >= 0;
+    if (track && (rack < 0 || rack >= kRackCount)) return "no such rack";
+    const auto key = std::make_pair(track ? rack : 0, static_cast<int>(u));
+    Mount mount;
+    mount.kind = Mount::Kind::EffectObject;
+    mount.rack = key.first;
+    mount.slot = static_cast<int32_t>(u);
+    mount.machineType = "Venue";
+    mount.deleter = deleteAs<effect::VenueImpulse>;
+    if (path.empty()) {
+        {
+            std::lock_guard<std::mutex> lock(impulseMtx_);
+            impulses_.erase(key);
+        }
+        mount.object = nullptr;
+        return mountObjectWithRetry(mount) ? "" : "mount queue full";
+    }
+    std::shared_ptr<const SampleData> data;
+    {
+        std::lock_guard<std::mutex> lock(impulseMtx_);
+        const auto it = impulses_.find(key);
+        if (it != impulses_.end() && it->second.path == path) data = it->second.data;
+    }
+    if (!data) {
+        std::string error;
+        // Twice the longest length, for a stretch of one half.
+        auto decoded = decodeAudio(path, kSampleRate, error, 20);
+        if (!decoded) return error.empty() ? "that file couldn't be read" : error;
+        effect::normaliseImpulse(decoded->left, decoded->right);
+        data = std::move(decoded);
+        std::lock_guard<std::mutex> lock(impulseMtx_);
+        impulses_[key] = ImpulseSource{path, data};
+    }
+    int32_t count = 0;
+    const ParamDef *defs = EffectRegistry::paramDefs("Venue", count);
+    if (defs == nullptr || count < effect::Venue::Count) return "no Venue effect";
+    effect::VenueShape shape;
+    shape.length = defs[effect::Venue::Length].map(length01);
+    shape.decay = defs[effect::Venue::Decay].map(decay01);
+    shape.stretch = defs[effect::Venue::Stretch].map(stretch01);
+    auto built = effect::buildVenueImpulse(data->left.data(), data->stereo ? data->right.data() : nullptr, data->frames,
+                                           kSampleRate, shape);
+    if (!built) return "that impulse is empty";
+    // Handed over before the mount: on failure the retry deletes it.
+    mount.object = built.release();
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
     return "";
 }
 

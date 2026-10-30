@@ -6,7 +6,7 @@ FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place 
 panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc
 FX3 et FX4 sont toujours à vous.
 
-Il y a trente-deux effets. Chacun a les réglages habituels plus un extra, affiché
+Il y a trente-trois effets. Chacun a les réglages habituels plus un extra, affiché
 dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau
 de sortie, puisque monter le mélange peut changer le niveau.
 
@@ -21,6 +21,8 @@ Chaque effet a sa propre page ci-dessous.
   d’une plaque, d’un hall ou d’un ressort à un tube accordé, une peau de
   tambour ou une salle qui hurle, avec une queue qu’on peut atténuer,
   éloigner, figer, faire miroiter ou écraser.
+- [**Venue**](05-effects-and-mixing/venue.md) : place la piste dans une salle
+  d’après une impulsion : cinq salles à nous, ou un fichier à vous.
 - [**Grain**](05-effects-and-mixing/grain.md) : un nuage de courtes tranches de
   ce que la piste vient de jouer, qui peut se figer.
 - [**Tape**](05-effects-and-mixing/tape.md) : un magnétophone usé, avec

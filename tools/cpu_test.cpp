@@ -32,6 +32,7 @@
 #include <sstream>
 #include "audition_material.h"
 #include "patchbank.h"
+#include "venue_impulse.h"
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/dsp/Wsola.h>
@@ -646,6 +647,44 @@ Result timeEffect(const std::string &name) {
 }
 
 /**
+ * Venue with a made-up room [seconds] long, stereo or mono, under noise.
+ * Ten seconds are timed, so the largest partitions' shares run many times.
+ * [worst] is the slowest block, which a percentile leaves out.
+ */
+Result timeVenue(double seconds, bool stereo, double &worst) {
+    Result r;
+    char name[48];
+    std::snprintf(name, sizeof(name), "%.1f s %s", seconds, stereo ? "stereo" : "mono");
+    r.name = name;
+    Effect *fx = EffectRegistry::create("Venue");
+    fx->prepare(kSr);
+    fx->swapObject(0, venue_harness::room(seconds, stereo).release());
+    fx->reset();
+    fx->params().jumpAll();
+    std::vector<float> L(kBlock), R(kBlock);
+    uint32_t seed = 1;
+    worst = 0.0;
+    const int32_t blocks = 10 * kSr / kBlock;
+    for (int32_t b = 0; b < blocks; ++b) {
+        for (int32_t i = 0; i < kBlock; ++i) {
+            seed = seed * 1664525u + 1013904223u;
+            L[i] = 0.2f * (static_cast<float>(seed >> 9) * (2.0f / 8388608.0f) - 1.0f);
+            R[i] = -L[i];
+        }
+        const double t0 = nowUs();
+        fx->run(L.data(), R.data(), kBlock, true);
+        const double us = nowUs() - t0;
+        if (b > 8) {
+            r.samples.push_back(us);
+            worst = std::max(worst, us);
+        }
+    }
+    r.finish();
+    delete fx;
+    return r;
+}
+
+/**
  * What a unit costs after the note has stopped, which is where denormals
  * show. Each unit gets one burst of sound and then two silent seconds, and
  * the silent blocks are timed (reverbs emptying, modes ringing down,
@@ -923,6 +962,29 @@ int main(int argc, char **argv) {
             rows.push_back(timeDiction("recorded, morphed halfway", spec, 4.0, {{"morph", 0.5f}}, 1, true));
         }
         report(rows);
+        return 0;
+    }
+    if (only == "venue") {
+        // cpu_test venue [seconds...]: Venue with a room that long, stereo
+        // and mono. 2, 4 and 8 seconds if none are given.
+        std::vector<double> lengths;
+        for (int i = 2; i < argc; ++i) lengths.push_back(atof(argv[i]));
+        if (lengths.empty()) lengths = {2.0, 4.0, 8.0};
+        printf("Venue convolving noise with a made-up room\n\n");
+        std::vector<double> worsts;
+        for (const double secs : lengths) {
+            for (const bool stereo : {true, false}) {
+                double w = 0.0;
+                rows.push_back(timeVenue(secs, stereo, w));
+                worsts.push_back(w);
+            }
+        }
+        printf("  %-14s %9s %9s %9s %8s\n", "impulse", "mean us", "p99 us", "worst us", "mean%");
+        for (size_t i = 0; i < rows.size(); ++i) {
+            const Result &r = rows[i];
+            printf("  %-14s %9.1f %9.1f %9.1f %7.1f%%\n", r.name.c_str(), r.mean, r.p99, worsts[i],
+                   r.mean / kBudgetUs * 100.0);
+        }
         return 0;
     }
     if (only == "idle") {

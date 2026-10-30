@@ -90,9 +90,13 @@ internal fun ModCard(type: String, trackNames: List<String>, a: ModAccess) {
                 Continuous(a, InsertMod.RELEASE, panelWord("release"))
             }
         }
-        // The effect's knobs a mod can move: all but the sidechain, which picks a track.
+        // The effect's knobs a mod can move: all but the sidechain, which picks a track, and Venue's shape.
         val targets = remember(effectInfo) {
-            listOf(-1) + effectInfo.indices.filter { effectInfo[it].name != SIDECHAIN_PARAM && it < InsertMod.TARGETS }
+            listOf(-1) + effectInfo.indices.filter {
+                effectInfo[it].name != SIDECHAIN_PARAM && it < InsertMod.TARGETS &&
+                    // Venue's shape knobs only act when the impulse is built again.
+                    !com.rm.acidulous.model.VenueRooms.isShape(type, effectInfo[it].name)
+            }
         }
         val none = panelWord("none")
         for (j in 1..2) {

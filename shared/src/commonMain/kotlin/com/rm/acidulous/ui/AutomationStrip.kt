@@ -395,7 +395,9 @@ fun automationKeysFor(track: com.rm.acidulous.model.Track): List<String> =
         (0 until com.rm.acidulous.model.EFFECT_SLOTS).flatMap { slot ->
             val fx = track.effectAt(slot)
             if (fx.isEmpty) emptyList()
-            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name } + "bypass" + modLaneNames(fx))
+            // Venue's shape knobs only act when the impulse is built again, so they aren't lanes.
+            else (com.rm.acidulous.engine.NativeEngine.effectParamInfo(fx.type).map { it.name }
+                .filterNot { com.rm.acidulous.model.VenueRooms.isShape(fx.type, it) } + "bypass" + modLaneNames(fx))
                 .map { laneKey(com.rm.acidulous.model.effectUnit(slot), it) }
         } +
         listOf("gain", "pan", "sendreverb", "senddelay").map { laneKey("channel", it) } +

@@ -32,7 +32,7 @@ MODEL = ROOT / "shared/src/commonMain/kotlin/com/rm/acidulous/model"
 XML = ROOT / "shared/src/commonMain/strings/values/strings_panel_words.xml"
 KT = UI / "PanelWords.kt"
 
-PANEL_FILES = ["MachinePanel.kt", "SlotsPanel.kt", "SampleDialog.kt", "PatchEditor.kt"]
+PANEL_FILES = ["MachinePanel.kt", "SlotsPanel.kt", "SampleDialog.kt", "PatchEditor.kt", "VenueCard.kt"]
 # Lists of names, not words: note names, scale names, chord symbols.
 NOT_WORDS = {"KEY_NAMES", "SCALE_NAMES", "CHORD_NAMES", "NAMES", "NOTE_NAMES", "VOWEL_NAMES"}
 

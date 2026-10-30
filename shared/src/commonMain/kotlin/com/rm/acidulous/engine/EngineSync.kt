@@ -43,6 +43,7 @@ import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
 import com.rm.acidulous.model.slotOf
+import com.rm.acidulous.model.VenueRooms
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.isPedalLane
@@ -92,6 +93,8 @@ object EngineSync {
         val pushedMacros = arrayOfNulls<String>(RACKS)
         /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
         val loadedEffectFormulas = mutableMapOf<String, String>()
+        /** What each Venue slot was last built from, by [effectFormulaKey]: the impulse and its shape. */
+        val loadedImpulses = mutableMapOf<String, String>()
 
         fun clear() {
         mounted.fill(null)
@@ -104,6 +107,7 @@ object EngineSync {
         builtClouds.fill(null)
         loadedFormulas.fill(null)
         loadedEffectFormulas.clear()
+        loadedImpulses.clear()
         loadedTakes.fill(null)
         loadedReels.fill(null)
         loadedVoices.fill(null)
@@ -170,6 +174,7 @@ object EngineSync {
         m.mountedGroupInserts.forEachIndexed { i, a -> add("group$i", a) }
         append("samples").append(m.loadedSamples.entries.sortedBy { it.key }.joinToString()).append('\n')
         append("effectFormulas").append(m.loadedEffectFormulas.entries.sortedBy { it.key }.joinToString()).append('\n')
+        append("impulses").append(m.loadedImpulses.entries.sortedBy { it.key }.joinToString()).append('\n')
         append("voiceSpecs").append(m.voiceSpecs.entries.sortedBy { it.key }.joinToString()).append('\n')
         append("synced").append(synced?.name).append('\n')
         append("status").append(mapStatus).append(patchStatus).append('\n')
@@ -322,6 +327,7 @@ object EngineSync {
             if (slot !in 0 until EFFECT_SLOTS) continue
             m.mountedEffects[rack][slot] = null
             m.loadedEffectFormulas.remove(effectFormulaKey(rack, effectUnit(slot)))
+            m.loadedImpulses.remove(effectFormulaKey(rack, effectUnit(slot)))
         }
     }
 
@@ -572,6 +578,96 @@ object EngineSync {
         }
     }
 
+    /** The effect slots of every kind, as (rack or -1, unit, the type mounted there). */
+    private fun effectSlots(m: Memory): List<Triple<Int, String, String?>> = buildList {
+        for (rack in 0 until RACKS) for (slot in 0 until EFFECT_SLOTS) add(Triple(rack, effectUnit(slot), m.mountedEffects[rack][slot]))
+        for (slot in 0 until SEND_SLOTS) add(Triple(-1, sendUnit(slot), m.mountedSends[slot]))
+        for (slot in 0 until MASTER_INSERT_SLOTS) add(Triple(-1, masterInsertUnit(slot), m.mountedMasterInserts[slot]))
+        for (g in 0 until MAX_GROUPS) for (slot in 0 until GROUP_INSERT_SLOTS) add(Triple(-1, groupInsertUnit(g, slot), m.mountedGroupInserts[g][slot]))
+        for (slot in 0 until INPUT_SLOTS) add(Triple(-1, inputUnit(slot), m.mountedInput[slot]))
+    }
+
+    // Venue builds run here rather than on the map loader, since a knob
+    // turning waits a moment before each one.
+    private val impulseLoader = com.rm.acidulous.util.SerialWorker("Acidulous.Impulses")
+    /** The newest build asked for, by slot key, so older ones still queued are skipped. */
+    private val impulseAsked = HashMap<String, Int>()
+
+    /** How long a shape knob has to rest before the impulse is built again. */
+    private const val IMPULSE_SETTLE_MS = 150L
+
+    /**
+     * Venue's impulses, in every slot an effect can go in. Read and built on
+     * a worker and handed to the effect, like Cumulus's clouds: the slot's
+     * length, decay and stretch shape the impulse before it's built, so a
+     * change to them builds it again, once they've rested [IMPULSE_SETTLE_MS].
+     * A new impulse is built at once.
+     */
+    fun ensureImpulses(song: Song, m: Memory = live) {
+        val shape = VenueRooms.SHAPE.toList()
+        val table by lazy { effectTable(VenueRooms.TYPE) }
+        for ((rack, unit, mountedType) in effectSlots(m)) {
+            val key = effectFormulaKey(rack, unit)
+            val slot = if (mountedType == VenueRooms.TYPE) song.slotOf(rack, unit) else null
+            if (slot == null || slot.type != VenueRooms.TYPE) {
+                m.loadedImpulses.remove(key)
+                continue
+            }
+            val impulse = VenueRooms.impulseOf(slot)
+            val values = FloatArray(shape.size) { i ->
+                slot.params[shape[i]] ?: table.firstOrNull { it.name == shape[i] }?.defaultNormalized ?: 1f
+            }
+            val wanted = impulse + "|" + values.joinToString(",") { "%.4f".format(it) }
+            val before = m.loadedImpulses[key]
+            if (before == wanted) continue
+            m.loadedImpulses[key] = wanted
+            // Only the shape moved: wait for the knob to rest.
+            val settle = m.live && before != null && before.substringBefore('|') == impulse
+            val ask = com.rm.acidulous.util.locked(impulseAsked) {
+                ((impulseAsked[key] ?: 0) + 1).also { if (m.live) impulseAsked[key] = it }
+            }
+            fun stale() = m.live && com.rm.acidulous.util.locked(impulseAsked) { impulseAsked[key] } != ask
+            val task: suspend () -> Unit = task@{
+                if (stale()) return@task
+                if (settle) {
+                    kotlinx.coroutines.delay(IMPULSE_SETTLE_MS)
+                    if (stale()) return@task
+                }
+                val path = impulsePath(impulse)
+                if (path == null) {
+                    problem(Res.string.sync_impulse_missing, VenueRooms.displayName(impulse))
+                    return@task
+                }
+                val error = NativeEngine.loadImpulse(maxOf(rack, 0), unit, path, values[0], values[1], values[2])
+                if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(impulse), error)
+                else Log.i(TAG, "venue $key: ${impulse.ifEmpty { "(none)" }} built")
+            }
+            if (m.live) impulseLoader.execute(task) else com.rm.acidulous.util.runNow(task)
+        }
+    }
+
+    /**
+     * Where the engine reads [impulse] from: one of your files under
+     * [sampleRoot], or one of our rooms, copied out of the app's resources
+     * into the cache the first time. "" for none, null if it isn't there.
+     */
+    private suspend fun impulsePath(impulse: String): String? {
+        if (impulse.isEmpty()) return ""
+        val asset = VenueRooms.factoryAsset(impulse)
+        if (asset != null) {
+            val file = com.rm.acidulous.io.File(com.rm.acidulous.io.File(EngineAssets.cacheRoot(), "rooms").apply { mkdirs() }, asset.substringAfterLast('/'))
+            if (!file.isFile) {
+                val bytes = runCatching { Res.readBytes(asset) }.getOrNull() ?: return null
+                file.writeBytesSafely(bytes)
+            }
+            return file.absolutePath
+        }
+        if (impulse.startsWith(VenueRooms.FACTORY)) return null
+        val root = sampleRoot ?: return null
+        val file = com.rm.acidulous.io.File(root, impulse)
+        return if (file.isFile) file.absolutePath else null
+    }
+
     /**
      * Formulate's expression and step tables. Text, like Nexus patches and
      * Mosaic zones: parsed on a worker and handed over as one object.
@@ -806,6 +902,7 @@ object EngineSync {
         ensureClouds(song, m)
         ensureFormulas(song, m)
         ensureEffectFormulas(song, m)
+        ensureImpulses(song, m)
         ensureTakes(song, m)
         ensureVoices(song, m)
         ensureReels(song, m)

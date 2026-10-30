@@ -5,7 +5,7 @@ Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in
 the editor's bottom bar shows them in place of the machine panel. A patch's own
 effects only go in FX1 and FX2, so FX3 and FX4 are always yours.
 
-There are thirty-two effects. Each one has the usual controls plus one extra,
+There are thirty-three effects. Each one has the usual controls plus one extra,
 shown in the accent colour. Every effect ends with **gain**, an output level
 trim, since turning up the wet/dry mix can change the level.
 
@@ -18,6 +18,8 @@ Each effect has its own page below.
 - [**Reverb**](05-effects-and-mixing/reverb.md) - twelve models, from a room,
   plate, hall or spring to a tuned tube, a drumhead or a howling room, with a
   tail you can duck, push back, freeze, shimmer or crush.
+- [**Venue**](05-effects-and-mixing/venue.md) - puts the track in a room from
+  an impulse: five rooms of ours, or a file of your own.
 - [**Grain**](05-effects-and-mixing/grain.md) - a cloud of short slices of what
   the track just played, which can freeze.
 - [**Tape**](05-effects-and-mixing/tape.md) - a worn tape machine: wow,

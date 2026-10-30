@@ -59,6 +59,13 @@
     <string name="machine_listening">écoute</string>
     <string name="machine_open">ouvrir</string>
 
+    <!-- Venue -->
+    <string name="venue_none">aucune</string>
+    <string name="venue_rooms">salles</string>
+    <string name="venue_yours">les vôtres</string>
+    <string name="venue_open">ouvrir…</string>
+    <string name="venue_open_failed">Ce fichier n’a pas pu être lu (%s).</string>
+
     <!-- Formulate -->
     <string name="formula_none">aucune formule</string>
     <string name="formula_edit">modifier…</string>

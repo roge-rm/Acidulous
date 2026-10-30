@@ -282,6 +282,8 @@ class Recorder {
                     },
                 )
                 else effectParamNames.getOrPut(type) { NativeEngine.effectParamInfo(type).map { it.name } }.getOrNull(index)
+                    // Venue's shape knobs only act when the impulse is built again, so they aren't recorded.
+                    ?.takeUnless { com.rm.acidulous.model.VenueRooms.isShape(type, it) }
             }
             "mod1", "mod2", "mod3" -> {
                 val type = track.modifierAt(if (unit == "mod1") 0 else if (unit == "mod2") 1 else 2).type

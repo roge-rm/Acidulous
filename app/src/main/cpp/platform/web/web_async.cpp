@@ -119,6 +119,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadEffectFormula(jniweb::A
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadEffectFormula(acid_jni_env(), nullptr, rack, unit, formula))); });
 }
 
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadImpulse(JNIEnv *, jobject, jint, jstring, jstring, jfloat, jfloat, jfloat);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadImpulse(jniweb::Arena *arena, jint rack, jstring unit, jstring path, jfloat length01, jfloat decay01, jfloat stretch01) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadImpulse(acid_jni_env(), nullptr, rack, unit, path, length01, decay01, stretch01))); });
+}
+
 extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(JNIEnv *, jobject, jint, jfloatArray);
 extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeBuildCloud(jniweb::Arena *arena, jint rack, jfloatArray spectrum01) {
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(acid_jni_env(), nullptr, rack, spectrum01))); });

@@ -1544,7 +1544,8 @@ internal fun Group(
     ) {
         // A panel's English title is translated here, a window's card title
         // arrives translated and passes through.
-        Text(
+        // An untitled card (an effect with one group) has no title line.
+        if (title.isNotEmpty()) Text(
             panelWord(title), color = Acid.colors.teal, fontSize = 9.sp, fontFamily = FontFamily.Monospace,
             // A card's title is a heading, so TalkBack can jump card to card.
             modifier = Modifier.semantics { heading() },

@@ -1,6 +1,6 @@
 // Tests the character effects: Smash, Acid, Mouth, Tape, Slicer, Horn,
-// Spectral, Formula, Transient, Midside, Deesser, the Delay's modes and the
-// Reverb's models. Each is rendered and measured for the thing it's for,
+// Spectral, Formula, Transient, Midside, Deesser, Venue, the Delay's modes and
+// the Reverb's models. Each is rendered and measured for the thing it's for,
 // since none of it shows in a frequency response.
 #include <algorithm>
 #include <cmath>
@@ -18,6 +18,7 @@
 #include <engine/effect/Reverb.h>
 #include <engine/effect/Spectral.h>
 #include <engine/machine/formulate/Expr.h>
+#include "venue_impulse.h"
 
 using namespace acidulous;
 
@@ -1839,6 +1840,46 @@ void reverb() {
     }
 }
 
+// --- Venue ----------------------------------------------------------------------
+// The convolution itself is tested in venue_test; here, how it sits in a track.
+
+void venue() {
+    printf("- venue\n");
+    const auto music = noise(0.3f, 4 * 48000);
+    {
+        auto fx = make("Venue");
+        const auto out = run(*fx, music);
+        ok("no impulse: the track untouched", worst(out.l, music) == 0.0);
+    }
+    {
+        // A made-up two second room at the defaults: about as loud as dry.
+        auto fx = make("Venue");
+        fx->swapObject(0, venue_harness::room(2.0).release());
+        fx->reset();
+        const auto out = run(*fx, music);
+        const double db = dB(rms(out.l, 96000, music.size()) / rms(music, 96000, music.size()));
+        ok("a room at the defaults sits within 1.5 dB of dry", std::fabs(db) < 1.5, num(db) + " dB");
+    }
+    {
+        auto fx = make("Venue", {{"mix", 0.0f}});
+        fx->swapObject(0, venue_harness::room(1.0).release());
+        fx->reset();
+        ok("mix 0 is the track untouched", worst(run(*fx, music).l, music) == 0.0);
+    }
+    {
+        auto fx = make("Venue");
+        fx->swapObject(0, venue_harness::room(3.0).release());
+        fx->reset();
+        for (int32_t i = 0; i < fx->params().size(); ++i) {
+            if (std::strcmp(fx->params().def(i).name, "gain") == 0) continue;
+            fx->params().set(i, 1.0f);
+        }
+        fx->params().jumpAll();
+        const auto out = run(*fx, noise(0.9f, 240000));
+        ok("Venue: every knob up, it stays finite and bounded", finite(out) && peak(out.l) < 8.0, "peak " + num(peak(out.l)));
+    }
+}
+
 int main() {
     printf("character effects\n");
     smash();
@@ -1855,6 +1896,7 @@ int main() {
     midSide();
     deEsser();
     reverb();
+    venue();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

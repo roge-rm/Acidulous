@@ -330,6 +330,16 @@ internal actual object EngineNative {
         val result_ = jni_nativeLoadEffectFormula(rack, unit, formula)
         return result_
     }
+    @JvmName("nativeLoadImpulse")
+    private external fun jni_nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String
+    actual suspend fun nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadImpulse") { int(rack); str(unit); path(path); float(length01); float(decay01); float(stretch01) }; return "" }
+        EngineLines.sent++
+        EngineLines.writer?.call("LoadImpulse") { int(rack); str(unit); path(path); float(length01); float(decay01); float(stretch01) }
+        val result_ = jni_nativeLoadImpulse(rack, unit, path, length01, decay01, stretch01)
+        return result_
+    }
     @JvmName("nativeBuildCloud")
     private external fun jni_nativeBuildCloud(rack: Int, spectrum01: FloatArray): String
     actual suspend fun nativeBuildCloud(rack: Int, spectrum01: FloatArray): String {

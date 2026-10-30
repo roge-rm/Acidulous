@@ -1387,6 +1387,10 @@ void Engine::applyMount(const Mount &m) {
     }
     case Mount::Kind::EffectObject: {
         Effect *target = effectAt(m.rack, static_cast<Unit>(m.slot));
+        // Refused if the slot now holds another type of effect.
+        if (target != nullptr && m.machineType != nullptr && std::strcmp(target->typeName(), m.machineType) != 0) {
+            target = nullptr;
+        }
         void *back = target != nullptr ? target->swapObject(0, m.object) : m.object;
         if (m.deleter != nullptr) retirer.retire(back, m.deleter);
         break;

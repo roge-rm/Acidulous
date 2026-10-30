@@ -39,6 +39,13 @@ data class ParamInfo(
             curve == 2 -> v.toInt().toString()
             unit == "Hz" -> if (v >= 1000f) "%.1fk".format(v / 1000f) else "%.0f".format(v)
             unit == "ms" -> if (v >= 1000f) "%.2fs".format(v / 1000f) else "%.0fms".format(v)
+            // Under a second reads as ms, like a time given in ms.
+            unit == "s" -> when {
+                v < 1f -> "%.0fms".format(v * 1000f)
+                v < 10f -> "%.2fs".format(v)
+                else -> "%.1fs".format(v)
+            }
+            unit == "x" -> "%.2fx".format(v)
             unit == "st" -> "%+.1f".format(v)
             unit == "m" -> "%.1fm".format(v)
             // A level shows it's a level: a bare 0.00 read as nothing at all.

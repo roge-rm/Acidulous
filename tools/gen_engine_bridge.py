@@ -312,7 +312,7 @@ def lines_dispatch(decls):
                 value = f"r.rack({value})"
             elif short == "MountEffect" and pname == "slot":
                 value = f"r.slot({value})"
-            elif ptype == "String" and pname == "unit" and short in ("SetParam", "LoadEffectFormula"):
+            elif ptype == "String" and pname == "unit" and short in ("SetParam", "LoadEffectFormula", "LoadImpulse"):
                 value = f"r.unit({value})"
             body.append(f"    const {C_TYPE[ptype]} {pname} = {value};")
         body.append("    if (!in.finish()) return false;")

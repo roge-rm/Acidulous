@@ -313,6 +313,9 @@ private fun async_nativeLoadFormula(arena: Int, rack: Int, formula: Int, arp: In
 private fun async_nativeLoadEffectFormula(arena: Int, rack: Int, unit: Int, formula: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadEffectFormula(arena, rack, unit, formula)")
 
+private fun async_nativeLoadImpulse(arena: Int, rack: Int, unit: Int, path: Int, length01: Float, decay01: Float, stretch01: Float): Int =
+    js("globalThis.acid._acid_async_nativeLoadImpulse(arena, rack, unit, path, length01, decay01, stretch01)")
+
 private fun async_nativeBuildCloud(arena: Int, rack: Int, spectrum01: Int): Int =
     js("globalThis.acid._acid_async_nativeBuildCloud(arena, rack, spectrum01)")
 
@@ -1347,6 +1350,17 @@ internal actual object EngineNative {
         val junit = Jni.string(unit)
         val jformula = Jni.string(formula)
         val ticket_ = async_nativeLoadEffectFormula(arena_, rack, junit, jformula)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeLoadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String {
+        val arena_ = Jni.openArena()
+        val junit = Jni.string(unit)
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeLoadImpulse(arena_, rack, junit, jpath, length01, decay01, stretch01)
         Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)

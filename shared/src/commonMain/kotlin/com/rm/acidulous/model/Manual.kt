@@ -1848,7 +1848,28 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Try **pan** around a third of the way for movement that never sits on one side."),
     ))
 
-    private fun en4_31() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
+    private fun en4_31() = ManualSection("Venue", "Puts the track in a room, from a recording of how the room answers.", listOf(
+        ManualBlock(ManualKind.Para, "Venue plays the track through an impulse: a short recording of a room answering a single click. Every echo and every reflection in it lands on the track the same way, so the track sounds as if it were played there."),
+        ManualBlock(ManualKind.Para, "It comes with five rooms of our own: a small room, a wooden hall, a stone church, a metal plate and a closet. A new Venue starts in the wooden hall."),
+        ManualBlock(ManualKind.Heading, "The impulse"),
+        ManualBlock(ManualKind.Para, "Tap the **room** button to choose one. Our rooms are listed under **rooms**, and any you've brought in under **yours**. **none** lets the track through untouched.", "Click the **room** button to choose one. Our rooms are listed under **rooms**, and any you've brought in under **yours**. **none** lets the track through untouched."),
+        ManualBlock(ManualKind.Para, "**open…** brings in a WAV, FLAC or AIFF file as an impulse. It's copied into your impulses, up to 20 seconds of it, and goes in a song's zip when you share the song, so it plays on the other device too."),
+        ManualBlock(ManualKind.Heading, "The controls"),
+        ManualBlock(ManualKind.Bullet, "**predelay** - waits up to 250 ms before the room answers, which puts the sound further forward."),
+        ManualBlock(ManualKind.Bullet, "**length** - how much of the impulse is used, 0.1 to 10 seconds. The end is faded out. Shorter is lighter on the phone.", "**length** - how much of the impulse is used, 0.1 to 10 seconds. The end is faded out. Shorter is lighter on the computer."),
+        ManualBlock(ManualKind.Bullet, "**decay** - fades the impulse out sooner, as if the room were deader. At the top it's off and the impulse rings as recorded."),
+        ManualBlock(ManualKind.Bullet, "**stretch** *(extra)* - plays the impulse slower or faster, half to twice as long: a bigger or smaller room of the same shape."),
+        ManualBlock(ManualKind.Bullet, "**lowcut**, **highcut** - take lows and highs out of the room, not out of the track."),
+        ManualBlock(ManualKind.Bullet, "**width** - how wide the room sounds, from mono to wider than it was."),
+        ManualBlock(ManualKind.Bullet, "**mix** - the dry track against the room."),
+        ManualBlock(ManualKind.Bullet, "**gain** - the level out."),
+        ManualBlock(ManualKind.Para, "**length**, **decay** and **stretch** reshape the impulse, so a turn of one takes a moment to be heard. They can't be drawn as lanes or moved by the **mod** card."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "As a send, with **mix** all the way up, one Venue can be the room for the whole song."),
+        ManualBlock(ManualKind.Bullet, "The closet and the small room on a drum track add body without sounding like a reverb."),
+    ))
+
+    private fun en4_32() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
         ManualBlock(ManualKind.Para, "Controls the stereo image."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**width** - 0 is mono, 1 is unchanged and 2 is twice as wide. Anything in the centre stays in the centre."),
@@ -1863,11 +1884,12 @@ object Manual {
     private fun en4() = ManualSection("Effects and mixing", "", listOf(
         ManualBlock(ManualKind.Heading, "Inserts"),
         ManualBlock(ManualKind.Para, "Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in the editor's bottom bar shows them in place of the machine panel. A patch's own effects only go in FX1 and FX2, so FX3 and FX4 are always yours."),
-        ManualBlock(ManualKind.Para, "There are thirty-two effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
+        ManualBlock(ManualKind.Para, "There are thirty-three effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
         ManualBlock(ManualKind.Para, "Each effect has its own page below."),
         ManualBlock(ManualKind.Heading, "Time"),
         ManualBlock(ManualKind.Bullet, "**Delay** - echoes on a note value: normal, ping-pong, multi-tap or reverse, and it can duck while you play.", "**Delay** - echoes on a note value: normal, ping-pong, multi-click or reverse, and it can duck while you play."),
         ManualBlock(ManualKind.Bullet, "**Reverb** - twelve models, from a room, plate, hall or spring to a tuned tube, a drumhead or a howling room, with a tail you can duck, push back, freeze, shimmer or crush."),
+        ManualBlock(ManualKind.Bullet, "**Venue** - puts the track in a room from an impulse: five rooms of ours, or a file of your own."),
         ManualBlock(ManualKind.Bullet, "**Grain** - a cloud of short slices of what the track just played, which can freeze."),
         ManualBlock(ManualKind.Bullet, "**Tape** - a worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop."),
         ManualBlock(ManualKind.Bullet, "**Slicer** - cuts the track into slices on the beat and repeats, reverses or drops some of them."),
@@ -2021,6 +2043,7 @@ object Manual {
         en4_29(),
         en4_30(),
         en4_31(),
+        en4_32(),
     ))
 
     private fun en5() = ManualSection("Modifiers", "", listOf(
@@ -4099,7 +4122,28 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Essayez **pano** vers le tiers pour un mouvement qui ne s’arrête jamais d’un côté."),
     ))
 
-    private fun fr4_31() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
+    private fun fr4_31() = ManualSection("Venue", "Place la piste dans une salle, d’après un enregistrement de la façon dont la salle répond.", listOf(
+        ManualBlock(ManualKind.Para, "Venue joue la piste à travers une réponse impulsionnelle : un court enregistrement d’une salle qui répond à un seul clic. Chaque écho et chaque réflexion qu’elle contient tombe de la même façon sur la piste, qui sonne alors comme si on la jouait là."),
+        ManualBlock(ManualKind.Para, "Il vient avec cinq salles à nous : une petite salle, une salle en bois, une église en pierre, une plaque de métal et un placard. Un nouveau Venue commence dans la salle en bois."),
+        ManualBlock(ManualKind.Heading, "L’impulsion"),
+        ManualBlock(ManualKind.Para, "Touchez le bouton **salle** pour en choisir une. Nos salles sont sous **salles**, et celles que vous avez ajoutées sous **les vôtres**. **aucune** laisse passer la piste telle quelle.", "Cliquez le bouton **salle** pour en choisir une. Nos salles sont sous **salles**, et celles que vous avez ajoutées sous **les vôtres**. **aucune** laisse passer la piste telle quelle."),
+        ManualBlock(ManualKind.Para, "**ouvrir…** ajoute un fichier WAV, FLAC ou AIFF comme impulsion. Il est copié dans vos impulsions, jusqu’à 20 secondes, et va dans le zip d’une chanson quand vous la partagez, donc il joue aussi sur l’autre appareil."),
+        ManualBlock(ManualKind.Heading, "Les réglages"),
+        ManualBlock(ManualKind.Bullet, "**prédélai** : attend jusqu’à 250 ms avant que la salle réponde, ce qui avance le son."),
+        ManualBlock(ManualKind.Bullet, "**longueur** : combien de l’impulsion est utilisé, de 0,1 à 10 secondes. La fin est fondue. Plus court demande moins au téléphone."),
+        ManualBlock(ManualKind.Bullet, "**déclin** : éteint l’impulsion plus tôt, comme une salle plus sourde. En haut il est coupé et l’impulsion sonne comme enregistrée."),
+        ManualBlock(ManualKind.Bullet, "**étirer** *(extra)* : joue l’impulsion plus lentement ou plus vite, de la moitié au double de sa durée : une salle plus grande ou plus petite de la même forme."),
+        ManualBlock(ManualKind.Bullet, "**coupe-bas**, **coupe-haut** : enlèvent des graves et des aigus à la salle, pas à la piste."),
+        ManualBlock(ManualKind.Bullet, "**Width** : la largeur de la salle, du mono à plus large qu’enregistrée."),
+        ManualBlock(ManualKind.Bullet, "**mélange** : la piste sèche contre la salle."),
+        ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Para, "**longueur**, **déclin** et **étirer** refont l’impulsion, donc un réglage prend un moment avant de s’entendre. On ne peut pas les dessiner dans un couloir ni les faire bouger par la carte **mod**."),
+        ManualBlock(ManualKind.Heading, "Astuces"),
+        ManualBlock(ManualKind.Bullet, "En envoi, avec **mélange** au maximum, un seul Venue peut être la salle de toute la chanson."),
+        ManualBlock(ManualKind.Bullet, "Le placard et la petite salle sur une piste de batterie donnent du corps sans sonner comme une réverbération."),
+    ))
+
+    private fun fr4_32() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
         ManualBlock(ManualKind.Para, "Règle l’image stéréo."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**largeur** : 0 est mono, 1 ne change rien et 2 est deux fois plus large. Ce qui est au centre reste au centre."),
@@ -4114,11 +4158,12 @@ object Manual {
     private fun fr4() = ManualSection("Effets et mixage", "", listOf(
         ManualBlock(ManualKind.Heading, "Insertions"),
         ManualBlock(ManualKind.Para, "Chaque piste a quatre emplacements d’effet en insertion, joués dans l’ordre de FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place du panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc FX3 et FX4 sont toujours à vous."),
-        ManualBlock(ManualKind.Para, "Il y a trente-deux effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
+        ManualBlock(ManualKind.Para, "Il y a trente-trois effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
         ManualBlock(ManualKind.Para, "Chaque effet a sa propre page ci-dessous."),
         ManualBlock(ManualKind.Heading, "Temps"),
         ManualBlock(ManualKind.Bullet, "**Delay** : des échos sur une valeur de note, normaux, en ping-pong, à plusieurs têtes ou à l’envers, qui peuvent s’atténuer pendant que vous jouez."),
         ManualBlock(ManualKind.Bullet, "**Reverb** : douze modèles, d’une salle, d’une plaque, d’un hall ou d’un ressort à un tube accordé, une peau de tambour ou une salle qui hurle, avec une queue qu’on peut atténuer, éloigner, figer, faire miroiter ou écraser."),
+        ManualBlock(ManualKind.Bullet, "**Venue** : place la piste dans une salle d’après une impulsion : cinq salles à nous, ou un fichier à vous."),
         ManualBlock(ManualKind.Bullet, "**Grain** : un nuage de courtes tranches de ce que la piste vient de jouer, qui peut se figer."),
         ManualBlock(ManualKind.Bullet, "**Tape** : un magnétophone usé, avec pleurage, scintillement, saturation et souffle, et un interrupteur qui le ralentit jusqu’à l’arrêt."),
         ManualBlock(ManualKind.Bullet, "**Slicer** : découpe la piste en tranches sur le temps et en répète, inverse ou omet certaines."),
@@ -4272,6 +4317,7 @@ object Manual {
         fr4_29(),
         fr4_30(),
         fr4_31(),
+        fr4_32(),
     ))
 
     private fun fr5() = ManualSection("Les modificateurs", "", listOf(

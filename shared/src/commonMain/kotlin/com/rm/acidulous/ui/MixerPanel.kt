@@ -3,6 +3,7 @@ package com.rm.acidulous.ui
 import com.rm.acidulous.util.format
 
 import androidx.compose.ui.layout.onSizeChanged
+import com.rm.acidulous.model.VenueRooms
 import com.rm.acidulous.model.withSlotSetting
 import com.rm.acidulous.model.withGroupInsertBypass
 import com.rm.acidulous.model.withGroupInsertParam
@@ -878,6 +879,7 @@ private fun shortFx(type: String): String = when (type) {
     "Horn" -> "horn"
     "Spectral" -> "spec"
     "Formula" -> "frml"
+    "Venue" -> "venu"
     else -> type.lowercase().take(4)
 }
 
@@ -1077,7 +1079,10 @@ fun SongSlotDialog(
         editor.editSong { s ->
             var out = if (now.type != opened.type) withType(s, slot, opened.type) else s
             for ((n, v) in opened.params) out = withParam(out, slot, n, v)
-            if (now.settings != opened.settings) out = out.withSlotSetting(-1, unitOf(slot), "formula", opened.settings["formula"])
+            if (now.settings != opened.settings) {
+                out = out.withSlotSetting(-1, unitOf(slot), "formula", opened.settings["formula"])
+                out = out.withSlotSetting(-1, unitOf(slot), VenueRooms.SETTING, opened.settings[VenueRooms.SETTING])
+            }
             // The mod too, including settings it didn't have when the window opened.
             if (now.type == opened.type) {
                 for (p in modInfo) if (p.name !in opened.params && now.params[p.name] != null) out = withParam(out, slot, p.name, p.defaultNormalized)
@@ -1159,6 +1164,12 @@ fun SongSlotDialog(
                         edits++
                     },
                     modTracks = modTrackNames(editor),
+                    lead = if (send.type != VenueRooms.TYPE) null else { ->
+                        VenueImpulseCard(VenueRooms.impulseOf(send)) { new ->
+                            editor.editSong { s -> s.withSlotSetting(-1, unitOf(slot), VenueRooms.SETTING, new) }
+                            edits++
+                        }
+                    },
                 )
             }
         }

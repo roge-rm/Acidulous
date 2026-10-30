@@ -81,4 +81,5 @@
     <string name="sync_pad_failed">Pad %1$d: %2$s didn\'t load (%3$s).</string>
     <string name="sync_file_failed">%1$s didn\'t load (%2$s).</string>
     <string name="sync_tape_failed">The audio on this track didn\'t load (%s).</string>
+    <string name="sync_impulse_missing">The impulse %s isn\'t on this device.</string>
 </resources>

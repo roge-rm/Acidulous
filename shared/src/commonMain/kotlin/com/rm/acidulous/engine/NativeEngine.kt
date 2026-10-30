@@ -464,6 +464,14 @@ object NativeEngine {
         EngineNative.nativeLoadEffectFormula(rack, unit, formula)
 
     /**
+     * Reads the impulse at [path], shapes it with a Venue's length, decay and
+     * stretch (normalised) and hands it to the Venue in [unit]'s slot. An
+     * empty path takes it away. Returns "" or what went wrong.
+     */
+    suspend fun loadImpulse(rack: Int, unit: String, path: String, length01: Float, decay01: Float, stretch01: Float): String =
+        EngineNative.nativeLoadImpulse(rack, unit, path, length01, decay01, stretch01)
+
+    /**
      * Build and mount Cumulus's tables for a rack. Slow, so worker only.
      * [spectrum01] is the spectrum parameters in table order, NaN for any
      * the song never set. Passed in rather than read from the engine, which

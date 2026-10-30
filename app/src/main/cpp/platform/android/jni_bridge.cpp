@@ -649,6 +649,19 @@ Java_com_rm_acidulous_engine_EngineNative_nativeLoadEffectFormula(JNIEnv *env, j
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeLoadImpulse(JNIEnv *env, jobject, jint rack, jstring unit, jstring path,
+                                                            jfloat length01, jfloat decay01, jfloat stretch01) {
+    auto str = [&](jstring s) {
+        if (s == nullptr) return std::string();
+        const char *p = env->GetStringUTFChars(s, nullptr);
+        std::string out(p);
+        env->ReleaseStringUTFChars(s, p);
+        return out;
+    };
+    return env->NewStringUTF(host().loadImpulse(rack, str(unit), str(path), length01, decay01, stretch01).c_str());
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeBuildCloud(JNIEnv *env, jobject, jint rack, jfloatArray spectrum) {
     std::vector<jfloat> v;
     if (spectrum != nullptr) {

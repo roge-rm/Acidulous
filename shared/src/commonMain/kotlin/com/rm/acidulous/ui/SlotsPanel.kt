@@ -56,6 +56,7 @@ import com.rm.acidulous.model.withModifierBypass
 import com.rm.acidulous.model.withModifier
 import com.rm.acidulous.model.modifierUnit
 import com.rm.acidulous.model.UnitSlot
+import com.rm.acidulous.model.VenueRooms
 import com.rm.acidulous.model.MODIFIER_SLOTS
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.Track
@@ -108,17 +109,25 @@ fun SlotsPanel(
         // The patch picker joins the header line when the panel is wide
         // enough for both, which saves a line per slot.
         val roomy = this.maxWidth >= SlotHeaderPickerW
-        Column(
-            Modifier.heightIn(max = maxHeight).verticalScrollWithBar(rememberScrollState()).padding(6.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor, pickerInHeader = roomy)
+        // A side column stacks each slot's cards two knobs to a line, as a
+        // machine panel does there, and the column scrolls.
+        val side = this.maxWidth < SlotSideW
+        androidx.compose.runtime.CompositionLocalProvider(LocalPanelStacked provides side) {
+            Column(
+                Modifier.heightIn(max = maxHeight).verticalScrollWithBar(rememberScrollState()).padding(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                for (slot in 0 until kind.slots) SlotRow(kind, track, trackIndex, slot, types, editor, pickerInHeader = roomy)
+            }
         }
     }
 }
 
 /** How wide a panel has to be for a slot's patch picker to share its header line. */
 private val SlotHeaderPickerW = 360.dp
+
+/** Narrower than this, the panel is a side column; see [SlotsPanel]. */
+private val SlotSideW = 300.dp
 
 /**
  * One slot on its own, for the chip that opens it: choose the type, switch
@@ -233,15 +242,21 @@ private fun SlotRow(
     // The bypass as the window found it. Bypass isn't a parameter, so it's not
     // in the binding's baseline and has to be remembered here.
     val openedBypass = remember(kind, slot, trackIndex) { fx.bypass }
+    // A Venue's impulse too, which is a setting.
+    val openedImpulse = remember(kind, slot, trackIndex) { fx.settings[VenueRooms.SETTING] }
     // Per slot and kept across rotation, like a machine panel's. Two effects
     // and a modifier can fill a phone, so a slot you aren't editing can be
     // folded down to its one line.
     var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
     Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         val face = !fx.isEmpty && !minimized
-        val headerHere = !wrap && pickerInHeader && face && kind.patchKey?.invoke(fx.type) != null && kind.loadPatch != null
+        val hasPatches = kind.patchKey?.invoke(fx.type) != null && kind.loadPatch != null
+        val headerHere = !wrap && pickerInHeader && face && hasPatches
+        // A side column is too narrow for the bypass on the first line, so it
+        // starts the second, with the patch picker after it when there's a face.
+        val side = !wrap && LocalPanelStacked.current
         if (!(wrap && LocalDialogHeaderRow.current) && !headerHere) Row(
-            if (wrap) Modifier.fillMaxWidth() else Modifier,
+            if (wrap || side) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
             // Centred in a window. Packed left in a panel so it lines up with the
             // slots above and below.
@@ -251,12 +266,18 @@ private fun SlotRow(
                 Arrangement.spacedBy(4.dp)
             },
         ) {
-            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized) { minimized = !minimized }
+            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized, { minimized = !minimized }, withBypass = !side)
         }
+        if (side && !fx.isEmpty && !(face && hasPatches)) SlotBypass(kind, fx, trackIndex, slot, editor)
         if (face) {
             val header: (@Composable (@Composable () -> Unit) -> Unit)? = if (headerHere) { picker ->
                 Row(Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized, { minimized = !minimized }, picker)
+                }
+            } else if (side) { picker ->
+                Row(Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    SlotBypass(kind, fx, trackIndex, slot, editor)
+                    picker()
                 }
             } else null
             SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header) { b ->
@@ -265,6 +286,10 @@ private fun SlotRow(
                     if (fx.bypass != openedBypass) {
                         editor.edit(trackIndex) { t -> kind.withBypass(t, slot, openedBypass) }
                         NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (openedBypass) 1f else 0f, record = true)
+                    }
+                    val now = editor.song.tracks.getOrNull(trackIndex)?.let { kind.at(it, slot) }
+                    if (now != null && now.settings[VenueRooms.SETTING] != openedImpulse) {
+                        editor.editSong { song -> song.withSlotSetting(trackIndex, kind.unit(slot), VenueRooms.SETTING, openedImpulse) }
                     }
                 }
             }
@@ -288,6 +313,16 @@ private fun SlotFace(
     val unit = kind.unit(slot)
     val b = rememberParamBinding(trackIndex, type, info, editor, unit) { t, n, v -> kind.withParam(t, slot, n, v) }
     androidx.compose.runtime.SideEffect { onBinding?.invoke(b) }
+    // A Venue's impulse is a setting, not a knob, so it's read from the song.
+    var impulseEdits by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val venue = type == VenueRooms.TYPE && kind == SlotKind.Effects
+    val impulse = if (!venue) "" else impulseEdits.let {
+        editor.song.slotOf(trackIndex, unit)?.let { VenueRooms.impulseOf(it) } ?: VenueRooms.DEFAULT
+    }
+    val pickImpulse: (String) -> Unit = { new ->
+        editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, new) }
+        impulseEdits++
+    }
     // The panel follows the engine, which already holds what the document
     // pushed, so there's nothing to seed here.
     Column {
@@ -310,6 +345,11 @@ private fun SlotFace(
                             // A Formula's formula comes with its preset.
                             if (type == "Formula" && kind == SlotKind.Effects) {
                                 editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", patch.settings["formula"]) }
+                            }
+                            // So does a Venue's impulse.
+                            if (type == VenueRooms.TYPE && kind == SlotKind.Effects) {
+                                editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, patch.settings[VenueRooms.SETTING]) }
+                                impulseEdits++
                             }
                             // The slot's mod stays as it is.
                             b.applyAll(InsertMod.withoutMod(patch.params) + modInfo.associate { it.name to b.value(it.name) })
@@ -382,6 +422,7 @@ private fun SlotFace(
             val wide = LocalDialogWide.current
             BusyCards(type) { perLine ->
                 val pages = PAGES[type]
+                if (venue) VenueImpulseCard(impulse, pickImpulse)
                 for ((title, group) in groupsFor(type, shown, model)) {
                     if (page >= 0 && pages != null && title !in pages[page]) continue
                     key(title) {
@@ -400,16 +441,44 @@ private fun SlotFace(
             }
             if (type == "Arp" && !wide && (page < 0 || "pattern" in PAGES[type].orEmpty().getOrNull(page).orEmpty())) ArpSteps(b)
         } else {
-            Row(
-                Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                // The reverb's model first, then its own knobs, as its window has them.
-                val row = if (model != null) groupsFor(type, shown, model).flatMap { it.second } else shown
-                for (p in row) key(p.name) { control(p) }
+            // A panel's knobs are in titled cards like a machine's, as tall as
+            // the mod card beside them. The reverb's model first, then its own
+            // knobs, as its window has them.
+            // Packed cards take four knobs to a line, as a window's do; a side column's two.
+            val perLine = if (venue && !LocalPanelStacked.current) 4 else LocalStackedPerLine.current
+            // Packed, Venue's tone card goes beside the impulse card, which saves a line.
+            val groups = groupsFor(type, shown, model).let { g ->
+                if (perLine == 4) g.sortedBy { it.first != "tone" } else g
+            }
+            val cards: @Composable () -> Unit = {
+                if (venue) VenueImpulseCard(impulse, pickImpulse)
+                for ((title, group) in groups) key(title) {
+                    Group(title, perLine = perLine, background = Acid.colors.cardAlt) {
+                        for (p in group) key(p.name) { control(p) }
+                    }
+                }
                 if (kind == SlotKind.Effects) ModCard(type, modTrackNames(editor), b.modAccess())
             }
+            // Label and value lines just taller than their words, as in the
+            // reverb's window, so a slot costs the roll less height.
+            val tight = androidx.compose.material3.LocalTextStyle.current.merge(
+                androidx.compose.ui.text.TextStyle(lineHeight = 1.3.em),
+            )
+            androidx.compose.runtime.CompositionLocalProvider(
+                androidx.compose.material3.LocalTextStyle provides tight,
+                LocalControlH provides PanelControlH - 24.dp,
+            ) { when {
+                // A side column: the cards go down it two knobs to a line, and
+                // the slots' column scrolls; see [SlotsPanel].
+                LocalPanelStacked.current -> Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) { cards() }
+                // Venue's cards are too many for one row upright, so they're
+                // packed onto lines like its window's.
+                venue -> WindowCards(pack = true) { cards() }
+                else -> Row(
+                    Modifier.fillMaxWidth().horizontalScrollWithBar(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) { cards() }
+            } }
             if (type == "Arp") ArpSteps(b)
         }
     }
@@ -498,6 +567,12 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "tank" to listOf("model", "size", "damp", "tone", "predelay", "mix"),
         "extra" to listOf("freeze", "gate", "shimmer", "bits", "crush", "wobble"),
         "tail" to listOf("duck", "duckrel", "distance", "bloom", "gain"),
+    ),
+    // The impulse card comes first, drawn by the face; see [VenueImpulseCard].
+    "Venue" to listOf(
+        "tail" to listOf("predelay", "length", "decay", "stretch"),
+        "tone" to listOf("lowcut", "highcut"),
+        "out" to listOf("width", "mix", "gain"),
     ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
@@ -666,6 +741,7 @@ private val EXTRA = mapOf(
     "Horn" to setOf("breath", "snap"),
     "Spectral" to setOf("freeze", "peaks"),
     "Formula" to setOf("rate", "smooth"),
+    "Venue" to setOf("stretch"), // a bigger or smaller room of the same shape
     "Transient" to setOf("split"), // only the highs shaped
     "Midside" to setOf("breathe"), // the side opens in the gaps
     "Deesser" to setOf("relative"), // measured against the whole sound
@@ -787,6 +863,8 @@ internal fun SongSlotFace(
     set: (String, Float) -> Unit,
     /** The song's tracks for the slot's mod card, or null for no card. */
     modTracks: List<String>? = null,
+    /** A card before the knobs' cards, like Venue's impulse. */
+    lead: (@Composable () -> Unit)? = null,
 ) {
     val control: @Composable (ParamInfo) -> Unit = { p ->
         val labels = switchLabels(type, p.name, p.steps)?.let { panelWords(it) }
@@ -819,6 +897,7 @@ internal fun SongSlotFace(
     val model = if (type == "Reverb") reverbModel(value("model")) else null
     val shown = if (model != null) info.filter { reverbShows(model, it.name, trackInsert = false) } else info
     BusyCards(type) { perLine ->
+        lead?.invoke()
         for ((title, group) in groupsFor(type, shown, model)) {
             key(title) {
                 Group(title, perLine = perLine, centred = true, background = Acid.colors.cardAlt) {
@@ -841,6 +920,8 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
     fixedType: String?, wrap: Boolean, minimized: Boolean = false, onMinimize: () -> Unit = {},
     /** Drawn after the bypass, like the slot's patch picker when the panel has room for it on this line. */
     extra: (@Composable () -> Unit)? = null,
+    /** False when the bypass is drawn on a line of its own; see [SlotRow]. */
+    withBypass: Boolean = true,
 ) {
     val fx = kind.at(track, slot)
     var menu by remember { mutableStateOf(false) }
@@ -862,16 +943,7 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                 }
             }
             if (!fx.isEmpty) {
-                val on = !fx.bypass
-                TextButton(
-                    onClick = {
-                        val bypass = !fx.bypass
-                        // The document push mounts nothing new, so the flag also goes straight to the running effect.
-                        editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
-                        NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
-                    },
-                    modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
-                ) { Text(stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass), color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp) }
+                if (withBypass) SlotBypass(kind, fx, trackIndex, slot, editor)
                 // Folding is only offered in a panel, where space is short. A window
                 // exists to show the face, so it doesn't get the fold mark.
                 extra?.invoke()
@@ -885,6 +957,27 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
                 }
             }
         }
+
+/** A slot's on/bypass button. One line at the size of either language's longer word. */
+@Composable
+private fun SlotBypass(kind: SlotKind, fx: UnitSlot, trackIndex: Int, slot: Int, editor: SongEditor) {
+    val on = !fx.bypass
+    TextButton(
+        onClick = {
+            val bypass = !fx.bypass
+            // The document push mounts nothing new, so the flag also goes straight to the running effect.
+            editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
+            NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
+        },
+        contentPadding = PaddingValues(horizontal = 8.dp),
+        modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
+    ) {
+        Text(
+            stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass),
+            color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp, maxLines = 1, softWrap = false,
+        )
+    }
+}
 
 /**
  * A slot knob's label: shortened where the engine's name is too long, and
