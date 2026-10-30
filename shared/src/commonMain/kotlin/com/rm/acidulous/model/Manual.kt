@@ -1879,7 +1879,30 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The closet and the small room on a drum track add body without sounding like a reverb."),
     ))
 
-    private fun en4_32() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
+    private fun en4_32() = ManualSection("Vessel", "Plays the track through a body of wood, skin, stone, metal, glass or a bell.", listOf(
+        ManualBlock(ManualKind.Para, "Vessel treats the track as something hitting a body, and you hear the body ring. A drum loop through a wooden box knocks, a bass line through a bell chimes."),
+        ManualBlock(ManualKind.Heading, "The body"),
+        ManualBlock(ManualKind.Bullet, "**material** - glass, wood, metal, skin, stone, bell, plate or tube. Each has its own set of overtones. The high ones of wood and stone die fast, metal and glass ring on."),
+        ManualBlock(ManualKind.Bullet, "**size** - the body's lowest note."),
+        ManualBlock(ManualKind.Bullet, "**key** and **scale** - snap the size to the nearest note of a scale. **off** leaves it free."),
+        ManualBlock(ManualKind.Bullet, "**follow** *(extra)* - tunes the body to the last note the track played, so it rings along with the part. Only on a track's own inserts, since a send or a group doesn't get notes."),
+        ManualBlock(ManualKind.Heading, "The ring"),
+        ManualBlock(ManualKind.Bullet, "**decay** - how long the lowest note rings, 0.05 to 20 s."),
+        ManualBlock(ManualKind.Bullet, "**damp** - how much sooner the higher notes die."),
+        ManualBlock(ManualKind.Heading, "The touch"),
+        ManualBlock(ManualKind.Bullet, "**strike** - where the track lands on the body. **pickup** - where it's heard from, with left and right a little apart. Moving either changes which overtones you hear."),
+        ManualBlock(ManualKind.Bullet, "**drive** - pushes the track into the body through a soft clip, so loud hits bark. It adds grit, not level."),
+        ManualBlock(ManualKind.Heading, "Out"),
+        ManualBlock(ManualKind.Bullet, "**mix** - the dry track against the body."),
+        ManualBlock(ManualKind.Bullet, "**gain** - the level out."),
+        ManualBlock(ManualKind.Para, "A body tuned to the notes playing through it can't get much louder than the track, so **follow** and a long **decay** are safe to try."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "On drums, set **key** and **scale** to the song's and every hit gets a pitch in the key."),
+        ManualBlock(ManualKind.Bullet, "**skin** with a low **size** and some **drive** makes thin drums bigger."),
+        ManualBlock(ManualKind.Bullet, "**follow** with **glass** or **bell** on a lead puts a ring under each note."),
+    ))
+
+    private fun en4_33() = ManualSection("Width", "Wider, narrower, mono below a frequency or rotated.", listOf(
         ManualBlock(ManualKind.Para, "Controls the stereo image."),
         ManualBlock(ManualKind.Heading, "The controls"),
         ManualBlock(ManualKind.Bullet, "**width** - 0 is mono, 1 is unchanged and 2 is twice as wide. Anything in the centre stays in the centre."),
@@ -1894,12 +1917,13 @@ object Manual {
     private fun en4() = ManualSection("Effects and mixing", "", listOf(
         ManualBlock(ManualKind.Heading, "Inserts"),
         ManualBlock(ManualKind.Para, "Each track has four insert effect slots, run in order from FX1 to FX4. **fx** in the editor's bottom bar shows them in place of the machine panel. A patch's own effects only go in FX1 and FX2, so FX3 and FX4 are always yours."),
-        ManualBlock(ManualKind.Para, "There are thirty-three effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
+        ManualBlock(ManualKind.Para, "There are thirty-four effects. Each one has the usual controls plus one extra, shown in the accent colour. Every effect ends with **gain**, an output level trim, since turning up the wet/dry mix can change the level."),
         ManualBlock(ManualKind.Para, "Each effect has its own page below."),
         ManualBlock(ManualKind.Heading, "Time"),
         ManualBlock(ManualKind.Bullet, "**Delay** - echoes on a note value: normal, ping-pong, multi-tap or reverse, and it can duck while you play.", "**Delay** - echoes on a note value: normal, ping-pong, multi-click or reverse, and it can duck while you play."),
         ManualBlock(ManualKind.Bullet, "**Reverb** - twelve models, from a room, plate, hall or spring to a tuned tube, a drumhead or a howling room, with a tail you can duck, push back, freeze, shimmer or crush."),
         ManualBlock(ManualKind.Bullet, "**Venue** - puts the track in a room from an impulse: five rooms of ours, or a file of your own."),
+        ManualBlock(ManualKind.Bullet, "**Vessel** - plays the track through a body of wood, skin, stone, metal, glass or a bell, tuned free, to a key or to the track's notes."),
         ManualBlock(ManualKind.Bullet, "**Grain** - a cloud of short slices of what the track just played, which can freeze."),
         ManualBlock(ManualKind.Bullet, "**Tape** - a worn tape machine: wow, flutter, saturation and hiss, and a switch that slows it to a stop."),
         ManualBlock(ManualKind.Bullet, "**Slicer** - cuts the track into slices on the beat and repeats, reverses or drops some of them."),
@@ -2054,6 +2078,7 @@ object Manual {
         en4_30(),
         en4_31(),
         en4_32(),
+        en4_33(),
     ))
 
     private fun en5() = ManualSection("Modifiers", "", listOf(
@@ -4163,7 +4188,30 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Le placard et la petite salle sur une piste de batterie donnent du corps sans sonner comme une réverbération."),
     ))
 
-    private fun fr4_32() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
+    private fun fr4_32() = ManualSection("Vessel", "Fait passer la piste par un corps de bois, de peau, de pierre, de métal, de verre ou une cloche.", listOf(
+        ManualBlock(ManualKind.Para, "Vessel traite la piste comme quelque chose qui frappe un corps, et vous entendez le corps résonner. Une boucle de batterie dans une boîte de bois cogne, une ligne de basse dans une cloche tinte."),
+        ManualBlock(ManualKind.Heading, "Le corps"),
+        ManualBlock(ManualKind.Bullet, "**matériau** : verre, bois, métal, peau, pierre, cloche, plaque ou tube. Chacun a ses propres harmoniques. Celles du bois et de la pierre meurent vite, le métal et le verre résonnent longtemps."),
+        ManualBlock(ManualKind.Bullet, "**taille** : la note la plus grave du corps."),
+        ManualBlock(ManualKind.Bullet, "**tonalité** et **gamme** : calent la taille sur la note la plus proche d’une gamme. **non** la laisse libre."),
+        ManualBlock(ManualKind.Bullet, "**suivre** *(extra)* : accorde le corps sur la dernière note jouée par la piste, et il résonne avec la partie. Seulement sur les insertions d’une piste, puisqu’un envoi ou un groupe ne reçoit pas de notes."),
+        ManualBlock(ManualKind.Heading, "La résonance"),
+        ManualBlock(ManualKind.Bullet, "**déclin** : combien de temps la note la plus grave résonne, de 0,05 à 20 s."),
+        ManualBlock(ManualKind.Bullet, "**amortir** : à quel point les notes aiguës meurent plus tôt."),
+        ManualBlock(ManualKind.Heading, "Le toucher", "Le cliquer"),
+        ManualBlock(ManualKind.Bullet, "**frappe** : l’endroit où la piste frappe le corps. **capteur** : l’endroit d’où on l’entend, gauche et droite un peu à l’écart. Bouger l’un ou l’autre change les harmoniques entendues."),
+        ManualBlock(ManualKind.Bullet, "**satur.** : pousse la piste dans le corps par un écrêtage doux, et les coups forts aboient. Ça ajoute du grain, pas du niveau."),
+        ManualBlock(ManualKind.Heading, "Sortie"),
+        ManualBlock(ManualKind.Bullet, "**mélange** : la piste sèche face au corps."),
+        ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Para, "Un corps accordé sur les notes qui le traversent ne peut pas devenir beaucoup plus fort que la piste, donc **suivre** et un long **déclin** sont sans danger."),
+        ManualBlock(ManualKind.Heading, "Astuces"),
+        ManualBlock(ManualKind.Bullet, "Sur la batterie, réglez **tonalité** et **gamme** sur celles du morceau et chaque coup prend une hauteur dans la tonalité."),
+        ManualBlock(ManualKind.Bullet, "**peau** avec une **taille** basse et un peu de **satur.** grossit des tambours trop minces."),
+        ManualBlock(ManualKind.Bullet, "**suivre** avec **verre** ou **cloche** sur une mélodie met une résonance sous chaque note."),
+    ))
+
+    private fun fr4_33() = ManualSection("Width", "Plus large, plus étroit, mono sous une fréquence ou tourné.", listOf(
         ManualBlock(ManualKind.Para, "Règle l’image stéréo."),
         ManualBlock(ManualKind.Heading, "Les réglages"),
         ManualBlock(ManualKind.Bullet, "**largeur** : 0 est mono, 1 ne change rien et 2 est deux fois plus large. Ce qui est au centre reste au centre."),
@@ -4178,12 +4226,13 @@ object Manual {
     private fun fr4() = ManualSection("Effets et mixage", "", listOf(
         ManualBlock(ManualKind.Heading, "Insertions"),
         ManualBlock(ManualKind.Para, "Chaque piste a quatre emplacements d’effet en insertion, joués dans l’ordre de FX1 à FX4. **fx** dans la barre du bas de l’éditeur les affiche à la place du panneau de la machine. Les effets d’un son vont seulement dans FX1 et FX2, donc FX3 et FX4 sont toujours à vous."),
-        ManualBlock(ManualKind.Para, "Il y a trente-trois effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
+        ManualBlock(ManualKind.Para, "Il y a trente-quatre effets. Chacun a les réglages habituels plus un extra, affiché dans la couleur d’accent. Chaque effet finit par **gain**, un réglage du niveau de sortie, puisque monter le mélange peut changer le niveau."),
         ManualBlock(ManualKind.Para, "Chaque effet a sa propre page ci-dessous."),
         ManualBlock(ManualKind.Heading, "Temps"),
         ManualBlock(ManualKind.Bullet, "**Delay** : des échos sur une valeur de note, normaux, en ping-pong, à plusieurs têtes ou à l’envers, qui peuvent s’atténuer pendant que vous jouez."),
         ManualBlock(ManualKind.Bullet, "**Reverb** : douze modèles, d’une salle, d’une plaque, d’un hall ou d’un ressort à un tube accordé, une peau de tambour ou une salle qui hurle, avec une queue qu’on peut atténuer, éloigner, figer, faire miroiter ou écraser."),
         ManualBlock(ManualKind.Bullet, "**Venue** : place la piste dans une salle d’après une impulsion : cinq salles à nous, ou un fichier à vous."),
+        ManualBlock(ManualKind.Bullet, "**Vessel** : fait passer la piste par un corps de bois, de peau, de pierre, de métal, de verre ou une cloche, accordé librement, sur une tonalité ou sur les notes de la piste."),
         ManualBlock(ManualKind.Bullet, "**Grain** : un nuage de courtes tranches de ce que la piste vient de jouer, qui peut se figer."),
         ManualBlock(ManualKind.Bullet, "**Tape** : un magnétophone usé, avec pleurage, scintillement, saturation et souffle, et un interrupteur qui le ralentit jusqu’à l’arrêt."),
         ManualBlock(ManualKind.Bullet, "**Slicer** : découpe la piste en tranches sur le temps et en répète, inverse ou omet certaines."),
@@ -4338,6 +4387,7 @@ object Manual {
         fr4_30(),
         fr4_31(),
         fr4_32(),
+        fr4_33(),
     ))
 
     private fun fr5() = ManualSection("Les modificateurs", "", listOf(

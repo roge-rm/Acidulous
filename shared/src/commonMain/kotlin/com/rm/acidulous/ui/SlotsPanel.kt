@@ -40,9 +40,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
+import kotlin.math.floor
+import kotlin.math.abs
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
 import com.rm.acidulous.model.EFFECT_SLOTS
+import com.rm.acidulous.model.Scales
 import com.rm.acidulous.model.InsertMod
 import com.rm.acidulous.model.SIDECHAIN_PARAM
 import com.rm.acidulous.model.SIDECHAIN_STEPS
@@ -399,7 +402,10 @@ private fun SlotFace(
                         onReset = { b.reset(p.name) },
                         steps = labels.size,
                     )
-                    else -> PanelKnob(b, p.name, label = shortLabel, accent = accent)
+                    else -> PanelKnob(
+                        b, p.name, label = shortLabel, accent = accent,
+                        display = slotDisplay(type, p, b.value(p.name)) { b.value(it) },
+                    )
                 }
             }
         }
@@ -411,7 +417,9 @@ private fun SlotFace(
                 type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
                 type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
-                model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects)
+                model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects) ||
+                // Vessel's `follow` tunes to the track's notes, so only a track's insert has it.
+                type == "Vessel" && it.name == "follow" && kind != SlotKind.Effects
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
@@ -571,6 +579,12 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "tone" to listOf("lowcut", "highcut"),
         "out" to listOf("width", "mix", "gain"),
     ),
+    "Vessel" to listOf(
+        "body" to listOf("material", "size", "key", "scale", "follow"),
+        "ring~body" to listOf("decay", "damp"),
+        "touch" to listOf("strike", "pickup", "drive"),
+        "out" to listOf("mix", "gain"),
+    ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
@@ -631,6 +645,46 @@ private fun BusyCards(type: String, content: @Composable (perLine: Int) -> Unit)
 
 /** The dial in a busy effect window; see [BusyCards]. 48 dp knobs, wide enough for "predelay". */
 private val BusyDial = 42.dp
+
+/** Vessel's materials, in the engine's order (Vessel.h, Kind). */
+private val VESSEL_MATERIALS = listOf("glass", "wood", "metal", "skin", "stone", "bell", "plate", "tube")
+
+/**
+ * A knob's value as the face shows it: Vessel's size as the note it's tuned
+ * to, with cents when it's between notes. [value] reads the slot's other knobs.
+ */
+private fun slotDisplay(type: String, p: ParamInfo, v: Float, value: (String) -> Float): String {
+    if (type != "Vessel" || p.name != "size") return p.format(v)
+    val note = p.map(v)
+    val key = (value("key") * 12f).roundToInt().coerceIn(0, 12)
+    if (key > 0) {
+        val scale = (value("scale") * (Scales.intervals.size - 1)).roundToInt().coerceIn(0, Scales.intervals.size - 1)
+        return noteName(vesselSnap(note, key - 1, Scales.intervals[scale]))
+    }
+    val whole = note.roundToInt()
+    val cents = ((note - whole) * 100f).roundToInt()
+    return when {
+        cents > 0 -> "${noteName(whole)} +$cents"
+        cents < 0 -> "${noteName(whole)} $cents"
+        else -> noteName(whole)
+    }
+}
+
+/** The note of the scale nearest [note], the lower on a tie: the same rule as Vessel.cpp's targetHz. */
+private fun vesselSnap(note: Float, root: Int, intervals: List<Int>): Int {
+    val base = floor(note).toInt()
+    var best = note.roundToInt()
+    var bestGap = Float.MAX_VALUE
+    for (n in base - 12..base + 13) {
+        val degree = ((n - root) % 12 + 12) % 12
+        val gap = abs(n - note)
+        if (degree in intervals && gap < bestGap) {
+            bestGap = gap
+            best = n
+        }
+    }
+    return best
+}
 
 /** The reverb's models, in the engine's order (Reverb.h, ModelKind). */
 private val REVERB_MODELS = listOf(
@@ -739,6 +793,7 @@ private val EXTRA = mapOf(
     "Spectral" to setOf("freeze", "peaks"),
     "Formula" to setOf("rate", "smooth"),
     "Venue" to setOf("stretch"), // a bigger or smaller room of the same shape
+    "Vessel" to setOf("follow"), // the body tuned to the track's notes
     "Transient" to setOf("split"), // only the highs shaped
     "Midside" to setOf("breathe"), // the side opens in the gaps
     "Deesser" to setOf("relative"), // measured against the whole sound
@@ -779,6 +834,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "snap" -> listOf("nearest", "down", "up")
     name == "mode" && type == "Chord" -> listOf("fixed", "diatonic")
     name == "mode" && type == "Arp" -> ARP_MODES
+    name == "key" && type == "Vessel" -> listOf("off") + KEY_NAMES
     name == "key" -> KEY_NAMES
     name == "scale" -> SCALE_NAMES
     name == "type" && type == "Chord" -> CHORD_NAMES
@@ -815,6 +871,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
     name == "model" && type == "Reverb" -> REVERB_MODELS
     name == "material" && type == "Reverb" -> listOf("tile", "plaster", "wood", "curtains")
+    name == "material" && type == "Vessel" -> VESSEL_MATERIALS
     name == "speed" && type == "Rotary" -> listOf("brake", "slow", "fast")
     name == "tempo" && type == "Rotary" -> listOf("free", "1/1", "1/2", "1/4", "1/8", "1/8T")
     name == "freeze" && type == "Grain" -> listOf("off", "on")
@@ -885,14 +942,18 @@ internal fun SongSlotFace(
             }
             else -> Knob(
                 label = shortLabel, value = v, accent = accent, modifier = panelKnobWidth(),
-                display = p.format(v),
+                display = slotDisplay(type, p, v, value),
                 onStart = start, onChange = { nv -> change(p.name, nv) }, onEnd = end,
             )
         }
     }
-    // A song slot never hears notes, so the reverb's `follow` isn't offered.
+    // A song slot never hears notes, so the reverb's and Vessel's `follow` isn't offered.
     val model = if (type == "Reverb") reverbModel(value("model")) else null
-    val shown = if (model != null) info.filter { reverbShows(model, it.name, trackInsert = false) } else info
+    val shown = when {
+        model != null -> info.filter { reverbShows(model, it.name, trackInsert = false) }
+        type == "Vessel" -> info.filter { it.name != "follow" }
+        else -> info
+    }
     BusyCards(type) { perLine ->
         lead?.invoke()
         for ((title, group) in groupsFor(type, shown, model)) {
@@ -992,7 +1053,7 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
 }
 
 /** The slots whose `key` is a musical key, not a filter's tracking. */
-private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer")
+private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel")
 
 /** Formulas to start a Formula effect from, all original. x is the track, 0 to 255. */
 internal val FORMULA_FX_EXAMPLES = listOf(

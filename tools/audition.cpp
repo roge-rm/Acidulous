@@ -1277,10 +1277,10 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  * What an effect is fed: two bars of music made by the app's own machines,
  * then silence for the tails. Most effects get a band (drums, bass and
  * electric piano). Amp and Distortion get a clean guitar, Horn and Harmonizer
- * a single line they can follow, Reverb sparse hits with gaps, Rotary an organ, Gate the band over a
+ * a single line they can follow, Reverb and Vessel sparse hits with gaps, Rotary an organ, Gate the band over a
  * little hiss to take out, Deesser a voice and Midside the band with a
  * piano spread wide. Returns the stereo source; it stops at `stop`, and the
- * silence after it is longer for a reverb.
+ * silence after it is longer for a reverb or a body.
  */
 /** The pitched notes in the last effect source, frame and note, for an effect that follows them. */
 std::vector<std::pair<int64_t, int>> gSourceNotes;
@@ -1290,7 +1290,7 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
     const float bars = 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
     // A reverb gets longer to ring out, since a big hall outlasts three seconds.
-    const int64_t frames = stop + secondsToFrames(effect == "Reverb" ? 6.0f : 3.0f);
+    const int64_t frames = stop + secondsToFrames(effect == "Reverb" || effect == "Vessel" ? 6.0f : 3.0f);
     std::vector<float> out(static_cast<size_t>(frames) * 2, 0.0f);
     const auto add = [&](const std::vector<float> &part, float gain) {
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
@@ -1328,7 +1328,7 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             out[i * 2] = voice[i];
             out[i * 2 + 1] = voice[i];
         }
-    } else if (effect == "Reverb") {
+    } else if (effect == "Reverb" || effect == "Vessel") {
         // Sparse hits with gaps, so the tail has room to ring: a snare alone,
         // a kick and snare, a short chord stab, three single notes, then
         // silence.

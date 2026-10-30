@@ -817,10 +817,10 @@ internal fun com.rm.acidulous.model.Clip.withLane(key: String, lane: com.rm.acid
     copy(automation = if (lane == null) automation - key else automation + (key to lane))
 
 @Composable
-internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal) {
+internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal, display: String? = null) {
     val key = com.rm.acidulous.model.laneKey(b.unit, name)
     Knob(
-        label = panelWord(label), value = b.value(name), display = b.display(name), accent = accent,
+        label = panelWord(label), value = b.value(name), display = display ?: b.display(name), accent = accent,
         automated = key in AutomationMarks.lanes && key !in AutomationMarks.locks,
         locked = key in AutomationMarks.locks,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
