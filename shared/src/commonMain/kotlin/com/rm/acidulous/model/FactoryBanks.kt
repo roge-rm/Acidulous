@@ -70,6 +70,7 @@ internal object FactoryBanks {
         "fx.Transient" -> fx_transient
         "fx.Midside" -> fx_midside
         "fx.Deesser" -> fx_deesser
+        "fx.Vessel" -> fx_vessel
         else -> emptyList()
     }
 
@@ -16058,4 +16059,97 @@ internal object FactoryBanks {
         family = "tame")
 
     private val fx_deesser: List<Patch> by lazy { listOf(fx_deesser0(), fx_deesser1(), fx_deesser2(), fx_deesser3(), fx_deesser4(), fx_deesser5(), fx_deesser6(), fx_deesser7(), fx_deesser8(), fx_deesser9(), fx_deesser10(), fx_deesser11(), fx_deesser12(), fx_deesser13()) }
+
+    private fun fx_vessel0() = Patch("fx.Vessel", "Init", emptyMap(),
+        family = "wood")
+
+    private fun fx_vessel1() = Patch("fx.Vessel", "Box",
+        mapOf("size" to 0.430555552f, "decay" to 0.3843109f, "damp" to 0.5f, "mix" to 0.45f),
+        family = "wood")
+
+    private fun fx_vessel2() = Patch("fx.Vessel", "Log",
+        mapOf("size" to 0.194444448f, "damp" to 0.3f, "strike" to 0.2f, "gain" to 0.53125f),
+        family = "wood")
+
+    private fun fx_vessel3() = Patch("fx.Vessel", "Block",
+        mapOf("size" to 0.6388889f, "decay" to 0.299052f, "damp" to 0.7f, "strike" to 0.15f, "mix" to 0.4f, "gain" to 0.53125f),
+        family = "wood")
+
+    private fun fx_vessel4() = Patch("fx.Vessel", "Drumhead",
+        mapOf("material" to 0.428571433f, "size" to 0.2638889f, "decay" to 0.462756425f, "mix" to 0.45f, "gain" to 0.53125f),
+        family = "skin")
+
+    private fun fx_vessel5() = Patch("fx.Vessel", "Frame Drum",
+        mapOf("material" to 0.428571433f, "size" to 0.166666672f, "decay" to 0.578445554f, "damp" to 0.6f, "strike" to 0.12f),
+        family = "skin")
+
+    private fun fx_vessel6() = Patch("fx.Vessel", "Tight Head",
+        mapOf("material" to 0.428571433f, "size" to 0.3888889f, "decay" to 0.347067326f, "drive" to 0.5f, "mix" to 0.45f, "gain" to 0.5208333f),
+        family = "skin")
+
+    private fun fx_vessel7() = Patch("fx.Vessel", "Slate",
+        mapOf("material" to 0.5714286f, "size" to 0.3611111f, "decay" to 0.4147411f, "mix" to 0.45f, "gain" to 0.5416667f),
+        family = "stone")
+
+    private fun fx_vessel8() = Patch("fx.Vessel", "Pebbles",
+        mapOf("material" to 0.5714286f, "size" to 0.6666667f, "decay" to 0.299052f, "damp" to 0.2f, "strike" to 0.4f, "mix" to 0.4f),
+        family = "stone")
+
+    private fun fx_vessel9() = Patch("fx.Vessel", "Boulder",
+        mapOf("material" to 0.5714286f, "size" to 0.125f, "decay" to 0.5304302f, "damp" to 0.5f, "gain" to 0.5729167f),
+        family = "stone")
+
+    private fun fx_vessel10() = Patch("fx.Vessel", "Metal Bar",
+        mapOf("material" to 0.2857143f, "size" to 0.458333343f, "decay" to 0.6156891f, "mix" to 0.35f, "gain" to 0.479166657f),
+        family = "metal")
+
+    private fun fx_vessel11() = Patch("fx.Vessel", "Sheet",
+        mapOf("material" to 0.857142866f, "size" to 0.291666657f, "decay" to 0.6833629f, "damp" to 0.3f, "pickup" to 0.25f, "mix" to 0.35f),
+        family = "metal")
+
+    private fun fx_vessel12() = Patch("fx.Vessel", "Pipe",
+        mapOf("material" to 1f, "size" to 0.3611111f, "decay" to 0.5676738f, "damp" to 0.5f, "mix" to 0.4f),
+        family = "metal")
+
+    private fun fx_vessel13() = Patch("fx.Vessel", "Driven Pan",
+        mapOf("material" to 0.2857143f, "size" to 0.5277778f, "decay" to 0.5304302f, "strike" to 0.45f, "drive" to 0.75f, "mix" to 0.4f),
+        family = "metal")
+
+    private fun fx_vessel14() = Patch("fx.Vessel", "Bowl",
+        mapOf("material" to 0f, "size" to 0.5555556f, "decay" to 0.7313782f, "damp" to 0.2f, "mix" to 0.3f),
+        family = "glass")
+
+    private fun fx_vessel15() = Patch("fx.Vessel", "Bottle",
+        mapOf("material" to 1f, "size" to 0.5972222f, "decay" to 0.462756425f, "damp" to 0.8f, "strike" to 0.5f, "mix" to 0.35f),
+        family = "glass")
+
+    private fun fx_vessel16() = Patch("fx.Vessel", "Ice",
+        mapOf("material" to 0f, "size" to 0.8333333f, "decay" to 0.4147411f, "strike" to 0.37f, "mix" to 0.35f),
+        family = "glass")
+
+    private fun fx_vessel17() = Patch("fx.Vessel", "Bell",
+        mapOf("material" to 0.714285731f, "size" to 0.6666667f, "decay" to 0.6833629f, "mix" to 0.3f),
+        family = "bell")
+
+    private fun fx_vessel18() = Patch("fx.Vessel", "Gong",
+        mapOf("material" to 0.857142866f, "size" to 0.0972222239f, "decay" to 0.8470673f, "damp" to 0.15f, "strike" to 0.42f, "mix" to 0.35f, "gain" to 0.5208333f),
+        family = "bell")
+
+    private fun fx_vessel19() = Patch("fx.Vessel", "Chime",
+        mapOf("material" to 0.714285731f, "size" to 0.8333333f, "decay" to 0.6156891f, "damp" to 0.3f, "mix" to 0.3f, "gain" to 0.5208333f),
+        family = "bell")
+
+    private fun fx_vessel20() = Patch("fx.Vessel", "Following Glass",
+        mapOf("material" to 0f, "decay" to 0.6156891f, "follow" to 1f, "mix" to 0.3f),
+        family = "tuned")
+
+    private fun fx_vessel21() = Patch("fx.Vessel", "Keyed Tube",
+        mapOf("material" to 1f, "size" to 0.458333343f, "decay" to 0.6156891f, "key" to 0.8333333f, "scale" to 0.3125f, "mix" to 0.35f),
+        family = "tuned")
+
+    private fun fx_vessel22() = Patch("fx.Vessel", "Sympathy Bell",
+        mapOf("material" to 0.714285731f, "decay" to 0.7686218f, "follow" to 1f, "mix" to 0.25f),
+        family = "tuned")
+
+    private val fx_vessel: List<Patch> by lazy { listOf(fx_vessel0(), fx_vessel1(), fx_vessel2(), fx_vessel3(), fx_vessel4(), fx_vessel5(), fx_vessel6(), fx_vessel7(), fx_vessel8(), fx_vessel9(), fx_vessel10(), fx_vessel11(), fx_vessel12(), fx_vessel13(), fx_vessel14(), fx_vessel15(), fx_vessel16(), fx_vessel17(), fx_vessel18(), fx_vessel19(), fx_vessel20(), fx_vessel21(), fx_vessel22()) }
 }

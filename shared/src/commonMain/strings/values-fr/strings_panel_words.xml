@@ -1607,4 +1607,8 @@
     <string name="pw_impulse">impulsion</string>
     <string name="pw_lowcut">coupe-bas</string>
     <string name="pw_venue">Venue</string>
+    <string name="pw_ring_body">résonance</string>
+    <string name="pw_skin">peau</string>
+    <string name="pw_stone">pierre</string>
+    <string name="pw_vessel">Vessel</string>
 </resources>

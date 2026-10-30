@@ -1,7 +1,8 @@
 // Tests the character effects: Smash, Acid, Mouth, Tape, Slicer, Horn,
-// Spectral, Formula, Transient, Midside, Deesser, Venue, the Delay's modes and
-// the Reverb's models. Each is rendered and measured for the thing it's for,
+// Spectral, Formula, Transient, Midside, Deesser, Venue, Vessel, the Delay's
+// modes and the Reverb's models. Each is rendered and measured for the thing it's for,
 // since none of it shows in a frequency response.
+#include <functional>
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -17,6 +18,7 @@
 #include <engine/effect/Magneto.h>
 #include <engine/effect/Reverb.h>
 #include <engine/effect/Spectral.h>
+#include <engine/effect/Vessel.h>
 #include <engine/machine/formulate/Expr.h>
 #include "venue_impulse.h"
 
@@ -1880,6 +1882,213 @@ void venue() {
     }
 }
 
+// --- Vessel ---------------------------------------------------------------------
+
+/** The largest step from one sample to the next over [from, to). */
+double steepest(const std::vector<float> &x, size_t from, size_t to) {
+    double s = 0.0;
+    for (size_t i = std::max<size_t>(from, 1); i < std::min(to, x.size()); ++i) s = std::max(s, double(std::fabs(x[i] - x[i - 1])));
+    return s;
+}
+
+/** The largest second difference over [from, to): a kink a step can't show. */
+double sharpest(const std::vector<float> &x, size_t from, size_t to) {
+    double s = 0.0;
+    for (size_t i = std::max<size_t>(from, 2); i < std::min(to, x.size()); ++i)
+        s = std::max(s, double(std::fabs(x[i] - 2.0f * x[i - 1] + x[i - 2])));
+    return s;
+}
+
+void vessel() {
+    printf("- vessel\n");
+    const char *names[] = {"glass", "wood", "metal", "skin", "stone", "bell", "plate", "tube"};
+    const auto hz = [](float note) { return 440.0 * std::pow(2.0, (note - 69.0) / 12.0); };
+    const auto fundamental = [](Effect &fx) { return static_cast<effect::Vessel &>(fx).fundamentalHz(); };
+    // A click, then a second and a half of ring.
+    std::vector<float> click(72000, 0.0f);
+    click[0] = 0.5f;
+    {
+        // Rings at the size it's set to, on a few materials.
+        const std::tuple<int, float> cases[] = {{7, 57.0f}, {2, 60.0f}, {0, 64.0f}, {3, 50.0f}};
+        for (const auto &[m, note] : cases) {
+            auto fx = make("Vessel", {{"material", float(m)}, {"size", note}, {"decay", 3.0f}, {"mix", 1.0f}, {"strike", 0.23f}, {"pickup", 0.31f}});
+            const auto out = run(*fx, click);
+            const double found = peakNear(out.l, hz(note), 50.0, 2400, 50400, kRate);
+            ok(std::string(names[m]) + ": a click rings at the size", std::fabs(cents(found, hz(note))) < 2.0,
+               num(found) + " Hz for " + num(hz(note)) + ", " + num(cents(found, hz(note))) + " cents");
+        }
+    }
+    {
+        // Key snaps size to the nearest note of the scale, the lower on a tie.
+        auto fx = make("Vessel", {{"size", 61.4f}, {"key", 1.0f}, {"scale", 0.0f}, {"mix", 1.0f}});
+        run(*fx, click);
+        ok("key C major: 61.4 snaps to D", std::fabs(cents(fundamental(*fx), hz(62.0f))) < 0.1, num(fundamental(*fx)) + " Hz");
+        set(*fx, "size", 61.0f);
+        run(*fx, std::vector<float>(64, 0.0f));
+        ok("key C major: 61 is a tie and takes C", std::fabs(cents(fundamental(*fx), hz(60.0f))) < 0.1, num(fundamental(*fx)) + " Hz");
+        set(*fx, "key", 3.0f); // D
+        set(*fx, "size", 60.4f);
+        run(*fx, std::vector<float>(64, 0.0f));
+        ok("key D major: 60.4 snaps to C#", std::fabs(cents(fundamental(*fx), hz(61.0f))) < 0.1, num(fundamental(*fx)) + " Hz");
+        set(*fx, "key", 0.0f);
+        run(*fx, std::vector<float>(64, 0.0f));
+        ok("key off: size is free", std::fabs(cents(fundamental(*fx), hz(60.4f))) < 0.1, num(fundamental(*fx)) + " Hz");
+        // A snapped body rings there.
+        auto fy = make("Vessel", {{"material", 7.0f}, {"size", 56.6f}, {"key", 1.0f}, {"decay", 3.0f}, {"mix", 1.0f}, {"strike", 0.23f}});
+        const auto out = run(*fy, click);
+        const double found = peakNear(out.l, hz(57.0f), 50.0, 2400, 50400, kRate);
+        ok("a snapped body rings at the scale's note", std::fabs(cents(found, hz(57.0f))) < 2.0, num(cents(found, hz(57.0f))) + " cents");
+    }
+    {
+        // Follow: the size until a note comes, then the note, and a reset forgets it.
+        auto fx = make("Vessel", {{"material", 7.0f}, {"size", 48.0f}, {"follow", 1.0f}, {"decay", 3.0f}, {"mix", 1.0f}, {"strike", 0.23f}});
+        run(*fx, std::vector<float>(64, 0.0f));
+        ok("follow with no note yet: the size", std::fabs(cents(fundamental(*fx), hz(48.0f))) < 0.1, num(fundamental(*fx)) + " Hz");
+        fx->onNote(45, 110.0f);
+        const auto out = run(*fx, click);
+        ok("follow: the track's note", std::fabs(fundamental(*fx) - 110.0f) < 0.01, num(fundamental(*fx)) + " Hz");
+        const double found = peakNear(out.l, 110.0, 50.0, 2400, 50400, kRate);
+        ok("follow: it rings at the note", std::fabs(cents(found, 110.0)) < 2.0, num(cents(found, 110.0)) + " cents");
+        auto fk = make("Vessel", {{"size", 48.0f}, {"follow", 1.0f}, {"key", 3.0f}});
+        fk->onNote(45, 110.0f);
+        run(*fk, std::vector<float>(64, 0.0f));
+        ok("follow wins over key", std::fabs(fundamental(*fk) - 110.0f) < 0.01, num(fundamental(*fk)) + " Hz");
+        fx->reset();
+        fx->params().jumpAll();
+        run(*fx, std::vector<float>(64, 0.0f));
+        ok("a reset forgets the note", std::fabs(cents(fundamental(*fx), hz(48.0f))) < 0.1, num(fundamental(*fx)) + " Hz");
+    }
+    {
+        // Damping: wood's high modes go long before metal's.
+        const auto fallOf = [&](int m) {
+            auto fx = make("Vessel", {{"material", float(m)}, {"size", 48.0f}, {"decay", 2.0f}, {"mix", 1.0f}});
+            const auto out = run(*fx, click);
+            return fallTime(out.l, 480);
+        };
+        const double wood = fallOf(1), metal = fallOf(2);
+        ok("wood dies sooner than metal", wood < metal * 0.5, num(wood) + " s against " + num(metal) + " s");
+    }
+    {
+        // A full mix at the defaults sits near dry on music and on noise, every material.
+        const auto song = music(4 * 48000, 7);
+        const auto hiss = noise(0.3f, 4 * 48000);
+        std::string spread;
+        for (int m = 0; m < effect::Vessel::KindCount; ++m) {
+            auto fx = make("Vessel", {{"material", float(m)}});
+            const auto out = run(*fx, song);
+            const double db = dB(rms(out.l, 48000, song.size()) / rms(song, 48000, song.size()));
+            auto fy = make("Vessel", {{"material", float(m)}});
+            const auto outN = run(*fy, hiss);
+            const double dbN = dB(rms(outN.l, 48000, hiss.size()) / rms(hiss, 48000, hiss.size()));
+            ok(std::string(names[m]) + ": the defaults sit within 1.5 dB of dry on music", std::fabs(db) < 1.5,
+               num(db) + " dB, noise " + num(dbN) + " dB");
+        }
+        auto fx = make("Vessel", {{"mix", 0.0f}});
+        ok("mix 0 is the track untouched", worst(run(*fx, song).l, song) == 0.0);
+    }
+    {
+        // A held tone sitting on a long mode is held to the guard, not left to build.
+        auto fx = make("Vessel", {{"material", 7.0f}, {"size", 57.0f}, {"decay", 20.0f}, {"damp", 0.0f}, {"mix", 1.0f}});
+        const auto out = run(*fx, tone(220.0f, 0.1f, 10 * 48000));
+        const double over = dB(peak(out.l) / 0.1);
+        ok("a tone on a 20 s mode stays within 16 dB of its own peak", over < 16.0, num(over) + " dB");
+        // Once it has settled, the body tuned to the tone is held to 3 dB over
+        // it, and the 2 dB trim a full mix carries.
+        const double l = rms(out.l, 5 * 48000, out.l.size()), r = rms(out.r, 5 * 48000, out.r.size());
+        const double held = dB(std::sqrt(0.5 * (l * l + r * r)) / (0.1 / std::sqrt(2.0)));
+        ok("a tone on a 20 s mode settles within 6 dB of the tone", held < 6.0, num(held) + " dB, left " + num(dB(l / (0.1 / std::sqrt(2.0)))) + " dB");
+    }
+    {
+        // A retune or a new material mid-ring doesn't click: no step much past the ring's own.
+        for (const char *what : {"size", "material", "strike"}) {
+            auto fx = make("Vessel", {{"material", 2.0f}, {"size", 60.0f}, {"decay", 4.0f}, {"mix", 1.0f}});
+            auto in = noise(0.2f, 9600);
+            in.resize(48000, 0.0f);
+            Stereo s{in, in};
+            for (size_t at = 0; at < in.size(); at += kBlock) {
+                if (at == 19200) set(*fx, what, std::strcmp(what, "size") == 0 ? 67.0f : std::strcmp(what, "material") == 0 ? 6.0f : 0.6f);
+                fx->run(s.l.data() + at, s.r.data() + at, kBlock, false);
+            }
+            const double before = steepest(s.l, 19200 - 4800, 19200), after = steepest(s.l, 19200, 19200 + 256);
+            ok(std::string("a change of ") + what + " mid-ring doesn't click", after < 1.5 * before,
+               num(after) + " against " + num(before));
+        }
+    }
+    {
+        // Mods slice a block into 8-frame calls; a retune still glides over its
+        // own time, not one call, so it doesn't click, and comes out the same
+        // as in whole blocks.
+        const auto render = [&](int32_t call, const std::function<void(Effect &, size_t)> &at) {
+            auto fx = make("Vessel", {{"material", 2.0f}, {"size", 60.0f}, {"decay", 4.0f}, {"mix", 1.0f}, {"follow", 1.0f}});
+            fx->onNote(60, float(hz(60.0f)));
+            auto in = noise(0.2f, 9600);
+            in.resize(48000, 0.0f);
+            Stereo s{in, in};
+            for (size_t i = 0; i < in.size(); i += size_t(call)) {
+                at(*fx, i);
+                fx->run(s.l.data() + i, s.r.data() + i, call, false);
+            }
+            return s;
+        };
+        const auto sliced = [&](const char *what, const std::function<void(Effect &, size_t)> &at, bool same) {
+            const Stereo s = render(8, at);
+            const double before = steepest(s.l, 19200 - 4800, 19200), after = steepest(s.l, 19200, 19200 + 256);
+            const double kinkBefore = sharpest(s.l, 19200 - 4800, 19200), kinkAfter = sharpest(s.l, 19200, 19200 + 256);
+            ok(std::string("in 8-frame calls, ") + what + " doesn't click", after < 1.5 * before && kinkAfter < 1.5 * kinkBefore,
+               num(after) + " against " + num(before) + ", kink " + num(kinkAfter) + " against " + num(kinkBefore));
+            if (same) {
+                const double off = worst(s.l, render(240, at).l);
+                ok(std::string("in 8-frame calls, ") + what + " glides as in whole blocks", off < 1e-5, num(off));
+            }
+        };
+        sliced("a follow retune", [&](Effect &fx, size_t i) {
+            if (i == 19200) fx.onNote(65, float(hz(65.0f)));
+        }, true);
+        sliced("a size jump", [&](Effect &fx, size_t i) {
+            if (i == 19200) set(fx, "follow", 0.0f), set(fx, "size", 65.0f);
+        }, true);
+        sliced("a size moved every call", [&](Effect &fx, size_t i) {
+            if (i == 19200) set(fx, "follow", 0.0f);
+            if (i >= 19200 && i < 24000) set(fx, "size", 60.0f + 5.0f * float(i - 19200) / 4800.0f);
+        }, false);
+    }
+    {
+        // In tune at the bottom of size: the tube's fundamental and the bell's
+        // first mode, which sits near 20 Hz.
+        auto long_ = click;
+        long_.resize(4 * 48000, 0.0f);
+        const std::tuple<int, double> low[] = {{7, hz(24.0f)}, {5, 0.618 * hz(24.0f)}};
+        for (const auto &[m, want] : low) {
+            auto fx = make("Vessel", {{"material", float(m)}, {"size", 24.0f}, {"decay", 20.0f}, {"damp", 0.0f}, {"mix", 1.0f},
+                                      {"strike", 0.23f}, {"pickup", 0.31f}});
+            const auto out = run(*fx, long_);
+            const double found = peakNear(out.l, want, 50.0, 2400, long_.size(), kRate);
+            ok(std::string(names[m]) + ": size 24 rings in tune", std::fabs(cents(found, want)) < 1.0,
+               num(found) + " Hz for " + num(want) + ", " + num(cents(found, want)) + " cents");
+        }
+    }
+    {
+        // Every material at the longest decay and the most drive, its ends of size: finite and bounded.
+        bool fine = true;
+        double top = 0.0;
+        auto burst = noise(0.9f, 96000, 9);
+        for (size_t i = 48000; i < burst.size(); ++i) burst[i] = (i % 9600 == 0) ? 1.0f : 0.0f;
+        for (int m = 0; m < effect::Vessel::KindCount; ++m) {
+            for (float size : {24.0f, 60.0f, 96.0f}) {
+                for (float damp : {0.0f, 1.0f}) {
+                    auto fx = make("Vessel", {{"material", float(m)}, {"size", size}, {"decay", 20.0f}, {"drive", 24.0f},
+                                              {"damp", damp}, {"mix", 1.0f}, {"strike", 0.02f}, {"pickup", 0.98f}});
+                    const auto out = run(*fx, burst);
+                    fine = fine && finite(out);
+                    top = std::max(top, std::max(peak(out.l), peak(out.r)));
+                }
+            }
+        }
+        ok("every material at the longest decay and the most drive: finite and bounded", fine && top < 8.0, "peak " + num(top));
+    }
+    staysBounded("Vessel");
+}
+
 int main() {
     printf("character effects\n");
     smash();
@@ -1897,6 +2106,7 @@ int main() {
     deEsser();
     reverb();
     venue();
+    vessel();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

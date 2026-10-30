@@ -880,6 +880,7 @@ private fun shortFx(type: String): String = when (type) {
     "Spectral" -> "spec"
     "Formula" -> "frml"
     "Venue" -> "venu"
+    "Vessel" -> "vesl"
     else -> type.lowercase().take(4)
 }
 

@@ -1130,6 +1130,7 @@
     <string name="pw_ring_loop">ring loop</string>
     <string name="pw_ring12">ring12</string>
     <string name="pw_ring23">ring23</string>
+    <string name="pw_ring_body">ring</string>
     <string name="pw_ring_level">ring</string>
     <string name="pw_ring_strings">ring</string>
     <string name="pw_riq">riq</string>
@@ -1238,6 +1239,7 @@
     <string name="pw_size_spread">size spread</string>
     <string name="pw_sizzle">sizzle</string>
     <string name="pw_skew">skew</string>
+    <string name="pw_skin">skin</string>
     <string name="pw_skip">skip</string>
     <string name="pw_slap">slap</string>
     <string name="pw_slew">slew</string>
@@ -1310,6 +1312,7 @@
     <string name="pw_stereo">stereo</string>
     <string name="pw_stiff">stiff</string>
     <string name="pw_stiffness">stiffness</string>
+    <string name="pw_stone">stone</string>
     <string name="pw_stop">stop</string>
     <string name="pw_stops">stops</string>
     <string name="pw_stoptime">stoptime</string>
@@ -1523,6 +1526,7 @@
     <string name="pw_velspread">velspread</string>
     <string name="pw_vent">vent</string>
     <string name="pw_venue">Venue</string>
+    <string name="pw_vessel">Vessel</string>
     <string name="pw_vib">vib</string>
     <string name="pw_vib_delay">vib delay</string>
     <string name="pw_vib_depth">vib depth</string>

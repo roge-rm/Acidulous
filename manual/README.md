@@ -69,6 +69,7 @@
     - [Transient](05-effects-and-mixing/transient.md) - the start of each hit and the ring after it, up or down.
     - [Tremolo](05-effects-and-mixing/tremolo.md) - volume on an LFO, or auto-pan.
     - [Venue](05-effects-and-mixing/venue.md) - puts the track in a room, from a recording of how the room answers.
+    - [Vessel](05-effects-and-mixing/vessel.md) - plays the track through a body of wood, skin, stone, metal, glass or a bell.
     - [Width](05-effects-and-mixing/width.md) - wider, narrower, mono below a frequency or rotated.
 6. [Modifiers](06-modifiers.md)
 7. [MIDI and playing with others](07-midi-and-sync.md)
