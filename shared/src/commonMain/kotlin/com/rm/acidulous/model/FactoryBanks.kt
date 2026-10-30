@@ -8786,63 +8786,139 @@ internal object FactoryBanks {
         mapOf("bump" to 0.5f, "bumpfreq" to 0.21372664f, "sat" to 0.15f, "width" to 0.65f),
         family = "clean")
 
-    private fun bias3() = Patch("Bias", "Cassette",
+    private fun bias3() = Patch("Bias", "Console",
+        mapOf("highcut" to 0.982877851f, "bump" to 0.416666657f, "bumpfreq" to 0.5170096f, "sat" to 0.25f, "comp" to 0.3f),
+        family = "clean")
+
+    private fun bias4() = Patch("Bias", "Narrow",
+        mapOf("highcut" to 0.92551285f, "sat" to 0.1f, "width" to 0.275f),
+        family = "clean")
+
+    private fun bias5() = Patch("Bias", "Lean",
+        mapOf("lowcut" to 0.462131679f, "bump" to 0.166666672f, "bumpfreq" to 0.8483585f, "sat" to 0.2f, "comp" to 0.15f),
+        family = "clean")
+
+    private fun bias6() = Patch("Bias", "Cassette",
         mapOf("hiss" to 0.35f, "hisstone" to 0.55f, "lowcut" to 0.219831035f, "highcut" to 0.86879915f, "bump" to 0.5f, "bumpfreq" to 0.60759443f, "sat" to 0.4f, "comp" to 0.3f, "wow" to 0.25f, "flutter" to 0.3f, "width" to 0.475f),
         family = "tape")
 
-    private fun bias4() = Patch("Bias", "Four-Track",
+    private fun bias7() = Patch("Bias", "Four-Track",
         mapOf("hiss" to 0.5f, "hisstone" to 0.6f, "lowcut" to 0.297817349f, "highcut" to 0.8004371f, "bump" to 0.5555556f, "bumpfreq" to 0.6848713f, "sat" to 0.5f, "comp" to 0.55f, "wow" to 0.3f, "flutter" to 0.4f, "bleed" to 0.45f, "width" to 0.45f),
         family = "tape")
 
-    private fun bias5() = Patch("Bias", "Reel",
+    private fun bias8() = Patch("Bias", "Reel",
         mapOf("hiss" to 0.12f, "hisstone" to 0.35f, "lowcut" to 0.0604908764f, "highcut" to 0.9739758f, "bump" to 0.4722222f, "bumpfreq" to 0.177359477f, "sat" to 0.28f, "comp" to 0.15f, "wow" to 0.1f, "flutter" to 0.08f, "speed" to 0.315758616f),
         family = "tape")
 
-    private fun bias6() = Patch("Bias", "Cartridge",
+    private fun bias9() = Patch("Bias", "Cartridge",
         mapOf("hiss" to 0.42f, "hisstone" to 0.45f, "lowcut" to 0.339605272f, "highcut" to 0.7334516f, "bump" to 0.5277778f, "bumpfreq" to 0.660349846f, "sat" to 0.45f, "comp" to 0.4f, "wow" to 0.5f, "flutter" to 0.35f, "bleed" to 0.3f, "drop" to 0.15f),
         family = "tape")
 
-    private fun bias7() = Patch("Bias", "Micro",
+    private fun bias10() = Patch("Bias", "Micro",
         mapOf("hiss" to 0.7f, "hisstone" to 0.75f, "lowcut" to 0.7516073f, "highcut" to 0.479042947f, "sat" to 0.6f, "comp" to 0.8f, "wow" to 0.55f, "flutter" to 0.6f, "speed" to 0.711999238f, "drop" to 0.25f, "width" to 0f),
         family = "tape")
 
-    private fun bias8() = Patch("Bias", "Disc",
+    private fun bias11() = Patch("Bias", "Chrome",
+        mapOf("hiss" to 0.22f, "hisstone" to 0.65f, "lowcut" to 0.151703462f, "highcut" to 0.914914846f, "bump" to 0.444444448f, "bumpfreq" to 0.5489657f, "sat" to 0.3f, "comp" to 0.2f, "wow" to 0.12f, "flutter" to 0.18f),
+        family = "tape")
+
+    private fun bias12() = Patch("Bias", "Half Inch",
+        mapOf("hiss" to 0.2f, "hisstone" to 0.45f, "lowcut" to 0.109915517f, "highcut" to 0.92551285f, "bump" to 0.5833333f, "bumpfreq" to 0.446623236f, "sat" to 0.55f, "comp" to 0.35f, "wow" to 0.12f, "flutter" to 0.15f, "speed" to 0.419517964f),
+        family = "tape")
+
+    private fun bias13() = Patch("Bias", "Slow Reel",
+        mapOf("hiss" to 0.3f, "hisstone" to 0.4f, "lowcut" to 0.151703462f, "highcut" to 0.7686218f, "bump" to 0.6111111f, "bumpfreq" to 0.319503158f, "sat" to 0.5f, "comp" to 0.25f, "wow" to 0.35f, "flutter" to 0.2f, "speed" to 0.211999208f),
+        family = "tape")
+
+    private fun bias14() = Patch("Bias", "Disc",
         mapOf("highcut" to 0.921313941f, "bits" to 0.6f, "smear" to 0.35f, "width" to 0.4f),
         family = "digital")
 
-    private fun bias9() = Patch("Bias", "DAT",
+    private fun bias15() = Patch("Bias", "DAT",
         mapOf("highcut" to 0.991548657f, "sat" to 0.05f, "bits" to 0.6f),
         family = "digital")
 
-    private fun bias10() = Patch("Bias", "Sampler",
+    private fun bias16() = Patch("Bias", "Sampler",
         mapOf("highcut" to 0.903969347f, "sat" to 0.2f, "bits" to 0.4f, "rate" to 0.6f),
         family = "digital")
 
-    private fun bias11() = Patch("Bias", "Phone",
+    private fun bias17() = Patch("Bias", "Stream",
+        mapOf("lowcut" to 0.109915517f, "highcut" to 0.8004371f, "sat" to 0.1f, "comp" to 0.2f, "bits" to 0.6f, "smear" to 0.75f, "width" to 0.25f),
+        family = "digital")
+
+    private fun bias18() = Patch("Bias", "Eight Bit",
+        mapOf("sat" to 0.15f, "bits" to 0.2f, "rate" to 0.210526317f),
+        family = "digital")
+
+    private fun bias19() = Patch("Bias", "Early",
+        mapOf("highcut" to 0.880939f, "sat" to 0.1f, "bits" to 0.5f, "rate" to 0.7368421f, "smear" to 0.15f),
+        family = "digital")
+
+    private fun bias20() = Patch("Bias", "Phone",
         mapOf("lowcut" to 0.7341119f, "highcut" to 0.4085063f, "sat" to 0.3f, "comp" to 0.6f, "bits" to 0.2f, "width" to 0f),
         family = "broadcast")
 
-    private fun bias12() = Patch("Bias", "Shortwave",
+    private fun bias21() = Patch("Bias", "Shortwave",
         mapOf("hiss" to 0.55f, "hisstone" to 0.6f, "lowcut" to 0.695319355f, "highcut" to 0.3667258f, "comp" to 0.5f, "wow" to 0.35f, "speed" to 0.7843759f, "drop" to 0.4f, "width" to 0f),
         family = "broadcast")
 
-    private fun bias13() = Patch("Bias", "AM",
+    private fun bias22() = Patch("Bias", "AM",
         mapOf("hiss" to 0.3f, "hisstone" to 0.45f, "lowcut" to 0.485719174f, "highcut" to 0.550335765f, "sat" to 0.25f, "comp" to 0.55f, "width" to 0f),
         family = "broadcast")
 
-    private fun bias14() = Patch("Bias", "Shellac",
+    private fun bias23() = Patch("Bias", "FM",
+        mapOf("hiss" to 0.1f, "hisstone" to 0.7f, "lowcut" to 0.187901825f, "highcut" to 0.903969347f, "sat" to 0.2f, "comp" to 0.75f, "width" to 0.425f),
+        family = "broadcast")
+
+    private fun bias24() = Patch("Bias", "Walkie",
+        mapOf("hiss" to 0.45f, "hisstone" to 0.7f, "lowcut" to 0.8120982f, "highcut" to 0.3315556f, "sat" to 0.5f, "comp" to 0.85f, "drop" to 0.25f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias25() = Patch("Bias", "Megaphone",
+        mapOf("lowcut" to 0.9220137f, "highcut" to 0.462756425f, "bump" to 0.111111112f, "bumpfreq" to 1f, "sat" to 0.85f, "comp" to 0.6f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias26() = Patch("Bias", "Call",
+        mapOf("lowcut" to 0.546210051f, "highcut" to 0.64956075f, "sat" to 0.3f, "comp" to 0.65f, "drop" to 0.1f, "bits" to 0.4f, "smear" to 0.6f, "width" to 0f),
+        family = "broadcast")
+
+    private fun bias27() = Patch("Bias", "Shellac",
         mapOf("hiss" to 0.6f, "hisstone" to 0.3f, "lowcut" to 0.650033534f, "highcut" to 0.388269275f, "sat" to 0.35f, "comp" to 0.35f, "wow" to 0.6f, "speed" to 0.25f, "drop" to 0.55f, "width" to 0f),
         family = "worn")
 
-    private fun bias15() = Patch("Bias", "Wire",
+    private fun bias28() = Patch("Bias", "Wire",
         mapOf("hiss" to 0.65f, "lowcut" to 0.695319355f, "highcut" to 0.52361685f, "sat" to 0.4f, "wow" to 0.45f, "flutter" to 0.5f, "speed" to 0.6213567f, "drop" to 0.3f, "width" to 0f),
         family = "worn")
 
-    private fun bias16() = Patch("Bias", "Wax",
+    private fun bias29() = Patch("Bias", "Wax",
         mapOf("hiss" to 0.5f, "hisstone" to 0.25f, "lowcut" to 0.7758998f, "highcut" to 0.318957537f, "sat" to 0.45f, "comp" to 0.4f, "wow" to 0.75f, "speed" to 0.121356696f, "drop" to 0.4f, "width" to 0f),
         family = "worn")
 
-    private val bias: List<Patch> by lazy { listOf(bias0(), bias1(), bias2(), bias3(), bias4(), bias5(), bias6(), bias7(), bias8(), bias9(), bias10(), bias11(), bias12(), bias13(), bias14(), bias15(), bias16()) }
+    private fun bias30() = Patch("Bias", "Attic",
+        mapOf("hiss" to 0.55f, "lowcut" to 0.407732874f, "highcut" to 0.64956075f, "bump" to 0.444444448f, "bumpfreq" to 0.6848713f, "sat" to 0.35f, "comp" to 0.3f, "wow" to 0.45f, "flutter" to 0.3f, "speed" to 0.371356726f, "drop" to 0.35f, "width" to 0.35f),
+        family = "worn")
+
+    private fun bias31() = Patch("Bias", "Copied",
+        mapOf("hiss" to 0.6f, "hisstone" to 0.55f, "lowcut" to 0.339605272f, "highcut" to 0.694134653f, "bump" to 0.6111111f, "bumpfreq" to 0.6346319f, "sat" to 0.6f, "comp" to 0.5f, "wow" to 0.3f, "flutter" to 0.4f, "bleed" to 0.3f, "width" to 0.375f),
+        family = "worn")
+
+    private fun bias32() = Patch("Bias", "Acetate",
+        mapOf("hiss" to 0.4f, "hisstone" to 0.35f, "lowcut" to 0.297817349f, "highcut" to 0.7334516f, "bump" to 0.444444448f, "bumpfreq" to 0.446623236f, "sat" to 0.3f, "wow" to 0.25f, "speed" to 0.2843759f, "drop" to 0.3f, "width" to 0.3f),
+        family = "worn")
+
+    private fun bias33() = Patch("Bias", "Chewed",
+        mapOf("hiss" to 0.4f, "lowcut" to 0.375803649f, "highcut" to 0.598104f, "sat" to 0.5f, "comp" to 0.3f, "wow" to 1f, "flutter" to 0.8f, "speed" to 0.5657586f, "drop" to 0.7f, "width" to 0.3f),
+        family = "broken")
+
+    private fun bias34() = Patch("Bias", "Seasick",
+        mapOf("hiss" to 0.15f, "hisstone" to 0.4f, "highcut" to 0.8562011f, "sat" to 0.1f, "wow" to 0.95f, "flutter" to 0.1f, "speed" to 0.0657586157f),
+        family = "broken")
+
+    private fun bias35() = Patch("Bias", "Shredded",
+        mapOf("highcut" to 0.7334516f, "sat" to 0.3f, "drop" to 0.5f, "bits" to 0.1f, "rate" to 0.0736842f, "smear" to 1f),
+        family = "broken")
+
+    private val bias: List<Patch> by lazy { listOf(bias0(), bias1(), bias2(), bias3(), bias4(), bias5(), bias6(), bias7(), bias8(), bias9(), bias10(), bias11(), bias12(), bias13(), bias14(), bias15(), bias16(), bias17(), bias18(), bias19(), bias20(), bias21(), bias22(), bias23(), bias24(), bias25(), bias26(), bias27(), bias28(), bias29(), bias30(), bias31(), bias32(), bias33(), bias34(), bias35()) }
 
     private fun hammer0() = Patch("Hammer", "Init", emptyMap(),
         family = "grand",
