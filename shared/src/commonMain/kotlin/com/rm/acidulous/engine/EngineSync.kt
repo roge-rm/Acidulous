@@ -996,7 +996,7 @@ object EngineSync {
                 // Unchanged since the last push? Then it's one lookup, not a marshal.
                 // A singer's words depend on the accent and on whether the
                 // dictionary has loaded yet, not only on the clip.
-                val sings = MachineUi.takesWords(track.machine.type) && clip.notes.any { it.lyric.isNotBlank() }
+                val sings = MachineUi.sendsWords(track) && clip.notes.any { it.lyric.isNotBlank() }
                 val accent = Accent.of(MachineUi.wordsAccent(track.machine.type, track.machine.params))
                 val rev = lockedRev(track, clip).let { r ->
                     if (implicit.isEmpty()) r else r xor (implicit.sorted().hashCode().toLong() shl 20) xor 0x5a5a
