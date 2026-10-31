@@ -5337,6 +5337,8 @@ private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf",
 private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
 
 /** Where a Fathom macro route goes, in the engine's MacroDest order. */
+private val FATHOM_KEY_SOURCES = listOf("chord", "scale")
+
 val FATHOM_MACRO_DESTS = listOf(
     "off", "density", "size", "rise", "decay", "gust", "whistle", "tone",
     "waves", "spread", "fade", "velocity", "volume",
@@ -5401,6 +5403,12 @@ private fun FathomPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int
                 }
                 Group("rain") {
                     PanelStepKnob(b, "surface", FATHOM_SURFACES, "surface")
+                }
+                Group("key~music") {
+                    PanelKnob(b, "snap", "snap", PanelAmber)
+                    PanelStepKnob(b, "snap_to", FATHOM_KEY_SOURCES, "onto")
+                    PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
+                    PanelStepKnob(b, "key", POLLEN_KEYS, "key~music")
                 }
             }
             2 -> {

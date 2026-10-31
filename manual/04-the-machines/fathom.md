@@ -34,6 +34,24 @@ note the wind whistles; the velocity sets how much.
 - **surface** - what the rain or hail falls on: **water**, **leaves**,
   **tin** or a **window**.
 
+## Key
+
+The **key** card puts the bubbles and drips in key, so the water plays
+along with the song.
+
+- **snap** - how many of them land on a note of the key. At 0 they're free,
+  at 1 every one is on a note, in whatever octave it's nearest.
+- **onto** - **chord**, the notes you're holding on the track, or
+  **scale**, the scale and key set next to it. With chord, hold or play a
+  new chord and the next bubbles take its notes.
+- **scale** and **key** - the scale for **onto scale**.
+
+The notes follow the track's tuning. Rain on water catches more bubbles as
+the snap goes up, so it sings the chord. Turn the **rise** down for bubbles
+that hold their note, and the **size** up to spread them over more octaves.
+Wind, fire, hail and the roof or window the rain falls on aren't pitched,
+so the key doesn't move them.
+
 ## Weather
 
 - **gust** - how much the wind, the fire and the waves come and go.
@@ -81,3 +99,6 @@ macro's name to rename it.
 - **Bubble Notes** and **Drip Notes** have no density: each note is one
   bubble or drip, tuned, for melodies.
 - **Whistling Wind** plays the note you hold: try slow chords.
+- **Bubble Chords**, **Tuned Drips** and **Rain in the Key** follow the
+  chord you hold, and **Pentatonic Brook** a scale: set its key to the
+  song's.

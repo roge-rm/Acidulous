@@ -992,6 +992,12 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**rise** - how far a bubble's pitch climbs as it nears the surface."),
         ManualBlock(ManualKind.Bullet, "**decay** - how long each bubble rings."),
         ManualBlock(ManualKind.Bullet, "**surface** - what the rain or hail falls on: **water**, **leaves**, **tin** or a **window**."),
+        ManualBlock(ManualKind.Heading, "Key"),
+        ManualBlock(ManualKind.Para, "The **key** card puts the bubbles and drips in key, so the water plays along with the song."),
+        ManualBlock(ManualKind.Bullet, "**snap** - how many of them land on a note of the key. At 0 they're free, at 1 every one is on a note, in whatever octave it's nearest."),
+        ManualBlock(ManualKind.Bullet, "**onto** - **chord**, the notes you're holding on the track, or **scale**, the scale and key set next to it. With chord, hold or play a new chord and the next bubbles take its notes."),
+        ManualBlock(ManualKind.Bullet, "**scale** and **key** - the scale for **onto scale**."),
+        ManualBlock(ManualKind.Para, "The notes follow the track's tuning. Rain on water catches more bubbles as the snap goes up, so it sings the chord. Turn the **rise** down for bubbles that hold their note, and the **size** up to spread them over more octaves. Wind, fire, hail and the roof or window the rain falls on aren't pitched, so the key doesn't move them."),
         ManualBlock(ManualKind.Heading, "Weather"),
         ManualBlock(ManualKind.Bullet, "**gust** - how much the wind, the fire and the waves come and go."),
         ManualBlock(ManualKind.Bullet, "**whistle** - wind caught in a gap, whistling on the note."),
@@ -1013,6 +1019,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "**Bubble Notes** and **Drip Notes** have no density: each note is one bubble or drip, tuned, for melodies."),
         ManualBlock(ManualKind.Bullet, "**Whistling Wind** plays the note you hold: try slow chords."),
+        ManualBlock(ManualKind.Bullet, "**Bubble Chords**, **Tuned Drips** and **Rain in the Key** follow the chord you hold, and **Pentatonic Brook** a scale: set its key to the song's."),
     ))
 
     private fun en3_24() = ManualSection("Molt", "Sing a take in, and the piano roll tunes it.", listOf(
@@ -3305,6 +3312,12 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**montée** : de combien monte une bulle en approchant de la surface."),
         ManualBlock(ManualKind.Bullet, "**déclin** : combien de temps sonne chaque bulle."),
         ManualBlock(ManualKind.Bullet, "**surface** : ce sur quoi tombent la pluie ou la grêle : **eau**, **feuilles**, **tôle** ou **fenêtre**."),
+        ManualBlock(ManualKind.Heading, "Tonalité"),
+        ManualBlock(ManualKind.Para, "La carte **tonalité** met les bulles et les gouttes dans le ton, pour que l’eau joue avec la chanson."),
+        ManualBlock(ManualKind.Bullet, "**aimant** : combien d’entre elles tombent sur une note de la tonalité. À 0, elles sont libres; à 1, toutes sont sur une note, dans l’octave la plus proche."),
+        ManualBlock(ManualKind.Bullet, "**sur** : **accord**, les notes tenues sur la piste, ou **gamme**, la gamme et la tonalité réglées à côté. Avec accord, tenez ou jouez un nouvel accord et les bulles suivantes prennent ses notes."),
+        ManualBlock(ManualKind.Bullet, "**gamme** et **tonalité** : la gamme pour **sur gamme**."),
+        ManualBlock(ManualKind.Para, "Les notes suivent l’accordage de la piste. La pluie sur l’eau prend plus de bulles quand l’aimant monte, et chante l’accord. Baissez la **montée** pour des bulles qui tiennent leur note, et montez la **taille** pour les étaler sur plus d’octaves. Le vent, le feu, la grêle et le toit ou la fenêtre sous la pluie n’ont pas de hauteur : la tonalité ne les change pas."),
         ManualBlock(ManualKind.Heading, "Temps"),
         ManualBlock(ManualKind.Bullet, "**rafale** : combien le vent, le feu et les vagues vont et viennent."),
         ManualBlock(ManualKind.Bullet, "**sifflement** : le vent pris dans une fente, qui siffle sur la note."),
@@ -3326,6 +3339,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "**Bubble Notes** et **Drip Notes** n’ont pas de densité : chaque note est une bulle ou une goutte accordée, pour jouer des mélodies."),
         ManualBlock(ManualKind.Bullet, "**Whistling Wind** joue la note tenue : essayez des accords lents."),
+        ManualBlock(ManualKind.Bullet, "**Bubble Chords**, **Tuned Drips** et **Rain in the Key** suivent l’accord tenu, et **Pentatonic Brook** une gamme : réglez sa tonalité sur celle de la chanson."),
     ))
 
     private fun fr3_24() = ManualSection("Molt", "Chantez une prise, et la grille de notes l’accorde.", listOf(

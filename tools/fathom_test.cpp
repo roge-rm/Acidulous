@@ -216,6 +216,109 @@ void textures() {
     }
 }
 
+/** Plays [seconds] and returns the pitch of each new ringing grain. */
+std::vector<double> rings(Water &g, double seconds) {
+    std::vector<double> got;
+    float L[kBlock], R[kBlock];
+    uint32_t n = g.f->ringsStarted();
+    for (int b = 0; b < static_cast<int>(seconds * kRate / kBlock); ++b) {
+        g.f->onBlock(0, 0, 120.0f);
+        g.f->render(L, R, kBlock);
+        if (g.f->ringsStarted() != n) got.push_back(g.f->lastRingHz());
+        n = g.f->ringsStarted();
+    }
+    return got;
+}
+
+/** The share of [hz] within 3 cents of a pitch class in [classes] (0 = C). */
+double inKey(const std::vector<double> &hz, std::initializer_list<int> classes) {
+    if (hz.empty()) return 0.0;
+    int in = 0;
+    for (double f : hz) {
+        const double note = 69.0 + 12.0 * std::log2(f / 440.0);
+        bool ok = false;
+        for (int c : classes) {
+            double d = std::fmod(note - c, 12.0);
+            if (d < 0) d += 12.0;
+            ok = ok || std::fmin(d, 12.0 - d) < 0.03;
+        }
+        in += ok ? 1 : 0;
+    }
+    return static_cast<double>(in) / static_cast<double>(hz.size());
+}
+
+void key() {
+    std::printf("- the key\n");
+    auto chord = [](float snap) {
+        Water g({{"model", Bubbles}, {"size", 12.0f}, {"rise", 0.0f}, {"density", 1.0f}, {"snap", snap}});
+        for (int n : {60, 64, 67}) g.f->noteOn(static_cast<uint8_t>(n), 100);
+        return rings(g, 3.0);
+    };
+    const auto free = chord(0.0f), half = chord(0.5f), full = chord(1.0f);
+    const double f0 = inKey(free, {0, 4, 7}), f5 = inKey(half, {0, 4, 7}), f1 = inKey(full, {0, 4, 7});
+    check(full.size() > 50 && f1 > 0.999, "snapped, every bubble lands on the held chord", fmt("%.0f%% of %zu", 100 * f1, full.size()));
+    check(f0 < 0.1, "free, they don't", fmt("%.0f%%", 100 * f0));
+    check(f5 > f0 + 0.2 && f5 < f1 - 0.2, "half way, some do", fmt("%.0f%%", 100 * f5));
+    {
+        // The chord changes: new bubbles take the new notes.
+        Water g({{"model", Bubbles}, {"size", 12.0f}, {"rise", 0.0f}, {"density", 1.0f}, {"snap", 1.0f}});
+        for (int n : {60, 64, 67}) g.f->noteOn(static_cast<uint8_t>(n), 100);
+        rings(g, 1.0);
+        for (int n : {60, 64, 67}) g.f->noteOff(static_cast<uint8_t>(n));
+        for (int n : {62, 66, 69}) g.f->noteOn(static_cast<uint8_t>(n), 100);
+        const auto next = rings(g, 2.0);
+        check(next.size() > 20 && inKey(next, {2, 6, 9}) > 0.999, "a new chord moves the bubbles to it", fmt("%.0f%% of %zu", 100 * inKey(next, {2, 6, 9}), next.size()));
+    }
+    {
+        // A scale: D minor pentatonic, from one held note off the scale.
+        Water g({{"model", Stream}, {"size", 12.0f}, {"rise", 0.0f}, {"density", 1.0f}, {"snap", 1.0f},
+                 {"snap_to", 1.0f}, {"scale", 10.0f}, {"key", 2.0f}});
+        g.f->noteOn(61, 100);
+        const auto got = rings(g, 2.0);
+        check(got.size() > 50 && inKey(got, {2, 5, 7, 9, 0}) > 0.999, "a scale puts the stream in it", fmt("%.0f%% of %zu", 100 * inKey(got, {2, 5, 7, 9, 0}), got.size()));
+    }
+    {
+        // A kit: a held pad gives its note as set now, and a fire pad has no pitch to give.
+        Water g({{"kit", 1.0f}, {"p01_model", Bubbles}, {"p01_note", 60.0f}, {"p01_density", 1.0f},
+                 {"p02_model", Fire}, {"p02_note", 61.0f}, {"size", 12.0f}, {"rise", 0.0f}, {"snap", 1.0f}});
+        g.f->noteOn(36, 100);
+        g.f->noteOn(37, 100);
+        const auto first = rings(g, 1.5);
+        g.set("p01_note", 62.0f);
+        rings(g, 0.1);
+        const auto moved = rings(g, 1.5);
+        check(first.size() > 20 && inKey(first, {0}) > 0.999, "a kit's chord is its pitched pads", fmt("%.0f%% of %zu", 100 * inKey(first, {0}), first.size()));
+        check(moved.size() > 20 && inKey(moved, {2}) > 0.999, "and follows a held pad's note", fmt("%.0f%% of %zu", 100 * inKey(moved, {2}), moved.size()));
+    }
+    {
+        // A stretched tuning, 1.3 semitones a key, played an octave up: the drops land on the note the voice plays.
+        static float table[128];
+        for (int n = 0; n < 128; ++n) table[n] = static_cast<float>(std::pow(2.0, (n - 60) * 0.3 / 12.0));
+        Water g({{"model", Bubbles}, {"size", 12.0f}, {"rise", 0.0f}, {"density", 1.0f}, {"snap", 1.0f}, {"octave", 1.0f}});
+        g.f->setTuning(table);
+        g.f->noteOn(60, 100);
+        const auto got = rings(g, 2.0);
+        const double want = 69.0 + 12.0 * std::log2(noteHz(72) * table[72] / 440.0);
+        int in = 0;
+        for (double f : got) {
+            double d = std::fmod(69.0 + 12.0 * std::log2(f / 440.0) - want, 12.0);
+            if (d < 0) d += 12.0;
+            in += std::fmin(d, 12.0 - d) < 0.03 ? 1 : 0;
+        }
+        check(got.size() > 20 && in == static_cast<int>(got.size()), "in a tuning and an octave up, on the tuned note", fmt("%d of %zu", in, got.size()));
+    }
+    {
+        // The rain catches more bubbles in the key, so it sings it.
+        auto count = [](float snap) {
+            Water g({{"model", Rain}, {"density", 0.6f}, {"snap", snap}});
+            g.f->noteOn(60, 100);
+            return rings(g, 3.0).size();
+        };
+        const size_t off = count(0.0f), on = count(1.0f);
+        check(on > off * 3, "keyed rain carries more bubbles", fmt("%zu against %zu", on, off));
+    }
+}
+
 void lifecycle() {
     std::printf("- extremes\n");
     for (int kind = 0; kind <= Fire; ++kind) {
@@ -237,6 +340,7 @@ void lifecycle() {
 int main() {
     bubbles();
     textures();
+    key();
     lifecycle();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
