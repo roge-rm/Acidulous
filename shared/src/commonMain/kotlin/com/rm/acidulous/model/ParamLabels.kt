@@ -1060,6 +1060,7 @@ private fun labels1(): Map<String, String> = mapOf(
     "Fathom:density" to "bubbles|density",
     "Fathom:fade" to "play|fade",
     "Fathom:gust" to "weather|gust",
+    "Fathom:key" to "key~music",
     "Fathom:kit" to "kit",
     "Fathom:mac1" to "macros|macro 1",
     "Fathom:mac1_a1" to "macro 1|by 1",
@@ -1136,7 +1137,10 @@ private fun labels1(): Map<String, String> = mapOf(
     "Fathom:model" to "instrument|model",
     "Fathom:octave" to "play|octave",
     "Fathom:rise" to "bubbles|rise",
+    "Fathom:scale" to "key~music|scale",
     "Fathom:size" to "bubbles|size",
+    "Fathom:snap" to "key~music|snap",
+    "Fathom:snap_to" to "key~music|onto",
     "Fathom:spread" to "play|spread",
     "Fathom:surface" to "rain|surface",
     "Fathom:swell" to "weather|waves",
@@ -1618,13 +1622,13 @@ private fun labels1(): Map<String, String> = mapOf(
     "Formulate:mac2_a4" to "macro 2|by 4",
     "Formulate:mac2_d1" to "macro 2|to 1",
     "Formulate:mac2_d2" to "macro 2|to 2",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Formulate:mac2_d3" to "macro 2|to 3",
     "Formulate:mac2_d4" to "macro 2|to 4",
     "Formulate:mac3" to "play|macro 3",
     "Formulate:mac3_a1" to "macro 3|by 1",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Formulate:mac3_a2" to "macro 3|by 2",
     "Formulate:mac3_a3" to "macro 3|by 3",
     "Formulate:mac3_a4" to "macro 3|by 4",
@@ -2421,13 +2425,13 @@ private fun labels2(): Map<String, String> = mapOf(
     "Molt:mac6_d2" to "macro 6|to 2",
     "Molt:mac6_d3" to "macro 6|to 3",
     "Molt:mac6_d4" to "macro 6|to 4",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Molt:mac7" to "macros|macro 7",
     "Molt:mac7_a1" to "macro 7|by 1",
     "Molt:mac7_a2" to "macro 7|by 2",
     "Molt:mac7_a3" to "macro 7|by 3",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Molt:mac7_a4" to "macro 7|by 4",
     "Molt:mac7_d1" to "macro 7|to 1",
     "Molt:mac7_d2" to "macro 7|to 2",
@@ -3224,13 +3228,13 @@ private fun labels3(): Map<String, String> = mapOf(
     "Resonance:mac3" to "macros|macro 3",
     "Resonance:mac3_a1" to "macro 3|by 1",
     "Resonance:mac3_a2" to "macro 3|by 2",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Resonance:mac3_a3" to "macro 3|by 3",
     "Resonance:mac3_a4" to "macro 3|by 4",
     "Resonance:mac3_d1" to "macro 3|to 1",
     "Resonance:mac3_d2" to "macro 3|to 2",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Resonance:mac3_d3" to "macro 3|to 3",
     "Resonance:mac3_d4" to "macro 3|to 4",
     "Resonance:mac4" to "macros|macro 4",
@@ -5107,7 +5111,10 @@ private fun short1(): Map<String, String> = mapOf(
     "Fathom:model" to "model",
     "Fathom:octave" to "octave",
     "Fathom:rise" to "rise",
+    "Fathom:scale" to "scale",
     "Fathom:size" to "size",
+    "Fathom:snap" to "snap",
+    "Fathom:snap_to" to "onto",
     "Fathom:spread" to "spread",
     "Fathom:surface" to "surface",
     "Fathom:swell" to "waves",
@@ -5624,12 +5631,12 @@ private fun short1(): Map<String, String> = mapOf(
     "Formulate:mac6_a4" to "by 4",
     "Formulate:mac6_d1" to "to 1",
     "Formulate:mac6_d2" to "to 2",
-    "Formulate:mac6_d3" to "to 3",
-    "Formulate:mac6_d4" to "to 4",
-    "Formulate:mac7" to "macro 7",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Formulate:mac6_d3" to "to 3",
+    "Formulate:mac6_d4" to "to 4",
+    "Formulate:mac7" to "macro 7",
     "Formulate:mac7_a1" to "by 1",
     "Formulate:mac7_a2" to "by 2",
     "Formulate:mac7_a3" to "by 3",
@@ -6427,12 +6434,12 @@ private fun short2(): Map<String, String> = mapOf(
     "Mosaic:e2_decay" to "decay",
     "Mosaic:e2_release" to "release",
     "Mosaic:e2_sustain" to "sustain",
-    "Mosaic:envfrom" to "env from",
-    "Mosaic:f_attack" to "attack",
-    "Mosaic:f_decay" to "decay",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Mosaic:envfrom" to "env from",
+    "Mosaic:f_attack" to "attack",
+    "Mosaic:f_decay" to "decay",
     "Mosaic:f_env" to "envmod",
     "Mosaic:f_freq" to "freq",
     "Mosaic:f_key" to "key",
@@ -7230,12 +7237,12 @@ private fun short3(): Map<String, String> = mapOf(
     "Resonance:mac8_a2" to "by 2",
     "Resonance:mac8_a3" to "by 3",
     "Resonance:mac8_a4" to "by 4",
-    "Resonance:mac8_d1" to "to 1",
-    "Resonance:mac8_d2" to "to 2",
-    "Resonance:mac8_d3" to "to 3",
 )
 
 private fun short4(): Map<String, String> = mapOf(
+    "Resonance:mac8_d1" to "to 1",
+    "Resonance:mac8_d2" to "to 2",
+    "Resonance:mac8_d3" to "to 3",
     "Resonance:mac8_d4" to "to 4",
     "Resonance:modes" to "modes",
     "Resonance:p00_bend" to "amount",

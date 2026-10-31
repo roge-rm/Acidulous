@@ -37,6 +37,25 @@ la note que siffle le vent; la vélocité, la quantité.
 - **surface** : ce sur quoi tombent la pluie ou la grêle : **eau**,
   **feuilles**, **tôle** ou **fenêtre**.
 
+## Tonalité
+
+La carte **tonalité** met les bulles et les gouttes dans le ton, pour que
+l’eau joue avec la chanson.
+
+- **aimant** : combien d’entre elles tombent sur une note de la tonalité.
+  À 0, elles sont libres; à 1, toutes sont sur une note, dans l’octave la
+  plus proche.
+- **sur** : **accord**, les notes tenues sur la piste, ou **gamme**, la
+  gamme et la tonalité réglées à côté. Avec accord, tenez ou jouez un
+  nouvel accord et les bulles suivantes prennent ses notes.
+- **gamme** et **tonalité** : la gamme pour **sur gamme**.
+
+Les notes suivent l’accordage de la piste. La pluie sur l’eau prend plus de
+bulles quand l’aimant monte, et chante l’accord. Baissez la **montée** pour
+des bulles qui tiennent leur note, et montez la **taille** pour les étaler
+sur plus d’octaves. Le vent, le feu, la grêle et le toit ou la fenêtre sous
+la pluie n’ont pas de hauteur : la tonalité ne les change pas.
+
 ## Temps
 
 - **rafale** : combien le vent, le feu et les vagues vont et viennent.
@@ -73,8 +92,10 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace tous les sons, 24 demi-tons
-à 1. Le modèle, l’accordage, la surface, l’octave, le bend et le son, la
-hauteur et le niveau des pads d’un kit ne sont pas accessibles. Dans un kit,
+à 1, et l’aimant met l’eau dans le ton. Le modèle, l’accordage, la surface,
+l’octave, le bend, le **sur**, la **gamme** et la **tonalité** de la carte
+tonalité, et le son, la hauteur et le niveau des pads d’un kit ne sont pas
+accessibles. Dans un kit,
 les routes bougent les boutons que tous les pads partagent, et la densité
 bouge aussi la densité de chaque pad. Un changement de taille, de montée, de
 déclin ou d’écart s’entend à la bulle, à la goutte ou au crépitement suivant;
@@ -85,3 +106,6 @@ le reste bouge tout de suite. Touchez le nom d’une macro pour la renommer.
 - **Bubble Notes** et **Drip Notes** n’ont pas de densité : chaque note est
   une bulle ou une goutte accordée, pour jouer des mélodies.
 - **Whistling Wind** joue la note tenue : essayez des accords lents.
+- **Bubble Chords**, **Tuned Drips** et **Rain in the Key** suivent
+  l’accord tenu, et **Pentatonic Brook** une gamme : réglez sa tonalité sur
+  celle de la chanson.
