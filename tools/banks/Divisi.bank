@@ -1,0 +1,2697 @@
+# Divisi - the string ensemble: twelve top oscillators divided down in
+# octaves, keys gated into six registers (violin, viola, cello, contrabass,
+# choir and brass), one shared envelope or one per note, then a thick chorus
+# and a phaser.
+#
+# Each patch plays the `pad` phrase, four held chords, except the brass
+# patches, which play `chord`. 64 patches in six families: strings, low,
+# choir, brass, layers and motion.
+#
+# Levels: every patch is levelled by `volume` to about -29.5 on `loud`, one
+# note at its own note. A chord of four reads about 6 dB louder. Patches with
+# a slow attack read lower, since a single note never reaches full in the
+# measured window. The choir is even across the keyboard and the vowels, so a
+# choir patch reads the same on any note. Violin and viola peak about 15 dB
+# over their rms, so a big chord at full velocity can still peak near full
+# scale; the master's limiter takes that.
+#
+# Every patch but Init carries eight named macros. Destinations are numbered
+# as in Divisi.h's MacroDest: #1 violin, #2 viola, #3 cello, #4 contrabass,
+# #5 choir, #6 vowel, #7 brass, #8 sweep, #9 brass decay, #10 blat, #11 tone,
+# #12 attack, #13 release, #14 ensemble, #15 speed, #16 phaser, #17 rate,
+# #18 feedback, #19 velocity, #20 volume, #21 pitch (24 semitones a unit).
+# The set is the same on every patch: Bright, Swell, Longer, Lush, Voices,
+# Brass, Phase and Low. A macro whose knob has no room left goes the other way
+# under the opposite name (Dark, Sharper, Shorter, Drier, Light, ...), and a
+# patch already full of choir or brass gets Vowel or Blat in its place. Where
+# a macro at full moves the level by more than 1.2 dB, a volume route takes it
+# back out.
+#
+# Values are in each parameter's own units; `audition params Divisi` lists
+# them. A patch names only what it changes.
+
+machine Divisi
+role    pad
+
+# --- strings ------------------------------------------------------------------
+
+patch Init family=strings note=60 range=36..84
+
+patch "Full Strings" family=strings note=60 range=36..84
+  # Violins, violas and cellos, a little more chorus.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.153
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.134
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.194
+  mac8_d1  #4
+  mac8_a1  0.5
+  viola          0.7
+  cello          0.6
+  ensemble       0.8
+  volume         0.556
+
+patch "Bright Violins" family=strings note=60 range=36..84
+  # Violins alone, opened up.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.207
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.247
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         1
+  viola          0.2
+  cello          0
+  tone           0.75
+  volume         0.708
+
+patch "Warm Section" family=strings note=60 range=36..84
+  # Violas and cellos in front, the violins behind.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.141
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.247
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.3
+  viola          0.8
+  cello          0.6
+  tone           0.35
+  volume         0.638
+
+patch "Slow Strings" family=strings note=60 range=36..84
+  # A long swell in and a long fall away.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.173
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.256
+  mac8_d1  #4
+  mac8_a1  0.5
+  attack         1.5
+  release        4
+  volume         0.589
+
+patch "Quick Strings" family=strings note=60 range=36..84
+  # Each note its own short bow.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.173
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.256
+  mac8_d1  #4
+  mac8_a1  0.5
+  mode           1
+  attack         0.02
+  release        0.6
+  volume         0.603
+
+patch Chamber family=strings note=60 range=36..84
+  # Less chorus, so it sounds like fewer players.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.186
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.084
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.186
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.6
+  viola          0.6
+  tone           0.55
+  ensemble       0.3
+  volume         0.427
+
+patch "Poly Section" family=strings note=60 range=36..84
+  # Each note swells on its own.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.153
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.242
+  mac8_d1  #4
+  mac8_a1  0.5
+  viola          0.6
+  mode           1
+  attack         0.15
+  release        1.2
+  volume         0.569
+
+patch Silk family=strings note=60 range=36..84
+  # Dark and slow-moving chorus.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.199
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.175
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.187
+  mac8_d1  #4
+  mac8_a1  0.5
+  viola          0.6
+  tone           0.3
+  ensemble       0.9
+  speed          0.3
+  volume         0.645
+
+patch "High Octave" family=strings note=60 range=36..84
+  # An octave up, violins only.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.105
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.093
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.224
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.9
+  viola          0.3
+  cello          0
+  tone           0.6
+  octave         1
+  volume         0.624
+
+patch "Wide Section" family=strings note=60 range=36..84
+  # Everything from violins to basses, the chorus deep and quick.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.097
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.125
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.173
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.7
+  viola          0.6
+  cello          0.7
+  contrabass     0.3
+  ensemble       1
+  speed          0.6
+  volume         0.519
+
+patch Lento family=strings note=60 range=36..84
+  # Three seconds in, eight out.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac2_d2  #20
+  mac2_a2  -0.338
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.294
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.227
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.21
+  mac8_d1  #4
+  mac8_a1  0.5
+  attack         3
+  release        8
+  ensemble       0.8
+  speed          0.25
+  volume         0.669
+
+
+# --- low ----------------------------------------------------------------------
+
+patch Cellos family=low note=43 range=24..60
+  # Cellos and a little viola.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.092
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.149
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.141
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0.3
+  cello          1
+  volume         0.794
+
+patch Basses family=low note=43 range=24..60
+  # Contrabasses with the cellos under them.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.093
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.178
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.224
+  violin         0
+  viola          0
+  cello          0.6
+  contrabass     1
+  volume         0.776
+
+patch "Low Section" family=low note=43 range=24..60
+  # Violas, cellos and basses.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.096
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.14
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.176
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.127
+  violin         0
+  viola          0.4
+  cello          0.8
+  contrabass     0.6
+  volume         0.785
+
+patch "Bass Pedal" family=low note=43 range=24..60
+  # Short bass notes to play a line with.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.093
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.168
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.224
+  violin         0
+  viola          0
+  cello          0.6
+  contrabass     1
+  mode           1
+  attack         0.05
+  release        0.8
+  volume         0.776
+
+patch "Dark Cellos" family=low note=43 range=24..60
+  # Cellos with the top taken off.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.103
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.116
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0.4
+  cello          1
+  tone           0.25
+  volume         0.776
+
+patch "Deep Swell" family=low note=43 range=24..60
+  # Cellos and basses rising slowly.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.176
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.093
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.178
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.173
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.244
+  violin         0
+  viola          0
+  cello          0.7
+  contrabass     0.9
+  attack         2
+  release        5
+  volume         0.668
+
+patch "Low Choir" family=low note=43 range=24..60
+  # A dark ooh over cellos and basses.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.123
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac5_d2  #20
+  mac5_a2  -0.101
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.203
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0.7
+  contrabass     0.4
+  choir          0.9
+  vowel          0.1
+  volume         0.638
+
+patch "Low Brass" family=low note=43 range=24..60 role=chord
+  # Brass and basses, slow to open.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.072
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.096
+  violin         0
+  viola          0
+  cello          0
+  contrabass     0.5
+  brass          1
+  sweep          0.5
+  mode           1
+  attack         0.05
+  release        0.5
+  volume         0.550
+
+patch "Sub Octave" family=low note=55 range=36..72
+  # The section an octave down.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.053
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.299
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.077
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.6
+  viola          0.6
+  cello          0.4
+  octave         -1
+  volume         0.923
+
+patch Undertow family=low note=43 range=24..60
+  # Cellos and basses through a slow phaser.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Light"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.078
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  -0.159
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac8_d1  #4
+  mac8_a1  -0.5
+  mac8_d2  #20
+  mac8_a2  0.177
+  violin         0
+  viola          0
+  cello          0.9
+  contrabass     0.7
+  phaser         0.4
+  rate           0.1
+  feedback       0.5
+  volume         0.724
+
+
+# --- choir --------------------------------------------------------------------
+
+patch "Aah Choir" family=choir note=60 range=36..84
+  # The choir alone on an open aah.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.093
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.254
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  volume         0.531
+
+patch "Ooh Choir" family=choir note=60 range=36..84
+  # A round, dark ooh.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.126
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac5_d2  #20
+  mac5_a2  0.034
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.144
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.123
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  vowel          0
+  volume         0.610
+
+patch "Oh Choir" family=choir note=60 range=36..84
+  # Between ooh and aah.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac5_d2  #20
+  mac5_a2  0.032
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.174
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.262
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  vowel          0.25
+  volume         0.636
+
+patch "Eh Choir" family=choir note=60 range=36..84
+  # Brighter and more nasal.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.09
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.107
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.248
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.119
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  vowel          0.75
+  volume         0.651
+
+patch "Ee Choir" family=choir note=60 range=36..84
+  # The thinnest vowel, high and bright.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.117
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.093
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.101
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.113
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  vowel          1
+  volume         0.602
+
+patch "Choir and Strings" family=choir note=60 range=36..84
+  # The choir with the section under it.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.229
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.5
+  viola          0.4
+  cello          0.3
+  choir          0.7
+  volume         0.496
+
+patch "Distant Voices" family=choir note=60 range=36..84
+  # Far off and slow, the chorus deep.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Drier"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.09
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.123
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          1
+  vowel          0.3
+  tone           0.35
+  attack         1.2
+  release        4
+  ensemble       1
+  volume         0.565
+
+patch "Bright Choir" family=choir note=60 range=36..84
+  # An aah opened up.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.007
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.208
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  vowel          0.6
+  tone           0.8
+  volume         0.622
+
+patch "Poly Choir" family=choir note=60 range=36..84
+  # Each voice its own breath.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.093
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.254
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.9
+  mode           1
+  attack         0.1
+  release        1
+  volume         0.531
+
+patch "Cathedral Air" family=choir note=60 range=36..84
+  # Voices and violas that take two seconds to arrive.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Drier"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac2_d2  #20
+  mac2_a2  -0.115
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.149
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.012
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.383
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0.3
+  cello          0
+  choir          0.7
+  attack         2
+  release        7
+  ensemble       0.9
+  speed          0.3
+  volume         0.617
+
+patch Chant family=choir note=60 range=36..84
+  # A low oh with cellos, little chorus.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.175
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac5_d2  #20
+  mac5_a2  0.064
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.129
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.205
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0.3
+  choir          0.9
+  vowel          0.2
+  tone           0.4
+  ensemble       0.4
+  volume         0.449
+
+
+# --- brass --------------------------------------------------------------------
+
+patch "Brass Section" family=brass note=60 range=36..84 role=chord
+  # Bright brass, each note its own filter.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.007
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.07
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.119
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.196
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  mode           1
+  attack         0.01
+  release        0.3
+  volume         0.881
+
+patch "Soft Brass" family=brass note=60 range=36..84 role=chord
+  # Mellow, a gentle opening.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.004
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.087
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.067
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.206
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.4
+  blat           0.2
+  tone           0.45
+  mode           1
+  attack         0.08
+  release        0.4
+  volume         0.933
+
+patch "Blat Brass" family=brass note=60 range=36..84 role=chord
+  # A hard bite at the start of each note.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Smooth"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.011
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.224
+  mac6_d1  #10
+  mac6_a1  -0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.139
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.159
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.8
+  brassdecay     0.5
+  blat           1
+  mode           1
+  attack         0.005
+  release        0.3
+  volume         0.861
+
+patch "Brass Swell" family=brass note=60 range=36..84 role=chord
+  # One filter for all the notes, opening slowly.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.005
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.11
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.109
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.187
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.5
+  brassdecay     2.5
+  attack         0.8
+  release        1
+  volume         0.891
+
+patch "Stab Brass" family=brass note=60 range=36..84 role=chord
+  # Short and bright for stabs.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Smooth"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.004
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.093
+  mac6_d1  #10
+  mac6_a1  -0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.149
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.178
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.9
+  brassdecay     0.25
+  blat           0.7
+  mode           1
+  attack         0.003
+  release        0.15
+  volume         0.851
+
+patch "Para Brass" family=brass note=60 range=36..84 role=chord
+  # Every key opens the one filter: play legato.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.01
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.087
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.129
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.187
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.7
+  brassdecay     1.2
+  blat           0.6
+  attack         0.02
+  release        0.4
+  volume         0.871
+
+patch "Brass and Strings" family=brass note=60 range=36..84 role=chord
+  # Brass over the section.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.266
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.139
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.147
+  violin         0.5
+  viola          0.4
+  cello          0.3
+  brass          0.8
+  sweep          0.5
+  mode           1
+  attack         0.05
+  release        0.6
+  volume         0.861
+
+patch "Bright Fanfare" family=brass note=60 range=36..84 role=chord
+  # Wide open with a bit of blat.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.013
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.02
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.159
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.178
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          1
+  blat           0.6
+  tone           0.8
+  mode           1
+  attack         0.01
+  release        0.3
+  volume         0.841
+
+patch "Mellow Horns" family=brass note=60 range=36..84 role=chord
+  # Dark horns with some chorus.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac1_d2  #20
+  mac1_a2  -0.113
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.241
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.083
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.197
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.196
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.3
+  brassdecay     1.5
+  blat           0.3
+  tone           0.35
+  mode           1
+  attack         0.06
+  release        0.6
+  ensemble       0.4
+  volume         0.759
+
+patch "Dark Brass" family=brass note=60 range=36..84 role=chord
+  # A closed filter that stays closed.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.018
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.151
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.077
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.187
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.45
+  brassdecay     3
+  tone           0.35
+  mode           1
+  attack         0.03
+  release        0.5
+  volume         0.923
+
+patch "Brass Choir" family=brass note=60 range=36..84 role=chord
+  # Brass and voices together.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.022
+  mac5_d1  #6
+  mac5_a1  0.4
+  mac5_d2  #20
+  mac5_a2  0.163
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac6_d2  #20
+  mac6_a2  -0.231
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.163
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.106
+  violin         0
+  viola          0
+  cello          0
+  choir          0.8
+  vowel          0.4
+  brass          1
+  mode           1
+  attack         0.04
+  release        0.6
+  volume         0.837
+
+
+# --- layers -------------------------------------------------------------------
+
+patch Everything family=layers note=60 range=36..84
+  # All six registers at once.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.202
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.073
+  violin         0.6
+  contrabass     0.4
+  choir          0.5
+  brass          0.5
+  volume         0.490
+
+patch "Orchestra Pad" family=layers note=60 range=36..84
+  # The section with a little brass and choir.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.198
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.222
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.093
+  violin         0.6
+  contrabass     0.4
+  choir          0.3
+  brass          0.4
+  sweep          0.4
+  brassdecay     2
+  volume         0.550
+
+patch "Vox Brass" family=layers note=60 range=36..84
+  # A bright ee over brass.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.138
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  -0.115
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.217
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          1
+  vowel          0.8
+  brass          0.6
+  mode           1
+  attack         0.05
+  release        0.8
+  volume         0.822
+
+patch "Hall Pad" family=layers note=60 range=36..84
+  # Violins, cellos and voices, slow.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.271
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.6
+  viola          0
+  choir          0.5
+  attack         1
+  release        5
+  volume         0.575
+
+patch "Glass Section" family=layers note=60 range=36..84
+  # Violins an octave up with an ee on top.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.13
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.181
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.9
+  viola          0
+  cello          0
+  choir          0.3
+  vowel          1
+  tone           0.9
+  octave         1
+  volume         0.661
+
+patch Dusk family=layers note=60 range=36..84
+  # Violas, cellos and an ooh, dark and slow.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.168
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.259
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0.7
+  cello          0.6
+  choir          0.4
+  vowel          0.2
+  tone           0.25
+  attack         1.4
+  release        3
+  volume         0.618
+
+patch "Swell and Bite" family=layers note=60 range=36..84
+  # Strings and brass with a bite.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.397
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.0
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.224
+  violin         0.6
+  cello          0
+  brass          0.6
+  sweep          0.7
+  blat           0.6
+  mode           1
+  attack         0.4
+  volume         1
+
+patch "Poly Ensemble" family=layers note=60 range=36..84
+  # Strings and choir, each note its own.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.198
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.252
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.6
+  choir          0.3
+  mode           1
+  attack         0.05
+  release        0.9
+  volume         0.576
+
+patch "Morning Mist" family=layers note=60 range=36..84
+  # An ee and the violins, very slow, deep chorus.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Drier"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac2_d2  #20
+  mac2_a2  -0.372
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac3_d2  #20
+  mac3_a2  0.149
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac4_d2  #20
+  mac4_a2  -0.146
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac5_d2  #20
+  mac5_a2  0.019
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac6_d2  #20
+  mac6_a2  0.149
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.114
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.5
+  viola          0
+  cello          0
+  choir          0.5
+  vowel          0.9
+  tone           0.6
+  attack         2.5
+  release        5
+  ensemble       1
+  speed          0.2
+  volume         0.851
+
+patch Sunrise family=layers note=60 range=36..84
+  # Strings with brass that opens over seconds.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac2_d2  #20
+  mac2_a2  -0.272
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.242
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.233
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.108
+  violin         0.7
+  cello          0.4
+  brass          0.4
+  sweep          0.4
+  brassdecay     3
+  attack         3
+  release        6
+  volume         0.684
+
+
+# --- motion -------------------------------------------------------------------
+
+patch "Phased Strings" family=motion note=60 range=36..84
+  # The section through the phaser.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.127
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.172
+  mac8_d1  #4
+  mac8_a1  0.5
+  phaser         0.7
+  rate           0.3
+  feedback       0.5
+  volume         0.803
+
+patch "Slow Phase" family=motion note=60 range=36..84
+  # A slow sweep under a slow swell.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.175
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.217
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.187
+  attack         1.5
+  release        4
+  phaser         0.8
+  rate           0.08
+  feedback       0.6
+  volume         0.803
+
+patch "Fast Shimmer" family=motion note=60 range=36..84
+  # The chorus at its deepest and quickest.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac1_d2  #20
+  mac1_a2  0.09
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.115
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.171
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0.9
+  tone           0.65
+  ensemble       1
+  speed          1
+  volume         0.537
+
+patch "Dry Section" family=motion note=60 range=36..84
+  # No chorus at all: the dividers as they are.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Phase"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.14
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.065
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  0.6
+  mac7_d2  #20
+  mac7_a2  0.11
+  mac8_d1  #4
+  mac8_a1  0.5
+  viola          0.6
+  ensemble       0
+  volume         0.302
+
+patch "Jet Phase" family=motion note=60 range=36..84
+  # A bright section and a phaser fed back hard.
+  set macro1 "Dark"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  -0.4
+  mac1_d2  #20
+  mac1_a2  0.115
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.03
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.152
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.091
+  tone           0.8
+  phaser         1
+  rate           0.15
+  feedback       0.85
+  volume         0.512
+
+patch "Phased Choir" family=motion note=60 range=36..84
+  # An aah through the phaser.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Vowel"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.131
+  mac5_d1  #6
+  mac5_a1  -0.4
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.232
+  mac8_d1  #4
+  mac8_a1  0.5
+  violin         0
+  viola          0
+  cello          0
+  choir          0.85
+  phaser         0.6
+  rate           0.2
+  feedback       0.5
+  volume         0.751
+
+patch "Phased Brass" family=motion note=60 range=36..84 role=chord
+  # Brass with a quick phaser.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Blat"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.011
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac6_d1  #10
+  mac6_a1  0.4
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.139
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.196
+  violin         0
+  viola          0
+  cello          0
+  brass          1
+  sweep          0.8
+  mode           1
+  attack         0.02
+  release        0.4
+  phaser         0.4
+  rate           0.5
+  volume         1
+
+patch Warble family=motion note=60 range=36..84
+  # Quick chorus and quick phaser.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Drier"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  -0.5
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.16
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.141
+  mac8_d1  #4
+  mac8_a1  0.5
+  ensemble       1
+  speed          1
+  phaser         0.4
+  rate           2
+  volume         0.742
+
+patch Tidal family=motion note=60 range=36..84
+  # Strings and basses moving in and out over seconds.
+  set macro1 "Bright"
+  set macro2 "Sharper"
+  set macro3 "Shorter"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  -0.35
+  mac2_d2  #20
+  mac2_a2  -0.328
+  mac3_d1  #13
+  mac3_a1  -0.3
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  0.107
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.062
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.099
+  mac8_d1  #4
+  mac8_a1  0.5
+  mac8_d2  #20
+  mac8_a2  -0.132
+  contrabass     0.4
+  attack         4
+  release        10
+  phaser         0.7
+  rate           0.05
+  feedback       0.7
+  volume         0.617
+
+patch "Spin Cycle" family=motion note=60 range=36..84
+  # A fast phaser, light feedback.
+  set macro1 "Bright"
+  set macro2 "Swell"
+  set macro3 "Longer"
+  set macro4 "Lush"
+  set macro5 "Voices"
+  set macro6 "Brass"
+  set macro7 "Still"
+  set macro8 "Low"
+  mac1_d1  #11
+  mac1_a1  0.35
+  mac2_d1  #12
+  mac2_a1  0.2
+  mac3_d1  #13
+  mac3_a1  0.2
+  mac4_d1  #14
+  mac4_a1  0.3
+  mac4_d2  #15
+  mac4_a2  0.15
+  mac4_d3  #20
+  mac4_a3  -0.031
+  mac5_d1  #5
+  mac5_a1  0.5
+  mac5_d2  #20
+  mac5_a2  -0.179
+  mac6_d1  #7
+  mac6_a1  0.5
+  mac7_d1  #16
+  mac7_a1  -0.6
+  mac7_d2  #20
+  mac7_a2  -0.231
+  mac8_d1  #4
+  mac8_a1  0.5
+  viola          0.6
+  phaser         0.9
+  rate           3
+  feedback       0.3
+  volume         0.832

@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Divisi, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -28,6 +28,7 @@
 #include <engine/machine/tongue/Tongue.h>
 #include <engine/machine/sympath/Sympath.h>
 #include <engine/machine/chanter/Chanter.h>
+#include <engine/machine/divisi/Divisi.h>
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <engine/machine/diction/Diction.h>
@@ -2312,6 +2313,11 @@ int main() {
     using Ch = acidulous::machine::Chanter;
     basics("Chanter", Ch::MacroDestCount, Ch::McVolume, Ch::McPitch, Ch::McOff, Ch::kMacros);
     chanterRoutes();
+    using Dv = acidulous::machine::Divisi;
+    // Violins alone and no chorus, so the zero crossings count the note.
+    gUnits = {{"viola", 0.0f}, {"cello", 0.0f}, {"ensemble", 0.0f}};
+    basics("Divisi", Dv::MacroDestCount, Dv::McVolume, Dv::McPitch, Dv::McOff, Dv::kMacros);
+    gUnits.clear();
     using Po = acidulous::machine::Pollen;
     // Volume 0.8 of 1.5: a route of -0.5 leaves 0.05, and half of it 0.425.
     basics("Pollen", Po::MacroDestCount, Po::McVolume, Po::McPitch, Po::McOff, Po::kMacros, 0.05 / 0.8, 0.425 / 0.8);

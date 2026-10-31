@@ -41,6 +41,7 @@ There are 31 machines. Each has patches to start from and a [manual page](manual
 | Machine | What it does |
 |---|---|
 | Cumulus | Pads built from a spectrum of partials. |
+| Divisi | String ensemble with choir and brass. |
 | Formulate | An 8-bit chip synth with tables and formula waveforms. |
 | Ratio | Six-operator FM with morphing algorithms. |
 | Reflux | Acid bass with accents and slides. |

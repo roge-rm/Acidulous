@@ -6,6 +6,7 @@
 3. [L’éditeur](03-the-editor.md)
 4. [Les machines](04-the-machines.md)
     - [Cumulus](04-the-machines/cumulus.md) : des nappes bâties à partir d’un spectre de partiels.
+    - [Divisi](04-the-machines/divisi.md) : un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, le tout dans un chorus épais et un phaser.
     - [Formulate](04-the-machines/formulate.md) : un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.
     - [Ratio](04-the-machines/ratio.md) : la FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.
     - [Reflux](04-the-machines/reflux.md) : la basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.

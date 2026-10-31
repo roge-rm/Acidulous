@@ -119,7 +119,7 @@ object MachineUi {
      * they're in alphabetical order.
      */
     val machineGroups: List<MachineGroup> = listOf(
-        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate").sorted(), GroupIcon.Synths),
+        MachineGroup(Res.string.machines_synths, listOf("Reflux", "Trinity", "Ratio", "Cumulus", "Formulate", "Divisi").sorted(), GroupIcon.Synths),
         MachineGroup(Res.string.machines_drums, listOf("Hexbeat", "Genesis", "Resonance", "Forage", "Dice", "Palm").sorted(), GroupIcon.Drums),
         MachineGroup(Res.string.machines_keys, listOf("Hammer", "Manual", "Tine").sorted(), GroupIcon.Keys),
         MachineGroup(Res.string.machines_strings, listOf("Filament", "Fret", "Sympath").sorted(), GroupIcon.Strings),
@@ -154,6 +154,7 @@ object MachineUi {
         "Chanter" -> Res.string.machine_about_chanter
         "Aviary" -> Res.string.machine_about_aviary
         "Fathom" -> Res.string.machine_about_fathom
+        "Divisi" -> Res.string.machine_about_divisi
         "Timber" -> Res.string.machine_about_timber
         "Mosaic" -> Res.string.machine_about_mosaic
         "Pollen" -> Res.string.machine_about_pollen
@@ -188,7 +189,8 @@ object MachineUi {
         type == "Trinity" || type == "Ratio" || type == "Mosaic" || type == "Manual" ||
             type == "Cipher" || type == "Filament" || type == "Cumulus" || type == "Pollen" ||
             type == "Brazen" || type == "Timber" || type == "Molt" || type == "Diction" || type == "Hammer" ||
-            type == "Tongue" || type == "Draw" || type == "Fret" || type == "Tine" || type == "Sympath" || type == "Palm" || type == "Chanter" || type == "Aviary" || type == "Fathom"
+            type == "Tongue" || type == "Draw" || type == "Fret" || type == "Tine" || type == "Sympath" || type == "Palm" || type == "Chanter" || type == "Aviary" || type == "Fathom" ||
+            type == "Divisi"
 
     /** Genesis's kit, in the Voice order of engine/machine/genesis/Genesis.h. */
     val genesisVoices: List<DrumVoice> = listOf(

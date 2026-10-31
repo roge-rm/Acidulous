@@ -32,6 +32,7 @@
     <string name="machine_about_chanter">modelled bagpipes and hurdy-gurdy: drones that carry on between notes, grace notes, and a wheel whose loose bridge buzzes in time</string>
     <string name="machine_about_aviary">modelled birdsong: a two-voiced syrinx, throat and beak singing whistles, chirps, trills, warbles, calls, coos and caws in time</string>
     <string name="machine_about_fathom">modelled water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys</string>
+    <string name="machine_about_divisi">string ensemble: violins down to contrabass, a choir and brass, all through a thick chorus</string>
     <string name="machine_about_draw">modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds in pipes</string>
     <string name="machine_about_timber">modelled woodwinds: reeds and flutes</string>
     <string name="machine_about_mosaic">multisample player for SoundFonts and your samples</string>
