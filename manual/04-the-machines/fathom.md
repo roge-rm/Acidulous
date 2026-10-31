@@ -87,9 +87,10 @@ patch as it was made.
 The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
-range at 1. Pitch moves every sound, 24 semitones at 1. The model, tune,
-surface, octave, bend and a kit's pad sound, pitch and level can't be
-reached. In a kit the routes move the knobs every pad shares, and density
+range at 1. Pitch moves every sound, 24 semitones at 1, and snap brings
+the water into key. The model, tune, surface, octave, bend, the key's
+**onto**, **scale** and **key**, and a kit's pad sound, pitch and level
+can't be reached. In a kit the routes move the knobs every pad shares, and density
 moves each pad's own density. A change to the size, rise, decay or spread is
 heard from the next bubble, drop or crackle; the rest move at once. Tap a
 macro's name to rename it.

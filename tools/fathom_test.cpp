@@ -308,6 +308,14 @@ void key() {
         check(got.size() > 20 && in == static_cast<int>(got.size()), "in a tuning and an octave up, on the tuned note", fmt("%d of %zu", in, got.size()));
     }
     {
+        // A macro routed to snap brings the bubbles into key with the knob at 0.
+        Water g({{"model", Bubbles}, {"size", 12.0f}, {"rise", 0.0f}, {"density", 1.0f},
+                 {"mac1", 1.0f}, {"mac1_d1", static_cast<float>(Fathom::McSnap)}, {"mac1_a1", 1.0f}});
+        for (int n : {60, 64, 67}) g.f->noteOn(static_cast<uint8_t>(n), 100);
+        const auto got = rings(g, 2.0);
+        check(got.size() > 20 && inKey(got, {0, 4, 7}) > 0.999, "a macro on snap puts them in key", fmt("%.0f%% of %zu", 100 * inKey(got, {0, 4, 7}), got.size()));
+    }
+    {
         // The rain catches more bubbles in the key, so it sings it.
         auto count = [](float snap) {
             Water g({{"model", Rain}, {"density", 0.6f}, {"snap", snap}});

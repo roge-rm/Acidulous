@@ -171,7 +171,7 @@ struct DestMap {
             {P::Density, P::McDensity}, {P::Size, P::McSize}, {P::Rise, P::McRise}, {P::Decay, P::McDecay},
             {P::Gust, P::McGust}, {P::Whistle, P::McWhistle}, {P::Tone, P::McTone}, {P::Swell, P::McSwell},
             {P::Spread, P::McSpread}, {P::Fade, P::McFade}, {P::VelocityAmount, P::McVelocity},
-            {P::Volume, P::McVolume},
+            {P::Volume, P::McVolume}, {P::KeySnap, P::McSnap},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
         // The density route moves every pad's own density as well.
@@ -591,8 +591,12 @@ bool Fathom::render(float *L, float *R, int32_t frames) {
     const float swellBeats = clampf(paramOf(Swell), 1.0f, 16.0f);
     const int surf = std::clamp(steppedTargetOf(Surface), 0, SurfaceCount - 1);
     // The key, built at block rate from what's held now, through the voices' own pitch path less the note.
-    // The target, since a note-on's first bubble comes in this block.
-    keySnap_ = clampf(targetOf(KeySnap), 0.0f, 1.0f);
+    // The target, since a note-on's first bubble comes in this block, with the macros' routes added.
+    {
+        const float snap = targetOf(KeySnap);
+        const ParamDef &def = params_.def(KeySnap);
+        keySnap_ = clampf(mac_[McSnap] == 0.0f ? snap : def.map(def.unmap(snap) + mac_[McSnap]), 0.0f, 1.0f);
+    }
     if (keySnap_ > 0.0f) {
         buildKey(12.0f * static_cast<float>(steppedTargetOf(Octave)) + paramOf(Tune) / 100.0f + bend * paramOf(BendRange) +
                  (mac_[McPitch] != 0.0f ? mac_[McPitch] * 24.0f : 0.0f));

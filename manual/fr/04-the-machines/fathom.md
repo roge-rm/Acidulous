@@ -92,8 +92,10 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace tous les sons, 24 demi-tons
-à 1. Le modèle, l’accordage, la surface, l’octave, le bend et le son, la
-hauteur et le niveau des pads d’un kit ne sont pas accessibles. Dans un kit,
+à 1, et l’aimant met l’eau dans le ton. Le modèle, l’accordage, la surface,
+l’octave, le bend, le **sur**, la **gamme** et la **tonalité** de la carte
+tonalité, et le son, la hauteur et le niveau des pads d’un kit ne sont pas
+accessibles. Dans un kit,
 les routes bougent les boutons que tous les pads partagent, et la densité
 bouge aussi la densité de chaque pad. Un changement de taille, de montée, de
 déclin ou d’écart s’entend à la bulle, à la goutte ou au crépitement suivant;

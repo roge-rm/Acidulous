@@ -42,11 +42,11 @@ class Fathom final : public Machine {
     };
     enum KeySource : int32_t { KeyChord = 0, KeyScaleNotes, KeySourceCount };
     // Where a macro route goes. Continuous params only: the model, tune,
-    // surface, bend range, octave and the pads are left out.
+    // surface, bend range, octave, the key's choices and the pads are left out.
     enum MacroDest : int32_t {
         McOff, McDensity, McSize, McRise, McDecay, McGust, McWhistle, McTone,
         McSwell, McSpread, McFade, McVelocity, McVolume,
-        McPitch,
+        McPitch, McSnap,
         MacroDestCount
     };
     static constexpr int kMacros = 8;

@@ -37,7 +37,7 @@
 # Every patch but Init carries eight named macros. Destinations are
 # numbered as in Fathom.h's MacroDest: #1 density, #2 size, #3 rise, #4
 # decay, #5 gust, #6 whistle, #7 tone, #8 swell, #9 spread, #10 fade, #12
-# volume, #13 pitch (24 semitones a unit). Each sound gets the eight that
+# volume, #13 pitch (24 semitones a unit), #14 snap. Each sound gets the eight that
 # move it: bubbles More, Bigger, Rise, Ring, Deep, High, Wide and Calm;
 # surf Foam, Waves, Bright, Dark, Long, Quick, Bigger and Still; wind
 # Gusts, Lull, Whistle, Bright, Dark, Low, High and Slow; and so on for

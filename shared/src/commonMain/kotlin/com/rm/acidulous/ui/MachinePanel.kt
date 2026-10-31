@@ -5342,7 +5342,7 @@ private val FATHOM_KEY_SOURCES = listOf("chord", "scale")
 val FATHOM_MACRO_DESTS = listOf(
     "off", "density", "size", "rise", "decay", "gust", "whistle", "tone",
     "waves", "spread", "fade", "velocity", "volume",
-    "pitch",
+    "pitch", "snap",
 )
 
 /** Fathom: the macros, the water, the weather, the player and the kit. */
