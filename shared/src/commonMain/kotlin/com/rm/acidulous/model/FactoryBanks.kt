@@ -15407,7 +15407,23 @@ internal object FactoryBanks {
         mapOf("vowel" to 0.15f, "size" to 0.75f, "nasal" to 0.5f, "move" to 1f, "depth" to 0.4f, "gain" to 0.5729167f),
         family = "key")
 
-    private val fx_mouth: List<Patch> by lazy { listOf(fx_mouth0(), fx_mouth1(), fx_mouth2(), fx_mouth3(), fx_mouth4(), fx_mouth5(), fx_mouth6(), fx_mouth7(), fx_mouth8(), fx_mouth9(), fx_mouth10(), fx_mouth11()) }
+    private fun fx_mouth12() = Patch("fx.Mouth", "Say",
+        mapOf("depth" to 0f, "gain" to 0.4729167f, "words" to 1f),
+        family = "words")
+
+    private fun fx_mouth13() = Patch("fx.Mouth", "Sing",
+        mapOf("vowel" to 0.5f, "size" to 0.7f, "depth" to 0f, "mix" to 0.85f, "gain" to 0.452083349f, "words" to 1f),
+        family = "words")
+
+    private fun fx_mouth14() = Patch("fx.Mouth", "Chant",
+        mapOf("vowel" to 0.4f, "size" to 0.3f, "nasal" to 0.45f, "depth" to 0f, "gain" to 0.591666639f, "words" to 1f),
+        family = "words")
+
+    private fun fx_mouth15() = Patch("fx.Mouth", "Mutter",
+        mapOf("vowel" to 0.05f, "size" to 0.55f, "move" to 0.5f, "depth" to 0.6f, "words" to 0.6f),
+        family = "words")
+
+    private val fx_mouth: List<Patch> by lazy { listOf(fx_mouth0(), fx_mouth1(), fx_mouth2(), fx_mouth3(), fx_mouth4(), fx_mouth5(), fx_mouth6(), fx_mouth7(), fx_mouth8(), fx_mouth9(), fx_mouth10(), fx_mouth11(), fx_mouth12(), fx_mouth13(), fx_mouth14(), fx_mouth15()) }
 
     private fun fx_tape0() = Patch("fx.Tape", "Init", emptyMap(),
         family = "warm")

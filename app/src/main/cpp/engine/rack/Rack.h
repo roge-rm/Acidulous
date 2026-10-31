@@ -363,6 +363,8 @@ class Rack {
     void setPedal(int32_t which, uint8_t value);
     bool machineTakesPedals() const { return machine != nullptr && machine->takesPedals(); }
     void releasePedalled();
+    /** A note-off as the machine got it, to the inserts. Audio thread. */
+    void offToInserts(uint8_t note);
     void resetPedals();
 
     const FrozenSet *frozenSet = nullptr;

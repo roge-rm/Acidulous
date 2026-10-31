@@ -16,10 +16,14 @@
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Magneto.h>
+#include <engine/effect/Mouth.h>
 #include <engine/effect/Reverb.h>
 #include <engine/effect/Spectral.h>
 #include <engine/effect/Vessel.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/formulate/Expr.h>
+#include <engine/machine/MachineRegistry.h>
+#include <engine/rack/Rack.h>
 #include "venue_impulse.h"
 
 using namespace acidulous;
@@ -270,6 +274,123 @@ void mouth() {
     ok("moved by level, loud opens it further", upperFormants(loud, 9600) > upperFormants(soft, 9600) + 6.0,
        num(upperFormants(soft, 9600)) + " -> " + num(upperFormants(loud, 9600)) + " dB");
     staysBounded("Mouth");
+}
+
+void mouthWords() {
+    printf("- mouth words\n");
+    const auto voice = saw(110.0f, 0.4f, 48000);
+    uint8_t ee[8], sh[8];
+    const int32_t eeCount = machine::diction::parsePhones("IY", ee, 8);
+    const int32_t shCount = machine::diction::parsePhones("S IY", sh, 8);
+    // Through a rack: its words and notes reach the insert.
+    {
+        Rack rack;
+        auto fx = make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}, {"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        rack.swapEffect(0, fx.get());
+        rack.lyric(ee, eeCount);
+        rack.playSequenced(0x90, 60, 100);
+        ok("a rack's words reach its insert", m->saying() && m->wordFormant(1) > 2000.0f, num(m->wordFormant(1)) + " Hz");
+        rack.playSequenced(0x80, 60, 0);
+        rack.playSequenced(0x90, 62, 100);
+        ok("a note without words goes back to the move", !m->saying());
+        rack.swapEffect(0, nullptr);
+    }
+    // With a machine and the sustain down, the insert hears the off when the machine does.
+    {
+        Rack rack;
+        std::unique_ptr<Machine> synth(MachineRegistry::create("Trinity"));
+        synth->prepare(static_cast<int32_t>(kRate));
+        synth->reset();
+        rack.swapMachine(synth.get());
+        auto fx = make("Mouth", {{"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        rack.swapEffect(0, fx.get());
+        rack.setParam(Unit::Performance, kPerfSustain, 1.0f, false);
+        rack.lyric(sh, shCount);
+        rack.playSequenced(0x90, 60, 100);
+        rack.playSequenced(0x80, 60, 0);
+        ok("a pedal holds the word", m->saying() && !m->released());
+        rack.setParam(Unit::Performance, kPerfSustain, 0.0f, false);
+        ok("and the pedal coming up lets it go", m->released());
+        rack.swapEffect(0, nullptr);
+        rack.swapMachine(nullptr);
+    }
+    // A key played twice without an off is one key: its off lets it go.
+    {
+        auto fx = make("Mouth", {{"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        fx->onLyric(ee, eeCount);
+        fx->onNote(60, 261.6f);
+        fx->onNote(60, 261.6f);
+        fx->onNoteOff(60);
+        fx->onNote(62, 293.7f);
+        ok("a retriggered key is let go by one off", !m->saying());
+    }
+    // A word ending on a stop: once it's said, the mouth opens back to the move.
+    {
+        uint8_t at[8];
+        const int32_t atCount = machine::diction::parsePhones("AA T", at, 8);
+        auto fx = make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}, {"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        fx->onLyric(at, atCount);
+        fx->onNote(45, 110.0f);
+        run(*fx, saw(110.0f, 0.4f, 14400));
+        fx->onNoteOff(45);
+        const auto after = run(*fx, saw(110.0f, 0.4f, 24000)).l;
+        const auto plain = run(*make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}}), saw(110.0f, 0.4f, 48000)).l;
+        ok("after a word's last sound it's over", !m->saying());
+        ok("and the mouth is open again", rms(after, 14400, 24000) > rms(plain, 24000, 48000) * 0.8,
+           num(dB(rms(after, 14400, 24000))) + " vs " + num(dB(rms(plain, 24000, 48000))) + " dB");
+    }
+    // Words on an oo: the note's ee takes it, as far as the knob says.
+    const auto said = [&](float words, const uint8_t *phones, int32_t count) {
+        auto fx = make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}, {"words", words}});
+        fx->onLyric(phones, count);
+        fx->onNote(45, 110.0f);
+        return run(*fx, voice).l;
+    };
+    const auto plain = run(*make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}}), voice).l;
+    const auto off = said(0.0f, ee, eeCount), full = said(1.0f, ee, eeCount), half = said(0.5f, ee, eeCount);
+    bool same = true;
+    for (size_t i = 0; i < plain.size(); ++i) same = same && plain[i] == off[i];
+    ok("with words at 0 the words change nothing", same);
+    ok("words say ee on an oo", upperFormants(full, 9600) > upperFormants(plain, 9600) + 10.0,
+       num(upperFormants(plain, 9600)) + " -> " + num(upperFormants(full, 9600)) + " dB");
+    ok("half the words is in between", upperFormants(half, 9600) > upperFormants(plain, 9600) + 2.0 &&
+       upperFormants(half, 9600) < upperFormants(full, 9600) - 2.0, num(upperFormants(half, 9600)) + " dB");
+    // An s first: the mouth nearly shut and hissing, then the vowel.
+    const auto hissed = said(1.0f, sh, shCount);
+    const double sRms = rms(hissed, 2400, 4800), vRms = rms(hissed, 24000, 48000);
+    // How much of it is in the top, from the size of the steps between samples.
+    const auto edge = [&](size_t from, size_t to) {
+        double d = 0.0;
+        for (size_t i = from; i < to; ++i) d += double(hissed[i] - hissed[i - 1]) * (hissed[i] - hissed[i - 1]);
+        return std::sqrt(d / double(to - from)) / (rms(hissed, from, to) + 1e-20);
+    };
+    ok("an s is quieter than its vowel", sRms < vRms * 0.7, num(dB(sRms)) + " vs " + num(dB(vRms)) + " dB");
+    ok("and it hisses", edge(2400, 4800) > edge(24000, 48000) * 1.5, num(edge(2400, 4800)) + " vs " + num(edge(24000, 48000)));
+    // Word after word, each starting on a hiss or a stop: none kicks.
+    {
+        auto fx = make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}, {"words", 1.0f}});
+        const char *lines[] = {"T W IH NG", "K AH L", "S T AA R", "P AA"};
+        std::vector<float> out;
+        int pitch = 45;
+        for (const char *line : lines) {
+            uint8_t ph[16];
+            const int32_t n = machine::diction::parsePhones(line, ph, 16);
+            fx->onLyric(ph, n);
+            fx->onNote(pitch, 110.0f);
+            const auto part = run(*fx, saw(110.0f, 0.4f, 24000)).l;
+            fx->onNoteOff(pitch);
+            const auto gap = run(*fx, saw(110.0f, 0.4f, 9600)).l;
+            out.insert(out.end(), part.begin(), part.end());
+            out.insert(out.end(), gap.begin(), gap.end());
+        }
+        // The loudest held vowel: the last note's ah.
+        const double vowelPeak = peak(std::vector<float>(out.end() - 21600, out.end() - 9600));
+        ok("word after word, none kicks", peak(out) < vowelPeak * 1.25, num(peak(out)) + " against " + num(vowelPeak));
+    }
 }
 
 // --- Tape --------------------------------------------------------------------------
@@ -2094,6 +2215,7 @@ int main() {
     smash();
     acid();
     mouth();
+    mouthWords();
     tape();
     slicer();
     magneto();

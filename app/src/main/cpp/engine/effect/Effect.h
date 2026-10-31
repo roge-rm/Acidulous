@@ -29,6 +29,14 @@ class Effect {
     // A note-on reaching the track's machine, after transpose, with its pitch
     // in hertz in the track's tuning. Audio thread.
     virtual void onNote(int32_t /*note*/, float /*hz*/) {}
+    // That note let go, when the machine is sent the off: after a pedal lets
+    // it go, or when the voice limit takes it. Audio thread.
+    virtual void onNoteOff(int32_t /*note*/) {}
+    // Every note let go at once, as the machine's allNotesOff. Audio thread.
+    virtual void onAllNotesOff() {}
+    // A clip note's words, just before its onNote: phone codes as
+    // Machine::lyric has them, only valid for the call. Audio thread.
+    virtual void onLyric(const uint8_t * /*phones*/, int32_t /*count*/) {}
     // In place. Return true if the output is stereo.
     virtual bool process(float *L, float *R, int32_t frames, bool stereoIn) = 0;
     /**

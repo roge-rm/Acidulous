@@ -215,7 +215,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**trig condition** - when it's allowed to play. `1:4` plays on the first of every four loops. `pre` plays only if the last conditional note played, and `!pr` only if it didn't. `fil` plays only while fill is held, and `!fi` only while it isn't."),
         ManualBlock(ManualKind.Bullet, "**ratchet** - how many times the note repeats in its step."),
         ManualBlock(ManualKind.Bullet, "**micro timing** - nudges the note off the grid, up to half a sixteenth either way."),
-        ManualBlock(ManualKind.Bullet, "**words** - on a Diction or Tongue track, what each note sings or says. Tap a note to type them. See Diction and Tongue.", "**words** - on a Diction or Tongue track, what each note sings or says. Click a note to type them. See Diction and Tongue."),
+        ManualBlock(ManualKind.Bullet, "**words** - on a Diction, Tongue or Draw track, or a track with a Mouth whose **words** is up, what each note sings or says. Tap a note to type them. See Diction, Tongue and Mouth.", "**words** - on a Diction, Tongue or Draw track, or a track with a Mouth whose **words** is up, what each note sings or says. Click a note to type them. See Diction, Tongue and Mouth."),
         ManualBlock(ManualKind.Para, "The randomness uses a fixed seed, so the same variation comes back every time."),
         ManualBlock(ManualKind.Heading, "Knobs"),
         ManualBlock(ManualKind.Para, "The machine's panel sits between the grid and the keyboard. Its controls are in sections, and the tabs along its top show one section at a time. Inserts, modifiers and sends open the same kind of panel in a window."),
@@ -1626,10 +1626,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**mix** - the dry sound against the vowel."),
         ManualBlock(ManualKind.Bullet, "**gain** - the level out."),
         ManualBlock(ManualKind.Bullet, "**sidechain** - the track that moves it when **move** is **key**."),
+        ManualBlock(ManualKind.Bullet, "**words** *(extra)* - how far a clip's words move the mouth. See below."),
+        ManualBlock(ManualKind.Heading, "Words"),
+        ManualBlock(ManualKind.Para, "Turn **words** up and the track gets a **words** lane in the editor, whatever machine it is. Give its notes words there, as for Diction, and the mouth says each note's word: the vowel held while the note is down, the sounds before it on the way in, and the ones after it when you let go. A P or a T shuts the mouth for a moment, an S hisses and an M goes through the nose. Between words the mouth goes back to **move**. The words only reach a Mouth in a track's inserts, not in a group or the master."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "On a synth lead with **move** at **level**, harder notes say \"ah\"."),
         ManualBlock(ManualKind.Bullet, "Point the sidechain at a drum loop and a pad talks in its rhythm."),
         ManualBlock(ManualKind.Bullet, "Slow **lfo** sweeps from oo to ah sound like a wah played by a voice."),
+        ManualBlock(ManualKind.Bullet, "A bright, buzzy sound says words best: a saw pad or a chord with plenty of top. Short, open words come through clearest."),
     ))
 
     private fun en4_19() = ManualSection("Phaser", "Two to eight stages.", listOf(
@@ -2524,7 +2528,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**condition de déclenchement** - quand elle a le droit de jouer. `1:4` joue à la première de chaque série de quatre boucles. `pre` joue seulement si la dernière note conditionnelle a joué, et `!pr` seulement si elle n’a pas joué. `fil` joue seulement pendant qu’on maintient fill, et `!fi` seulement quand on ne le maintient pas."),
         ManualBlock(ManualKind.Bullet, "**ratchet** - combien de fois la note se répète dans son pas."),
         ManualBlock(ManualKind.Bullet, "**micro-décalage** - pousse la note hors de la grille, jusqu’à une demi-double-croche dans un sens ou dans l’autre."),
-        ManualBlock(ManualKind.Bullet, "**paroles** - sur une piste Diction ou Tongue, ce que chaque note chante ou dit. Touchez une note pour les taper. Voir Diction et Tongue.", "**paroles** - sur une piste Diction ou Tongue, ce que chaque note chante ou dit. Cliquez une note pour les taper. Voir Diction et Tongue."),
+        ManualBlock(ManualKind.Bullet, "**paroles** - sur une piste Diction, Tongue ou Draw, ou une piste avec un Mouth dont les **paroles** sont montées, ce que chaque note chante ou dit. Touchez une note pour les taper. Voir Diction, Tongue et Mouth.", "**paroles** - sur une piste Diction, Tongue ou Draw, ou une piste avec un Mouth dont les **paroles** sont montées, ce que chaque note chante ou dit. Cliquez une note pour les taper. Voir Diction, Tongue et Mouth."),
         ManualBlock(ManualKind.Para, "Le hasard utilise une graine fixe, donc la même variation revient chaque fois."),
         ManualBlock(ManualKind.Heading, "Les boutons"),
         ManualBlock(ManualKind.Para, "Le panneau de la machine est entre la grille et le clavier. Ses commandes sont en sections, et les onglets en haut montrent une section à la fois. Les insertions, les modificateurs et les envois ouvrent le même genre de panneau dans une fenêtre."),
@@ -3935,10 +3939,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**mélange** : le son sec face à la voyelle."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
         ManualBlock(ManualKind.Bullet, "**entrée lat.** : la piste qui la fait bouger quand **bouger** est sur **key**."),
+        ManualBlock(ManualKind.Bullet, "**paroles** *(extra)* : à quel point les paroles d’un clip bougent la bouche. Voyez plus bas."),
+        ManualBlock(ManualKind.Heading, "Les paroles"),
+        ManualBlock(ManualKind.Para, "Montez **paroles** et la piste a un couloir **paroles** dans l’éditeur, quelle que soit sa machine. Donnez-y des paroles à ses notes, comme pour Diction, et la bouche dit le mot de chaque note : la voyelle tenue tant que la note est enfoncée, les sons d’avant à l’entrée et ceux d’après au relâchement. Un P ou un T ferme la bouche un instant, un S siffle et un M passe par le nez. Entre les mots, la bouche revient à **bouger**. Les paroles n’arrivent qu’à un Mouth dans les inserts d’une piste, pas dans un groupe ni sur le master."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Sur un lead avec **bouger** sur le niveau, les notes plus fortes disent « a »."),
         ManualBlock(ManualKind.Bullet, "Pointez l’entrée latérale sur une boucle de batterie et une nappe parle à son rythme."),
         ManualBlock(ManualKind.Bullet, "Un balayage lent de ou à a sonne comme une wah jouée par une voix."),
+        ManualBlock(ManualKind.Bullet, "Un son brillant et riche dit mieux les mots : une nappe en dent de scie ou un accord avec beaucoup d’aigus. Les mots courts et ouverts passent le mieux."),
     ))
 
     private fun fr4_19() = ManualSection("Phaser", "Deux à huit étages.", listOf(

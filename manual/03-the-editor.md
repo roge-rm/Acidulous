@@ -142,9 +142,10 @@ set that value on each note.
 - **ratchet** - how many times the note repeats in its step.
 - **micro timing** - nudges the note off the grid, up to half a sixteenth either
   way.
-- **words** - on a Diction or Tongue track, what each note sings or says.
-  Tap a note to type them. See [Diction](04-the-machines/diction.md) and
-  [Tongue](04-the-machines/tongue.md).
+- **words** - on a Diction, Tongue or Draw track, or a track with a Mouth
+  whose **words** is up, what each note sings or says. Tap a note to type
+  them. See [Diction](04-the-machines/diction.md),
+  [Tongue](04-the-machines/tongue.md) and [Mouth](05-effects-and-mixing/mouth.md).
 
 The randomness uses a fixed seed, so the same variation comes back every time.
 

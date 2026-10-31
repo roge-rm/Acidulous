@@ -158,9 +158,10 @@ montre, puis glissez dedans pour régler cette valeur sur chaque note.
 - **ratchet** - combien de fois la note se répète dans son pas.
 - **micro-décalage** - pousse la note hors de la grille, jusqu’à une
   demi-double-croche dans un sens ou dans l’autre.
-- **paroles** - sur une piste Diction ou Tongue, ce que chaque note chante ou
-  dit. Touchez une note pour les taper. Voir [Diction](04-the-machines/diction.md)
-  et [Tongue](04-the-machines/tongue.md).
+- **paroles** - sur une piste Diction, Tongue ou Draw, ou une piste avec un
+  Mouth dont les **paroles** sont montées, ce que chaque note chante ou dit.
+  Touchez une note pour les taper. Voir [Diction](04-the-machines/diction.md),
+  [Tongue](04-the-machines/tongue.md) et [Mouth](05-effects-and-mixing/mouth.md).
 
 Le hasard utilise une graine fixe, donc la même variation revient chaque fois.
 

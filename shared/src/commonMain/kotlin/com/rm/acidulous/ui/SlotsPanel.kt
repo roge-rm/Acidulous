@@ -785,7 +785,7 @@ private val EXTRA = mapOf(
     "Resonator" to setOf("metal"), // stiff strings, toward a bell
     "Smash" to setOf("up"), // the lift, which a compressor doesn't have
     "Acid" to setOf("pattern", "accent"),
-    "Mouth" to setOf("move"),
+    "Mouth" to setOf("move", "words"),
     "Tape" to setOf("stop", "stoptime"),
     "Slicer" to setOf("seed", "pitch"),
     "Magneto" to setOf("dubs"),

@@ -90,6 +90,16 @@ object MachineUi {
     /** Machines that take a clip's words: Diction sings them, Tongue says them with the mouth. */
     fun takesWords(type: String): Boolean = type == "Diction" || type == "Tongue" || type == "Draw"
 
+    /** Tracks that show the words lane: a machine that takes words, or a Mouth insert with its words knob up. */
+    fun takesWords(track: Track): Boolean =
+        takesWords(track.machine.type) || track.effects.any { it.type == "Mouth" && (it.params["words"] ?: 0f) > 0f }
+
+    /**
+     * Tracks whose words are sent to the engine: any with a Mouth insert, as
+     * well as the lane's, so a words knob moved up by a lane or a mod hears them.
+     */
+    fun sendsWords(track: Track): Boolean = takesWords(track.machine.type) || track.effects.any { it.type == "Mouth" }
+
     /** The accent a track's words are said in. Only Diction has one; Tongue's `accent` is a rhythm's. */
     fun wordsAccent(type: String, params: Map<String, Float>): Float = if (type == "Diction") params["accent"] ?: 0f else 0f
 
