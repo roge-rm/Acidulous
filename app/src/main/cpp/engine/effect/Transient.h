@@ -40,12 +40,6 @@ class Transient final : public Effect {
         blockStart = tickStart;
         blockEnd = tickEnd;
     }
-    void onTransport(bool rolling, float percent, int64_t pair) override {
-        told = true;
-        moving = rolling;
-        swing = percent;
-        swingPair = pair;
-    }
 
   private:
     float sr = 48000.0f;
@@ -54,22 +48,21 @@ class Transient final : public Effect {
     float timeWas = -1.0f;
     float atkFast = 0.0f, atkSlow = 0.0f, relA = 0.0f, relHold = 0.0f, relFall = 0.0f;
 
-    // The accent grid. The block's ticks from onBlock; on a track's insert,
-    // whether the song moves and its swing from onTransport. Elsewhere it
-    // counts as moving while the ticks do (stillFrames since they last did).
-    int64_t blockStart = 0, blockEnd = 0, tickWas = 0;
-    int32_t stillFrames = 0;
-    bool told = false, moving = false, tickKnown = false;
-    float swing = 50.0f;
-    int64_t swingPair = 120;
+    // The accent grid: the block's ticks from onBlock; whether the song
+    // moves and the track's swing come in modTransport_.
+    int64_t blockStart = 0, blockEnd = 0;
     // A hit starts when a short average of the level jumps over a long one
-    // (armed), and can start again once it has fallen back under it. The
-    // step is picked then and held for the hit: accent is its -1, 0 or +1,
-    // and accentNow glides to it a frame at a time.
+    // while armed. It's over, and can start again, once it has held for a
+    // while and its envelope (env, slow to fall so a low wave's zero
+    // crossings don't count) is 6 dB under its peak. The step is picked at
+    // the start and held for the hit: accent is its -1, 0 or +1, and
+    // accentNow glides to it, then eases back to flat after.
     float shortAvg = 0.0f, longAvg = 0.0f, shortCoeff = 0.0f, longCoeff = 0.0f;
+    float env = 0.0f, envRelease = 0.0f, hitPeak = 0.0f;
+    int32_t hitFrames = 0;
     bool armed = true;
     float accent = 0.0f, accentNow = 0.0f;
-    float accentGlide = 0.0f;
+    float accentIn = 0.0f, accentOut = 0.0f;
     float stepAccent(int64_t songTick) const;
 };
 

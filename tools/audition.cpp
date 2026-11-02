@@ -45,6 +45,9 @@
 #include "audition_measure.h"
 #include "patchbank.h"
 
+/** The song playing, straight, as the engine tells an insert while it plays. */
+const acidulous::ModTransport kPlaying = [] { acidulous::ModTransport t; t.rolling = true; return t; }();
+
 using namespace acidulous;
 using namespace acidulous::audition;
 
@@ -1079,6 +1082,7 @@ struct FxChain {
 
     void process(float *L, float *R, int32_t n, int64_t t0, int64_t t1, float bpm) {
         for (auto &fx : inserts) {
+            fx->setTransport(kPlaying);
             fx->onBlock(t0, t1, bpm);
             fx->run(L, R, n, true);
         }
@@ -1447,6 +1451,7 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         // The notes starting in this block, as the rack hands them on.
         for (const auto &[frame, note] : gSourceNotes)
             if (frame >= at && frame < at + kBlock) fx->onNote(note, 440.0f * std::pow(2.0f, (static_cast<float>(note) - 69.0f) / 12.0f));
+        fx->setTransport(kPlaying);
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {

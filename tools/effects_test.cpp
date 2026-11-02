@@ -1419,9 +1419,13 @@ void transientGrid() {
         auto flat = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}, {"grid", 1.0f}, {"depth", 12.0f}});
         ok("grid on with every step flat is too", worst(a, run(*flat, in).l) == 0.0);
     }
+    // The song playing, as the engine says it on every insert.
+    ModTransport rolling;
+    rolling.rolling = true;
     // Hits on steps 1, 5, 9, 13 up, on 3, 7, 11, 15 down.
     auto grid = [&](std::initializer_list<std::pair<const char *, float>> extra = {}) {
         auto fx = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}});
+        fx->setTransport(rolling);
         for (int k = 0; k < 16; k += 4) set(*fx, steps[k], 2.0f);
         for (int k = 2; k < 16; k += 4) set(*fx, steps[k], 0.0f);
         for (const auto &[name, value] : extra) set(*fx, name, value);
@@ -1483,7 +1487,9 @@ void transientGrid() {
         for (size_t i = 0; i < 6000; ++i) one[6000 + i] = hit[i];
         const auto plainOne = run(*make("Transient"), one).l;
         auto swung = grid({{"a02", 0.0f}});
-        swung->onTransport(true, 75.0f, 120);
+        ModTransport sw = rolling;
+        sw.swing = 75.0f;
+        swung->setTransport(sw);
         auto straight = grid({{"a02", 0.0f}});
         const double s = dB(rms(run(*swung, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
         const double t = dB(rms(run(*straight, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
@@ -1491,14 +1497,11 @@ void transientGrid() {
            num(s) + " dB swung, " + num(t) + " dB as if straight");
     }
     {
-        // Stopped, the grid leaves the hits alone.
+        // Stopped, the grid leaves the hits alone, though the clock's ticks
+        // still move, as they do in the engine.
         auto fx = grid();
-        Stereo st{in, in};
-        for (size_t at = 0; at < in.size(); at += kBlock) {
-            fx->onBlock(480, 480, 120.0f);
-            fx->run(st.l.data() + at, st.r.data() + at, kBlock, false);
-        }
-        ok("stopped, the grid does nothing", worst(st.l, ref) == 0.0);
+        fx->setTransport(ModTransport{});
+        ok("stopped, the grid does nothing", worst(run(*fx, in).l, ref) == 0.0);
     }
     {
         auto fx = grid({{"attack", 0.3f}});
@@ -1507,7 +1510,57 @@ void transientGrid() {
         const auto b = run(*fx, in).l;
         ok("reset: played again it's the same to the bit", worst(a, b) == 0.0);
     }
+    // A kick and a ringing tone, every step up: the accent holds through
+    // each hit, with no steps in the gain at the wave's rate (noise hid this).
+    auto kick = [](float hz, float tau) {
+        std::vector<float> x(96000, 0.0f);
+        for (size_t h = 0; h < x.size(); h += 24000)
+            for (size_t i = 0; i < 24000; ++i)
+                x[h + i] = 0.8f * static_cast<float>(std::exp(-double(i) / kRate / tau) * std::sin(2.0 * M_PI * hz * i / kRate));
+        return x;
+    };
+    // The gain applied, in dB, where the input is big enough to say; and the
+    // biggest step from one such sample to the next past each hit's first 2 ms.
+    auto worstStep = [](const std::vector<float> &out, const std::vector<float> &x) {
+        double w = 0.0, peak = 0.0;
+        for (float v : x) peak = std::max(peak, double(std::fabs(v)));
+        for (size_t i = 1; i < x.size(); ++i) {
+            if (i % 24000 < 96) continue;
+            if (std::fabs(x[i]) < 0.05 * peak || std::fabs(x[i - 1]) < 0.05 * peak) continue;
+            const double a = dB(std::fabs(out[i] / x[i])), b = dB(std::fabs(out[i - 1] / x[i - 1]));
+            w = std::max(w, std::fabs(a - b));
+        }
+        return w;
+    };
+    // The gain at [ms] into the second hit, from the output's level against the input's over 1 ms.
+    auto gainAt = [](const std::vector<float> &out, const std::vector<float> &x, double ms) {
+        const auto at = static_cast<size_t>(24000 + ms * 48.0);
+        return dB(rms(out, at, at + 48) / rms(x, at, at + 48));
+    };
+    for (const auto &[name, hz, tau] : {std::tuple<const char *, float, float>{"a 50 Hz kick", 50.0f, 0.15f},
+                                        std::tuple<const char *, float, float>{"a 3 kHz ring", 3000.0f, 0.03f}}) {
+        const auto x = kick(hz, tau);
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], 2.0f);
+        auto off = make("Transient", {{"attack", 0.5f}});
+        const auto yOn = run(*on, x).l, yOff = run(*off, x).l;
+        const double sOn = worstStep(yOn, x), sOff = worstStep(yOff, x);
+        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.1 + sOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off");
+        // Up at the start, then easing off with the onset, never dropping and
+        // coming back as a second start would.
+        double first = 0.0, prev = 0.0, worstMs = 0.0;
+        for (double ms = 2.0; ms <= 30.0; ms += 1.0) {
+            const double d = gainAt(yOn, x, ms) - gainAt(yOff, x, ms);
+            if (ms == 2.0) first = d; else worstMs = std::max(worstMs, std::fabs(d - prev));
+            prev = d;
+        }
+        ok(std::string(name) + ": the accent holds through the hit's start", first > 3.0 && worstMs < 1.5,
+           num(first) + " dB at 2 ms, moving " + num(worstMs) + " dB a ms at most");
+    }
 }
+
 
 // --- Midside ----------------------------------------------------------------------
 

@@ -638,6 +638,9 @@ Result timeEffect(const std::string &name) {
         }
         // The transport at 120 bpm, for effects that follow the beat.
         const double ticksPerFrame = 240.0 * 120.0 / 60.0 / kSr;
+        ModTransport playing;
+        playing.rolling = true;
+        fx->setTransport(playing);
         fx->onBlock(static_cast<int64_t>(b * kBlock * ticksPerFrame), static_cast<int64_t>((b + 1) * kBlock * ticksPerFrame), 120.0f);
         const double t0 = nowUs();
         fx->run(L.data(), R.data(), kBlock, true);

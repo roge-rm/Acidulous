@@ -26,10 +26,6 @@ class Effect {
     // Once per block, before process(): tempo and the block's tick range, for
     // anything synced to the transport.
     virtual void onBlock(int64_t /*tickStart*/, int64_t /*tickEnd*/, float /*bpm*/) {}
-    // Once per block before onBlock(), on a track's insert only: whether the
-    // song is moving (past any count-in), and the track's swing, percent and
-    // pair as seq::Swing takes them.
-    virtual void onTransport(bool /*rolling*/, float /*swing*/, int64_t /*swingPair*/) {}
     // A note-on reaching the track's machine, after transpose, with its pitch
     // in hertz in the track's tuning. Audio thread.
     virtual void onNote(int32_t /*note*/, float /*hz*/) {}

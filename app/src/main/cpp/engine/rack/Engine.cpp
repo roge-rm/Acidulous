@@ -289,6 +289,8 @@ void Engine::renderBlock(const float *in, float *out) {
         const int64_t barFrom = launching ? clock.blockStart() : scheduler.currentTickInIteration();
         const int64_t tickInBar = ((barFrom % ticksPerBar) + ticksPerBar) % ticksPerBar;
         const int64_t pair = swingPair.load(std::memory_order_relaxed);
+        modTransport.rolling = rolling;
+        modTransport.swingPair = pair;
         // Per rack, because in clip mode racks can be on different scenes
         // and frozen audio is stored per track and scene.
         for (int32_t r = 0; r < kRackCount; ++r) {
@@ -297,6 +299,7 @@ void Engine::renderBlock(const float *in, float *out) {
             // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
                                   clock.blockStart(), tickInBar, ticksPerBar, pair);
+            clipCycleTick[r] = scheduler.rackCycleTick(r);
         }
     }
 
@@ -646,10 +649,14 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     rack.playQueued();
     // Give each detector its key for this block (see keyFor), or silence for
     // an empty rack.
+    // A track's inserts also get its swing, counted from its clip's start.
+    ModTransport trackTransport = modTransport;
+    trackTransport.swing = rack.channelTarget(Rack::Swing);
+    trackTransport.swingFrom = clock.blockStart() + modTransport.songOffset - clipCycleTick[r];
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
-            e->setTransport(modTransport);
+            e->setTransport(trackTransport);
             if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTransport);
         }
     }
