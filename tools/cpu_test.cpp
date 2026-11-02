@@ -636,6 +636,9 @@ Result timeEffect(const std::string &name) {
             L[i] = v;
             R[i] = v * 0.97f;
         }
+        // The transport at 120 bpm, for effects that follow the beat.
+        const double ticksPerFrame = 240.0 * 120.0 / 60.0 / kSr;
+        fx->onBlock(static_cast<int64_t>(b * kBlock * ticksPerFrame), static_cast<int64_t>((b + 1) * kBlock * ticksPerFrame), 120.0f);
         const double t0 = nowUs();
         fx->run(L.data(), R.data(), kBlock, true);
         const double us = nowUs() - t0;
@@ -1005,6 +1008,14 @@ int main(int argc, char **argv) {
         }
         report(rows);
         return 0;
+    }
+    // `cpu_test.sh fx.Spectral stutter=1` times one unit with knobs set, normalised.
+    for (int i = 2; i < argc; ++i) {
+        const std::string kv = argv[i];
+        const size_t eq = kv.find('=');
+        if (eq == std::string::npos) continue;
+        forced.emplace_back(kv.substr(0, eq), std::stof(kv.substr(eq + 1)));
+        printf("forcing %s to %s\n", kv.substr(0, eq).c_str(), kv.substr(eq + 1).c_str());
     }
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
         const std::string name = MachineRegistry::name(i);

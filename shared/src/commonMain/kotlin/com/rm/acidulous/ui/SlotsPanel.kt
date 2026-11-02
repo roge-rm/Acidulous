@@ -585,6 +585,11 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "touch" to listOf("strike", "pickup", "drive"),
         "out" to listOf("mix", "gain"),
     ),
+    "Spectral" to listOf(
+        "spectrum" to listOf("freeze", "blur", "smear", "robot", "peaks", "tilt"),
+        "stutter" to listOf("stutter", "grid", "length", "order", "fade", "renew"),
+        "out" to listOf("mix", "gain"),
+    ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
@@ -790,7 +795,7 @@ private val EXTRA = mapOf(
     "Slicer" to setOf("seed", "pitch"),
     "Magneto" to setOf("dubs"),
     "Horn" to setOf("breath", "snap"),
-    "Spectral" to setOf("freeze", "peaks"),
+    "Spectral" to setOf("freeze", "peaks", "stutter"),
     "Formula" to setOf("rate", "smooth"),
     "Venue" to setOf("stretch"), // a bigger or smaller room of the same shape
     "Vessel" to setOf("follow"), // the body tuned to the track's notes
@@ -863,6 +868,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "stop" && type == "Tape" -> listOf("run", "stop")
     name == "snap" && type == "Horn" -> listOf("free", "semi")
     name == "freeze" && type == "Spectral" -> listOf("run", "hold")
+    name == "stutter" && type == "Spectral" -> listOf("run", "loop")
     name == "mode" && type == "Deesser" -> listOf("split", "wide")
     steps == 2 -> listOf("off", "on")
     name == "mode" && type == "Delay" -> listOf("normal", "ping-pong", "multi-tap", "reverse")
@@ -879,6 +885,9 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "pattern" && type == "Acid" -> listOf("track", "8ths", "16ths", "offbeat", "push", "busy", "halves", "synco", "rolling")
     name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
     name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
+    name == "grid" && type == "Spectral" -> listOf("1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T", "1/32")
+    name == "order" && type == "Spectral" -> listOf("forward", "reverse", "bounce", "random")
+    name == "renew" && type == "Spectral" -> listOf("never", "1 lap", "2 laps", "4 laps", "8 laps")
     name == "seed" && type == "Slicer" -> (1..16).map { "$it" }
     name == "mode" && type == "Magneto" -> listOf("SP", "LP2", "LP4", "HQ", "XLP")
     name == "dubs" && type == "Magneto" -> (1..4).map { "$it" }

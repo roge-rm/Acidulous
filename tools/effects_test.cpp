@@ -714,6 +714,122 @@ void horn() {
 
 // --- Spectral -------------------------------------------------------------------
 
+/** The stutter: off leaves Spectral as it was, the loop repeats, reset replays it, and letting go returns to the track. */
+void spectralStutter() {
+    // At 117.1875 bpm a sixteenth is 6144 frames, twelve hops of 512, so steps
+    // land on hops and every lap is played the same way.
+    const float bpm = 117.1875f;
+    const size_t step = 6144, lap = 4 * step, n = 6 * lap;
+    const auto l = music(n, 7);
+    {
+        auto plain = make("Spectral", {{"blur", 0.3f}});
+        auto off = make("Spectral", {{"blur", 0.3f}, {"grid", 0.0f}, {"length", 9.0f}, {"order", 3.0f}, {"fade", 0.7f}});
+        const auto a = run(*plain, l, bpm).l, b = run(*off, l, bpm).l;
+        ok("stutter off: its other knobs change nothing", worst(a, b) == 0.0, num(worst(a, b)));
+    }
+    const auto plain = run(*make("Spectral"), l, bpm).l;
+    {
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"grid", 4.0f}, {"length", 4.0f}});
+        const auto out = run(*fx, l, bpm).l;
+        const std::vector<float> a(out.begin() + 2 * lap, out.begin() + 3 * lap), b(out.begin() + 3 * lap, out.begin() + 4 * lap),
+            c(out.begin() + 5 * lap, out.end()), live(plain.begin() + 3 * lap, plain.begin() + 4 * lap);
+        ok("the loop repeats exactly", worst(a, b) < 1e-6 && worst(a, c) < 1e-6 && rms(a, 0, lap) > 0.05,
+           num(worst(a, b)) + " / " + num(worst(a, c)) + ", rms " + num(rms(a, 0, lap)));
+        ok("...and isn't the track", worst(b, live) > 0.1, num(worst(b, live)));
+    }
+    {
+        // Reversed: from the second lap, each step is one of the forward lap's,
+        // the order running the other way.
+        auto fwd = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}});
+        auto rev = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"order", 1.0f}});
+        const auto f = run(*fwd, l, bpm).l, r = run(*rev, l, bpm).l;
+        // The middle of a step on the way out, clear of the frames that overlap its neighbours.
+        auto differ = [&](size_t rj, size_t fj) {
+            double w = 0.0;
+            for (size_t i = 0; i < 2048; ++i) w = std::max(w, double(std::fabs(r[3 * lap + rj * step + 7 * 512 + i] - f[3 * lap + fj * step + 7 * 512 + i])));
+            return w;
+        };
+        double w = 0.0;
+        int matched[4];
+        for (size_t j = 0; j < 4; ++j) {
+            double best = 1e9;
+            for (size_t k = 0; k < 4; ++k) {
+                const double d = differ(j, k);
+                if (d < best) { best = d; matched[j] = static_cast<int>(k); }
+            }
+            w = std::max(w, best);
+        }
+        bool backwards = true;
+        for (int j = 1; j < 4; ++j) backwards = backwards && (matched[j] - matched[j - 1] + 4) % 4 == 3;
+        w = backwards ? w : 1.0;
+        ok("reverse plays the steps backwards", w < 1e-6, num(w));
+    }
+    {
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"grid", 5.0f}, {"length", 7.0f}, {"order", 3.0f}, {"fade", 0.5f}, {"smear", 0.3f}});
+        const auto a = run(*fx, l, 128.0f).l;
+        fx->reset();
+        const auto b = run(*fx, l, 128.0f).l;
+        ok("reset replays a random stutter the same", worst(a, b) == 0.0, num(worst(a, b)));
+        auto fwd = make("Spectral", {{"stutter", 1.0f}, {"grid", 5.0f}, {"length", 7.0f}, {"fade", 0.5f}, {"smear", 0.3f}});
+        const auto f = run(*fwd, l, 128.0f).l;
+        ok("...and random isn't forward", worst(a, f) > 0.05, num(worst(a, f)));
+    }
+    {
+        // Renewed every lap: a lap taken, a lap looped, a lap taken again. The
+        // first step is the one it started in, a step before the song's first.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"renew", 1.0f}});
+        const auto out = run(*fx, l, bpm).l;
+        auto lapAt = [&](size_t firstStep) { return std::vector<float>(out.begin() + firstStep * step + 4096, out.begin() + (firstStep + 4) * step + 1536); };
+        const auto taken = lapAt(7), looped = lapAt(11), earlier = lapAt(3);
+        ok("renew: the lap taken again loops", worst(taken, looped) < 1e-6, num(worst(taken, looped)));
+        ok("...and is new", worst(earlier, looped) > 0.1, num(worst(earlier, looped)));
+    }
+    {
+        // A mono track that turns stereo part way through a loop: both sides loop.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}});
+        Stereo s{l, l};
+        const double ticksPerSample = kTicksPerBeat * bpm / 60.0 / kRate;
+        for (size_t at = 0; at < n; at += kBlock) {
+            fx->onBlock(static_cast<int64_t>(at * ticksPerSample), static_cast<int64_t>((at + kBlock) * ticksPerSample), bpm);
+            fx->run(s.l.data() + at, s.r.data() + at, kBlock, at >= 2 * lap + 3000);
+        }
+        const std::vector<float> L(s.l.begin() + 3 * lap, s.l.end()), R(s.r.begin() + 3 * lap, s.r.end());
+        ok("mono turned stereo mid-loop: the right loops as the left", worst(L, R) == 0.0 && rms(R, 0, R.size()) > 0.05, num(worst(L, R)));
+    }
+    {
+        // Frozen on one note, stuttered over another and let go: back to the freeze.
+        auto fx = make("Spectral");
+        const auto a440 = tone(440.0f, 0.3f, 40000), b660 = tone(660.0f, 0.3f, 192000);
+        run(*fx, a440, 120.0f);
+        set(*fx, "freeze", 1.0f);
+        const std::vector<float> lead(b660.begin(), b660.begin() + 24000), first(b660.begin() + 24000, b660.begin() + 96000),
+            rest(b660.begin() + 96000, b660.end());
+        run(*fx, lead, 120.0f, 40000);
+        set(*fx, "stutter", 1.0f);
+        const auto looping = run(*fx, first, 120.0f, 64000).l;
+        set(*fx, "stutter", 0.0f);
+        const auto back = run(*fx, rest, 120.0f, 136000).l;
+        const double during = pitchHz(looping, 40000, 44000), after = pitchHz(back, 48000, 52000);
+        ok("stutter over a freeze, let go: the freeze again", std::fabs(during - 660.0) < 10.0 && std::fabs(after - 440.0) < 10.0,
+           num(during) + " Hz looping, " + num(after) + " Hz after");
+    }
+    {
+        // Held for two laps and let go: it fades back into the track.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"fade", 0.3f}});
+        const size_t cut = 2 * lap + 1000;
+        const auto held = run(*fx, std::vector<float>(l.begin(), l.begin() + cut), bpm).l;
+        set(*fx, "stutter", 0.0f);
+        const auto after = run(*fx, std::vector<float>(l.begin() + cut, l.end()), bpm, cut).l;
+        const std::vector<float> back(after.begin() + 24000, after.begin() + 48000), live(plain.begin() + cut + 24000, plain.begin() + cut + 48000);
+        ok("let go, it's the track again within half a second", worst(back, live) < 1e-4, num(worst(back, live)));
+        double jump = 0.0, usual = 0.0;
+        for (size_t i = 1; i < 12000; ++i) jump = std::max(jump, double(std::fabs(after[i] - after[i - 1])));
+        for (size_t i = 1; i < held.size(); ++i) usual = std::max(usual, double(std::fabs(held[i] - held[i - 1])));
+        for (size_t i = cut; i < cut + 12000; ++i) usual = std::max(usual, double(std::fabs(plain[i] - plain[i - 1])));
+        ok("...with no jump as it lets go", jump <= usual * 1.2, num(jump) + " against " + num(usual) + " held or live");
+    }
+}
+
 void spectral() {
     printf("- spectral\n");
     auto latencyOf = [](Effect &fx) { return dynamic_cast<effect::Spectral &>(fx).latency(); };
@@ -789,6 +905,7 @@ void spectral() {
         const auto out = run(*fx, music(n, 2)).l;
         ok("robot makes a sound of its own", rms(out, 48000, n) > 0.01 && finite(Stereo{out, out}), num(rms(out, 48000, n)));
     }
+    spectralStutter();
     staysBounded("Spectral");
 }
 
