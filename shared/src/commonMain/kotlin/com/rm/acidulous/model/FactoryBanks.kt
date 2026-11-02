@@ -16021,7 +16021,27 @@ internal object FactoryBanks {
         mapOf("sustain" to 0.9f, "split" to 0.6156891f),
         family = "split")
 
-    private val fx_transient: List<Patch> by lazy { listOf(fx_transient0(), fx_transient1(), fx_transient2(), fx_transient3(), fx_transient4(), fx_transient5(), fx_transient6(), fx_transient7(), fx_transient8(), fx_transient9(), fx_transient10(), fx_transient11(), fx_transient12(), fx_transient13(), fx_transient14(), fx_transient15()) }
+    private fun fx_transient16() = Patch("fx.Transient", "Backbeat Snap",
+        mapOf("gain" to 0.458333343f, "grid" to 1f, "a03" to 0f, "a05" to 1f, "a07" to 0f, "a11" to 0f, "a13" to 1f, "a15" to 0f),
+        family = "grid")
+
+    private fun fx_transient17() = Patch("fx.Transient", "Offbeat Push",
+        mapOf("grid" to 1f, "a01" to 0f, "a03" to 1f, "a05" to 0f, "a07" to 1f, "a09" to 0f, "a11" to 1f, "a13" to 0f, "a15" to 1f),
+        family = "grid")
+
+    private fun fx_transient18() = Patch("fx.Transient", "Ghost Hats",
+        mapOf("split" to 0.8362956f, "grid" to 1f, "depth" to 0.75f, "a01" to 1f, "a02" to 0f, "a04" to 0f, "a05" to 1f, "a06" to 0f, "a08" to 0f, "a09" to 1f, "a10" to 0f, "a12" to 0f, "a13" to 1f, "a14" to 0f, "a16" to 0f),
+        family = "grid")
+
+    private fun fx_transient19() = Patch("fx.Transient", "Tresillo",
+        mapOf("gain" to 0.479166657f, "grid" to 1f, "length" to 0.466666669f, "a01" to 1f, "a02" to 0f, "a03" to 0f, "a04" to 1f, "a05" to 0f, "a06" to 0f, "a07" to 1f, "a08" to 0f),
+        family = "grid")
+
+    private fun fx_transient20() = Patch("fx.Transient", "Dembow",
+        mapOf("grid" to 1f, "depth" to 0.6666667f, "a02" to 0f, "a04" to 1f, "a05" to 0f, "a06" to 0f, "a07" to 1f, "a10" to 0f, "a12" to 1f, "a13" to 0f, "a14" to 0f, "a15" to 1f),
+        family = "grid")
+
+    private val fx_transient: List<Patch> by lazy { listOf(fx_transient0(), fx_transient1(), fx_transient2(), fx_transient3(), fx_transient4(), fx_transient5(), fx_transient6(), fx_transient7(), fx_transient8(), fx_transient9(), fx_transient10(), fx_transient11(), fx_transient12(), fx_transient13(), fx_transient14(), fx_transient15(), fx_transient16(), fx_transient17(), fx_transient18(), fx_transient19(), fx_transient20()) }
 
     private fun fx_midside0() = Patch("fx.Midside", "Init", emptyMap(),
         family = "wide")

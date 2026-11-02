@@ -1285,6 +1285,8 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  */
 /** The pitched notes in the last effect source, frame and note, for an effect that follows them. */
 std::vector<std::pair<int64_t, int>> gSourceNotes;
+/** `--material drums` on an effect: a plain drum loop, every hit as loud as its kind, instead of the usual source. */
+std::string gEffectMaterial;
 
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     gSourceNotes.clear();
@@ -1297,7 +1299,17 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
     };
 
-    if (effect == "Amp" || effect == "Distortion") {
+    if (gEffectMaterial == "drums") {
+        // Kick on the beat, snare on 2 and 4, a closed hat every sixteenth at
+        // one velocity: a flat loop with no groove of its own.
+        std::vector<Hit> drums;
+        for (int b = 0; b < 8; ++b) {
+            drums.push_back({static_cast<float>(b), 0.25f, 36, 105});
+            if (b % 2 == 1) drums.push_back({static_cast<float>(b), 0.25f, 38, 105});
+            for (int q = 0; q < 4; ++q) drums.push_back({b + q * 0.25f, 0.2f, 43, 85});
+        }
+        add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.9f);
+    } else if (effect == "Amp" || effect == "Distortion") {
         // A riff on the low strings, then a chord left to ring.
         add(renderPart("Fret", "Clean Neck", {
             {0.0f, 0.5f, 45, 100}, {0.5f, 0.5f, 48, 80}, {1.0f, 0.5f, 50, 90}, {1.5f, 0.5f, 52, 80},
@@ -1748,6 +1760,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         fx->setHearsNotes(true); // as a track's insert, which the source's notes stand for
         applyTo(fx->params(), r.norm);
         applyEffectSettings(fx.get(), r.settings);
+        gEffectMaterial = opt.material;
         take = renderEffect(fx.get(), bank.typeName(), opt.bpm);
     } else {
         std::unique_ptr<Machine> m(MachineRegistry::create(bank.unit.c_str()));

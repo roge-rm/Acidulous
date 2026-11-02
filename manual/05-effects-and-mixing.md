@@ -71,7 +71,7 @@ Each effect has its own page below.
 - [**Smash**](05-effects-and-mixing/smash.md) - three bands squashed from both
   sides: loud parts down, quiet parts up.
 - [**Transient**](05-effects-and-mixing/transient.md) - the start of each hit
-  and the ring after it, up or down.
+  and the ring after it, up or down. Can shape each hit by its step in the bar.
 - [**Deesser**](05-effects-and-mixing/deesser.md) - turns down a band when it
   gets too loud: an s, a cymbal. Can throw what it cuts into an echo.
 

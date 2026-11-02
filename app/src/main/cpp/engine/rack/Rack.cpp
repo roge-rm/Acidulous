@@ -456,6 +456,7 @@ void Rack::updateFrozen(int64_t sceneId, float bpm, bool playing, bool ramping) 
 
 void Rack::updateScene(int64_t sceneId, int64_t cycleTick, bool playing, bool rolling, int64_t tickStart,
                        int64_t tickInBar, int32_t ticksPerBar, int64_t swingPair) {
+    for (Effect *e : effects) if (e != nullptr) e->onTransport(rolling, channelTarget(Swing), swingPair);
     if (machine == nullptr) return;
     // The clip is set per rack per scene, so the mute is right in both modes
     // (same as updateFrozen).

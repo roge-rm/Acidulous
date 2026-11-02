@@ -78,7 +78,8 @@ Chaque effet a sa propre page ci-dessous.
 - [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
   côtés. Les passages forts descendent, les doux montent.
 - [**Transient**](05-effects-and-mixing/transient.md) : le début de chaque
-  coup et la résonance après, plus fort ou plus doux.
+  coup et la résonance après, plus fort ou plus doux. Peut façonner chaque
+  coup selon son pas dans la mesure.
 - [**Deesser**](05-effects-and-mixing/deesser.md) : baisse une bande quand
   elle devient trop forte : un s, une cymbale. Peut renvoyer ce qu’elle
   coupe dans un écho.

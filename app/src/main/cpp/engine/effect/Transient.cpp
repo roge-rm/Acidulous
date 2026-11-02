@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <engine/dsp/Math.h>
+#include <sequencer/Swing.h>
 
 namespace acidulous::effect {
 
@@ -20,6 +21,29 @@ constexpr float kMostApart = 4.0f, kDepth = 0.5f;
 constexpr float kLeast = -4.0f, kMost = 2.0f;
 /** At the bottom of `split` the whole sound is shaped. */
 constexpr float kSplitOff = 21.0f;
+/** The grid's step lengths in ticks: 1/16 triplet, 1/16, 1/8. */
+constexpr int64_t kStepTicks[3] = {kPPQN / 6, kPPQN / 4, kPPQN / 2};
+/**
+ * The hit detector: a 1 ms average of the level against a 30 ms one. A hit
+ * starts when the short one is kOnset times the long one (6 dB) and the next
+ * can start once it's back under kRearm times.
+ */
+constexpr float kShortAvg = 0.001f, kLongAvg = 0.03f;
+constexpr float kOnset = 2.0f, kRearm = 1.2f;
+/**
+ * The accent comes in as the attack followers part from kAccentFrom to 1
+ * octave, so it leaves the ring between hits alone.
+ */
+constexpr float kAccentFrom = 0.3f;
+/** Ticks standing still this long (in seconds) count as stopped, where nothing says. */
+constexpr float kStillSeconds = 0.1f;
+/** The accent's glide to a new step's value, in seconds: short, so a down step catches the hit's first peak. */
+constexpr float kAccentGlide = 0.0001f;
+/**
+ * A hit up to a quarter step early counts as the step it's early for, so
+ * a played-in or rounded note isn't put on the step before.
+ */
+constexpr int64_t kLeadDivisor = 4;
 
 inline float follow(float &env, float x, float attack, float release) {
     env = dsp::guardDenormal(env + (x - env) * (x > env ? attack : release));
@@ -34,6 +58,27 @@ const ParamDef *Transient::paramDefs(int32_t &count) const {
         {"time", 0.25f, 4.0f, 1.0f, Curve::Exponential, 0, ""},
         {"split", 20.0f, 8000.0f, 20.0f, Curve::Exponential, 0, "Hz"},
         {"gain", -24.0f, 24.0f, 0.0f, Curve::Linear, 0, "dB"},
+        {"grid", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"depth", 0.0f, 12.0f, 6.0f, Curve::Linear, 0, "dB"},
+        {"rate", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""}, // 1/16T 1/16 1/8
+        {"length", 1.0f, 16.0f, 16.0f, Curve::Stepped, 16, ""},
+        // The steps: 0 down, 1 flat, 2 up.
+        {"a01", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a02", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a03", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a04", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a05", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a06", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a07", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a08", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a09", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a10", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a11", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a12", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a13", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a14", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a15", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
+        {"a16", 0.0f, 2.0f, 1.0f, Curve::Stepped, 3, ""},
     };
     count = Count;
     return defs;
@@ -42,12 +87,30 @@ const ParamDef *Transient::paramDefs(int32_t &count) const {
 void Transient::prepare(int32_t sampleRate) {
     sr = static_cast<float>(sampleRate);
     timeWas = -1.0f;
+    accentGlide = dsp::onePoleCoeff(kAccentGlide, sr);
+    shortCoeff = dsp::onePoleCoeff(kShortAvg, sr);
+    longCoeff = dsp::onePoleCoeff(kLongAvg, sr);
     reset();
 }
 
 void Transient::reset() {
     low[0] = low[1] = 0.0f;
     fastA = slowA = holdS = fallS = 0.0f;
+    shortAvg = longAvg = 0.0f;
+    armed = true;
+    accent = accentNow = 0.0f;
+    stillFrames = static_cast<int32_t>(kStillSeconds * sr) + 1;
+    tickKnown = false;
+}
+
+float Transient::stepAccent(int64_t songTick) const {
+    const auto &p = params_;
+    const int64_t step = kStepTicks[std::clamp(static_cast<int>(p.get(Rate) + 0.5f), 0, 2)];
+    const int64_t length = std::clamp(static_cast<int64_t>(p.get(Length) + 0.5f), int64_t{1}, int64_t{16});
+    // Back to where the hit's note was written, then onto the grid.
+    const int64_t straight = seq::Swing::from(std::max<int64_t>(songTick, 0), swing, swingPair);
+    const int64_t at = ((straight + step / kLeadDivisor) / step) % length;
+    return std::round(p.get(A01 + static_cast<int32_t>(at))) - 1.0f;
 }
 
 bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
@@ -68,6 +131,21 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
     const int chans = stereoIn ? 2 : 1;
     // The low filter only runs while split is on; it starts from silence each time.
     if (!splitting) low[0] = low[1] = 0.0f;
+    // The grid: only while the song is moving.
+    const bool grid = p.get(Grid) >= 0.5f;
+    if (!tickKnown) {
+        tickKnown = true;
+        tickWas = blockStart;
+    } else if (blockStart != tickWas || blockEnd != blockStart) {
+        tickWas = blockStart;
+        stillFrames = 0;
+    } else if (subOffset_ == 0) {
+        stillFrames = std::min(stillFrames + frames, 1 << 30);
+    }
+    const bool rolling = told ? moving : stillFrames < static_cast<int32_t>(kStillSeconds * sr);
+    const double ticksPerFrame = frames > 0 ? static_cast<double>(blockEnd - blockStart) / blockFramesOf(frames) : 0.0;
+    const double songStart = static_cast<double>(blockStart + modTransport_.songOffset);
+    const float depth = p.get(Depth) / 6.0206f; // in octaves, as the gain is worked out
     for (int32_t i = 0; i < frames; ++i) {
         // The part that's shaped: above the split, or all of it.
         float hi[2] = {L[i], stereoIn ? R[i] : 0.0f};
@@ -84,7 +162,27 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
         follow(fallS, x, atkFast, relFall);
         const float apart = std::clamp(std::log2((fastA + kFloor) / (slowA + kFloor)), 0.0f, kMostApart);
         const float ring = std::clamp(std::log2((holdS + kFloor) / (fallS + kFloor)), 0.0f, kMostApart);
-        const float g = std::exp2(std::clamp(attack * apart + sustain * ring, kLeast, kMost));
+        float shape = attack * apart + sustain * ring;
+        if (grid || accentNow != 0.0f) {
+            shortAvg = dsp::guardDenormal(shortAvg + (x - shortAvg) * shortCoeff);
+            longAvg = dsp::guardDenormal(longAvg + (x - longAvg) * longCoeff);
+            if (armed && shortAvg + kFloor > kOnset * (longAvg + kFloor)) {
+                armed = false;
+                const double tick = songStart + static_cast<double>(i + subOffset_) * ticksPerFrame;
+                accent = grid && rolling ? stepAccent(static_cast<int64_t>(std::floor(tick))) : 0.0f;
+            } else if (!armed && shortAvg + kFloor < kRearm * (longAvg + kFloor)) {
+                // The hit is over: back to flat, so the next starts from there.
+                armed = true;
+                accent = 0.0f;
+            }
+            // Turned off, it glides out and then stops, back to the plain sum above.
+            const float to = grid ? accent : 0.0f;
+            accentNow += (to - accentNow) * accentGlide;
+            // Landed, exactly, so it can't sink into denormals.
+            if (std::fabs(to - accentNow) < 1.0e-5f) accentNow = to;
+            shape += accentNow * depth * std::clamp((apart - kAccentFrom) / (1.0f - kAccentFrom), 0.0f, 1.0f);
+        }
+        const float g = std::exp2(std::clamp(shape, kLeast, kMost));
         if (splitting) {
             L[i] = low[0] + hi[0] * g;
             if (stereoIn) R[i] = low[1] + hi[1] * g;

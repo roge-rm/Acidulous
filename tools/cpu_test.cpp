@@ -1034,6 +1034,16 @@ int main(int argc, char **argv) {
             rows.push_back(r);
             forced.clear();
         }
+        // The Transient's accent grid adds a detector the default skips.
+        if (name == "Transient" && forced.empty()) {
+            forced.emplace_back("grid", 1.0f);
+            forced.emplace_back("a01", 2.0f);
+            forced.emplace_back("a03", 0.0f);
+            Result r = timeEffect(name);
+            r.name += " grid";
+            rows.push_back(r);
+            forced.clear();
+        }
     }
     report(rows);
     printf("\n%zu units timed\n", rows.size());

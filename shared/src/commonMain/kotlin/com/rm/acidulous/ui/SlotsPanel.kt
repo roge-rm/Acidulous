@@ -470,6 +470,8 @@ private fun SlotFace(
         val shown = info.filterNot {
             InsertMod.isModParam(it.name) ||
                 type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
+                // So do the Transient's sixteen accent steps.
+                type == "Transient" && it.name.length == 3 && it.name[0] == 'a' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
                 type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
                 model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects) ||
@@ -500,8 +502,12 @@ private fun SlotFace(
                 if (type == "Arp" && wide) {
                     Group("steps", background = Acid.colors.cardAlt) { ArpStepGrid(b) }
                 }
+                if (type == "Transient" && wide) {
+                    Group("steps", background = Acid.colors.cardAlt) { AccentStepGrid(b) }
+                }
             }
             if (type == "Arp" && !wide && (page < 0 || "pattern" in PAGES[type].orEmpty().getOrNull(page).orEmpty())) ArpSteps(b)
+            if (type == "Transient" && !wide) AccentSteps(b)
         } else {
             // A panel's knobs are in titled cards like a machine's, as tall as
             // the mod card beside them. The reverb's model first, then its own
@@ -542,6 +548,7 @@ private fun SlotFace(
                 ) { cards() }
             } }
             if (type == "Arp") ArpSteps(b)
+            if (type == "Transient") AccentSteps(b)
         }
     }
 }
@@ -614,6 +621,8 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
     "Transient" to listOf(
         "shape" to listOf("attack", "sustain", "time"),
         "extra" to listOf("split"),
+        // The accent grid's own knobs; its steps are a row of their own.
+        "grid" to listOf("grid", "depth", "rate", "length"),
         "out" to listOf("gain"),
     ),
     "Midside" to listOf(
@@ -834,6 +843,63 @@ private fun ArpStepGrid(b: ParamBinding) {
     }
 }
 
+/** A Transient accent step: 0 down, 1 flat, 2 up. */
+private fun accentOf(b: ParamBinding, name: String): Int = (b.value(name) * 2f).roundToInt().coerceIn(0, 2)
+
+/** A tap moves a step on: flat, up, down, flat. */
+private fun nextAccent(b: ParamBinding, name: String) {
+    val next = when (accentOf(b, name)) { 1 -> 2; 2 -> 0; else -> 1 }
+    b.set(name, next / 2f)
+}
+
+/** One accent step's cell: green up, red down, the ones past `length` dimmed. */
+@Composable
+private fun AccentCell(b: ParamBinding, i: Int, length: Int, modifier: Modifier, fontSize: androidx.compose.ui.unit.TextUnit) {
+    val name = "a%02d".format(i)
+    val accent = accentOf(b, name)
+    val inRange = i <= length
+    val fill = when {
+        accent == 2 && inRange -> Acid.colors.green
+        accent == 2 -> Acid.colors.greenDim
+        accent == 0 && inRange -> Acid.colors.red
+        accent == 0 -> Acid.colors.accentDim
+        else -> Acid.colors.control
+    }
+    Box(
+        modifier.clip(RoundedCornerShape(3.dp)).background(fill).clickable { nextAccent(b, name) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            when (accent) { 2 -> "↑"; 0 -> "↓"; else -> "$i" },
+            color = if (!inRange) Acid.colors.textFaint else if (accent != 1) Color.White else Acid.colors.text,
+            fontSize = fontSize,
+        )
+    }
+}
+
+/** The Transient's accent grid: sixteen steps in one row, each down, flat or up. */
+@Composable
+private fun AccentSteps(b: ParamBinding) {
+    val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(Res.string.slot_steps), color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        for (i in 1..16) AccentCell(b, i, length, Modifier.weight(1f).height(22.dp), 8.sp)
+    }
+}
+
+/** The same steps as [AccentSteps], as two lines of eight for a card. */
+@Composable
+private fun AccentStepGrid(b: ParamBinding) {
+    val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        for (row in 0 until 2) {
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (i in row * 8 + 1..row * 8 + 8) AccentCell(b, i, length, Modifier.width(28.dp).height(30.dp), 9.sp)
+            }
+        }
+    }
+}
+
 /** The "extra something" controls, drawn in the accent colour so they stand out from the classic set. */
 private val EXTRA = mapOf(
     "Delay" to setOf("duck", "wobble"),
@@ -864,7 +930,7 @@ private val EXTRA = mapOf(
     "Formula" to setOf("rate", "smooth"),
     "Venue" to setOf("stretch"), // a bigger or smaller room of the same shape
     "Vessel" to setOf("follow"), // the body tuned to the track's notes
-    "Transient" to setOf("split"), // only the highs shaped
+    "Transient" to setOf("split", "grid", "depth"), // only the highs shaped; each hit shaped by its step
     "Midside" to setOf("breathe"), // the side opens in the gaps
     "Deesser" to setOf("relative", "throw"), // measured against the whole sound; what it cuts, echoed
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
@@ -953,6 +1019,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "pattern" && type == "Acid" -> listOf("track", "8ths", "16ths", "offbeat", "push", "busy", "halves", "synco", "rolling")
     name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
     name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
+    name == "rate" && type == "Transient" -> listOf("1/16T", "1/16", "1/8")
     name == "grid" && type == "Spectral" -> listOf("1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T", "1/32")
     name == "order" && type == "Spectral" -> listOf("forward", "reverse", "bounce", "random")
     name == "renew" && type == "Spectral" -> listOf("never", "1 lap", "2 laps", "4 laps", "8 laps")

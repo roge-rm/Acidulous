@@ -1402,6 +1402,113 @@ void transient() {
     staysBounded("Transient");
 }
 
+/** The accent grid: each hit shaped by the step it lands on. */
+void transientGrid() {
+    printf("- transient grid\n");
+    // A hit every eighth note at 120 bpm: every other sixteenth step.
+    const auto in = hits(96000);
+    const char *steps[16] = {"a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08",
+                             "a09", "a10", "a11", "a12", "a13", "a14", "a15", "a16"};
+    {
+        // Grid off, with everything else of the grid's turned, is the plain shaper to the bit.
+        auto plain = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}});
+        auto off = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}, {"depth", 12.0f}, {"rate", 2.0f}, {"length", 5.0f}});
+        for (int k = 0; k < 16; ++k) set(*off, steps[k], k % 2 ? 2.0f : 0.0f);
+        const auto a = run(*plain, in).l, b = run(*off, in).l;
+        ok("grid off is the plain shaper, bit for bit", worst(a, b) == 0.0);
+        auto flat = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}, {"grid", 1.0f}, {"depth", 12.0f}});
+        ok("grid on with every step flat is too", worst(a, run(*flat, in).l) == 0.0);
+    }
+    // Hits on steps 1, 5, 9, 13 up, on 3, 7, 11, 15 down.
+    auto grid = [&](std::initializer_list<std::pair<const char *, float>> extra = {}) {
+        auto fx = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}});
+        for (int k = 0; k < 16; k += 4) set(*fx, steps[k], 2.0f);
+        for (int k = 2; k < 16; k += 4) set(*fx, steps[k], 0.0f);
+        for (const auto &[name, value] : extra) set(*fx, name, value);
+        return fx;
+    };
+    // Each hit's onset (its first 5 ms, RMS) against the same hit with the grid off, in dB, for the
+    // hits on even (up) and odd (down) eighths. The first hit starts from silence
+    // and is left out.
+    auto byHit = [&](const std::vector<float> &out, const std::vector<float> &ref, bool odd) {
+        double s = 0.0;
+        int n = 0;
+        for (size_t h = 12000, k = 1; h + 240 < out.size(); h += 12000, ++k) {
+            if ((k % 2 == 1) != odd) continue;
+            s += dB(rms(out, h, h + 240) / rms(ref, h, h + 240));
+            ++n;
+        }
+        return s / std::max(1, n);
+    };
+    const auto ref = run(*make("Transient"), in).l;
+    {
+        auto fx = grid();
+        const auto out = run(*fx, in).l;
+        const double up = byHit(out, ref, false), down = byHit(out, ref, true);
+        ok("an up step raises the hit's onset", up > 3.0, num(up) + " dB");
+        ok("a down step lowers it", down < -3.0, num(down) + " dB");
+        // The ring after the onset is left alone.
+        double worstTail = 0.0;
+        for (size_t h = 12000; h + 12000 <= out.size(); h += 12000)
+            worstTail = std::max(worstTail, std::fabs(dB(rms(out, h + 6000, h + 11000) / rms(ref, h + 6000, h + 11000))));
+        ok("the tail of each hit is as it was", worstTail < 0.5, num(worstTail) + " dB at most");
+    }
+    {
+        // Started a sixteenth in, every hit lands two steps later: the up and down swap.
+        auto fx = grid();
+        const auto out = run(*fx, in, 120.0f, 12000).l;
+        const double even = byHit(out, ref, false), odd = byHit(out, ref, true);
+        ok("the pattern follows the song's position", even < -3.0 && odd > 3.0,
+           "even hits " + num(even) + " dB, odd " + num(odd) + " dB");
+    }
+    {
+        // At 1/8 over 4 steps the hits go step 1 (up), 2, 3 (down), 4.
+        auto fx = grid({{"rate", 2.0f}, {"length", 4.0f}});
+        const auto out = run(*fx, in).l;
+        double upHit = 0.0, downHit = 0.0, flatHit = 0.0;
+        for (size_t h = 12000, k = 1; h + 240 < out.size(); h += 12000, ++k) {
+            const double d = dB(rms(out, h, h + 240) / rms(ref, h, h + 240));
+            if (k % 4 == 0) upHit = std::max(upHit, d);
+            else if (k % 4 == 2) downHit = std::min(downHit, d);
+            else flatHit = std::max(flatHit, std::fabs(d));
+        }
+        ok("rate and length: 1/8 steps over a 4-step loop", upHit > 3.0 && downHit < -3.0 && flatHit < 0.5,
+           num(upHit) + " dB on step 1, " + num(downHit) + " on 3, " + num(flatHit) + " on 2 and 4");
+    }
+    {
+        // A note on step 1's second half swung to where step 2 starts (75%,
+        // sixteenths: tick 40 sounds at 60). With the swing known it counts as step 1.
+        std::vector<float> one(24000, 0.0f);
+        const auto hit = hits(12000);
+        for (size_t i = 0; i < 6000; ++i) one[6000 + i] = hit[i];
+        const auto plainOne = run(*make("Transient"), one).l;
+        auto swung = grid({{"a02", 0.0f}});
+        swung->onTransport(true, 75.0f, 120);
+        auto straight = grid({{"a02", 0.0f}});
+        const double s = dB(rms(run(*swung, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
+        const double t = dB(rms(run(*straight, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
+        ok("swing: a swung note is accented as the step it was written on", s > 3.0 && t < -3.0,
+           num(s) + " dB swung, " + num(t) + " dB as if straight");
+    }
+    {
+        // Stopped, the grid leaves the hits alone.
+        auto fx = grid();
+        Stereo st{in, in};
+        for (size_t at = 0; at < in.size(); at += kBlock) {
+            fx->onBlock(480, 480, 120.0f);
+            fx->run(st.l.data() + at, st.r.data() + at, kBlock, false);
+        }
+        ok("stopped, the grid does nothing", worst(st.l, ref) == 0.0);
+    }
+    {
+        auto fx = grid({{"attack", 0.3f}});
+        const auto a = run(*fx, in).l;
+        fx->reset();
+        const auto b = run(*fx, in).l;
+        ok("reset: played again it's the same to the bit", worst(a, b) == 0.0);
+    }
+}
+
 // --- Midside ----------------------------------------------------------------------
 
 void midSide() {
@@ -2556,6 +2663,7 @@ int main() {
     formula();
     delayModes();
     transient();
+    transientGrid();
     midSide();
     deEsser();
     reverb();

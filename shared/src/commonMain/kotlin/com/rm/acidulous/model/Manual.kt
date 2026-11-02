@@ -1862,10 +1862,16 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**time** - how long counts as the start of a hit and as its ring. Short catches only the click, long the whole hit."),
         ManualBlock(ManualKind.Bullet, "**split** *(extra)* - only what's above this frequency is shaped. At the bottom of its range the whole sound is."),
         ManualBlock(ManualKind.Bullet, "**gain** - the output level."),
+        ManualBlock(ManualKind.Subheading, "Grid"),
+        ManualBlock(ManualKind.Bullet, "**grid** *(extra)* - shapes each hit by where it lands in the bar, so a flat drum loop gets a groove. The row of steps under the knobs sets each step up, flat or down: tap one to go flat, up, down. A hit on an up step gets more attack, on a down step less. The step is the one the hit starts in, and it follows the song's position and the track's swing. Only while the song plays.", "**grid** *(extra)* - shapes each hit by where it lands in the bar, so a flat drum loop gets a groove. The row of steps under the knobs sets each step up, flat or down: click one to go flat, up, down. A hit on an up step gets more attack, on a down step less. The step is the one the hit starts in, and it follows the song's position and the track's swing. Only while the song plays."),
+        ManualBlock(ManualKind.Bullet, "**depth** - how much an up or down step adds or takes, in dB."),
+        ManualBlock(ManualKind.Bullet, "**rate** - how long a step is: 1/16 triplet, 1/16 or 1/8."),
+        ManualBlock(ManualKind.Bullet, "**length** - how many steps before the row starts over."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "On a drum loop, set **split** to 1 or 2 kHz and turn up **attack**: the hats and snare snap and the kick stays as it was."),
         ManualBlock(ManualKind.Bullet, "Turning **attack** up raises the peaks, so turn **gain** down to match."),
         ManualBlock(ManualKind.Bullet, "**sustain** down on a roomy recording takes the room out."),
+        ManualBlock(ManualKind.Bullet, "With **grid** on, leave **attack** at 0 and set only a few steps: up on 2 and 4 and the snare cracks while the rest stays as it was. Try **Backbeat Snap** or **Ghost Hats**."),
     ))
 
     private fun en4_30() = ManualSection("Tremolo", "Volume on an LFO, or auto-pan.", listOf(
@@ -1979,7 +1985,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Gate** - a noise gate that another track can open."),
         ManualBlock(ManualKind.Bullet, "**Swell** - upward compression, in one band or three: the quiet parts come up to meet the loud ones."),
         ManualBlock(ManualKind.Bullet, "**Smash** - three bands squashed from both sides: loud parts down, quiet parts up."),
-        ManualBlock(ManualKind.Bullet, "**Transient** - the start of each hit and the ring after it, up or down."),
+        ManualBlock(ManualKind.Bullet, "**Transient** - the start of each hit and the ring after it, up or down. Can shape each hit by its step in the bar."),
         ManualBlock(ManualKind.Bullet, "**Deesser** - turns down a band when it gets too loud: an s, a cymbal. Can throw what it cuts into an echo."),
         ManualBlock(ManualKind.Heading, "Movement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** - two to four detuned voices that drift."),
@@ -4206,10 +4212,16 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**temps** : combien de temps compte comme le début d’un coup et comme sa résonance. Court ne prend que le clic, long le coup entier."),
         ManualBlock(ManualKind.Bullet, "**partage** *(extra)* : seul ce qui est au-dessus de cette fréquence est façonné. Tout en bas, tout le son l’est."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Subheading, "Grille"),
+        ManualBlock(ManualKind.Bullet, "**grille** *(extra)* : façonne chaque coup selon où il tombe dans la mesure, donc une boucle de batterie plate prend du groove. La rangée de pas sous les boutons règle chaque pas vers le haut, plat ou vers le bas : touchez-en un pour passer à plat, haut, bas. Un coup sur un pas haut a plus d’attaque, sur un pas bas moins. Le pas est celui où le coup commence, et il suit la position du morceau et le swing de la piste. Seulement pendant la lecture.", "**grille** *(extra)* : façonne chaque coup selon où il tombe dans la mesure, donc une boucle de batterie plate prend du groove. La rangée de pas sous les boutons règle chaque pas vers le haut, plat ou vers le bas : cliquez-en un pour passer à plat, haut, bas. Un coup sur un pas haut a plus d’attaque, sur un pas bas moins. Le pas est celui où le coup commence, et il suit la position du morceau et le swing de la piste. Seulement pendant la lecture."),
+        ManualBlock(ManualKind.Bullet, "**prof.** : combien un pas haut ou bas ajoute ou enlève, en dB."),
+        ManualBlock(ManualKind.Bullet, "**vitesse** : la longueur d’un pas : 1/16 triolet, 1/16 ou 1/8."),
+        ManualBlock(ManualKind.Bullet, "**longueur** : combien de pas avant que la rangée recommence."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Sur une boucle de batterie, réglez **partage** vers 1 ou 2 kHz et montez **attaque** : les charleys et la caisse claire claquent et la grosse caisse reste comme elle était."),
         ManualBlock(ManualKind.Bullet, "Monter **attaque** fait monter les crêtes, donc baissez **gain** en conséquence."),
         ManualBlock(ManualKind.Bullet, "**maintien** vers le bas sur un enregistrement avec beaucoup de salle enlève la salle."),
+        ManualBlock(ManualKind.Bullet, "Avec **grille**, laissez **attaque** à 0 et réglez seulement quelques pas : vers le haut sur 2 et 4 et la caisse claire claque pendant que le reste ne bouge pas. Essayez **Backbeat Snap** ou **Ghost Hats**."),
     ))
 
     private fun fr4_30() = ManualSection("Tremolo", "Le volume sur un LFO, ou un panoramique automatique.", listOf(
@@ -4323,7 +4335,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Gate** : une porte de bruit qu’une autre piste peut ouvrir."),
         ManualBlock(ManualKind.Bullet, "**Swell** : une compression vers le haut, sur une bande ou trois. Les passages doux montent rejoindre les forts."),
         ManualBlock(ManualKind.Bullet, "**Smash** : trois bandes écrasées des deux côtés. Les passages forts descendent, les doux montent."),
-        ManualBlock(ManualKind.Bullet, "**Transient** : le début de chaque coup et la résonance après, plus fort ou plus doux."),
+        ManualBlock(ManualKind.Bullet, "**Transient** : le début de chaque coup et la résonance après, plus fort ou plus doux. Peut façonner chaque coup selon son pas dans la mesure."),
         ManualBlock(ManualKind.Bullet, "**Deesser** : baisse une bande quand elle devient trop forte : un s, une cymbale. Peut renvoyer ce qu’elle coupe dans un écho."),
         ManualBlock(ManualKind.Heading, "Mouvement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** : deux à quatre voix désaccordées qui dérivent."),
