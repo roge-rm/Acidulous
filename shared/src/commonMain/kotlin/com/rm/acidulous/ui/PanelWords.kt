@@ -1423,6 +1423,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "threshold" to Res.string.pw_threshold,
     "throat" to Res.string.pw_throat,
     "through" to Res.string.pw_through,
+    "throw" to Res.string.pw_throw,
     "thru" to Res.string.pw_thru,
     "thumb" to Res.string.pw_thumb,
     "thunder" to Res.string.pw_thunder,

@@ -1422,9 +1422,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**listen** - plays only the band, so you can find where the s sits."),
         ManualBlock(ManualKind.Bullet, "**relative** *(extra)* - measures the band against the rest of the sound instead of against full level, so a quiet line and a loud one are treated the same. The threshold is then how far under the rest the band can come up: an s is nearly all band, a vowel has it 20 dB or more down. At -36 it is 10 dB, each 1 dB lower allows 1 dB less."),
         ManualBlock(ManualKind.Bullet, "**gain** - the output level."),
+        ManualBlock(ManualKind.Subheading, "Throw"),
+        ManualBlock(ManualKind.Bullet, "**throw** *(extra)* - sends what the deesser takes off to its own echo, so each s comes back as a bright trail while the voice stays clean. Turned down, the echoes already sent ring out. **listen** keeps it quiet."),
+        ManualBlock(ManualKind.Bullet, "**time** - how far apart the echoes are, on the beat: 1/16, 1/8, dotted 1/8, 1/4, dotted 1/4 or 1/2. The repeats bounce left and right, so a mono track comes out in stereo."),
+        ManualBlock(ManualKind.Bullet, "**feedback** - how long the echoes keep coming back."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Turn on **listen**, move **freq** until the s is loudest, then turn **listen** off."),
         ManualBlock(ManualKind.Bullet, "With **relative** on, the singer can move off the microphone and it still catches the same s."),
+        ManualBlock(ManualKind.Bullet, "Draw **throw** up for the last word of a line, the way a dub engineer throws a word into the delay: only its esses fly off. Try **Dub Sparkle**."),
     ))
 
     private fun en4_6() = ManualSection("Delay", "Echoes on a note value, in four modes, and it can duck while you play.", listOf(
@@ -1975,7 +1980,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Swell** - upward compression, in one band or three: the quiet parts come up to meet the loud ones."),
         ManualBlock(ManualKind.Bullet, "**Smash** - three bands squashed from both sides: loud parts down, quiet parts up."),
         ManualBlock(ManualKind.Bullet, "**Transient** - the start of each hit and the ring after it, up or down."),
-        ManualBlock(ManualKind.Bullet, "**Deesser** - turns down a band when it gets too loud: an s, a cymbal."),
+        ManualBlock(ManualKind.Bullet, "**Deesser** - turns down a band when it gets too loud: an s, a cymbal. Can throw what it cuts into an echo."),
         ManualBlock(ManualKind.Heading, "Movement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** - two to four detuned voices that drift."),
         ManualBlock(ManualKind.Bullet, "**Flanger** - a short sweeping delay, with negative feedback for the hollow sound."),
@@ -3759,9 +3764,14 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**écouter** : ne joue que la bande, pour trouver où se trouve le s."),
         ManualBlock(ManualKind.Bullet, "**relatif** *(extra)* : mesure la bande par rapport au reste du son plutôt qu’au niveau maximal, donc une phrase douce et une forte sont traitées pareil. Le seuil devient alors de combien la bande peut monter sous le reste : un s est presque tout en bande, une voyelle l’a 20 dB plus bas ou plus. À -36, c'est 10 dB."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Subheading, "Renvoi"),
+        ManualBlock(ManualKind.Bullet, "**renvoi** *(extra)* : envoie ce que le deesser enlève dans son propre écho, donc chaque s revient en une traînée brillante pendant que la voix reste propre. Baissé, les échos déjà envoyés finissent de sonner. **écouter** le fait taire."),
+        ManualBlock(ManualKind.Bullet, "**temps** : l’écart entre les échos, sur le tempo : 1/16, 1/8, 1/8 pointée, 1/4, 1/4 pointée ou 1/2. Les répétitions vont de gauche à droite, donc une piste mono sort en stéréo."),
+        ManualBlock(ManualKind.Bullet, "**réinjection** : combien de temps les échos reviennent."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Activez **écouter**, déplacez **fréq.** jusqu’à ce que le s soit le plus fort, puis coupez **écouter**."),
         ManualBlock(ManualKind.Bullet, "Avec **relatif**, la voix peut s’éloigner du micro et il attrape toujours le même s."),
+        ManualBlock(ManualKind.Bullet, "Montez **renvoi** sur le dernier mot d’une phrase, comme on lance un mot dans l’écho en dub : seuls ses s s’envolent. Essayez **Dub Sparkle**."),
     ))
 
     private fun fr4_6() = ManualSection("Delay", "Des échos sur une valeur de note, en quatre modes, qui peuvent s’atténuer pendant que vous jouez.", listOf(
@@ -4312,7 +4322,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Swell** : une compression vers le haut, sur une bande ou trois. Les passages doux montent rejoindre les forts."),
         ManualBlock(ManualKind.Bullet, "**Smash** : trois bandes écrasées des deux côtés. Les passages forts descendent, les doux montent."),
         ManualBlock(ManualKind.Bullet, "**Transient** : le début de chaque coup et la résonance après, plus fort ou plus doux."),
-        ManualBlock(ManualKind.Bullet, "**Deesser** : baisse une bande quand elle devient trop forte : un s, une cymbale."),
+        ManualBlock(ManualKind.Bullet, "**Deesser** : baisse une bande quand elle devient trop forte : un s, une cymbale. Peut renvoyer ce qu’elle coupe dans un écho."),
         ManualBlock(ManualKind.Heading, "Mouvement"),
         ManualBlock(ManualKind.Bullet, "**Chorus** : deux à quatre voix désaccordées qui dérivent."),
         ManualBlock(ManualKind.Bullet, "**Flanger** : un court délai qui balaie, avec une réinjection négative pour le son creux."),

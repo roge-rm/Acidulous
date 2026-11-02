@@ -16134,7 +16134,23 @@ internal object FactoryBanks {
         mapOf("freq" to 0.951438f, "threshold" to 0.233333334f),
         family = "tame")
 
-    private val fx_deesser: List<Patch> by lazy { listOf(fx_deesser0(), fx_deesser1(), fx_deesser2(), fx_deesser3(), fx_deesser4(), fx_deesser5(), fx_deesser6(), fx_deesser7(), fx_deesser8(), fx_deesser9(), fx_deesser10(), fx_deesser11(), fx_deesser12(), fx_deesser13()) }
+    private fun fx_deesser14() = Patch("fx.Deesser", "Ess Throw",
+        mapOf("throw" to 0.5f, "feedback" to 0.3888889f),
+        family = "throw")
+
+    private fun fx_deesser15() = Patch("fx.Deesser", "Dub Sparkle",
+        mapOf("throw" to 0.8f, "time" to 0.6f, "feedback" to 0.7222222f),
+        family = "throw")
+
+    private fun fx_deesser16() = Patch("fx.Deesser", "Hiss Trail",
+        mapOf("throw" to 0.6f, "time" to 0f, "feedback" to 0.611111164f),
+        family = "throw")
+
+    private fun fx_deesser17() = Patch("fx.Deesser", "Long Air",
+        mapOf("range" to 0.75f, "throw" to 1f, "time" to 1f, "feedback" to 0.8333334f),
+        family = "throw")
+
+    private val fx_deesser: List<Patch> by lazy { listOf(fx_deesser0(), fx_deesser1(), fx_deesser2(), fx_deesser3(), fx_deesser4(), fx_deesser5(), fx_deesser6(), fx_deesser7(), fx_deesser8(), fx_deesser9(), fx_deesser10(), fx_deesser11(), fx_deesser12(), fx_deesser13(), fx_deesser14(), fx_deesser15(), fx_deesser16(), fx_deesser17()) }
 
     private fun fx_vessel0() = Patch("fx.Vessel", "Init", emptyMap(),
         family = "wood")

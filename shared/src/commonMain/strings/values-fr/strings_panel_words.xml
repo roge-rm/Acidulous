@@ -1620,4 +1620,5 @@
     <string name="pw_never">jamais</string>
     <string name="pw_renew">refaire</string>
     <string name="pw_spectrum">spectre</string>
+    <string name="pw_throw">renvoi</string>
 </resources>

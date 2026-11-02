@@ -80,7 +80,8 @@ Chaque effet a sa propre page ci-dessous.
 - [**Transient**](05-effects-and-mixing/transient.md) : le début de chaque
   coup et la résonance après, plus fort ou plus doux.
 - [**Deesser**](05-effects-and-mixing/deesser.md) : baisse une bande quand
-  elle devient trop forte : un s, une cymbale.
+  elle devient trop forte : un s, une cymbale. Peut renvoyer ce qu’elle
+  coupe dans un écho.
 
 ## Mouvement
 
