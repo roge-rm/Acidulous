@@ -86,7 +86,7 @@ enum class SlotKind(
      */
     val patchKey: ((String) -> String)? = null,
     val loadPatch: ((Track, Int, Map<String, Float>) -> Track)? = null,
-    /** Parameters a preset neither saves nor loads: an insert's mod, the arp's latch. */
+    /** Parameters a preset neither saves nor loads: an insert's mod, a modifier's latch and chord memory. */
     val presetKeeps: (String) -> Boolean = { false },
 ) {
     Effects("FX", Res.string.slot_fx, EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
@@ -94,7 +94,7 @@ enum class SlotKind(
         patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }, presetKeeps = InsertMod::isModParam),
     Modifiers("MOD", Res.string.slot_mod, MODIFIER_SLOTS, { NativeEngine.inputModTypes }, { NativeEngine.inputModParamInfo(it) }, ::modifierUnit, { t, s -> t.modifierAt(s) },
         { t, s, ty -> t.withModifier(s, ty) }, { t, s, n, v -> t.withModifierParam(s, n, v) }, { t, s, b -> t.withModifierBypass(s, b) },
-        patchKey = PatchStore::modifierKey, loadPatch = { t, s, p -> t.withModifierPatch(s, p) }, presetKeeps = { it in PatchStore.MODIFIER_KEEPS }),
+        patchKey = PatchStore::modifierKey, loadPatch = { t, s, p -> t.withModifierPatch(s, p) }, presetKeeps = PatchStore::modifierKeeps),
 }
 
 /**
@@ -129,7 +129,7 @@ private fun SlotPatchPicker(
                 if (type == VenueRooms.TYPE && kind == SlotKind.Effects) {
                     editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, patch.settings[VenueRooms.SETTING]) }
                 }
-                // The slot's mod, or the arp's latch, stays as it is.
+                // The slot's mod, or a modifier's latch and chord memory, stays as it is.
                 apply(patch.params.filterKeys { !kind.presetKeeps(it) } +
                     info.filter { kind.presetKeeps(it.name) }.associate { it.name to current(it.name) })
             }

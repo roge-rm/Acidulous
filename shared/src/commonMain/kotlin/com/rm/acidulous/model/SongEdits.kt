@@ -546,13 +546,13 @@ fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSl
 
 /**
  * Puts a whole preset on a modifier slot, like [withEffectPatch]: anything
- * the preset doesn't mention goes to its default. What [PatchStore.MODIFIER_KEEPS]
+ * the preset doesn't mention goes to its default. What [PatchStore.modifierKeeps]
  * names stays as it was.
  */
 fun Track.withModifierPatch(slot: Int, params: Map<String, Float>): Track =
     withModifierSlot(slot) {
-        it.copy(params = params.filterKeys { k -> k !in PatchStore.MODIFIER_KEEPS } +
-            it.params.filterKeys { k -> k in PatchStore.MODIFIER_KEEPS })
+        it.copy(params = params.filterKeys { k -> !PatchStore.modifierKeeps(k) } +
+            it.params.filterKeys { k -> PatchStore.modifierKeeps(k) })
     }
 
 fun modifierUnit(slot: Int): String = "mod${slot + 1}"

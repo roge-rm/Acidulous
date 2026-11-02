@@ -98,6 +98,17 @@ class PatchChainTest {
     }
 
     @Test
+    fun `a chord preset keeps the learned chords and which one plays`() {
+        val t = Track(id = "t", name = "t", machine = Machine("Reflux"))
+            .withModifier(0, "Chord").withModifierParam(0, "memory", 0.25f)
+            .withModifierParam(0, "m2_3", 0.6f).withModifierParam(0, "strum", 0.4f)
+        val loaded = t.withModifierPatch(0, mapOf("strum" to 0.1f, "memory" to 0f, "m2_3" to 0f, "m1_1" to 0.5f)).modifierAt(0)
+        assertEquals(mapOf("strum" to 0.1f, "memory" to 0.25f, "m2_3" to 0.6f), loaded.params)
+        assertTrue(PatchStore.modifierKeeps("m8_6"))
+        assertFalse(PatchStore.modifierKeeps("mode"))
+    }
+
+    @Test
     fun `sends are set only by a patch that has them, the missing one to zero`() {
         val t = track().copy(mixer = Mixer(sendReverb = 0.4f, sendDelay = 0.6f))
         assertEquals(t.mixer, PatchChain.apply(t, patch(), known, defaults).track.mixer)

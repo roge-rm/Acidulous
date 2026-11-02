@@ -75,5 +75,6 @@ Le bouton **son** en haut de la fenêtre de l’arpège charge un préréglage :
 en six onglets, des montées simples aux roulements, aux grimpées et aux motifs
 cassés. Vous pouvez y enregistrer les vôtres et les partager en fichiers
 `.acpreset`, comme les sons d’une machine. Un préréglage garde tout sauf
-**verrou**, qui reste comme vous l’avez laissé. L’accord et la gamme ont le même
-bouton, pour vos propres préréglages.
+**verrou**, qui reste comme vous l’avez laissé. La fenêtre de
+l’accord a le même bouton, pour vos propres préréglages ; ils laissent vos
+accords appris et le verrou comme ils sont.
