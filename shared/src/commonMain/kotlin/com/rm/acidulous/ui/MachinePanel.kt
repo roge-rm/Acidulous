@@ -859,8 +859,8 @@ internal fun stackedKnobW(): Dp = StackedKnobW - 52.dp + LocalKnobDial.current
 
 @Composable
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
-    val info = b.infoOf(name) ?: return
-    val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
+    b.infoOf(name) ?: return
+    val idx = switchIndex(b.value(name), labels.size)
     if (labels.size == 2) {
         PanelPair(b, name, labels, label, idx)
         return
@@ -870,6 +870,14 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
 }
+
+/**
+ * Which of [n] switch cells a normalised value lights: its position in the
+ * range, the inverse of the tap's i / (n - 1). Not the mapped value, which is
+ * only an index for a range that starts at 0 (the arp's octaves run 1..4).
+ */
+internal fun switchIndex(v01: Float, n: Int): Int =
+    if (n > 1) (v01 * (n - 1)).roundToInt().coerceIn(0, n - 1) else 0
 
 /** A two-way parameter as one knob-sized square split in two; see [PairSquare]. */
 @Composable
