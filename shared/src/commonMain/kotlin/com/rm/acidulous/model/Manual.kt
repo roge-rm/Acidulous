@@ -2128,6 +2128,8 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Arpeggio"),
         ManualBlock(ManualKind.Para, "Plays the notes you're holding one at a time. You choose the order, speed, octave range, note length and a chance for each step to be skipped."),
         ManualBlock(ManualKind.Para, "Recording with the arp on writes out every note it plays, so a held chord becomes a line you can edit afterwards."),
+        ManualBlock(ManualKind.Subheading, "Arp presets"),
+        ManualBlock(ManualKind.Para, "The **patch** button at the top of the arp window loads a preset: 48 of them in six tabs, from plain runs to rolls, climbs and broken patterns. Save your own there too, and share them as `.acpreset` files the same as a machine's patches. A preset holds everything but **latch**, which stays as you left it. Chord and scale have the same button, for presets of your own."),
     ))
 
     private fun en6_0() = ManualSection("Exquis", "The Exquis by Intuitive Instruments as a controller: its own playing, and the song, the mixer and steps on its pads.", listOf(
@@ -4465,6 +4467,8 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Arpège"),
         ManualBlock(ManualKind.Para, "Joue une à la fois les notes que vous tenez. Vous choisissez l’ordre, la vitesse, l’étendue en octaves, la longueur des notes et une probabilité que chaque pas soit sauté."),
         ManualBlock(ManualKind.Para, "Enregistrer avec l’arpège actif écrit chaque note qu’il joue, donc un accord tenu devient une ligne que vous pouvez modifier ensuite."),
+        ManualBlock(ManualKind.Subheading, "Préréglages d’arpège"),
+        ManualBlock(ManualKind.Para, "Le bouton **son** en haut de la fenêtre de l’arpège charge un préréglage : 48, en six onglets, des montées simples aux roulements, aux grimpées et aux motifs cassés. Vous pouvez y enregistrer les vôtres et les partager en fichiers `.acpreset`, comme les sons d’une machine. Un préréglage garde tout sauf **verrou**, qui reste comme vous l’avez laissé. L’accord et la gamme ont le même bouton, pour vos propres préréglages."),
     ))
 
     private fun fr6_0() = ManualSection("Exquis", "L’Exquis d’Intuitive Instruments comme contrôleur : son propre jeu, et le morceau, le mixage et les pas sur ses pads.", listOf(

@@ -73,11 +73,17 @@ object PatchStore {
      */
     const val FX = "fx."
 
+    /** The same for an input modifier's patches, like the arp's. */
+    const val MOD = "mod."
+
     fun directory(machine: String): File =
         File(EngineAssets.userRoot(), path(machine)).apply { mkdirs() }
 
-    private fun path(machine: String): String =
-        if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
+    private fun path(machine: String): String = when {
+        machine.startsWith(FX) -> "patches/fx/${machine.removePrefix(FX)}"
+        machine.startsWith(MOD) -> "patches/mod/${machine.removePrefix(MOD)}"
+        else -> "patches/$machine"
+    }
 
     fun save(patch: Patch): File =
         File(directory(patch.machine), "${safe(patch.name)}.json").also {
@@ -164,6 +170,15 @@ object PatchStore {
 
     /** An effect type as a patch key: "Delay" becomes "fx.Delay". */
     fun effectKey(type: String): String = FX + type
+
+    /** A modifier type as a patch key: "Arp" becomes "mod.Arp". */
+    fun modifierKey(type: String): String = MOD + type
+
+    /**
+     * Parameters a modifier preset leaves alone: the arp's latch is a playing
+     * switch, so loading a preset mustn't let go of held notes or latch them.
+     */
+    val MODIFIER_KEEPS = setOf("latch")
 
     private fun safe(name: String) = name.trim().replace(Regex("[^A-Za-z0-9 _-]"), "_").ifEmpty { "patch" }
 }

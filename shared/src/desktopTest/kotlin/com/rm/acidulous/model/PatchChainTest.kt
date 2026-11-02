@@ -89,6 +89,15 @@ class PatchChainTest {
     }
 
     @Test
+    fun `a modifier preset replaces the slot's values but keeps its latch`() {
+        val t = Track(id = "t", name = "t", machine = Machine("Reflux"))
+            .withModifier(0, "Arp").withModifierParam(0, "latch", 1f).withModifierParam(0, "gate", 0.9f)
+        val loaded = t.withModifierPatch(0, mapOf("rate" to 0.7f, "latch" to 0f)).modifierAt(0)
+        assertEquals(mapOf("rate" to 0.7f, "latch" to 1f), loaded.params)
+        assertEquals("Arp", loaded.type)
+    }
+
+    @Test
     fun `sends are set only by a patch that has them, the missing one to zero`() {
         val t = track().copy(mixer = Mixer(sendReverb = 0.4f, sendDelay = 0.6f))
         assertEquals(t.mixer, PatchChain.apply(t, patch(), known, defaults).track.mixer)

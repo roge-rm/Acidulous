@@ -544,6 +544,17 @@ fun Track.withModifierParam(slot: Int, name: String, v01: Float): Track =
     withModifierSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
 fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSlot(slot) { it.copy(bypass = bypass) }
 
+/**
+ * Puts a whole preset on a modifier slot, like [withEffectPatch]: anything
+ * the preset doesn't mention goes to its default. What [PatchStore.MODIFIER_KEEPS]
+ * names stays as it was.
+ */
+fun Track.withModifierPatch(slot: Int, params: Map<String, Float>): Track =
+    withModifierSlot(slot) {
+        it.copy(params = params.filterKeys { k -> k !in PatchStore.MODIFIER_KEEPS } +
+            it.params.filterKeys { k -> k in PatchStore.MODIFIER_KEEPS })
+    }
+
 fun modifierUnit(slot: Int): String = "mod${slot + 1}"
 fun modifierSlotOf(unit: String): Int? = when (unit) { "mod1" -> 0; "mod2" -> 1; "mod3" -> 2; else -> null }
 

@@ -23,6 +23,7 @@
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -337,6 +338,98 @@ bool runaway(const std::vector<float> &stereo) {
     return last > before * 2.0 && last > 1e-4;
 }
 
+/** Note events a modifier sends on, in order, with the block they came in. */
+struct Heard : MidiSink {
+    struct Event { int block; uint8_t status, d1, d2; };
+    std::vector<Event> events;
+    int block = 0;
+    void send(uint8_t status, uint8_t d1, uint8_t d2) override { events.push_back({block, status, d1, d2}); }
+    bool operator==(const Heard &o) const {
+        if (events.size() != o.events.size()) return false;
+        for (size_t i = 0; i < events.size(); ++i) {
+            const Event &a = events[i], &b = o.events[i];
+            if (a.block != b.block || a.status != b.status || a.d1 != b.d1 || a.d2 != b.d2) return false;
+        }
+        return true;
+    }
+};
+
+/**
+ * Plays a modifier preset: a C minor seventh, keys pressed out of pitch
+ * order, held for four bars at 120 bpm, then let go for a bar. A tick a
+ * block (240 a beat), about what a 64-frame block is at 120 bpm.
+ */
+Heard playModifier(const std::string &type, const std::vector<float> &norm) {
+    Heard heard;
+    std::unique_ptr<InputMod> mod(InputModRegistry::create(type.c_str()));
+    if (!mod) return heard;
+    for (size_t i = 0; i < norm.size(); ++i) mod->params().set(static_cast<int32_t>(i), norm[i]);
+    mod->params().jumpAll();
+    mod->reset();
+    constexpr int64_t kTicks = 1;
+    constexpr int kHeld = 240 * 4 * 4, kAfter = 240 * 4;
+    const uint8_t chord[] = {55, 48, 58, 51};
+    for (const uint8_t n : chord) mod->handleMidi(0x90, n, 100, heard);
+    for (int b = 0; b < kHeld + kAfter; ++b) {
+        heard.block = b;
+        if (b == kHeld) for (const uint8_t n : chord) mod->handleMidi(0x80, n, 0, heard);
+        mod->run(b * kTicks, (b + 1) * kTicks, 120.0f, heard);
+    }
+    return heard;
+}
+
+/**
+ * A modifier's bank, like the arp's. There's no sound to measure, so it
+ * checks the notes: some come out, every one ends once the keys are up, and
+ * the same preset plays the same twice. Latch is a playing switch, so no
+ * preset sets it.
+ */
+void checkModifierBank(const Bank &bank) {
+    const std::string label = bank.unit;
+    int32_t count = 0;
+    const ParamDef *defs = InputModRegistry::paramDefs(bank.typeName().c_str(), count);
+    if (defs == nullptr || count == 0) {
+        fail(label, "the engine has no modifier by that name");
+        return;
+    }
+    if (bank.patches.empty()) {
+        fail(label, "the bank is empty");
+        return;
+    }
+    if (bank.patches.front().name != "Init" || !bank.patches.front().values.empty()) {
+        fail(label, "the first patch must be Init, and must set nothing");
+    }
+    std::vector<std::string> names;
+    std::vector<Heard> heard;
+    for (const BankPatch &patch : bank.patches) {
+        ++gPatches;
+        const std::string who = label + " / " + patch.name;
+        if (std::find(names.begin(), names.end(), patch.name) != names.end()) fail(who, "two patches with the same name");
+        names.push_back(patch.name);
+        if (patch.family.empty()) fail(who, "no family=");
+        for (const auto &v : patch.values) {
+            if (v.name == "latch") fail(who, "a preset doesn't set latch");
+        }
+        const Resolved r = resolve(patch, defs, count);
+        for (const std::string &p : r.problems) fail(who, p);
+        const Heard once = playModifier(bank.typeName(), r.norm);
+        int ons = 0;
+        std::set<uint8_t> sounding;
+        for (const auto &e : once.events) {
+            const uint8_t kind = e.status & 0xf0;
+            if (kind == 0x90 && e.d2 > 0) { ++ons; sounding.insert(e.d1); }
+            else if (kind == 0x80 || kind == 0x90) sounding.erase(e.d1);
+        }
+        if (ons == 0) fail(who, "plays no notes");
+        if (!sounding.empty()) fail(who, std::to_string(sounding.size()) + " notes still on a bar after the keys are up");
+        if (!(playModifier(bank.typeName(), r.norm) == once)) fail(who, "plays differently the second time");
+        for (size_t i = 0; i < heard.size(); ++i) {
+            if (heard[i] == once) warn(who, "plays the same as " + names[i]);
+        }
+        heard.push_back(once);
+    }
+}
+
 void checkBank(const Bank &bank) {
     const std::string label = bank.unit;
     int32_t count = 0;
@@ -556,6 +649,8 @@ int main(int argc, char **argv) {
         units.emplace_back(name);
     }
     for (int32_t i = 0; i < EffectRegistry::count(); ++i) units.emplace_back(std::string("fx.") + EffectRegistry::name(i));
+    // Only the arp has factory presets; the other modifiers save the user's own.
+    units.emplace_back("mod.Arp");
 
     for (const std::string &unit : units) {
         if (!only.empty() && unit != only) continue;
@@ -570,7 +665,8 @@ int main(int argc, char **argv) {
             fail(unit, "the bank says it is " + bank.unit);
             continue;
         }
-        checkBank(bank);
+        if (bank.isModifier()) checkModifierBank(bank);
+        else checkBank(bank);
     }
 
     // Anything on the known list that didn't come up has been fixed and

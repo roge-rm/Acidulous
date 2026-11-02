@@ -108,6 +108,7 @@
     <string name="pw_bars">bars</string>
     <string name="pw_bars_organ">bars</string>
     <string name="pw_basic">basic</string>
+    <string name="pw_basics">basics</string>
     <string name="pw_bass">bass</string>
     <string name="pw_bass_level">bass level</string>
     <string name="pw_bata">bata</string>
@@ -239,6 +240,7 @@
     <string name="pw_clean">clean</string>
     <string name="pw_click">click</string>
     <string name="pw_click_off">click off</string>
+    <string name="pw_climbs">climbs</string>
     <string name="pw_clip">clip</string>
     <string name="pw_clock">clock</string>
     <string name="pw_close">close</string>
@@ -1286,6 +1288,7 @@
     <string name="pw_space">space</string>
     <string name="pw_spacing">spacing</string>
     <string name="pw_span">span</string>
+    <string name="pw_special">special</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_spectrum">spectrum</string>
     <string name="pw_speed">speed</string>

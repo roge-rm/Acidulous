@@ -1327,7 +1327,7 @@ fun App(modifier: Modifier = Modifier) {
     fun sharePreset(key: String, name: String?, factory: Boolean) {
         scope.launch {
             val root = EngineAssets.userRoot()
-            val unit = key.removePrefix(PatchStore.FX)
+            val unit = key.removePrefix(PatchStore.FX).removePrefix(PatchStore.MOD)
             val written = withContext(Dispatchers.IO) {
                 runCatching {
                     val patches = when {

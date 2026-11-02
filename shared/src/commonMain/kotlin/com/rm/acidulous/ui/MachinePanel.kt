@@ -660,7 +660,7 @@ internal fun PatchPicker(
     vertical: Boolean = false,
     /** Only the vertical form uses this, the row sizes itself. */
     modifier: Modifier = Modifier,
-    /** The patch store's key: [title] for a machine, PatchStore.effectKey for an effect. */
+    /** The patch store's key: [title] for a machine, PatchStore.effectKey or modifierKey for a slot. */
     key: String = title,
     /** A machine's save, which can take the track's effects along. Replaces [onSave] when set. */
     onSaveWithEffects: ((String, Boolean) -> Unit)? = null,

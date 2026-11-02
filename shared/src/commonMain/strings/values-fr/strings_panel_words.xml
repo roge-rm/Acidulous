@@ -87,6 +87,7 @@
     <string name="pw_bars">mesures</string>
     <string name="pw_bars_organ">tirettes</string>
     <string name="pw_basic">simple</string>
+    <string name="pw_basics">bases</string>
     <string name="pw_bass">basse</string>
     <string name="pw_bata">batá</string>
     <string name="pw_bayan">bayan</string>
@@ -1087,6 +1088,7 @@
     <string name="pw_space">espace</string>
     <string name="pw_spacing">écart</string>
     <string name="pw_span">étendue</string>
+    <string name="pw_special">spécial</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">vitesse</string>
     <string name="pw_splash">éclabousse</string>
@@ -1491,6 +1493,7 @@
     <string name="pw_bar_glide">porta. tirettes</string>
     <string name="pw_church">église</string>
     <string name="pw_click_off">clic relâché</string>
+    <string name="pw_climbs">montées</string>
     <string name="pw_combo_atk">attaque combo</string>
     <string name="pw_contacts">contacts</string>
     <string name="pw_drum_fast">tambour rapide</string>

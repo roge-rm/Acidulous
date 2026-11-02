@@ -71,6 +71,7 @@ internal object FactoryBanks {
         "fx.Midside" -> fx_midside
         "fx.Deesser" -> fx_deesser
         "fx.Vessel" -> fx_vessel
+        "mod.Arp" -> mod_arp
         else -> emptyList()
     }
 
@@ -16228,4 +16229,197 @@ internal object FactoryBanks {
         family = "tuned")
 
     private val fx_vessel: List<Patch> by lazy { listOf(fx_vessel0(), fx_vessel1(), fx_vessel2(), fx_vessel3(), fx_vessel4(), fx_vessel5(), fx_vessel6(), fx_vessel7(), fx_vessel8(), fx_vessel9(), fx_vessel10(), fx_vessel11(), fx_vessel12(), fx_vessel13(), fx_vessel14(), fx_vessel15(), fx_vessel16(), fx_vessel17(), fx_vessel18(), fx_vessel19(), fx_vessel20(), fx_vessel21(), fx_vessel22()) }
+
+    private fun mod_arp0() = Patch("mod.Arp", "Init", emptyMap(),
+        family = "basics")
+
+    private fun mod_arp1() = Patch("mod.Arp", "Up 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f),
+        family = "basics")
+
+    private fun mod_arp2() = Patch("mod.Arp", "Down 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "mode" to 0.0833333358f),
+        family = "basics")
+
+    private fun mod_arp3() = Patch("mod.Arp", "Up Down 8ths",
+        mapOf("gate" to 0.333333343f, "mode" to 0.166666672f),
+        family = "basics")
+
+    private fun mod_arp4() = Patch("mod.Arp", "Quarters",
+        mapOf("rate" to 0.333333343f, "gate" to 0.43589744f, "mode" to 0.166666672f),
+        family = "basics")
+
+    private fun mod_arp5() = Patch("mod.Arp", "Played Order",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "mode" to 0.75f),
+        family = "basics")
+
+    private fun mod_arp6() = Patch("mod.Arp", "Triplet 8ths",
+        mapOf("rate" to 0.6666667f, "mode" to 0.25f),
+        family = "basics")
+
+    private fun mod_arp7() = Patch("mod.Arp", "Legato 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.538461566f, "mode" to 0.333333343f),
+        family = "basics")
+
+    private fun mod_arp8() = Patch("mod.Arp", "Staccato 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.06666667f, "velmode" to 0.25f),
+        family = "pulses")
+
+    private fun mod_arp9() = Patch("mod.Arp", "Offbeat 8ths",
+        mapOf("gate" to 0.179487184f, "mode" to 0.166666672f, "length" to 0.06666667f, "s01" to 0f),
+        family = "pulses")
+
+    private fun mod_arp10() = Patch("mod.Arp", "Accent Fours",
+        mapOf("rate" to 0.7777778f, "gate" to 0.179487184f, "length" to 0.2f, "velmode" to 0.5f, "accent" to 0.8f),
+        family = "pulses")
+
+    private fun mod_arp11() = Patch("mod.Arp", "Gallop",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "length" to 0.2f, "s02" to 0f, "velmode" to 0.5f, "accent" to 0.6f),
+        family = "pulses")
+
+    private fun mod_arp12() = Patch("mod.Arp", "Trance Gate",
+        mapOf("rate" to 0.7777778f, "gate" to 0.15384616f, "s03" to 0f, "s06" to 0f, "s09" to 0f, "s12" to 0f, "s15" to 0f, "velmode" to 0.5f),
+        family = "pulses")
+
+    private fun mod_arp13() = Patch("mod.Arp", "Stutter Gate",
+        mapOf("rate" to 1f, "gate" to 0.128205135f, "mode" to 0.166666672f, "length" to 0.466666669f, "s03" to 0f, "s04" to 0f, "s06" to 0f, "s08" to 0f),
+        family = "pulses")
+
+    private fun mod_arp14() = Patch("mod.Arp", "Tresillo",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "length" to 0.466666669f, "s02" to 0f, "s03" to 0f, "s05" to 0f, "s06" to 0f, "s08" to 0f, "velmode" to 0.5f, "accent" to 0.4f),
+        family = "pulses")
+
+    private fun mod_arp15() = Patch("mod.Arp", "Three Over Four",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "mode" to 0.25f, "length" to 0.13333334f, "s03" to 0f),
+        family = "pulses")
+
+    private fun mod_arp16() = Patch("mod.Arp", "Double Time",
+        mapOf("gate" to 0.230769232f, "ratchet" to 0.333333343f),
+        family = "rolls")
+
+    private fun mod_arp17() = Patch("mod.Arp", "Triple Hit",
+        mapOf("gate" to 0.179487184f, "mode" to 0.166666672f, "ratchet" to 0.6666667f),
+        family = "rolls")
+
+    private fun mod_arp18() = Patch("mod.Arp", "Quad Quarters",
+        mapOf("rate" to 0.333333343f, "gate" to 0.205128208f, "mode" to 0.0833333358f, "ratchet" to 1f),
+        family = "rolls")
+
+    private fun mod_arp19() = Patch("mod.Arp", "Sometimes Twice",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "ratchet" to 0.333333343f, "ratchetchance" to 0.3f),
+        family = "rolls")
+
+    private fun mod_arp20() = Patch("mod.Arp", "Snare Build",
+        mapOf("rate" to 0.7777778f, "gate" to 0.179487184f, "ratchet" to 0.333333343f, "ratchetchance" to 0.25f, "velmode" to 0.75f),
+        family = "rolls")
+
+    private fun mod_arp21() = Patch("mod.Arp", "Rolling Down",
+        mapOf("gate" to 0.256410271f, "mode" to 0.0833333358f, "octaves" to 0.333333343f, "ratchet" to 1f, "ratchetchance" to 0.5f),
+        family = "rolls")
+
+    private fun mod_arp22() = Patch("mod.Arp", "Trap Hats",
+        mapOf("rate" to 0.7777778f, "gate" to 0.128205135f, "s04" to 0f, "s11" to 0f, "ratchet" to 0.6666667f, "ratchetchance" to 0.35f, "velmode" to 0.5f, "accent" to 0.7f),
+        family = "rolls")
+
+    private fun mod_arp23() = Patch("mod.Arp", "Skitter",
+        mapOf("rate" to 0.8888889f, "gate" to 0.102564104f, "mode" to 0.416666657f, "ratchet" to 0.333333343f, "ratchetchance" to 0.4f),
+        family = "rolls")
+
+    private fun mod_arp24() = Patch("mod.Arp", "Two Octaves Up",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "octaves" to 0.333333343f),
+        family = "climbs")
+
+    private fun mod_arp25() = Patch("mod.Arp", "Three Down",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "mode" to 0.0833333358f, "octaves" to 0.6666667f, "octmode" to 0.5f),
+        family = "climbs")
+
+    private fun mod_arp26() = Patch("mod.Arp", "Octave Bounce",
+        mapOf("rate" to 0.7777778f, "mode" to 0.166666672f, "octaves" to 0.6666667f, "octmode" to 1f),
+        family = "climbs")
+
+    private fun mod_arp27() = Patch("mod.Arp", "Harp Sweep",
+        mapOf("rate" to 1f, "gate" to 0.3846154f, "octaves" to 1f, "velmode" to 0.75f),
+        family = "climbs")
+
+    private fun mod_arp28() = Patch("mod.Arp", "Fifths Climb",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "shift" to 0.7916667f, "cycles" to 0.2857143f),
+        family = "climbs")
+
+    private fun mod_arp29() = Patch("mod.Arp", "Whole Tone Rise",
+        mapOf("rate" to 0.7777778f, "mode" to 0.166666672f, "shift" to 0.5833333f, "cycles" to 0.428571433f),
+        family = "climbs")
+
+    private fun mod_arp30() = Patch("mod.Arp", "Falling Fourths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "mode" to 0.0833333358f, "octaves" to 0.333333343f, "shift" to 0.291666657f, "cycles" to 0.428571433f),
+        family = "climbs")
+
+    private fun mod_arp31() = Patch("mod.Arp", "Semitone Creep",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "octaves" to 0.333333343f, "velmode" to 0.75f, "shift" to 0.5416667f, "cycles" to 1f),
+        family = "climbs")
+
+    private fun mod_arp32() = Patch("mod.Arp", "Swung 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "swing" to 0.733333349f),
+        family = "broken")
+
+    private fun mod_arp33() = Patch("mod.Arp", "Lazy Shuffle",
+        mapOf("gate" to 0.307692319f, "swing" to 0.88f, "mode" to 0.75f, "chance" to 0.85f, "humanise" to 0.3f),
+        family = "broken")
+
+    private fun mod_arp34() = Patch("mod.Arp", "Loose Hands",
+        mapOf("rate" to 0.7777778f, "gate" to 0.256410271f, "mode" to 0.166666672f, "humanise" to 0.5f),
+        family = "broken")
+
+    private fun mod_arp35() = Patch("mod.Arp", "Gappy",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "octaves" to 0.333333343f, "chance" to 0.7f),
+        family = "broken")
+
+    private fun mod_arp36() = Patch("mod.Arp", "Walker",
+        mapOf("rate" to 0.7777778f, "gate" to 0.333333343f, "mode" to 0.6666667f, "octaves" to 0.333333343f),
+        family = "broken")
+
+    private fun mod_arp37() = Patch("mod.Arp", "Random 16ths",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "mode" to 0.5833333f, "octaves" to 0.333333343f),
+        family = "broken")
+
+    private fun mod_arp38() = Patch("mod.Arp", "Sparse Bubbles",
+        mapOf("rate" to 0.7777778f, "gate" to 0.7948718f, "mode" to 0.5833333f, "octaves" to 0.6666667f, "chance" to 0.45f),
+        family = "broken")
+
+    private fun mod_arp39() = Patch("mod.Arp", "Drunk",
+        mapOf("rate" to 0.7777778f, "gate" to 0.358974367f, "swing" to 0.933333337f, "mode" to 0.6666667f, "octaves" to 0.333333343f, "octmode" to 1f, "chance" to 0.8f, "humanise" to 0.8f),
+        family = "broken")
+
+    private fun mod_arp40() = Patch("mod.Arp", "Chord Stutter",
+        mapOf("rate" to 0.7777778f, "gate" to 0.102564104f, "mode" to 0.8333333f, "s02" to 0f, "s03" to 0f, "s05" to 0f, "s06" to 0f, "s08" to 0f, "s10" to 0f, "s12" to 0f, "s14" to 0f, "s15" to 0f, "ratchet" to 0.333333343f, "ratchetchance" to 0.2f, "velmode" to 0.5f, "accent" to 0.6f),
+        family = "special")
+
+    private fun mod_arp41() = Patch("mod.Arp", "Pinky Pedal",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "mode" to 0.9166667f, "ratchet" to 0.333333343f, "ratchetchance" to 0.3f, "shift" to 0.7083333f, "cycles" to 0.142857149f),
+        family = "special")
+
+    private fun mod_arp42() = Patch("mod.Arp", "Thumb Rolls",
+        mapOf("rate" to 0.7777778f, "gate" to 0.179487184f, "mode" to 1f, "octaves" to 0.333333343f, "ratchet" to 0.6666667f, "ratchetchance" to 0.25f, "velmode" to 0.5f, "accent" to 0.7f),
+        family = "special")
+
+    private fun mod_arp43() = Patch("mod.Arp", "Ramp Cycles",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "mode" to 0.333333343f, "velmode" to 0.75f, "shift" to 0.7916667f, "cycles" to 0.428571433f),
+        family = "special")
+
+    private fun mod_arp44() = Patch("mod.Arp", "Five Against Four",
+        mapOf("rate" to 0.7777778f, "gate" to 0.205128208f, "mode" to 0.416666657f, "octaves" to 0.333333343f, "octmode" to 1f, "length" to 0.266666681f, "s03" to 0f, "velmode" to 0.5f, "accent" to 0.9f),
+        family = "special")
+
+    private fun mod_arp45() = Patch("mod.Arp", "Seven Over Bar",
+        mapOf("rate" to 0.7777778f, "gate" to 0.230769232f, "mode" to 0.5f, "octaves" to 0.333333343f, "octmode" to 1f, "length" to 0.4f, "s02" to 0f, "s05" to 0f, "s07" to 0f, "ratchet" to 0.333333343f, "ratchetchance" to 0.35f),
+        family = "special")
+
+    private fun mod_arp46() = Patch("mod.Arp", "Fading Echo",
+        mapOf("rate" to 0.8888889f, "mode" to 0.416666657f, "length" to 0.333333343f, "ratchet" to 1f, "ratchetchance" to 0.4f, "velmode" to 1f),
+        family = "special")
+
+    private fun mod_arp47() = Patch("mod.Arp", "Glass Shards",
+        mapOf("rate" to 1f, "gate" to 0.051282052f, "mode" to 0.5833333f, "octaves" to 1f, "chance" to 0.5f, "velmode" to 0.5f, "accent" to 0.8f, "shift" to 0f, "cycles" to 0.142857149f, "humanise" to 0.4f),
+        family = "special")
+
+    private val mod_arp: List<Patch> by lazy { listOf(mod_arp0(), mod_arp1(), mod_arp2(), mod_arp3(), mod_arp4(), mod_arp5(), mod_arp6(), mod_arp7(), mod_arp8(), mod_arp9(), mod_arp10(), mod_arp11(), mod_arp12(), mod_arp13(), mod_arp14(), mod_arp15(), mod_arp16(), mod_arp17(), mod_arp18(), mod_arp19(), mod_arp20(), mod_arp21(), mod_arp22(), mod_arp23(), mod_arp24(), mod_arp25(), mod_arp26(), mod_arp27(), mod_arp28(), mod_arp29(), mod_arp30(), mod_arp31(), mod_arp32(), mod_arp33(), mod_arp34(), mod_arp35(), mod_arp36(), mod_arp37(), mod_arp38(), mod_arp39(), mod_arp40(), mod_arp41(), mod_arp42(), mod_arp43(), mod_arp44(), mod_arp45(), mod_arp46(), mod_arp47()) }
 }
