@@ -68,5 +68,5 @@ The **patch** button at the top of the arp window loads a preset: 48 of them in
 six tabs, from plain runs to rolls, climbs and broken patterns. Save your own
 there too, and share them as `.acpreset` files the same as a machine's patches.
 A preset holds everything but **latch**, which stays as you left it. The chord
-window has the same button, for presets of your own; they keep your learned
-chords and latch as they are.
+window has the same button, for presets of your own; they leave the key, scale,
+your learned chords and latch as they are.

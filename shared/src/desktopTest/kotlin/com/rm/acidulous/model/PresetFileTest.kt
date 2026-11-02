@@ -250,6 +250,15 @@ class PresetFileTest {
     }
 
     @Test
+    fun aScalePresetIsRefused() = phone { mine ->
+        val written = write(mine, "mod.Scale", listOf(Patch("mod.Scale", "Mine", mapOf("key" to 0.5f))))
+        phone { theirs ->
+            assertNull(read(theirs, written.file))
+            assertEquals(emptyList<String>(), PatchStore.userList(PatchStore.modifierKey("Scale")))
+        }
+    }
+
+    @Test
     fun engineLinesGoInPerPatch() = phone { mine ->
         val patches = listOf(Patch("Reflux", "A", params), Patch("Reflux", "B", params))
         val written = runBlocking {

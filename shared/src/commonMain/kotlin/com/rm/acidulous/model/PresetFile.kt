@@ -186,6 +186,8 @@ object PresetFile {
         val m = manifest
         if (!ok || m == null || m.version > VERSION) return null
         if (m.kind != "machine" && m.kind != "effect" && m.kind != "modifier") return null
+        // Only some modifiers have presets; one for another is refused like an unknown kind.
+        if (m.kind == "modifier" && m.unit !in PatchStore.MODIFIERS_WITH_PRESETS) return null
         if (!Regex("[A-Za-z0-9 _.-]{1,40}").matches(m.unit) || m.unit.startsWith(".")) return null
         val key = when (m.kind) {
             "effect" -> PatchStore.effectKey(m.unit)

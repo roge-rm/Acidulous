@@ -174,14 +174,20 @@ object PatchStore {
     /** A modifier type as a patch key: "Arp" becomes "mod.Arp". */
     fun modifierKey(type: String): String = MOD + type
 
+    /** The modifiers that have presets. Scale is two settings, so it has none. */
+    val MODIFIERS_WITH_PRESETS = setOf("Arp", "Chord")
+
+    /** [modifierKey] for a modifier that has presets, or null. */
+    fun modifierKeyOrNull(type: String): String? = if (type in MODIFIERS_WITH_PRESETS) modifierKey(type) else null
+
     /**
      * Parameters a modifier preset leaves alone. Latch is a playing switch, so
      * loading a preset mustn't let go of held notes or latch them. The chord's
-     * memory (which slot plays, and the learned chords m1_1..m8_6) is the
-     * player's own, kept with the song.
+     * key and scale follow the song, and its memory (which slot plays, and
+     * the learned chords m1_1..m8_6) is the player's own, kept with the song.
      */
     fun modifierKeeps(name: String): Boolean =
-        name == "latch" || name == "memory" || CHORD_MEMORY_NOTE.matches(name)
+        name == "latch" || name == "key" || name == "scale" || name == "memory" || CHORD_MEMORY_NOTE.matches(name)
 
     private val CHORD_MEMORY_NOTE = Regex("m[1-8]_[1-6]")
 

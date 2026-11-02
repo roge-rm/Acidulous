@@ -102,10 +102,16 @@ class PatchChainTest {
         val t = Track(id = "t", name = "t", machine = Machine("Reflux"))
             .withModifier(0, "Chord").withModifierParam(0, "memory", 0.25f)
             .withModifierParam(0, "m2_3", 0.6f).withModifierParam(0, "strum", 0.4f)
-        val loaded = t.withModifierPatch(0, mapOf("strum" to 0.1f, "memory" to 0f, "m2_3" to 0f, "m1_1" to 0.5f)).modifierAt(0)
-        assertEquals(mapOf("strum" to 0.1f, "memory" to 0.25f, "m2_3" to 0.6f), loaded.params)
+            .withModifierParam(0, "key", 0.3f).withModifierParam(0, "scale", 0.2f)
+        val loaded = t.withModifierPatch(0, mapOf(
+            "strum" to 0.1f, "memory" to 0f, "m2_3" to 0f, "m1_1" to 0.5f, "key" to 0.9f, "scale" to 0.9f,
+        )).modifierAt(0)
+        assertEquals(mapOf("strum" to 0.1f, "memory" to 0.25f, "m2_3" to 0.6f, "key" to 0.3f, "scale" to 0.2f), loaded.params)
         assertTrue(PatchStore.modifierKeeps("m8_6"))
         assertFalse(PatchStore.modifierKeeps("mode"))
+        // Only the arp and chord have presets.
+        assertEquals("mod.Chord", PatchStore.modifierKeyOrNull("Chord"))
+        assertNull(PatchStore.modifierKeyOrNull("Scale"))
     }
 
     @Test
