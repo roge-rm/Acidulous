@@ -1579,6 +1579,11 @@ bool EngineHost::audioAnchor(int64_t &frame, int64_t &nanos, int32_t &sampleRate
 
 void EngineHost::setExternalSync(bool on) { sEngine.transport.setExternalSync(on); }
 void EngineHost::setTuning(int rack, const float *ratios) {
+    // -1 is the song's tuning, for the group, master and input inserts.
+    if (rack == -1) {
+        sEngine.setSongTuning(ratios);
+        return;
+    }
     if (rack < 0 || rack >= kRackCount) return;
     sEngine.racks[rack].setTuning(ratios);
 }

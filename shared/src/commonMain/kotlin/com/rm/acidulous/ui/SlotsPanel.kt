@@ -419,7 +419,9 @@ private fun SlotFace(
                 type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
                 model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects) ||
                 // Vessel's `follow` tunes to the track's notes, so only a track's insert has it.
-                type == "Vessel" && it.name == "follow" && kind != SlotKind.Effects
+                type == "Vessel" && it.name == "follow" && kind != SlotKind.Effects ||
+                // Acid's `from` picks the track's notes, so off a track it's always the scale.
+                type == "Acid" && it.name == "from" && kind != SlotKind.Effects
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
@@ -583,6 +585,13 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "body" to listOf("material", "size", "key", "scale", "follow"),
         "ring~body" to listOf("decay", "damp"),
         "touch" to listOf("strike", "pickup", "drive"),
+        "out" to listOf("mix", "gain"),
+    ),
+    "Acid" to listOf(
+        "filter" to listOf("cutoff", "resonance", "mode", "drive"),
+        "sweep" to listOf("env", "decay", "accent", "pattern"),
+        "key" to listOf("follow", "from", "key", "scale", "octave"),
+        "slide" to listOf("glide", "slides"),
         "out" to listOf("mix", "gain"),
     ),
     "Deesser" to listOf(
@@ -784,7 +793,7 @@ private val EXTRA = mapOf(
     "Grain" to setOf("freeze", "feedback"),
     "Resonator" to setOf("metal"), // stiff strings, toward a bell
     "Smash" to setOf("up"), // the lift, which a compressor doesn't have
-    "Acid" to setOf("pattern", "accent"),
+    "Acid" to setOf("pattern", "accent", "follow", "slides"),
     "Mouth" to setOf("move", "words"),
     "Tape" to setOf("stop", "stoptime"),
     "Slicer" to setOf("seed", "pitch"),
@@ -855,11 +864,13 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "rate" && type == "Arp" -> ARP_RATES
     name == "transpose" || name == "shift" -> (-12..12).map { if (it > 0) "+$it" else "$it" }
     name == "octave" && type == "Scale" -> (-2..2).map { if (it > 0) "+$it" else "$it" }
+    name == "octave" && type == "Acid" -> (-2..3).map { if (it > 0) "+$it" else "$it" }
     name == "octaves" || name == "ratchet" -> listOf("1", "2", "3", "4")
     name == "cycles" -> (1..8).map { "$it" }
     name == "length" -> (1..16).map { "$it" }
     // Two-step switches with words of their own, before the plain off/on.
     name == "mode" && type == "Acid" -> listOf("LP", "BP")
+    name == "from" && type == "Acid" -> listOf("scale", "notes")
     name == "stop" && type == "Tape" -> listOf("run", "stop")
     name == "snap" && type == "Horn" -> listOf("free", "semi")
     name == "freeze" && type == "Spectral" -> listOf("run", "hold")
@@ -1053,7 +1064,7 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
 }
 
 /** The slots whose `key` is a musical key, not a filter's tracking. */
-private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel")
+private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel", "acid")
 
 /** Formulas to start a Formula effect from, all original. x is the track, 0 to 255. */
 internal val FORMULA_FX_EXAMPLES = listOf(

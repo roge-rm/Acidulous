@@ -51,6 +51,7 @@ void Engine::runInputChain() {
         inputFx[s]->setTransport(inputMod);
         if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, inputMod);
         inputFx[s]->block(clock.blockStart(), clock.blockEnd(), clock.bpm());
+        inputFx[s]->setTuning(songTuning());
         stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
     }
     for (int32_t i = 0; i < kBlockFrames; ++i) {
@@ -515,6 +516,7 @@ void Engine::renderBlock(const float *in, float *out) {
     master.perform.setTransport(
         playing, static_cast<double>(clock.blockEnd()) -
                      clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames) / clock.samplesPerTickNow());
+    master.setTuning(songTuning());
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     const auto tMaster = std::chrono::steady_clock::now();

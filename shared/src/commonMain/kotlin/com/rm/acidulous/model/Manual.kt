@@ -1332,10 +1332,19 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**mode** - low pass or band pass."),
         ManualBlock(ManualKind.Bullet, "**mix** - the dry sound against the filtered one."),
         ManualBlock(ManualKind.Bullet, "**gain** - the level out."),
+        ManualBlock(ManualKind.Subheading, "Key"),
+        ManualBlock(ManualKind.Bullet, "**follow** *(extra)* - how far the cutoff moves from its knob onto a note in key. At the top, with the resonance up, the filter sings the note and each sweep rises from it. At 0 the key does nothing."),
+        ManualBlock(ManualKind.Bullet, "**from** - where the notes come from. **scale** picks a note each step or hit from **key** and **scale**, mostly the root, as a bass line does. **notes** uses the track's played notes: with **pattern** at **track** it's the note just played, on a pattern each step takes the next held note up. Only a track's insert has **from**; on a group, the master or the input it's always the scale."),
+        ManualBlock(ManualKind.Bullet, "**key** and **scale** - the scale's root and its kind."),
+        ManualBlock(ManualKind.Bullet, "**octave** - moves the note up or down, -2 to +3."),
+        ManualBlock(ManualKind.Subheading, "Slide"),
+        ManualBlock(ManualKind.Bullet, "**glide** - how long a slide takes, 10 ms to 1 s."),
+        ManualBlock(ManualKind.Bullet, "**slides** *(extra)* - how many steps or hits glide to their note instead of jumping, each pattern's own slide steps first. With **from** at **notes** and the track's hits, a note played while another is held always slides."),
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "Put it on a held chord with **pattern** at **16ths** for an acid line out of a pad."),
         ManualBlock(ManualKind.Bullet, "On a drum loop with **pattern** at **track**, every hit barks."),
         ManualBlock(ManualKind.Bullet, "Band pass with the track as the pattern is a wah that follows the playing."),
+        ManualBlock(ManualKind.Bullet, "For a drum loop that screams a minor line, set **follow** to the top, **resonance** near it and **env** low, so the note is heard over the sweep."),
     ))
 
     private fun en4_1() = ManualSection("Amp", "A guitar amp with a cabinet you can resize.", listOf(
@@ -3652,10 +3661,19 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**mode** : passe-bas ou passe-bande."),
         ManualBlock(ManualKind.Bullet, "**mélange** : le son sec face au son filtré."),
         ManualBlock(ManualKind.Bullet, "**gain** : le niveau de sortie."),
+        ManualBlock(ManualKind.Subheading, "Tonalité"),
+        ManualBlock(ManualKind.Bullet, "**suivre** *(extra)* : jusqu’où la coupure quitte son bouton pour se poser sur une note de la tonalité. Tout en haut, avec la résonance haute, le filtre chante la note et chaque balayage monte à partir d’elle. À 0, la tonalité ne fait rien."),
+        ManualBlock(ManualKind.Bullet, "**de** : d’où viennent les notes. **gamme** prend une note à chaque pas ou coup dans **tonalité** et **gamme**, surtout la fondamentale, comme une ligne de basse. **notes** prend les notes jouées sur la piste : avec **motif** à **piste**, c’est la note qu’on vient de jouer, et sur un motif chaque pas prend la note tenue suivante, vers le haut. Seul l’insert d’une piste a **de** : sur un groupe, le master ou l’entrée, c’est toujours la gamme."),
+        ManualBlock(ManualKind.Bullet, "**tonalité** et **gamme** : la fondamentale de la gamme et son genre."),
+        ManualBlock(ManualKind.Bullet, "**octave** : déplace la note vers le haut ou le bas, de -2 à +3."),
+        ManualBlock(ManualKind.Subheading, "Glissé"),
+        ManualBlock(ManualKind.Bullet, "**porta.** : la durée d’un glissé, de 10 ms à 1 s."),
+        ManualBlock(ManualKind.Bullet, "**glissés** *(extra)* : combien de pas ou de coups glissent vers leur note au lieu de sauter, les pas glissés du motif d’abord. Avec **de** à **notes** et les coups de la piste, une note jouée pendant qu’une autre est tenue glisse toujours."),
         ManualBlock(ManualKind.Heading, "Astuces"),
         ManualBlock(ManualKind.Bullet, "Sur un accord tenu avec **motif** à **1/16**, une nappe devient une ligne acide."),
         ManualBlock(ManualKind.Bullet, "Sur une boucle de batterie avec **motif** à **piste**, chaque coup aboie."),
         ManualBlock(ManualKind.Bullet, "En passe-bande avec la piste comme motif, c’est une wah qui suit le jeu."),
+        ManualBlock(ManualKind.Bullet, "Pour une boucle de batterie qui hurle une ligne mineure, mettez **suivre** tout en haut, **résonance** presque en haut et **env** bas, pour qu’on entende la note par-dessus le balayage."),
     ))
 
     private fun fr4_1() = ManualSection("Amp", "Un ampli de guitare avec un baffle dont on peut changer la taille.", listOf(

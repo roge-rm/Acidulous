@@ -610,7 +610,9 @@ void Rack::render(int32_t frames) {
         machine->setTuning(t < 0 ? nullptr : tuningTables[t]);
         stereo = machine->render(bufL, bufR, frames);
         for (int32_t s = 0; s < kEffectSlots; ++s) {
-            if (effects[s] != nullptr) stereo = effects[s]->run(bufL, bufR, frames, stereo);
+            if (effects[s] == nullptr) continue;
+            effects[s]->setTuning(t < 0 ? nullptr : tuningTables[t]);
+            stereo = effects[s]->run(bufL, bufR, frames, stereo);
         }
     }
     // The ring-out, on top of whatever else plays: the next pass of a loop,
@@ -715,6 +717,7 @@ Machine *Rack::swapMachine(Machine *next) {
 Effect *Rack::swapEffect(int32_t slot, Effect *next) {
     if (slot < 0 || slot >= kEffectSlots) return next; // caller retires it
     Effect *old = effects[slot];
+    if (next != nullptr) next->setHearsNotes(true);
     effects[slot] = next;
     return old;
 }

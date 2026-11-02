@@ -15382,7 +15382,23 @@ internal object FactoryBanks {
         mapOf("cutoff" to 0.403694421f, "resonance" to 0.95f, "env" to 0.8f, "decay" to 0.411954373f, "drive" to 0.9f, "gain" to 0.385416657f),
         family = "wild")
 
-    private val fx_acid: List<Patch> by lazy { listOf(fx_acid0(), fx_acid1(), fx_acid2(), fx_acid3(), fx_acid4(), fx_acid5(), fx_acid6(), fx_acid7(), fx_acid8(), fx_acid9(), fx_acid10(), fx_acid11()) }
+    private fun fx_acid12() = Patch("fx.Acid", "Minor Scream",
+        mapOf("cutoff" to 0.403694421f, "resonance" to 0.93f, "env" to 0.35f, "decay" to 0.389075637f, "accent" to 0.7f, "pattern" to 0.625f, "drive" to 0.4f, "gain" to 0.46875f, "follow" to 1f, "glide" to 0.422549f, "slides" to 0.2f),
+        family = "key")
+
+    private fun fx_acid13() = Patch("fx.Acid", "Chord Follow",
+        mapOf("cutoff" to 0.474781454f, "resonance" to 0.9f, "env" to 0.3f, "decay" to 0.349485f, "pattern" to 0.25f, "follow" to 0.9f, "from" to 1f, "octave" to 0.8f, "glide" to 0.389075637f, "slides" to 0.3f),
+        family = "key")
+
+    private fun fx_acid14() = Patch("fx.Acid", "Slide Line",
+        mapOf("cutoff" to 0.353257328f, "resonance" to 0.92f, "env" to 0.4f, "decay" to 0.411954373f, "pattern" to 1f, "follow" to 1f, "scale" to 0.3125f, "glide" to 0.5395906f, "slides" to 0.45f),
+        family = "key")
+
+    private fun fx_acid15() = Patch("fx.Acid", "Sing Along",
+        mapOf("resonance" to 0.9f, "env" to 0.25f, "decay" to 0.432650715f, "gain" to 0.479166657f, "follow" to 1f, "from" to 1f, "glide" to 0.477121264f, "slides" to 0f),
+        family = "key")
+
+    private val fx_acid: List<Patch> by lazy { listOf(fx_acid0(), fx_acid1(), fx_acid2(), fx_acid3(), fx_acid4(), fx_acid5(), fx_acid6(), fx_acid7(), fx_acid8(), fx_acid9(), fx_acid10(), fx_acid11(), fx_acid12(), fx_acid13(), fx_acid14(), fx_acid15()) }
 
     private fun fx_mouth0() = Patch("fx.Mouth", "Init", emptyMap(),
         family = "sweep")

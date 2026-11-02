@@ -89,6 +89,8 @@ object EngineSync {
         val mountedGroupInserts = Array(MAX_GROUPS) { arrayOfNulls<String>(GROUP_INSERT_SLOTS) }
         /** What each rack was last told about its tuning, so only changes are pushed. */
         val pushedTuning = arrayOfNulls<String>(RACKS)
+        /** The song's own tuning as last pushed, for the group, master and input inserts. */
+        var pushedSongTuning: String? = null
         /** The macro names each rack was last told. */
         val pushedMacros = arrayOfNulls<String>(RACKS)
         /** The formula each Formula effect slot was last given, by [effectFormulaKey]; absent when it isn't a Formula. */
@@ -116,6 +118,7 @@ object EngineSync {
         mountedMasterInserts.fill(null)
         mountedGroupInserts.forEach { it.fill(null) }
         pushedTuning.fill(null)
+        pushedSongTuning = null
         pushedMacros.fill(null)
         voiceSpecs.clear()
     }
@@ -956,6 +959,13 @@ object EngineSync {
             if (m.pushedTuning[rack] == key) continue
             m.pushedTuning[rack] = key
             NativeEngine.setTuning(rack, tuning?.let { com.rm.acidulous.model.Tunings.ratios(it, root) })
+        }
+        // Rack -1 is the song's tuning, for the inserts that aren't on a track.
+        val songTuning = song.tuning?.takeIf { !it.isEqual }
+        val songKey = songTuning?.let { "${it.name}|${it.cents.hashCode()}|$root" } ?: "equal"
+        if (m.pushedSongTuning != songKey) {
+            m.pushedSongTuning = songKey
+            NativeEngine.setTuning(-1, songTuning?.let { com.rm.acidulous.model.Tunings.ratios(it, root) })
         }
     }
 

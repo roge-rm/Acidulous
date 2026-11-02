@@ -275,6 +275,27 @@ class Engine : public Rack::ModifiedNoteSink {
      */
     Effect *inputFx[kInputSlots] = {nullptr, nullptr};
 
+    /**
+     * The song's own tuning, for the inserts not on a track (groups, master,
+     * sends, input). Written into the table the audio thread isn't reading,
+     * then switched with one store, as Rack::setTuning.
+     */
+    void setSongTuning(const float *ratios) {
+        if (ratios == nullptr) {
+            songTuningIndex.store(-1, std::memory_order_release);
+            return;
+        }
+        const int next = songTuningIndex.load(std::memory_order_acquire) == 0 ? 1 : 0;
+        for (int i = 0; i < 128; ++i) songTuningTables[next][i] = ratios[i];
+        songTuningIndex.store(next, std::memory_order_release);
+    }
+    const float *songTuning() const {
+        const int t = songTuningIndex.load(std::memory_order_acquire);
+        return t < 0 ? nullptr : songTuningTables[t];
+    }
+    float songTuningTables[2][128]{};
+    std::atomic<int> songTuningIndex{-1};
+
     Capture capture;
     /**
      * Where the song was during the capture (see CaptureMarks).
