@@ -1743,6 +1743,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         if (!fx) return false;
         fx->prepare(static_cast<int32_t>(kSr));
         fx->reset();
+        fx->setHearsNotes(true); // as a track's insert, which the source's notes stand for
         applyTo(fx->params(), r.norm);
         applyEffectSettings(fx.get(), r.settings);
         take = renderEffect(fx.get(), bank.typeName(), opt.bpm);

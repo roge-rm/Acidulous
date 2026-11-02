@@ -206,6 +206,37 @@ double brightness(const std::vector<float> &x, size_t from, size_t to) {
     return 10.0 * std::log10((high + 1e-30) / (low + 1e-30));
 }
 
+/** Clicks every kClickGap samples: each one's ring is the filter's response as it's set then. */
+constexpr size_t kClickGap = 4096;
+std::vector<float> clicks(size_t n) {
+    std::vector<float> x(n, 0.0f);
+    for (size_t i = 0; i < n; i += kClickGap) x[i] = 0.1f;
+    return x;
+}
+
+/**
+ * Where the response to the clicks in [from, to) peaks between [lo] and
+ * [hi] Hz, searched in 2-cent steps. [from] is on a click.
+ */
+double peakHz(const std::vector<float> &x, size_t from, size_t to, double lo, double hi) {
+    const size_t n = kClickGap;
+    double best = lo, bestPower = -1.0;
+    for (double f = lo; f <= hi; f *= std::exp2(2.0 / 1200.0)) {
+        double power = 0.0;
+        for (size_t at = from; at + n <= to; at += n) {
+            double re = 0.0, im = 0.0;
+            for (size_t i = 0; i < n; ++i) {
+                const double ph = 2.0 * M_PI * f * i / kRate;
+                re += x[at + i] * std::cos(ph);
+                im += x[at + i] * std::sin(ph);
+            }
+            power += re * re + im * im;
+        }
+        if (power > bestPower) { bestPower = power; best = f; }
+    }
+    return best;
+}
+
 void acid() {
     printf("- acid\n");
     const auto buzz = saw(110.0f, 0.4f, 96000);
@@ -233,6 +264,83 @@ void acid() {
         const auto out = run(*fx, hits).l;
         const double open = brightness(out, 60000 + 100, 60000 + 1300), shut = brightness(out, 60000 + 7600, 60000 + 8800);
         ok("with no pattern, a hit sweeps it open", open > shut + 6.0, num(shut) + " -> " + num(open) + " dB");
+    }
+    {
+        // Follow at 0 is the filter as it was, whatever the key knobs and the notes say.
+        auto plain = make("Acid", {{"pattern", 7.0f}, {"resonance", 0.9f}});
+        auto keyed = make("Acid", {{"pattern", 7.0f}, {"resonance", 0.9f}, {"from", 1.0f}, {"slides", 1.0f},
+                                   {"glide", 300.0f}, {"octave", 3.0f}, {"key", 2.0f}, {"scale", 10.0f}});
+        keyed->setHearsNotes(true);
+        keyed->onNote(45, 110.0f);
+        keyed->onNote(52, 164.8f);
+        const auto a = run(*plain, buzz).l, b = run(*keyed, buzz).l;
+        ok("follow 0 is bit for bit the filter without a key", worst(a, b) == 0.0, num(worst(a, b)));
+    }
+    // A screaming filter rung by clicks: where its peak is, in cents from [want].
+    const auto hiss = clicks(96000);
+    auto cents = [](double hz, double want) { return 1200.0 * std::log2(hz / want); };
+    const std::initializer_list<std::pair<const char *, float>> scream = {
+        {"resonance", 0.98f}, {"env", 0.0f}, {"drive", 0.0f}, {"follow", 1.0f}, {"cutoff", 2000.0f}};
+    {
+        // Halves: step 0 is the key's root and step 8 four steps up, a fifth
+        // in A minor, an octave up from A3.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 6.0f);
+        set(*fx, "slides", 0.0f);
+        const auto out = run(*fx, hiss).l;
+        const double a = peakHz(out, 4096, 45056, 300.0, 1000.0), e = peakHz(out, 49152, 94208, 300.0, 1000.0);
+        ok("follow 1 sings the key's root", std::fabs(cents(a, 440.0)) < 20.0, num(a) + " Hz");
+        ok("and the step's note, a fifth up", std::fabs(cents(e, 659.255)) < 20.0, num(e) + " Hz");
+    }
+    {
+        // From the track's notes, with the track's hits: the note played, up an octave.
+        auto fx = make("Acid", scream);
+        set(*fx, "from", 1.0f);
+        fx->setHearsNotes(true);
+        fx->onNote(50, 146.83f);
+        const auto out = run(*fx, hiss).l;
+        const double d = peakHz(out, 4096, 94208, 150.0, 600.0);
+        ok("from the notes, it sings the note played", std::fabs(cents(d, 293.66)) < 20.0, num(d) + " Hz");
+        // Off a track no notes come, so it keeps to the scale: A4 on the first step of halves.
+        auto off = make("Acid", scream);
+        set(*off, "from", 1.0f);
+        set(*off, "pattern", 6.0f);
+        const auto o = run(*off, hiss).l;
+        const double s = peakHz(o, 4096, 45056, 300.0, 1000.0);
+        ok("off a track, from notes keeps to the scale", std::fabs(cents(s, 440.0)) < 20.0, num(s) + " Hz");
+    }
+    {
+        // Halfway between follow 0 and 1 it sits halfway in octaves between the knob and the note.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 6.0f);
+        set(*fx, "follow", 0.5f);
+        set(*fx, "cutoff", 1760.0f);
+        const auto out = run(*fx, hiss).l;
+        const double h = peakHz(out, 4096, 45056, 500.0, 1400.0);
+        ok("follow 0.5 sits halfway between knob and note", std::fabs(cents(h, 880.0)) < 20.0, num(h) + " Hz");
+    }
+    {
+        // A slide step glides: 24 to 110 ms after step 8 it's still on its way up.
+        auto jump = make("Acid", scream), glide = make("Acid", scream);
+        for (auto *fx : {jump.get(), glide.get()}) set(*fx, "pattern", 6.0f);
+        set(*jump, "slides", 0.0f);
+        set(*glide, "slides", 1.0f);
+        set(*glide, "glide", 600.0f);
+        const auto j = run(*jump, hiss).l, g = run(*glide, hiss).l;
+        const double jHz = peakHz(j, 49152, 53248, 300.0, 1000.0);
+        const double gHz = peakHz(g, 49152, 53248, 300.0, 1000.0);
+        ok("a step without a slide jumps to its note", std::fabs(cents(jHz, 659.255)) < 20.0, num(jHz) + " Hz");
+        ok("a slide step is still gliding up to it", gHz > 450.0 && gHz < 620.0, num(gHz) + " Hz");
+    }
+    {
+        // Reset and play again: the same, key and glide included.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 3.0f);
+        set(*fx, "slides", 0.6f);
+        const auto a = run(*fx, buzz).l;
+        fx->reset();
+        const auto b = run(*fx, buzz).l;
+        ok("with a key, a reset plays the same again", worst(a, b) == 0.0, num(worst(a, b)));
     }
     staysBounded("Acid");
 }

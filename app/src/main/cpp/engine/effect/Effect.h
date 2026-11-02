@@ -149,8 +149,17 @@ class Effect {
      * renders and only valid for that call.
      */
     void setKey(const float *key) { key_ = key; }
+    /** The track's tuning, set by the rack each block as for its machine: null is equal temperament. */
+    void setTuning(const float *ratios) { tuning_ = ratios; }
+    /** Set by a track's rack as it mounts the effect: only there do onNote and onNoteOff arrive. */
+    void setHearsNotes(bool on) { hearsNotes_ = on; }
 
   protected:
+    /** A MIDI note's pitch in hertz, in the track's tuning. */
+    float noteHz(int32_t note) const {
+        const float equal = 440.0f * std::exp2((static_cast<float>(note) - 69.0f) / 12.0f);
+        return tuning_ == nullptr ? equal : equal * tuning_[std::clamp(note, 0, 127)];
+    }
     /**
      * `trimDb` is added to the output gain, so that the effect at its default
      * settings comes out about as loud as it went in. A drive comes out
@@ -181,6 +190,8 @@ class Effect {
 
     /** The sidechain for this block, or null: see `setKey`. */
     const float *key_ = nullptr;
+    const float *tuning_ = nullptr;
+    bool hearsNotes_ = false;
 
   private:
     /**
