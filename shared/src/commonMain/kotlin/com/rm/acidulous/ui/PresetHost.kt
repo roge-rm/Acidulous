@@ -9,7 +9,7 @@ import com.rm.acidulous.Doc
  */
 object PresetHost {
     /**
-     * Shares a patch of [key] (a machine type, or PatchStore.effectKey) by name,
+     * Shares a patch of [key] (a machine type, PatchStore.effectKey or PatchStore.modifierKey) by name,
      * from the factory patches when [factory] is true, otherwise the user's. All
      * the user's when [name] is null.
      */

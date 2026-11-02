@@ -30,6 +30,7 @@
 #include <engine/format/WavReader.h>
 #include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -1673,6 +1674,7 @@ bool loadBank(const std::string &unit, Bank &bank) {
 
 const ParamDef *defsFor(const std::string &unit, int32_t &count) {
     if (unit.rfind("fx.", 0) == 0) return EffectRegistry::paramDefs(unit.substr(3).c_str(), count);
+    if (unit.rfind("mod.", 0) == 0) return InputModRegistry::paramDefs(unit.substr(4).c_str(), count);
     return MachineRegistry::paramDefs(unit.c_str(), count);
 }
 
@@ -2189,6 +2191,9 @@ int cmdEmit(const std::string &outPath) {
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) units.emplace_back(MachineRegistry::name(i));
     for (int32_t i = 0; i < EffectRegistry::count(); ++i) {
         units.emplace_back(std::string("fx.") + EffectRegistry::name(i));
+    }
+    for (int32_t i = 0; i < InputModRegistry::count(); ++i) {
+        units.emplace_back(std::string("mod.") + InputModRegistry::name(i));
     }
 
     std::string body, dispatch;

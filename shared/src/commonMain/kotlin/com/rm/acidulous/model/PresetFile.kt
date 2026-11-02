@@ -9,10 +9,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 /**
- * A preset file (.acpreset): one patch, or all of a machine's or effect's
- * patches, with the user's own files they point at. A zip:
+ * A preset file (.acpreset): one patch, or all of a machine's, effect's or
+ * modifier's patches, with the user's own files they point at. A zip:
  *
- *     preset.json        {"version":1,"kind":"machine"|"effect","unit":"Reflux","patches":["patches/1.json",...]}
+ *     preset.json        {"version":1,"kind":"machine"|"effect"|"modifier","unit":"Reflux","patches":["patches/1.json",...]}
  *     patches/<n>.json   the patch as PatchStore keeps it, its file settings pointing into media/
  *     media/...          the files, at their paths under the user folder
  *     media/voices/<name>/...   a recorded voice: its bank.json and takes, unpacked
@@ -23,7 +23,8 @@ import kotlinx.serialization.json.Json
  * the patch's own or one of its inserts, impulse. Built-in assets and
  * Venue's own rooms aren't files, so nothing of theirs is copied.
  *
- * engine/ is there only when the platform can record (not the browser).
+ * engine/ is there only when the platform can record (not the browser), and
+ * never for a modifier, which has no sound of its own to set up.
  * Its lines name media as zip:media/..., files that are in the zip as they
  * are, a voice's takes too.
  *
@@ -45,7 +46,7 @@ object PresetFile {
     /** What [write] made. [missing] are files a patch names that weren't there, as "patch: path". */
     class Written(val file: File, val count: Int, val media: Int, val missing: List<String>, val engineLines: Boolean, val unportable: List<String>)
 
-    /** What [read] added. [unit] is the machine or effect type, [kind] "machine" or "effect". */
+    /** What [read] added. [unit] is the machine, effect or modifier type, [kind] "machine", "effect" or "modifier". */
     class Imported(val kind: String, val unit: String, val names: List<String>, val media: Int, val missing: List<String>)
 
     /** Whether a setting of this name holds a path to one of the user's files. */
@@ -76,7 +77,7 @@ object PresetFile {
 
     /**
      * Writes [patches] of [key] (a machine's type, or PatchStore.effectKey for an
-     * effect) to [out]. [engine] gives the engine lines for a patch, or null.
+     * effect, PatchStore.modifierKey for a modifier) to [out]. [engine] gives the engine lines for a patch, or null.
      * Files a patch names that don't exist are left as they were and listed in
      * [Written.missing]; the file is still written.
      */
@@ -87,8 +88,8 @@ object PresetFile {
         out: File,
         engine: (suspend (Patch) -> PresetEngine.Recording?)? = null,
     ): Written {
-        val isEffect = key.startsWith(PatchStore.FX)
-        val unit = key.removePrefix(PatchStore.FX)
+        val kind = kindOf(key)
+        val unit = key.removePrefix(PatchStore.FX).removePrefix(PatchStore.MOD)
         val zip = ZipWriter(out)
         val missing = mutableListOf<String>()
         val unportable = linkedSetOf<String>()
@@ -104,7 +105,7 @@ object PresetFile {
                     machine = key, settings = rewritten, inserts = inserts, version = RateMigration.PATCH_VERSION,
                 )).encodeToByteArray())
                 entries += "patches/$n.json"
-                val recorded = engine?.invoke(patch)
+                val recorded = if (kind == "modifier") null else engine?.invoke(patch)
                 if (recorded != null) {
                     zip.add("engine/$n.txt", recorded.text.encodeToByteArray())
                     unportable += recorded.unportable
@@ -112,7 +113,7 @@ object PresetFile {
                 }
             }
             zip.add(MANIFEST, json.encodeToString(Manifest.serializer(), Manifest(
-                VERSION, if (isEffect) "effect" else "machine", unit, entries,
+                VERSION, kind, unit, entries,
             )).encodeToByteArray())
         } finally {
             zip.close()
@@ -146,6 +147,13 @@ object PresetFile {
         }
     }
 
+    /** The manifest's kind for a patch store key. */
+    fun kindOf(key: String): String = when {
+        key.startsWith(PatchStore.FX) -> "effect"
+        key.startsWith(PatchStore.MOD) -> "modifier"
+        else -> "machine"
+    }
+
     /** Whether [zip] has a preset manifest at its root. */
     suspend fun isPreset(zip: File): Boolean {
         var found = false
@@ -177,9 +185,15 @@ object PresetFile {
         }.isSuccess
         val m = manifest
         if (!ok || m == null || m.version > VERSION) return null
-        if (m.kind != "machine" && m.kind != "effect") return null
+        if (m.kind != "machine" && m.kind != "effect" && m.kind != "modifier") return null
+        // Only some modifiers have presets; one for another is refused like an unknown kind.
+        if (m.kind == "modifier" && m.unit !in PatchStore.MODIFIERS_WITH_PRESETS) return null
         if (!Regex("[A-Za-z0-9 _.-]{1,40}").matches(m.unit) || m.unit.startsWith(".")) return null
-        val key = if (m.kind == "effect") PatchStore.effectKey(m.unit) else m.unit
+        val key = when (m.kind) {
+            "effect" -> PatchStore.effectKey(m.unit)
+            "modifier" -> PatchStore.modifierKey(m.unit)
+            else -> m.unit
+        }
         val incoming = m.patches.mapNotNull { entry ->
             patchJson[entry]?.let { text ->
                 runCatching { json.decodeFromString(Patch.serializer(), text) }.getOrNull()
