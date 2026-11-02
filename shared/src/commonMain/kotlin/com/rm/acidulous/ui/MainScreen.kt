@@ -805,6 +805,7 @@ fun MainScreen(
                             },
                             onPlayThrough = { onLoopScene(false); com.rm.acidulous.engine.EngineSync.play(index, clipMode) },
                             onSettings = { dialog = Dialog.SceneSettings(index) },
+                            onRename = { dialog = Dialog.RenameScene(index) },
                             onInsertAfter = { editor.editSong { it.addScene(afterIndex = index) } },
                             onDuplicate = { editor.editSong { it.duplicateScene(index) } },
                             onDelete = { editor.editSong { it.deleteScene(index) } },
@@ -1017,6 +1018,13 @@ fun MainScreen(
                 dialog = null
             }
         }
+        is Dialog.RenameScene -> song.scenes.getOrNull(d.index)?.let { scene ->
+            TextInputDialog(stringResource(Res.string.scene_name), scene.name, onDismiss = { dialog = null }) { name ->
+                // A blank name keeps the old one, as in the scene's settings.
+                if (name.isNotBlank()) editor.editSong { it.updateScene(d.index) { s -> s.copy(name = name) } }
+                dialog = null
+            }
+        }
         is Dialog.RenameTrack -> TextInputDialog(stringResource(Res.string.main_track_name), song.tracks.getOrNull(d.index)?.name ?: "", onDismiss = { dialog = null }) { name ->
             editor.editSong { it.renameTrack(d.index, name) }
             dialog = null
@@ -1072,6 +1080,7 @@ private sealed class Dialog {
     data class ClipSettings(val track: Int, val sceneId: String) : Dialog()
     data class PickMachine(val track: Int?) : Dialog() // null = new track
     data class RenameTrack(val index: Int) : Dialog()
+    data class RenameScene(val index: Int) : Dialog()
     data class TrackSettings(val index: Int) : Dialog()
     object Tempo : Dialog()
     object Songs : Dialog()
@@ -1098,7 +1107,7 @@ private fun SceneHeader(
     /** How far through it is, read as the bar draws; null when it isn't playing. */
     progress: (() -> Float)?, repeatIdx: Int?, holding: Boolean, finishing: Boolean, queued: Boolean,
     onAudition: () -> Unit, onLoopThis: () -> Unit, onPlayThrough: () -> Unit,
-    onSettings: () -> Unit, onInsertAfter: () -> Unit,
+    onSettings: () -> Unit, onRename: () -> Unit, onInsertAfter: () -> Unit,
     onDuplicate: () -> Unit, onDelete: () -> Unit, onMoveLeft: () -> Unit, onMoveRight: () -> Unit,
     /** How many clips in this scene could be frozen, and how many already are. */
     freezable: Int, frozen: Int,
@@ -1170,7 +1179,7 @@ private fun SceneHeader(
                 maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
-        // A scrollbar, since eleven items is taller than a phone held sideways.
+        // A scrollbar, since twelve items is taller than a phone held sideways.
         // See ui/Scrollbar.kt.
         val menuScroll = rememberScrollState()
         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -1178,6 +1187,7 @@ private fun SceneHeader(
                 DropdownMenuItem(text = { Text(stringResource(Res.string.main_loop_this_scene)) }, onClick = { menu = false; onLoopThis() })
                 DropdownMenuItem(text = { Text(stringResource(Res.string.main_play_on)) }, onClick = { menu = false; onPlayThrough() })
                 DropdownMenuItem(text = { Text(stringResource(Res.string.main_settings)) }, onClick = { menu = false; onSettings() })
+                DropdownMenuItem(text = { Text(stringResource(Res.string.main_rename)) }, onClick = { menu = false; onRename() })
                 if (freezable > 0) {
                     DropdownMenuItem(text = { Text(stringResource(Res.string.main_freeze_scene, freezable)) }, onClick = { menu = false; onFreeze() })
                 }
