@@ -97,7 +97,7 @@ patch "Backbeat Snap" family=grid
 patch "Offbeat Push" family=grid
   # The offbeat eighths lean forward, the beats softened under them.
   grid           1
-  gain           -1 dB
+  gain           1.4 dB
   depth          6 dB
   a01            0
   a03            2
@@ -144,7 +144,7 @@ patch Tresillo family=grid
 patch Dembow family=grid
   # The 3+3+2 snare a dembow rides on, the backbeat pulled back under it.
   grid           1
-  gain           -1.5 dB
+  gain           0.9 dB
   depth          6 dB
   a02            0
   a05            0

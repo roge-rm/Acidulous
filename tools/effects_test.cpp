@@ -1558,6 +1558,143 @@ void transientGrid() {
         }
         ok(std::string(name) + ": the accent holds through the hit's start", first > 3.0 && worstMs < 1.5,
            num(first) + " dB at 2 ms, moving " + num(worstMs) + " dB a ms at most");
+        // Only the hit's own step is up: a second start inside the hit would land on a down one.
+        auto one = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        one->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*one, steps[k], k % 4 ? 0.0f : 2.0f);
+        double low = 1e9;
+        const auto yOne = run(*one, x).l;
+        for (double ms = 2.0; ms <= 60.0; ms += 1.0) low = std::min(low, gainAt(yOne, x, ms) - gainAt(yOff, x, ms));
+        ok(std::string(name) + ": it starts once a hit", low > -0.5, num(low) + " dB at the lowest");
+    }
+    {
+        // A 30 Hz sub, long enough that the second hit starts over the first's tail.
+        const auto x = kick(30.0f, 0.3f);
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], 2.0f);
+        auto off = make("Transient", {{"attack", 0.5f}});
+        const double sOn = worstStep(run(*on, x).l, x), sOff = worstStep(run(*off, x).l, x);
+        ok("a 30 Hz sub: no step in the gain sample to sample", sOn < 0.06 + sOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off");
+        // The same, swelling up out of the first with no kink to hear it start by.
+        std::vector<float> swell(96000);
+        for (size_t i = 0; i < swell.size(); ++i) {
+            const double t = double(i % 24000) / kRate, tail = std::exp(-(t + 0.5) / 0.3);
+            const double rise = std::min(1.0, t / 0.004), a = tail + (std::exp(-t / 0.3) - tail) * rise;
+            swell[i] = 0.8f * static_cast<float>(a * std::sin(2.0 * M_PI * 30.0 * i / kRate));
+        }
+        on->reset();
+        const double wOn = worstStep(run(*on, swell).l, swell), wOff = worstStep(run(*off, swell).l, swell);
+        ok("a 30 Hz sub swelling in: no step either", wOn < 0.06 + wOff,
+           num(wOn) + " dB against " + num(wOff) + " grid off");
+    }
+    // Hits at [at] (frames) at [bpm] through a grid of alternating up and down
+    // steps [rate] long. Each hit's onset (5 ms) against grid off should go its
+    // own step's way, the first left out as it starts from silence.
+    auto ownSteps = [&](const char *name, const std::vector<float> &x, const std::vector<size_t> &at, float bpm, float rate) {
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}, {"attack", 0.3f}, {"rate", rate}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+        auto off = make("Transient", {{"attack", 0.3f}});
+        const auto yOn = run(*on, x, bpm).l, yOff = run(*off, x, bpm).l;
+        const int64_t step = rate < 0.5f ? 40 : rate < 1.5f ? 60 : 120;
+        double up = 1e9, down = -1e9;
+        for (size_t k = 1; k < at.size(); ++k) {
+            const auto tick = static_cast<int64_t>(double(at[k]) * kTicksPerBeat * bpm / 60.0 / kRate);
+            const bool isUp = ((tick + step / 4) / step) % 2 == 0;
+            const double d = dB(rms(yOn, at[k], at[k] + 240) / rms(yOff, at[k], at[k] + 240));
+            if (isUp) up = std::min(up, d); else down = std::max(down, d);
+        }
+        ok(std::string(name) + ": each hit gets its own step", up > 2.0 && down < -2.0,
+           num(up) + " dB the least up, " + num(down) + " the least down");
+        auto steps2 = [&](const std::vector<float> &out) {
+            double w = 0.0, pk = 0.0;
+            for (float v : x) pk = std::max(pk, double(std::fabs(v)));
+            size_t next = 0;
+            for (size_t i = 1; i < x.size(); ++i) {
+                while (next < at.size() && at[next] + 96 <= i) ++next;
+                if (next < at.size() && i >= at[next]) continue;
+                if (std::fabs(x[i]) < 0.05 * pk || std::fabs(x[i - 1]) < 0.05 * pk) continue;
+                const double d = std::fabs(dB(std::fabs(out[i] / x[i])) - dB(std::fabs(out[i - 1] / x[i - 1])));
+                w = std::max(w, d);
+            }
+            return w;
+        };
+        const double sOn = steps2(yOn), sOff = steps2(yOff);
+        ok(std::string(name) + ": no step in the gain past each hit's first 2 ms", sOn < 0.06 + sOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off");
+    };
+    // A noise hit [amp] high falling with time constant [tau] seconds, added in at [from].
+    auto addHit = [](std::vector<float> &x, size_t from, float amp, double tau, uint32_t seed) {
+        const auto n = noise(amp, std::min<size_t>(x.size() - from, size_t(tau * 10.0 * kRate)), seed);
+        for (size_t i = 0; i < n.size(); ++i) x[from + i] += n[i] * static_cast<float>(std::exp(-double(i) / kRate / tau));
+    };
+    {
+        // A 32nd snare roll at 180 bpm: a hit every 2000 frames, each down 26 dB by 100 ms.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 2000 < x.size(); h += 2000) { addHit(x, h, 0.5f, 0.1 / 3.0, 11 + h); at.push_back(h); }
+        ownSteps("a 32nd roll at 180 bpm", x, at, 180.0f, 1.0f);
+    }
+    {
+        // Flams at 180 bpm on 1/16 triplets: a quiet grace note 20 ms before each main hit.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 8000; h + 4000 < x.size(); h += 8000) {
+            addHit(x, h - 960, 0.25f, 0.03, 3 + h);
+            addHit(x, h, 0.6f, 0.04, 5 + h);
+            at.push_back(h - 960);
+            at.push_back(h);
+        }
+        ownSteps("a 20 ms flam", x, at, 180.0f, 0.0f);
+    }
+    {
+        // 16th hats at 180 bpm: short and high.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 4000 < x.size(); h += 4000) {
+            std::vector<float> one(4000, 0.0f);
+            addHit(one, 0, 0.4f, 0.01, 17 + h);
+            float lp = 0.0f;
+            for (size_t i = 0; i < one.size(); ++i) { lp += (one[i] - lp) * 0.5f; x[h + i] += one[i] - lp; }
+            at.push_back(h);
+        }
+        ownSteps("16th hats at 180 bpm", x, at, 180.0f, 1.0f);
+    }
+    {
+        // Kicks with a click on top, an eighth apart at 120 bpm.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 12000 <= x.size(); h += 12000) {
+            for (size_t i = 0; i < 12000; ++i)
+                x[h + i] = 0.7f * static_cast<float>(std::exp(-double(i) / kRate / 0.12) * std::sin(2.0 * M_PI * 50.0 * i / kRate));
+            addHit(x, h, 0.4f, 0.0015, 23 + h);
+            at.push_back(h);
+        }
+        ownSteps("a kick with a click", x, at, 120.0f, 2.0f);
+    }
+    {
+        // Snare hits a sixteenth apart over a held 55 Hz saw bass.
+        auto x = saw(55.0f, 0.3f, 96000);
+        std::vector<size_t> at;
+        for (size_t h = 3000; h + 6000 <= x.size(); h += 6000) { addHit(x, h, 0.5f, 0.03, 29 + h); at.push_back(h); }
+        ownSteps("snares over a bass", x, at, 120.0f, 1.0f);
+    }
+    {
+        // A held saw bass from E1 up, whose every cycle starts with a click, isn't a run of hits:
+        // with every other step up, it comes out as with the grid off.
+        double w = 0.0;
+        for (float hz : {41.2f, 55.0f, 110.0f}) {
+            auto x = saw(hz, 0.5f, 96000);
+            auto on = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}, {"attack", 0.3f}});
+            on->setTransport(rolling);
+            for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+            auto off = make("Transient", {{"attack", 0.3f}});
+            const auto yOn = run(*on, x).l, yOff = run(*off, x).l;
+            for (size_t i = 4800; i + 480 <= x.size(); i += 480) w = std::max(w, std::fabs(dB(rms(yOn, i, i + 480) / rms(yOff, i, i + 480))));
+        }
+        ok("a held saw bass: the grid leaves it alone", w < 0.2, num(w) + " dB at most");
     }
 }
 

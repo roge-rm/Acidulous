@@ -16026,7 +16026,7 @@ internal object FactoryBanks {
         family = "grid")
 
     private fun fx_transient17() = Patch("fx.Transient", "Offbeat Push",
-        mapOf("gain" to 0.479166657f, "grid" to 1f, "a01" to 0f, "a03" to 1f, "a05" to 0f, "a07" to 1f, "a09" to 0f, "a11" to 1f, "a13" to 0f, "a15" to 1f),
+        mapOf("gain" to 0.529166639f, "grid" to 1f, "a01" to 0f, "a03" to 1f, "a05" to 0f, "a07" to 1f, "a09" to 0f, "a11" to 1f, "a13" to 0f, "a15" to 1f),
         family = "grid")
 
     private fun fx_transient18() = Patch("fx.Transient", "Ghost Hats",
@@ -16038,7 +16038,7 @@ internal object FactoryBanks {
         family = "grid")
 
     private fun fx_transient20() = Patch("fx.Transient", "Dembow",
-        mapOf("gain" to 0.46875f, "grid" to 1f, "a02" to 0f, "a04" to 1f, "a05" to 0f, "a06" to 0f, "a07" to 1f, "a10" to 0f, "a12" to 1f, "a13" to 0f, "a14" to 0f, "a15" to 1f),
+        mapOf("gain" to 0.51875f, "grid" to 1f, "a02" to 0f, "a04" to 1f, "a05" to 0f, "a06" to 0f, "a07" to 1f, "a10" to 0f, "a12" to 1f, "a13" to 0f, "a14" to 0f, "a15" to 1f),
         family = "grid")
 
     private val fx_transient: List<Patch> by lazy { listOf(fx_transient0(), fx_transient1(), fx_transient2(), fx_transient3(), fx_transient4(), fx_transient5(), fx_transient6(), fx_transient7(), fx_transient8(), fx_transient9(), fx_transient10(), fx_transient11(), fx_transient12(), fx_transient13(), fx_transient14(), fx_transient15(), fx_transient16(), fx_transient17(), fx_transient18(), fx_transient19(), fx_transient20()) }

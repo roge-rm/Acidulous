@@ -51,18 +51,31 @@ class Transient final : public Effect {
     // The accent grid: the block's ticks from onBlock; whether the song
     // moves and the track's swing come in modTransport_.
     int64_t blockStart = 0, blockEnd = 0;
-    // A hit starts when a short average of the level jumps over a long one
-    // while armed. It's over, and can start again, once it has held for a
-    // while and its envelope (env, slow to fall so a low wave's zero
-    // crossings don't count) is 6 dB under its peak. The step is picked at
-    // the start and held for the hit: accent is its -1, 0 or +1, and
-    // accentNow glides to it, then eases back to flat after.
-    float shortAvg = 0.0f, longAvg = 0.0f, shortCoeff = 0.0f, longCoeff = 0.0f;
-    float env = 0.0f, envRelease = 0.0f, hitPeak = 0.0f;
-    int32_t hitFrames = 0;
-    bool armed = true;
-    float accent = 0.0f, accentNow = 0.0f;
-    float accentIn = 0.0f, accentOut = 0.0f;
+    // Hits are found two ways, so a roll of snares and a sub kick both count.
+    // The high way: the energy above a few hundred Hz over 1 ms (hiE) jumping
+    // over its recent peak (hiPeak), which hears hiE 2 ms late through hiPast,
+    // so a hit's own rise isn't in it, and falls slowly, so a saw's click
+    // every cycle isn't a hit each time. The low way: the level's envelope
+    // (env, slow to fall so a low wave's zero crossings don't count) jumping
+    // over its recent low (envLow). After either, neither can start a hit for
+    // a short wait (wait, in frames).
+    float hpLow[2][4] = {}; // the high way's filter: four one-poles, each taken away, a side
+    float hpCoeff = 0.0f;
+    float hiE = 0.0f, hiECoeff = 0.0f, hiPeak = 0.0f, hiFall = 0.0f;
+    static constexpr int32_t kPastMost = 512;
+    float hiPast[kPastMost] = {};
+    int32_t pastAt = 0, pastLength = 1;
+    float env = 0.0f, envLow = 0.0f, envRelease = 0.0f, envUp = 0.0f, hitPeak = 0.0f;
+    int32_t hitFrames = 0, wait = 0, quick = 0;
+    bool inHit = false;
+    // The step is picked at the start and held for the hit: accent is its -1,
+    // 0 or +1. accentNow is the accent's share of the gain, in octaves. It
+    // moves no faster than accentStep a sample, plus what the level (env
+    // smoothed) rises past riseFrom a sample, so it can't click; or by up to
+    // quickStep for quick frames after a hit starts, while it has a click of
+    // its own.
+    float accent = 0.0f, accentNow = 0.0f, accentStep = 0.0f, quickStep = 0.0f;
+    float level = 0.0f, levelCoeff = 0.0f, riseFrom = 0.0f, riseRatio = 1.0f;
     float stepAccent(int64_t songTick) const;
 };
 
