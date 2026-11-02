@@ -1026,6 +1026,14 @@ int main(int argc, char **argv) {
         const std::string name = EffectRegistry::name(i);
         if (!only.empty() && only != name && only != "fx." + name) continue;
         rows.push_back(timeEffect(name));
+        // The Deesser's throw runs an echo the default leaves asleep.
+        if (name == "Deesser" && forced.empty()) {
+            forced.emplace_back("throw", 1.0f);
+            Result r = timeEffect(name);
+            r.name += " throw";
+            rows.push_back(r);
+            forced.clear();
+        }
     }
     report(rows);
     printf("\n%zu units timed\n", rows.size());

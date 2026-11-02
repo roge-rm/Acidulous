@@ -1465,6 +1465,12 @@ void midSide() {
 
 // --- Deesser ----------------------------------------------------------------------
 
+std::vector<float> both_of(const std::vector<float> &a, const std::vector<float> &b) {
+    std::vector<float> x(std::min(a.size(), b.size()));
+    for (size_t i = 0; i < x.size(); ++i) x[i] = a[i] + b[i];
+    return x;
+}
+
 void deEsser() {
     printf("- de-esser\n");
     const auto ess = tone(6000.0f, 0.3f, 48000);
@@ -1520,6 +1526,86 @@ void deEsser() {
         const double dv = dB(rms(run(*fx, vowel).l, 24000, 48000) / rms(vowel, 24000, 48000));
         const double de = dB(rms(run(*fx2, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
         ok("relative from defaults: a vowel is left alone, an ess is cut", std::fabs(dv) < 0.3 && de < -3.0, num(dv) + " / " + num(de) + " dB");
+    }
+    // Throw: an ess 50 ms long at 0.1 s, then silence.
+    const size_t essAt = 4800, essLen = 2400;
+    std::vector<float> burst(96000, 0.0f);
+    for (size_t i = 0; i < essLen; ++i) burst[essAt + i] = ess[i];
+    {
+        // At throw 0 the time and feedback change nothing and it stays mono.
+        auto a = make("Deesser");
+        auto b = make("Deesser", {{"time", 5.0f}, {"feedback", 0.9f}});
+        const auto oa = run(*a, both_of(ess, low)), ob = run(*b, both_of(ess, low));
+        bool mono = true;
+        {
+            auto c = make("Deesser");
+            std::vector<float> l(ess.begin(), ess.begin() + kBlock), r(kBlock, 0.0f);
+            mono = !c->run(l.data(), r.data(), kBlock, false);
+        }
+        ok("throw 0: time and feedback change nothing, the output stays mono", worst(oa.l, ob.l) == 0.0 && mono,
+           num(worst(oa.l, ob.l)));
+    }
+    for (const float bpm : {120.0f, 90.0f}) {
+        // 1/8 at the tempo: the cut comes back on the left an eighth later,
+        // then on the right an eighth after that.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 1.0f}, {"feedback", 0.5f}});
+        const auto out = run(*fx, burst, bpm);
+        const auto d = static_cast<size_t>(0.5f * 60.0f / bpm * kRate);
+        const double gap = rms(out.l, essAt + essLen + 600, essAt + d - 300);
+        const double echoL = rms(out.l, essAt + d, essAt + d + essLen);
+        const double echoR = rms(out.r, essAt + 2 * d, essAt + 2 * d + essLen);
+        const double earlyR = rms(out.r, essAt + essLen + 600, essAt + 2 * d - 300);
+        ok("throw at " + num(bpm) + " bpm: the ess echoes left at 1/8, right at 1/4",
+           dB(echoL) > -40.0 && dB(echoL / (gap + 1e-12)) > 40.0 && dB(echoR / (earlyR + 1e-12)) > 30.0,
+           num(dB(echoL)) + " dB, gap " + num(dB(gap)) + ", right " + num(dB(echoR)) + " / " + num(dB(earlyR)));
+    }
+    {
+        // Feedback rings on after the input stops, then sleeps; asleep it
+        // plays exactly what a de-esser without a throw would.
+        const std::vector<float> head(burst.begin(), burst.begin() + 9600);
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 0.0f}, {"feedback", 0.6f}});
+        run(*fx, head);
+        set(*fx, "throw", 0.0f);
+        const auto still = run(*fx, std::vector<float>(24000, 0.0f), 120.0f, head.size());
+        run(*fx, std::vector<float>(48000 * 4, 0.0f), 120.0f, head.size() + 24000);
+        auto plain = make("Deesser");
+        run(*plain, head);
+        run(*plain, std::vector<float>(24000 + 48000 * 4, 0.0f));
+        const auto a = run(*fx, ess), b = run(*plain, ess);
+        ok("throw: the tail rings after the input and throw stop, then it sleeps",
+           dB(rms(still.l, 0, 12000) + rms(still.r, 0, 12000)) > -60.0 && worst(a.l, b.l) == 0.0 && worst(a.r, b.r) == 0.0,
+           num(dB(rms(still.l, 0, 12000) + rms(still.r, 0, 12000))) + " dB, " + num(worst(a.l, b.l)));
+    }
+    {
+        // Reset clears the echo: silence after it is silence, and the same input plays the same.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"feedback", 0.8f}});
+        const auto first = run(*fx, burst);
+        fx->reset();
+        const auto quiet = run(*fx, std::vector<float>(48000, 0.0f));
+        fx->reset();
+        const auto again = run(*fx, burst);
+        ok("throw: reset clears the echo and the same input plays the same",
+           peak(quiet.l) == 0.0 && peak(quiet.r) == 0.0 && worst(first.l, again.l) == 0.0 && worst(first.r, again.r) == 0.0,
+           num(peak(quiet.l)) + " / " + num(worst(first.l, again.l)));
+    }
+    {
+        // Listen plays only the band; the throw is silent.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"listen", 1.0f}});
+        const auto out = run(*fx, burst);
+        const double after = rms(out.l, essAt + essLen + 2400, out.l.size()) + rms(out.r, essAt + essLen + 2400, out.r.size());
+        ok("throw: listen keeps the echo silent", dB(after) < -100.0, num(dB(after)) + " dB");
+    }
+    {
+        // A time change glides the read: no step in the echo bigger than the echo itself makes.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 1.0f}, {"feedback", 0.7f}});
+        auto hiss = noise(0.3f, 48000, 7);
+        auto out1 = run(*fx, hiss);
+        set(*fx, "time", 3.0f);
+        auto out2 = run(*fx, std::vector<float>(48000, 0.0f), 120.0f, 48000);
+        double jump = 0.0, typical = 0.0;
+        for (size_t i = 1; i < 4800; ++i) jump = std::max(jump, double(std::fabs(out2.l[i] - out2.l[i - 1])));
+        for (size_t i = 24001; i < 48000; ++i) typical = std::max(typical, double(std::fabs(out1.l[i] - out1.l[i - 1])));
+        ok("throw: a new time glides without a click", finite(out2) && jump <= typical * 1.5, num(jump) + " vs " + num(typical));
     }
     staysBounded("Deesser");
 }

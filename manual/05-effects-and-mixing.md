@@ -73,7 +73,7 @@ Each effect has its own page below.
 - [**Transient**](05-effects-and-mixing/transient.md) - the start of each hit
   and the ring after it, up or down.
 - [**Deesser**](05-effects-and-mixing/deesser.md) - turns down a band when it
-  gets too loud: an s, a cymbal.
+  gets too loud: an s, a cymbal. Can throw what it cuts into an echo.
 
 ## Movement
 

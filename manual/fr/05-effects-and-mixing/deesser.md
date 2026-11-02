@@ -20,9 +20,22 @@ dures.
   plus. À -36, c'est 10 dB.
 - **gain** : le niveau de sortie.
 
+### Renvoi
+
+- **renvoi** *(extra)* : envoie ce que le deesser enlève dans son propre
+  écho, donc chaque s revient en une traînée brillante pendant que la voix
+  reste propre. Baissé, les échos déjà envoyés finissent de sonner.
+  **écouter** le fait taire.
+- **temps** : l’écart entre les échos, sur le tempo : 1/16, 1/8, 1/8 pointée,
+  1/4, 1/4 pointée ou 1/2. Les répétitions vont de gauche à droite, donc une
+  piste mono sort en stéréo.
+- **réinjection** : combien de temps les échos reviennent.
+
 ## Astuces
 
 - Activez **écouter**, déplacez **fréq.** jusqu’à ce que le s soit le plus
   fort, puis coupez **écouter**.
 - Avec **relatif**, la voix peut s’éloigner du micro et il attrape toujours
   le même s.
+- Montez **renvoi** sur le dernier mot d’une phrase, comme on lance un mot
+  dans l’écho en dub : seuls ses s s’envolent. Essayez **Dub Sparkle**.

@@ -422,6 +422,17 @@ void checkBank(const Bank &bank) {
                 if (std::strcmp(defs[i].name, "duck") == 0) swells = defs[i].map(r.norm[static_cast<size_t>(i)]) > 0.0f;
             }
         }
+        // The Deesser's throw echoes the esses a quarter note or more apart,
+        // so one can land in the last quarter second with a gap before it.
+        // Its loop is limited; effects_test checks it stays bounded.
+        if (bank.isEffect() && bank.typeName() == "Deesser") {
+            float throwAmt = 0.0f, time = 0.0f;
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::strcmp(defs[i].name, "throw") == 0) throwAmt = defs[i].map(r.norm[static_cast<size_t>(i)]);
+                if (std::strcmp(defs[i].name, "time") == 0) time = defs[i].map(r.norm[static_cast<size_t>(i)]);
+            }
+            swells = throwAmt > 0.0f && time > 2.5f;
+        }
         if (!swells && runaway(out.audio)) fail(who, "louder at the end of its tail than before it");
 
         // Reset and play again. Different output means some state survives a

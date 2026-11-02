@@ -602,6 +602,7 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
+        "throw" to listOf("throw", "time", "feedback"),
         "out" to listOf("gain"),
     ),
 )
@@ -810,7 +811,7 @@ private val EXTRA = mapOf(
     "Vessel" to setOf("follow"), // the body tuned to the track's notes
     "Transient" to setOf("split"), // only the highs shaped
     "Midside" to setOf("breathe"), // the side opens in the gaps
-    "Deesser" to setOf("relative"), // measured against the whole sound
+    "Deesser" to setOf("relative", "throw"), // measured against the whole sound; what it cuts, echoed
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -884,6 +885,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     steps == 2 -> listOf("off", "on")
     name == "mode" && type == "Delay" -> listOf("normal", "ping-pong", "multi-tap", "reverse")
     name == "taps" && type == "Delay" -> listOf("2", "3", "4")
+    name == "time" && type == "Deesser" -> listOf("1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
     name == "model" && type == "Reverb" -> REVERB_MODELS
