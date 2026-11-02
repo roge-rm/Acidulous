@@ -1612,4 +1612,12 @@
     <string name="pw_skin">peau</string>
     <string name="pw_stone">pierre</string>
     <string name="pw_vessel">Vessel</string>
+    <string name="pw_1_lap">1 tour</string>
+    <string name="pw_2_laps">2 tours</string>
+    <string name="pw_4_laps">4 tours</string>
+    <string name="pw_8_laps">8 tours</string>
+    <string name="pw_bounce">aller-retour</string>
+    <string name="pw_never">jamais</string>
+    <string name="pw_renew">refaire</string>
+    <string name="pw_spectrum">spectre</string>
 </resources>

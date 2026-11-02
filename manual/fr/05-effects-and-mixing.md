@@ -48,8 +48,8 @@ Chaque effet a sa propre page ci-dessous.
   n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
 - [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
   LFO, le niveau de la piste ou une autre piste.
-- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille
-  ou robotise les fréquences de la piste.
+- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille,
+  robotise ou fait bégayer les fréquences de la piste.
 
 ## Saturation
 

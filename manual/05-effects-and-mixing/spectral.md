@@ -20,11 +20,30 @@ went in.
 - **mix** - the dry track against the changed one.
 - **gain** - the level out.
 
+### Stutter
+
+- **stutter** *(extra)* - **loop** takes one slice of the sound each step of
+  the grid and holds it for the step. After **length** steps it plays those
+  slices again in a loop, each with its own colour, until you go back to
+  **run**, when it fades into the track.
+- **grid** - the step, from a quarter note to a thirty-second, with triplets.
+- **length** - how many steps the loop holds, 1 to 16. Turned up while it
+  loops, it takes the extra steps from the track.
+- **order** - **forward**, **reverse**, **bounce** back and forth, or
+  **random**. Random plays the same order every time.
+- **fade** - fades each step out within its length, from held to a short
+  blip.
+- **renew** - takes the loop again from the track after that many laps, or
+  **never**.
+
 The changed sound runs about 40 ms behind the track. The dry sound in
 **mix** is held back to match, so the two stay in step.
 
 ## Tips
 
 - Map **freeze** to a button and hold a chord under the next part.
+- Map **stutter** to a button and hold it for a fill, or draw it in a lane.
+  **Step Repeat** and **Shuffle** loop on their own, taking the loop again
+  every lap or two.
 - **Robot Voice** on a sung or spoken track is the classic flat robot.
 - **Ice** on a pad or a piano leaves a glassy shimmer of its loudest notes.

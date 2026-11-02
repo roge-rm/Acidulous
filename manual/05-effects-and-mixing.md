@@ -43,8 +43,8 @@ Each effect has its own page below.
   track, opened by each note or by a pattern on the beat.
 - [**Mouth**](05-effects-and-mixing/mouth.md) - vowels, moved by an LFO, the
   track's level or another track.
-- [**Spectral**](05-effects-and-mixing/spectral.md) - freeze, blur, smear
-  or robotise the track's frequencies.
+- [**Spectral**](05-effects-and-mixing/spectral.md) - freeze, blur, smear,
+  robotise or stutter the track's frequencies.
 
 ## Drive
 

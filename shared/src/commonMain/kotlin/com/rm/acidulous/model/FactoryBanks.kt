@@ -15836,7 +15836,27 @@ internal object FactoryBanks {
         mapOf("peaks" to 0.3f, "tilt" to 0.875f, "gain" to 0.6666667f),
         family = "glass")
 
-    private val fx_spectral: List<Patch> by lazy { listOf(fx_spectral0(), fx_spectral1(), fx_spectral2(), fx_spectral3(), fx_spectral4(), fx_spectral5(), fx_spectral6(), fx_spectral7(), fx_spectral8(), fx_spectral9(), fx_spectral10(), fx_spectral11(), fx_spectral12(), fx_spectral13(), fx_spectral14(), fx_spectral15(), fx_spectral16(), fx_spectral17(), fx_spectral18(), fx_spectral19()) }
+    private fun fx_spectral20() = Patch("fx.Spectral", "Step Repeat",
+        mapOf("stutter" to 1f, "renew" to 0.25f),
+        family = "stutter")
+
+    private fun fx_spectral21() = Patch("fx.Spectral", "Backspin",
+        mapOf("stutter" to 1f, "length" to 0.466666669f, "order" to 0.333333343f, "renew" to 0.25f),
+        family = "stutter")
+
+    private fun fx_spectral22() = Patch("fx.Spectral", "Shuffle",
+        mapOf("gain" to 0.43125f, "stutter" to 1f, "grid" to 0.333333343f, "order" to 1f, "renew" to 0.25f),
+        family = "stutter")
+
+    private fun fx_spectral23() = Patch("fx.Spectral", "Blips",
+        mapOf("gain" to 0.683333337f, "stutter" to 1f, "grid" to 1f, "length" to 0.466666669f, "order" to 0.6666667f, "fade" to 0.7f, "renew" to 0.5f),
+        family = "stutter")
+
+    private fun fx_spectral24() = Patch("fx.Spectral", "Triplet Glass",
+        mapOf("peaks" to 0.6f, "gain" to 0.527083337f, "stutter" to 1f, "grid" to 0.8333333f, "length" to 0.333333343f, "order" to 1f, "renew" to 0.25f),
+        family = "stutter")
+
+    private val fx_spectral: List<Patch> by lazy { listOf(fx_spectral0(), fx_spectral1(), fx_spectral2(), fx_spectral3(), fx_spectral4(), fx_spectral5(), fx_spectral6(), fx_spectral7(), fx_spectral8(), fx_spectral9(), fx_spectral10(), fx_spectral11(), fx_spectral12(), fx_spectral13(), fx_spectral14(), fx_spectral15(), fx_spectral16(), fx_spectral17(), fx_spectral18(), fx_spectral19(), fx_spectral20(), fx_spectral21(), fx_spectral22(), fx_spectral23(), fx_spectral24()) }
 
     private fun fx_formula0() = Patch("fx.Formula", "Init", emptyMap(),
         family = "crush")
