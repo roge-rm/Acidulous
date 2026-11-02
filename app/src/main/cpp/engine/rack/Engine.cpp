@@ -299,7 +299,9 @@ void Engine::renderBlock(const float *in, float *out) {
             // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
                                   clock.blockStart(), tickInBar, ticksPerBar, pair);
-            clipCycleTick[r] = scheduler.rackCycleTick(r);
+            // Both from before the scheduler moves on: the offset is still the
+            // one the last block ended on, as the cycle tick is.
+            clipStartTick[r] = clock.blockStart() + modTransport.songOffset - scheduler.rackCycleTick(r);
         }
     }
 
@@ -652,12 +654,12 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     // A track's inserts also get its swing, counted from its clip's start.
     ModTransport trackTransport = modTransport;
     trackTransport.swing = rack.channelTarget(Rack::Swing);
-    trackTransport.swingFrom = clock.blockStart() + modTransport.songOffset - clipCycleTick[r];
+    trackTransport.swingFrom = clipStartTick[r];
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
             e->setTransport(trackTransport);
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTransport);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, trackTransport);
         }
     }
     // A machine can listen too: Diction mouthing another track's sound.

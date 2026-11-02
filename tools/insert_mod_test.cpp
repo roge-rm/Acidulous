@@ -796,6 +796,40 @@ void writeAuditions(const char *dir) {
     }
 }
 
+/**
+ * A track's swing reaches its inserts with a mod on or off: the mod's own
+ * transport mustn't put it back to straight, or the Transient's accent grid
+ * would put a swung note on the wrong step.
+ */
+void aSwungTrackKeepsItsSwing() {
+    printf("- a swung track's inserts see the swing, mod or not\n");
+    std::vector<std::pair<float, int64_t>> seen[2];
+    for (int k = 0; k < 2; ++k) {
+        Mod m;
+        m.source = k == 0 ? slotmod::Off : slotmod::Lfo;
+        Fixture f(m);
+        Effect *fx = EffectRegistry::create("Transient");
+        fx->prepare(kSampleRate);
+        fx->reset();
+        fx->params().set(fx->params().indexOf("grid"), 1.0f);
+        fx->params().jumpAll();
+        delete f.engine.racks[kPad].swapEffect(kSlot, fx);
+        f.filter = nullptr;
+        setMod(f.engine.racks[kPad], kUnit, m, 1);
+        f.engine.racks[kPad].setParam(Unit::Channel, Rack::Swing, 1.0f, true);
+        std::vector<float> out;
+        f.start();
+        for (int b = 0; b < 400; ++b) {
+            f.run(1, out);
+            seen[k].emplace_back(fx->transport().swing, fx->transport().swingFrom);
+        }
+        ok(k == 0 ? "no mod: the insert has the track's 75% swing" : "with a mod: the same",
+           fx->modActive() == (k == 1) && seen[k].back().first > 74.9f,
+           std::to_string(seen[k].back().first));
+    }
+    ok("the swing and the clip start it counts from match block for block", seen[0] == seen[1]);
+}
+
 } // namespace
 
 int main() {
@@ -815,6 +849,7 @@ int main() {
     blocksThatCrossNoTick();
     aCountInLandsOnTheSong();
     aKeyOfNoneIsSilence();
+    aSwungTrackKeepsItsSwing();
     fastModsDoNotZipper(true);
     fastModsDoNotZipper(false);
     printf("%d checks, %d failed\n", checks, failures);

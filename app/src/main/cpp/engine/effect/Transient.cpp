@@ -37,7 +37,11 @@ constexpr float kOnset = 2.0f, kRearm = 1.2f;
 constexpr float kAccentFrom = 0.3f;
 /** The hit's envelope falls this fast (seconds): slower than a 20 Hz half wave. */
 constexpr float kEnvRelease = 0.04f;
-/** A hit lasts at least this long, in seconds at time 1, and ends once its envelope is half its peak. */
+/**
+ * A hit lasts at least this long, in seconds at time 1, and ends once its
+ * envelope is half its peak. Hits that come before the last has fallen that
+ * far, a flam or a fast roll of long hits, count as one, with the first's step.
+ */
 constexpr float kHitHold = 0.015f, kHitEnd = 0.5f;
 /**
  * The accent's glide in at a hit's start and back to flat after it, in

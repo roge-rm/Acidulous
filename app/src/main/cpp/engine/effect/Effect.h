@@ -130,6 +130,8 @@ class Effect {
     bool modActive() const { return mod_.active(); }
     /** Before block(): the song's position, for an effect that lines up with the bar. */
     void setTransport(const ModTransport &transport) { modTransport_ = transport; }
+    /** What setTransport or setModKey last gave it. */
+    const ModTransport &transport() const { return modTransport_; }
 
     /**
      * The rack this effect's detector listens to, e.g. a compressor on the

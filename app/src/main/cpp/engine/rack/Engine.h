@@ -182,8 +182,8 @@ class Engine : public Rack::ModifiedNoteSink {
      * started this block.
      */
     ModTransport modTransport;
-    /** Each rack's tick into its clip's cycle this block, for its inserts' swing. */
-    int64_t clipCycleTick[kRackCount] = {};
+    /** Each rack's clip start as a song tick this block, for its inserts' swing. */
+    int64_t clipStartTick[kRackCount] = {};
     /** Play started since the input chain last ran, which is before the transport each block. */
     bool inputModStart = false;
     /**
