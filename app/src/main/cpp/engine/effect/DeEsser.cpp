@@ -164,7 +164,8 @@ bool DeEsser::process(float *L, float *R, int32_t frames, bool stereoIn) {
         L[i] += hpOut[0] * outNow;
         R[i] += hpOut[1] * outNow;
         const float loud = std::max(std::max(std::fabs(w0), std::fabs(w1)), std::max(std::fabs(hpOut[0]), std::fabs(hpOut[1])));
-        quietFrames = loud > kQuiet ? 0 : quietFrames + 1;
+        // Held at the line's length, which is all the sleep check needs, so it can't overflow.
+        quietFrames = loud > kQuiet ? 0 : std::min(quietFrames + 1, echo[0].capacity());
     }
     if (!echoing) return stereoIn;
     // Nothing more going in and nothing left that a read can reach: asleep.

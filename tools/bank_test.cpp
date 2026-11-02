@@ -424,7 +424,7 @@ void checkBank(const Bank &bank) {
         }
         // The Deesser's throw echoes the esses a quarter note or more apart,
         // so one can land in the last quarter second with a gap before it.
-        // Its loop is limited; effects_test checks it stays bounded.
+        // Its loop is limited; effects_test runs it flat out and checks it stays bounded.
         if (bank.isEffect() && bank.typeName() == "Deesser") {
             float throwAmt = 0.0f, time = 0.0f;
             for (int32_t i = 0; i < count; ++i) {

@@ -1596,16 +1596,37 @@ void deEsser() {
         ok("throw: listen keeps the echo silent", dB(after) < -100.0, num(dB(after)) + " dB");
     }
     {
-        // A time change glides the read: no step in the echo bigger than the echo itself makes.
-        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 1.0f}, {"feedback", 0.7f}});
-        auto hiss = noise(0.3f, 48000, 7);
-        auto out1 = run(*fx, hiss);
+        // A time change crossfades the read. A steady tone plays all through,
+        // so dry and echo are one sine but for the change, and a jump in the
+        // read shows as a kink: the largest second difference against the
+        // peak, after the change and before it. The tone is not a whole
+        // number of cycles in either time, or the jump would land in phase,
+        // and sent gently, so the loop's limit leaves it a sine.
+        auto fx = make("Deesser", {{"freq", 2000.0f}, {"throw", 0.1f}, {"time", 1.0f}, {"feedback", 0.7f}});
+        const auto t = tone(2130.0f, 0.3f, 96000);
+        const std::vector<float> first(t.begin(), t.begin() + 48000), second(t.begin() + 48000, t.end());
+        const auto out1 = run(*fx, first);
         set(*fx, "time", 3.0f);
-        auto out2 = run(*fx, std::vector<float>(48000, 0.0f), 120.0f, 48000);
-        double jump = 0.0, typical = 0.0;
-        for (size_t i = 1; i < 4800; ++i) jump = std::max(jump, double(std::fabs(out2.l[i] - out2.l[i - 1])));
-        for (size_t i = 24001; i < 48000; ++i) typical = std::max(typical, double(std::fabs(out1.l[i] - out1.l[i - 1])));
-        ok("throw: a new time glides without a click", finite(out2) && jump <= typical * 1.5, num(jump) + " vs " + num(typical));
+        const auto out2 = run(*fx, second, 120.0f, 48000);
+        auto kink = [](const Stereo &o, size_t from, size_t to) {
+            double k = 0.0, p = 1e-12;
+            for (size_t i = from + 2; i < to; ++i) {
+                for (const auto *x : {&o.l, &o.r}) {
+                    k = std::max(k, double(std::fabs((*x)[i] - 2.0f * (*x)[i - 1] + (*x)[i - 2])));
+                    p = std::max(p, double(std::fabs((*x)[i])));
+                }
+            }
+            return k / p;
+        };
+        const double after = kink(out2, 0, 4800), before = kink(out1, 43200, 48000);
+        ok("throw: a new time glides without a click", finite(out2) && after <= before * 1.2, num(after) + " vs " + num(before));
+    }
+    {
+        // staysBounded turns listen on, which mutes the throw: this runs the echo flat out.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"listen", 0.0f}, {"feedback", 0.9f}, {"range", 24.0f}, {"threshold", -60.0f}});
+        const auto out = run(*fx, noise(0.9f, 240000));
+        ok("throw: full send and feedback stay finite and bounded", finite(out) && peak(out.l) < 8.0 && peak(out.r) < 8.0,
+           num(peak(out.l)) + " / " + num(peak(out.r)));
     }
     staysBounded("Deesser");
 }
