@@ -186,6 +186,16 @@ object MachineUi {
         if (type != "Bias") emptySet()
         else (1..4).flatMap { listOf("lane$it", "mute$it") }.toSet()
 
+    /**
+     * What a machine holds after loading [patch] over [current]: the patch,
+     * plus what [patchKeeps] keeps, plus the track it listens to unless the
+     * patch names one, as an effect preset keeps its slot's sidechain.
+     */
+    fun patchParams(type: String, patch: Map<String, Float>, current: Map<String, Float>): Map<String, Float> {
+        val keep = patchKeeps(type)
+        return patch + current.filterKeys { it in keep || (it == SIDECHAIN_PARAM && it !in patch) }
+    }
+
     /** Machines that play a whole multisample map rather than one-shot pads. */
     fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
 

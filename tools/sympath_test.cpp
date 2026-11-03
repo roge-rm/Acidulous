@@ -81,6 +81,7 @@ struct Strings {
             }
             f->onBlock(0, 0, bpm);
             f->render(L, R, kBlock);
+            slept = slept || f->sleeping();
             out.insert(out.end(), L, L + kBlock);
         }
     }
@@ -119,6 +120,8 @@ struct Strings {
         for (size_t i = a; i < b; ++i) s += double(out[i]) * out[i];
         return 10.0 * std::log10(s / std::max<size_t>(1, b - a) + 1e-20);
     }
+    bool slept = false;
+    bool sleptOnce() const { return slept; }
     double peakAbs() const {
         double p = 0.0;
         for (float v : out) p = std::max(p, double(std::fabs(v)));
@@ -494,9 +497,108 @@ void song() {
             on += step == 0 || step == 6 || step == 11 ? 1 : 0;
         }
         check(on == l->f->tarbStrings(), "and listening, they find the song's notes in its steps", fmt("%d of %d", on, l->f->tarbStrings()));
+        // 31 equal: finer than the bands, keys 60, 70 and 78 (C, a third, a fifth).
+        std::vector<float> r31(128);
+        for (int k = 0; k < 128; ++k) r31[size_t(k)] = static_cast<float>(std::pow(2.0, (k - 60) / 31.0) / std::pow(2.0, (k - 60) / 12.0));
+        auto t = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"sidechain", 1.0f}, {"listen", 1.0f}});
+        t->f->setTuning(r31.data());
+        t->song.assign(static_cast<size_t>(4.0 * kRate), 0.0f);
+        for (int k : {60, 70, 78}) {
+            const double hz = 261.6255653 * std::pow(2.0, (k - 60) / 31.0);
+            for (size_t i = 0; i < t->song.size(); ++i) t->song[i] += 0.1f * static_cast<float>(std::sin(6.283185307179586 * hz * i / kRate));
+        }
+        t->keyed = true;
+        t->play(3.0);
+        int on31 = 0;
+        for (int i = 0; i < t->f->tarbStrings(); ++i) {
+            const int step = static_cast<int>(std::lround(31.0 * std::log2(t->f->tarbAim(i) / 261.6255653))) % 31;
+            on31 += step == 0 || step == 10 || step == 18 ? 1 : 0;
+        }
+        check(on31 == t->f->tarbStrings(), "in 31 equal too", fmt("%d of %d", on31, t->f->tarbStrings()));
+    }
+    {
+        // Listening turned off: the strings glide back to the scale.
+        auto g = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"sidechain", 1.0f}, {"listen", 1.0f}});
+        g->song = songOf({57, 60, 64}, 0.25, 6.0);
+        g->keyed = true;
+        g->play(3.0);
+        g->set("listen", 0.0f);
+        g->play(0.01);
+        const bool sliding = g->f->tarbHz(1) != g->f->tarbAim(1);
+        g->play(1.0);
+        // Sa C#, Bilawal: the second string is D#.
+        const double second = 69.0 + 12.0 * std::log2(g->f->tarbHz(1) / 440.0);
+        check(sliding && std::fabs(second - 63.0) < 0.01, "listen off, they glide back to the scale", fmt("note %.2f", second));
     }
 }
 
+/** Two Sympaths each keyed on the other a block late, as the engine hands a key over: one note, let go, must die away. */
+void loop() {
+    std::printf("- a loop through another track\n");
+    for (float ring : {0.5f, 1.0f}) {
+        Strings a({{"sidechain", 2.0f}, {"ring", ring}, {"tarbs", 1.0f}, {"chikari", 1.0f}, {"volume", 1.0f}}),
+            b({{"sidechain", 1.0f}, {"ring", ring}, {"tarbs", 1.0f}, {"chikari", 1.0f}, {"volume", 1.0f}});
+        float keyA[kBlock] = {}, keyB[kBlock] = {}, L[kBlock], R[kBlock];
+        a.f->noteOn(61, 127);
+        double peak = 0.0, late = 0.0;
+        const int blocks = static_cast<int>(60.0 * kRate / kBlock);
+        int asleepAt = -1;
+        for (int n = 0; n < blocks; ++n) {
+            if (n == static_cast<int>(0.3 * kRate / kBlock)) a.f->noteOff(61);
+            float nextA[kBlock], nextB[kBlock];
+            a.f->setKey(keyB);
+            a.f->render(L, R, kBlock);
+            for (int i = 0; i < kBlock; ++i) {
+                nextA[i] = 0.5f * (L[i] + R[i]);
+                peak = std::max(peak, double(std::fabs(L[i])));
+                if (n * kBlock > 20 * kRate) late = std::max(late, double(std::fabs(L[i])));
+            }
+            b.f->setKey(keyA);
+            b.f->render(L, R, kBlock);
+            for (int i = 0; i < kBlock; ++i) {
+                nextB[i] = 0.5f * (L[i] + R[i]);
+                peak = std::max(peak, double(std::fabs(L[i])));
+            }
+            std::copy(nextA, nextA + kBlock, keyA);
+            std::copy(nextB, nextB + kBlock, keyB);
+            if (asleepAt < 0 && a.f->sleeping() && b.f->sleeping()) asleepAt = n;
+        }
+        check(asleepAt >= 0 && late < 1e-3, fmt("ring %.1f: two keyed on each other die away and sleep", ring).c_str(),
+              fmt("asleep at %.1f s, peak %.2f, %.1e after 20 s", asleepAt * double(kBlock) / kRate, peak, late));
+    }
+}
+
+/** A tuning changed twice while the machine sleeps, through the rack's two tables in turn. */
+void retuned() {
+    std::printf("- tunings while asleep\n");
+    const auto edo = [](int n) {
+        std::vector<float> r(128);
+        for (int k = 0; k < 128; ++k) r[size_t(k)] = static_cast<float>(std::pow(2.0, (k - 60) / double(n)) / std::pow(2.0, (k - 60) / 12.0));
+        return r;
+    };
+    std::vector<float> table[2] = {edo(19), edo(19)};
+    Strings g({{"tarbs", 1.0f}});
+    g.f->setTuning(table[0].data());
+    g.f->noteOn(61, 100);
+    g.play(0.2);
+    g.f->noteOff(61);
+    g.play(12.0);
+    // Off, then 22 equal into the same table: the same pointer as before.
+    g.f->setTuning(nullptr);
+    table[0] = edo(22);
+    g.f->setTuning(table[0].data());
+    g.f->noteOn(61, 100);
+    g.play(0.2);
+    const auto onSteps = [&](int n) {
+        double worst = 0.0;
+        for (int i = 0; i < g.f->tarbStrings(); ++i) {
+            const double steps = n * std::log2(g.f->tarbHz(i) / 261.6255653);
+            worst = std::max(worst, std::fabs(steps - std::round(steps)) * 1200.0 / n);
+        }
+        return worst;
+    };
+    check(g.sleptOnce() && onSteps(22) < 0.5, "a tuning changed while asleep, in the same table, is followed", fmt("%.2f cents off 22 equal", onSteps(22)));
+}
 } // namespace
 
 int main() {
@@ -507,6 +609,8 @@ int main() {
     hands();
     lifecycle();
     song();
+    loop();
+    retuned();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

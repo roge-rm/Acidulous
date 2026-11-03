@@ -15,9 +15,10 @@
 # The song: `sidechain` picks a track whose sound shakes the sympathetic and
 # drone strings, `ring` is how hard, and `listen` retunes them to the notes
 # that track plays, slowly learning its key at the bottom and following each
-# chord at the top. `bloom` is how long they ring. The `song` family points at
-# track 1, and the harness plays them over the band the effects get (A minor).
-# A `halo` patch plays no notes at all.
+# chord at the top. `bloom` is how long they ring. No patch names the track:
+# loading one keeps the track's. The harness plays the `song` family over
+# the band the effects get (A minor), as if it were the track picked. A
+# `halo` patch plays no notes at all.
 #
 # 102 patches in nine families: sitar, sarod, veena, drone, east, bowed,
 # fiddle, bridge and song. All ten scales are used somewhere.
@@ -3797,7 +3798,6 @@ patch "Halo" family=song note=57 range=45..81 role=halo
   mac8_a1  -0.5
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.6
   listen         0.25
   bloom          0.65
@@ -3836,7 +3836,6 @@ patch "Chord Catcher" family=song note=57 range=45..81 role=halo
   model          #10
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.65
   listen         1
   bloom          0.75
@@ -3875,7 +3874,6 @@ patch "Sitar In The Band" family=song note=57 range=45..81 role=lead
   meend          90 ms
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.6
   tarbs          0.7
   volume         0.45
@@ -3911,7 +3909,6 @@ patch "Sarangi Shadow" family=song note=57 range=48..84 role=lead
   meend          150 ms
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.7
   listen         0.8
   bloom          0.7
@@ -3948,7 +3945,6 @@ patch "Nyckel Bloom" family=song note=57 range=48..81 role=pad
   model          #15
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.7
   listen         0.4
   bloom          0.85
@@ -3987,7 +3983,6 @@ patch "Rudra Undertow" family=song note=45 range=36..72 role=drone
   model          #5
   sa             #9
   scale          #3
-  sidechain      1
   ring           0.8
   listen         0.7
   bloom          0.8

@@ -101,7 +101,8 @@ macro's name to rename it.
   sympathetic strings ring along with the tune.
 - Put Sympath on a track with no clips, point **from track** at the drums or
   the band and turn **listen** up: the song gets a halo of strings in its own
-  key. The **song** patches point at track 1.
+  key. Loading a patch keeps the track you picked, so pick it yourself
+  after loading a **song** patch.
 - The tanpura only plucks while a note is held: hold Sa for as long as the
   drone should go.
 - **Sitar** has one voice: play legato for meend, and press harder to pull

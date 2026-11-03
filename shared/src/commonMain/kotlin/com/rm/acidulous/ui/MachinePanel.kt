@@ -177,9 +177,7 @@ fun MachinePanel(
             onLoadPatch(name)?.let { patch ->
                 // What this machine keeps across a patch change, see
                 // MachineUi.patchKeeps. Empty for everything but Bias.
-                val keep = MachineUi.patchKeeps(type)
-                val params = if (keep.isEmpty()) patch.params
-                             else patch.params + track.machine.params.filterKeys { it in keep }
+                val params = MachineUi.patchParams(type, patch.params, track.machine.params)
                 // Inserts that found no free slot, to say so once the edit is made.
                 var skipped = emptyList<String>()
                 var unknown = emptyList<String>()

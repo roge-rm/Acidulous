@@ -1801,6 +1801,11 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         m->prepare(static_cast<int32_t>(kSr));
         m->allNotesOff();
         m->reset();
+        // The patches leave the track to the song, so it's set here: track 1.
+        const bool song = bank.unit == "Sympath" && patch.family == "song";
+        for (int32_t i = 0; i < count && song; ++i) {
+            if (std::strcmp(defs[i].name, "sidechain") == 0) r.norm[static_cast<size_t>(i)] = defs[i].unmap(1.0f);
+        }
         applyTo(m->params(), r.norm);
 
         // The patch's inserts and sends, unless --dry.
@@ -1831,14 +1836,12 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         };
         dress();
         loadInput(input, mat);
-        // Sympath listening to another track hears the band the effects
-        // get, looped, and it's mixed into the take.
-        for (int32_t i = 0; i < count && bank.unit == "Sympath"; ++i) {
-            if (std::strcmp(defs[i].name, "sidechain") == 0 && defs[i].map(r.norm[static_cast<size_t>(i)]) >= 0.5f) {
-                int64_t stop = 0;
-                mat.song = effectSource(bank.unit, opt.bpm, stop);
-                mat.songLoop = stop;
-            }
+        // Sympath's song patches listen to another track: the band the
+        // effects get, looped, and it's mixed into the take.
+        if (song) {
+            int64_t stop = 0;
+            mat.song = effectSource(bank.unit, opt.bpm, stop);
+            mat.songLoop = stop;
         }
 
         const Kit *kit = kitFor(bank.unit);

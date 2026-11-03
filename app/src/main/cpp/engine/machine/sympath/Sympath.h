@@ -69,7 +69,7 @@ class Sympath final : public Machine {
     static constexpr int kDrones = 3;
     static constexpr int kScales = 10;
     /** The most notes the strings take from the song, and the most steps a tuning's octave can have for listening. */
-    static constexpr int kSongNotes = 7, kHearSteps = 24;
+    static constexpr int kSongNotes = 7, kHearSteps = 53;
 
     Sympath();
 
@@ -95,6 +95,8 @@ class Sympath final : public Machine {
     float tarbAim(int i) const { return i >= 0 && i < tarbCount ? tarbs[i].aim : 0.0f; }
     int tarbStrings() const { return tarbCount; }
     bool sleeping() const { return asleep; }
+    /** How much of the song gets in now, 0..1, for tests. */
+    float songLetIn() const { return songHold; }
 
   private:
     /** A string and what's still going into it. */
@@ -168,6 +170,8 @@ class Sympath final : public Machine {
     void tuneFree();
     /** The key whose pitch in the track's tuning is nearest [hz]. */
     int nearestKey(float hz) const;
+    /** Notes a new tuning by what's in it, since the rack hands over one of two tables in turn. */
+    void checkTuning();
     /** Finds the tuning's steps to the octave and sets the listening filters on its keys. */
     void tuneHearing();
     /** Listens to a block of the song for its notes, and picks them every tenth of a second. */
@@ -190,7 +194,16 @@ class Sympath final : public Machine {
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
     int retuneCountdown = 0;
     float builtBloom = -1.0f;
-    const float *builtTuning = nullptr;
+    /** The tuning last seen, counted up each time it changes, and what was built for. */
+    float tuningSeen[128]{};
+    bool tuningSeenEqual = true;
+    uint32_t tuningGen = 0, builtGen = 0xffffffffu, hearGen = 0xffffffffu;
+    /**
+     * The song's level and the free strings', followed, and how much of the
+     * song gets in: the strings may ring no louder than half the song, so a
+     * loop through another track (two Sympaths keyed on each other) dies away.
+     */
+    float songEnv = 0.0f, freeEnv = 0.0f, songHold = 1.0f;
     uint64_t builtSong = 0;
     float tarbT60 = 5.0f, droneT60 = 3.5f;
     /** How much more or less a longer or shorter bloom lets in, so it rings as loud. */
@@ -198,12 +211,12 @@ class Sympath final : public Machine {
     /**
      * Listening: the song low-passed and taken down 8 times, through a
      * narrow band on each key of three octaves, each band's energy held
-     * over the listen time. [hearPeriod] is the tuning's steps to the octave.
+     * over the listen time. [hearPeriod] is the tuning's steps to the octave,
+     * 0 for a tuning without octaves, which keeps the scale.
      */
-    dsp::Svf hearBands[3 * kHearSteps];
-    float heard[3 * kHearSteps]{};
+    dsp::Svf hearBands[2 * kHearSteps];
+    float heard[2 * kHearSteps]{};
     int hearCount = 0, hearPeriod = 12;
-    const float *hearTuning = nullptr;
     bool hearBuilt = false;
     float hearLp[2] = {0.0f, 0.0f}, hearSum = 0.0f;
     int hearPhase = 0, hearUntil = 0, glideTick = 0;

@@ -176,6 +176,15 @@ class MacroNamesTest {
     }
 
     @Test
+    fun aMachinePatchKeepsTheTrackItListensToUnlessItNamesOne() {
+        val current = mapOf(SIDECHAIN_PARAM to 0.25f, "ring" to 0.9f)
+        assertEquals(mapOf("ring" to 0.3f, SIDECHAIN_PARAM to 0.25f), MachineUi.patchParams("Sympath", mapOf("ring" to 0.3f), current))
+        assertEquals(0.5f, MachineUi.patchParams("Tongue", mapOf(SIDECHAIN_PARAM to 0.5f), current)[SIDECHAIN_PARAM])
+        // The song patches leave it to the track.
+        assertTrue(FactoryBanks.of("Sympath").none { SIDECHAIN_PARAM in it.params })
+    }
+
+    @Test
     fun chanterBankHasItsFamiliesInOrder() {
         val bank = FactoryBanks.of("Chanter")
         assertEquals(80, bank.size)

@@ -112,8 +112,8 @@ Touchez le nom d’une macro pour la renommer.
   cordes sympathiques sonnent avec la mélodie.
 - Mettez Sympath sur une piste sans clips, pointez **de la piste** vers la
   batterie ou le groupe et montez **écouter** : le morceau reçoit un halo de
-  cordes dans sa propre tonalité. Les patches **morceau** pointent vers la
-  piste 1.
+  cordes dans sa propre tonalité. Charger un patch garde la piste choisie :
+  choisissez-la vous-même après avoir chargé un patch **morceau**.
 - Le tanpura ne pince que tant qu’une note est tenue : tenez Sa aussi
   longtemps que le bourdon doit durer.
 - **Sitar** n’a qu’une voix : jouez lié pour le meend, et appuyez plus fort
