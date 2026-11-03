@@ -281,6 +281,9 @@ std::vector<float> effectSource(const std::string &type) {
     return out;
 }
 
+/** The song playing, straight, as the engine tells an insert while it plays. */
+const acidulous::ModTransport kPlaying = [] { acidulous::ModTransport t; t.rolling = true; return t; }();
+
 std::vector<float> renderEffect(const std::string &type, const std::vector<float> &norm,
                                 const std::vector<std::pair<std::string, std::string>> &settings = {}) {
     std::unique_ptr<Effect> fx(EffectRegistry::create(type.c_str()));
@@ -307,6 +310,7 @@ std::vector<float> renderEffect(const std::string &type, const std::vector<float
         }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        fx->setTransport(kPlaying);
         fx->onBlock(t0, t1, 120.0f);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {
