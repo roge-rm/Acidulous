@@ -181,7 +181,7 @@ class Rack {
      * in the bar (see Machine::onBar).
      */
     void updateScene(int64_t sceneId, int64_t cycleTick, bool playing, bool rolling, int64_t tickStart,
-                     int64_t tickInBar, int32_t ticksPerBar, int64_t swingPair);
+                     int64_t tickInBar, int32_t ticksPerBar, int64_t swingPair, double countInTicks = 0.0);
     bool frozenActive() const { return frozenNow != nullptr; }
     /** The mounted frozen set, or null. Read off the audio thread under Engine::readLive. */
     const FrozenSet *currentFrozen() const { return frozenSet; }

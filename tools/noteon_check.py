@@ -30,7 +30,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MACHINES = os.path.join(ROOT, "app", "src", "main", "cpp", "engine", "machine")
 
-FUNCTIONS = ("startVoice", "noteOn", "strike", "trigger", "startNote")
+FUNCTIONS = ("startVoice", "noteOn", "strike", "trigger", "startNote", "cycleStep", "land")
 
 SMOOTHED = re.compile(
     r"\b(paramOf|steppedOf|params_\.get|paramOfIndex)\s*\(\s*([A-Za-z_][\w:]*)"

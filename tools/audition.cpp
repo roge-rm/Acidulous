@@ -167,6 +167,12 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "pair") {
+        // Two notes held twenty seconds, the patch's note and the bottom of
+        // its range, for a Palm cycle shared between two drums.
+        hit(p, 0.0f, 20.0f, range.set() ? range.low : note - 5, velocity);
+        p.lastOff = hit(p, 0.0f, 20.0f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "scene") {
         // One note held twenty seconds, for a patch that is a whole scene on
         // one key (a flock of birds), where a chord would be several scenes.

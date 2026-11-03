@@ -221,6 +221,7 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     // Counting in. The clock is advanced by hand here because the
     // scheduler, which normally drives it, isn't running yet.
+    countInAtStart = countInFrames;
     if (countInFrames > 0.0) {
         countInFrames -= static_cast<double>(kBlockFrames);
         if (countInFrames <= 0.0) {
@@ -298,7 +299,8 @@ void Engine::renderBlock(const float *in, float *out) {
             // And tell the machine, for machines that play the arrangement
             // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
-                                  clock.blockStart(), tickInBar, ticksPerBar, pair);
+                                  clock.blockStart(), tickInBar, ticksPerBar, pair,
+                                  countInAtStart > 0.0 && countInPerTick > 0.0 ? countInAtStart / countInPerTick : 0.0);
             // Both from before the scheduler moves on: the offset is still the
             // one the last block ended on, as the cycle tick is.
             clipStartTick[r] = clock.blockStart() + modTransport.songOffset - scheduler.rackCycleTick(r);
