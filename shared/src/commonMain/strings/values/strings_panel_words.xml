@@ -131,6 +131,7 @@
     <string name="pw_bata">bata</string>
     <string name="pw_bayan">bayan</string>
     <string name="pw_beak">beak</string>
+    <string name="pw_beat">beat</string>
     <string name="pw_beats">beats</string>
     <string name="pw_bell">Bell</string>
     <string name="pw_bell_04bf88">bell</string>
@@ -360,6 +361,7 @@
     <string name="pw_division">division</string>
     <string name="pw_djembe">djembe</string>
     <string name="pw_dog">dog</string>
+    <string name="pw_dotted">dotted</string>
     <string name="pw_double">double</string>
     <string name="pw_down">down</string>
     <string name="pw_down_up">down-up</string>
@@ -623,6 +625,8 @@
     <string name="pw_high_cut">high cut</string>
     <string name="pw_high_pass">high pass</string>
     <string name="pw_highcut">highcut</string>
+    <string name="pw_highdepth">highdepth</string>
+    <string name="pw_highduck">highduck</string>
     <string name="pw_highfreq">highfreq</string>
     <string name="pw_highgain">highgain</string>
     <string name="pw_highland">highland</string>
@@ -793,6 +797,8 @@
     <string name="pw_low_pass">low pass</string>
     <string name="pw_low_tom">Low Tom</string>
     <string name="pw_lowcut">lowcut</string>
+    <string name="pw_lowdepth">lowdepth</string>
+    <string name="pw_lowduck">lowduck</string>
     <string name="pw_lower">lower</string>
     <string name="pw_lower_a">lower A</string>
     <string name="pw_lower_a_1">lower A 1</string>
@@ -864,6 +870,8 @@
     <string name="pw_mics">mics</string>
     <string name="pw_mid">mid</string>
     <string name="pw_mid_tom">Mid Tom</string>
+    <string name="pw_middepth">middepth</string>
+    <string name="pw_midduck">midduck</string>
     <string name="pw_midfreq">midfreq</string>
     <string name="pw_midgain">midgain</string>
     <string name="pw_midq">midq</string>
@@ -1113,6 +1121,7 @@
     <string name="pw_rattle_at">rattle at</string>
     <string name="pw_rchance">rchance</string>
     <string name="pw_read_from">read from</string>
+    <string name="pw_recover">recover</string>
     <string name="pw_rect">rect</string>
     <string name="pw_reed">Reed</string>
     <string name="pw_reed_f5cabf">reed</string>
@@ -1284,6 +1293,7 @@
     <string name="pw_slow">slow</string>
     <string name="pw_smallpipes">smallpipes</string>
     <string name="pw_smash">Smash</string>
+    <string name="pw_smash_31fe82">smash</string>
     <string name="pw_smear">smear</string>
     <string name="pw_smooth">smooth</string>
     <string name="pw_snap">snap</string>

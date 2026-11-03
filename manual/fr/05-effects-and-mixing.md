@@ -76,7 +76,8 @@ Chaque effet a sa propre page ci-dessous.
 - [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
   sur une bande ou trois. Les passages doux montent rejoindre les forts.
 - [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
-  côtés. Les passages forts descendent, les doux montent.
+  côtés. Les passages forts descendent, les doux montent. Chaque bande peut
+  baisser sur le temps ou sous une autre piste.
 - [**Transient**](05-effects-and-mixing/transient.md) : le début de chaque
   coup et la résonance après, plus fort ou plus doux. Peut façonner chaque
   coup selon son pas dans la mesure.
