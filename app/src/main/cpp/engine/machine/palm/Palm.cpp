@@ -234,6 +234,24 @@ uint32_t mix(uint32_t a, uint32_t b) {
 }
 float unit(uint32_t h) { return static_cast<float>(h >> 8) * (1.0f / 16777216.0f); }
 
+int64_t floorDiv(int64_t a, int64_t b) { return a >= 0 ? a / b : -((-a + b - 1) / b); }
+
+/**
+ * The pattern step played at step [i] of a bar [n] steps long, for a pattern
+ * of [steps] with [perBeat] to a beat, or -1 - the step for a filler stroke.
+ * A bar of another length keeps the pattern's start and its last half (at
+ * most), so the closing strokes stay at the bar's end; a shorter bar loses
+ * the middle, a longer one repeats the beat before the end as filler.
+ */
+int stepFor(int i, int n, int steps, int perBeat) {
+    if (n == steps) return i;
+    const int tail = std::min(n, steps) / 2 / perBeat * perBeat;
+    if (i >= n - tail) return steps - (n - i);
+    if (i < steps - tail) return i;
+    const int before = steps - tail - perBeat;
+    return -1 - (before + (i - (steps - tail)) % perBeat);
+}
+
 } // namespace
 
 Palm::Palm() { initParams(); }
@@ -481,6 +499,7 @@ void Palm::reset() {
     swingPercent = 50.0f;
     swingPairTicks = 0;
     freeTick = 0.0;
+    countLeft = 0.0;
 }
 
 void Palm::onBlock(int64_t tickStart, int64_t tickEnd, float tempo) {
@@ -489,6 +508,12 @@ void Palm::onBlock(int64_t tickStart, int64_t tickEnd, float tempo) {
 }
 
 void Palm::onTransport(bool rolling, int64_t tickStart) {
+    if (songRolling && !rolling) {
+        // Stopped with a key down: carry on from where the song was, and drop
+        // strokes still waiting to land.
+        if (barTicks > 0) freeTick = static_cast<double>(floorDiv(songTick - barTick, barTicks) * barTicks + barTick + blockTicks);
+        for (Voice &v : voices) v.hitCount = 0;
+    }
     songRolling = rolling;
     songTick = tickStart;
 }
@@ -629,13 +654,15 @@ void Palm::noteOn(uint8_t note, uint8_t velocity) {
     // A cycle starts its bar with the first held note while the song is stopped.
     const bool cycling = steppedTargetOf(Cycle) != CycleOff;
     if (cycling) {
+        // A held voice being taken for another note still counts.
         bool others = false;
-        for (const Voice &u : voices) others = others || (&u != v && u.used && u.held);
+        for (const Voice &u : voices) others = others || ((&u != v || u.note != note) && u.used && u.held);
         if (!others) freeTick = 0.0;
     }
     v->hitCount = 0;
-    v->shift = v->hand2 = v->hand2Aim = 0.0f;
     const bool fresh = !v->used || v->note != note || v->kind != kind;
+    // A drum still ringing keeps its low tone and press until the cycle's next stroke.
+    if (fresh || !cycling) v->shift = v->hand2 = v->hand2Aim = 0.0f;
     v->note = note;
     v->kind = kind;
     v->pad = kit ? pad : -1;
@@ -664,8 +691,13 @@ void Palm::noteOn(uint8_t note, uint8_t velocity) {
     }
     const float flam = goalOf(Flam);
     if (cycling) {
-        // The cycle plays the strokes, from its next step.
+        // The cycle plays the strokes, from its next step. A fresh drum is
+        // built now so a cuíca rubbed before then drives its own modes.
         v->flamLeft = 0;
+        if (fresh) {
+            v->stroke = Open;
+            build(*v);
+        }
     } else if (flam > 0.0f) {
         // The grace stroke now, softer and quieter; the stroke itself in render.
         strike(*v, kGrace * vel);
@@ -698,7 +730,10 @@ void Palm::noteOff(uint8_t note) {
 }
 
 void Palm::allNotesOff() {
-    for (Voice &v : voices) v.held = false;
+    for (Voice &v : voices) {
+        v.held = false;
+        v.hitCount = 0;
+    }
 }
 
 void Palm::controlChange(uint8_t cc, uint8_t value) {
@@ -728,16 +763,13 @@ void Palm::noteTimbre(uint8_t note, uint8_t value) {
     }
 }
 
-namespace {
-int64_t floorDiv(int64_t a, int64_t b) { return a >= 0 ? a / b : -((-a + b - 1) / b); }
-} // namespace
-
 void Palm::cycleStep(int32_t frames) {
     const int kind = std::clamp(steppedTargetOf(Cycle), 0, CycleCount - 1);
     const CycleDef &c = kCycles[kind];
-    // Where the block is: the song's bar while it rolls, or bars of four
-    // beats counted from the first held note.
-    // Stopped, the clock is fractional so strokes land on their own samples.
+    // Where the block is: the song's bar while it rolls, or else bars of the
+    // song's length on the free clock, which a count-in sets so its downbeat
+    // is the song's. Stopped, the clock is fractional so strokes land on
+    // their own samples.
     int64_t bar = 0, barLen = 0;
     double from = 0.0, to = 0.0;
     if (songRolling && barTicks > 0) {
@@ -746,7 +778,8 @@ void Palm::cycleStep(int32_t frames) {
         to = static_cast<double>(barTick + blockTicks);
         bar = floorDiv(songTick - barTick, barLen);
     } else {
-        barLen = 4 * kPPQN;
+        barLen = barTicks > 0 ? barTicks : 4 * kPPQN;
+        if (countLeft > 0.0) freeTick = -countLeft;
         const double adv = static_cast<double>(frames) * static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(sampleRate));
         bar = floorDiv(static_cast<int64_t>(std::floor(freeTick)), barLen);
         from = freeTick - static_cast<double>(bar * barLen);
@@ -790,8 +823,13 @@ void Palm::cycleStep(int32_t frames) {
             const int64_t cIn = st * stepTicks;
             const auto at = static_cast<double>(b * barLen + (swung ? seq::Swing::at(cIn, swingPercent, swingPairTicks) : cIn));
             if (at < from || at >= to) continue;
-            const int idx = static_cast<int>(st % c.steps);
+            const int n = static_cast<int>((barLen + stepTicks - 1) / stepTicks);
+            const int at0 = stepFor(static_cast<int>(st), n, c.steps, c.perBeat);
+            const bool filler = at0 < 0;
+            const int idx = filler ? -1 - at0 : at0;
             char ch = fill ? c.fills[pick][idx] : c.bar[idx];
+            // Filler beats are played soft.
+            if (filler) ch = static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
             const uint32_t h = mix(barSeed, static_cast<uint32_t>(idx + 1));
             const float u1 = unit(h), u3 = unit(mix(h, 2u)), u4 = unit(mix(h, 3u));
             const bool onBeat = idx % c.perBeat == 0;

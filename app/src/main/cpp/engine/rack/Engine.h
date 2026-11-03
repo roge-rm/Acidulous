@@ -322,6 +322,8 @@ class Engine : public Rack::ModifiedNoteSink {
     // so the screen can show it in ticks.
     double countInFrames = 0.0;
     double countInPerTick = 0.0;
+    // Frames of the count-in left at the start of this block, for machines.
+    double countInAtStart = 0.0;
 
     /**
      * Armed, running, and past the count-in.

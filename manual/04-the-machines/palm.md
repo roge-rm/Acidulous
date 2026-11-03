@@ -55,7 +55,10 @@ With MPE, sliding a finger up lays it on the head and damps it as it rings.
 Pick a **cycle** on the hands page and a held note plays a pattern in time
 with the song and its swing. Each pattern is a bar long and goes round for a
 few bars, with a fill on the last one. While the song is stopped, the first
-note you hold starts the bar.
+note you hold starts the bar; a count-in plays the bar before the song's
+first, and stopping with a key down carries on in time. In bars of other
+lengths the pattern keeps its start and its end, and an extra beat is
+played softly.
 
 - **cycle** - **off**, **tumbao** (heel and toe, a slap on two, open tones
   on four), **kuku** (a djembe part, the slaps in pairs), **baladi** and

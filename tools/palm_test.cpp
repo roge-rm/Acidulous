@@ -109,7 +109,7 @@ struct Drum {
         return 10.0 * std::log10(s / std::max<size_t>(1, b - a) + 1e-20);
     }
     /** Plays [seconds] with the song rolling from [tick] at 120 bpm in 4/4, swung [swing] over sixteenths. */
-    void playSong(double seconds, int64_t tick, float swing = 50.0f) {
+    void playSong(double seconds, int64_t tick, float swing = 50.0f, int32_t perBar = 4 * kPPQN) {
         float L[kBlock], R[kBlock];
         const int blocks = static_cast<int>(seconds * kRate / kBlock);
         const double ticksPerFrame = 120.0 * kPPQN / (60.0 * kRate);
@@ -119,10 +119,26 @@ struct Drum {
             const auto t0 = static_cast<int64_t>(start + at * ticksPerFrame);
             const auto t1 = static_cast<int64_t>(start + (at + kBlock) * ticksPerFrame);
             f->onTransport(true, t0);
-            f->onBar(t0 % (4 * kPPQN), 4 * kPPQN, swing, kPPQN / 2);
+            f->onBar(t0 % perBar, perBar, swing, kPPQN / 2);
+            f->onCountIn(0.0);
             f->onBlock(t0, t1, 120.0f);
             f->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
+        }
+    }
+    /** Plays [seconds] stopped, in 4/4 at 120 bpm, counting in from [left] ticks before the downbeat if it's more than 0. */
+    void playStopped(double seconds, double left = 0.0) {
+        float L[kBlock], R[kBlock];
+        const int blocks = static_cast<int>(seconds * kRate / kBlock);
+        const double ticksPerBlock = 120.0 * kPPQN / 60.0 * kBlock / kRate;
+        for (int b = 0; b < blocks; ++b) {
+            f->onTransport(false, 0);
+            f->onBar(0, 4 * kPPQN, 50.0f, kPPQN / 2);
+            f->onCountIn(left > 1e-9 ? left : 0.0);
+            f->onBlock(0, 0, 120.0f);
+            f->render(L, R, kBlock);
+            out.insert(out.end(), L, L + kBlock);
+            left -= ticksPerBlock;
         }
     }
     /** The first sample from [from] seconds louder than [floor]. */
@@ -297,19 +313,20 @@ void lifecycle() {
 
 /** The largest difference in loudness between bars [a] and [b] (two seconds each at 120 bpm), dB, in 5 ms windows
  *  no more than 40 dB under the bar's loudest. The crack is noise, so samples never repeat exactly. */
-double barDiff(const Drum &g, int a, int b) {
-    const size_t len = 2 * kRate, win = kRate / 200;
+/** As barDiff, for any two stretches, in windows of [win] samples. Strokes in the song land on its blocks, so
+ *  stretches that aren't a whole number of blocks apart want wider windows. */
+double envDiff(const std::vector<float> &x, size_t xa, const std::vector<float> &y, size_t ya, size_t len, size_t win = kRate / 200) {
     std::vector<double> ea, eb;
     double top = 1e-20;
     for (size_t w = 0; w + win <= len; w += win) {
-        double x = 0.0, y = 0.0;
+        double p = 0.0, q = 0.0;
         for (size_t i = 0; i < win; ++i) {
-            x += double(g.out[a * len + w + i]) * g.out[a * len + w + i];
-            y += double(g.out[b * len + w + i]) * g.out[b * len + w + i];
+            p += double(x[xa + w + i]) * x[xa + w + i];
+            q += double(y[ya + w + i]) * y[ya + w + i];
         }
-        ea.push_back(x);
-        eb.push_back(y);
-        top = std::max({top, x, y});
+        ea.push_back(p);
+        eb.push_back(q);
+        top = std::max({top, p, q});
     }
     double worst = 0.0;
     for (size_t i = 0; i < ea.size(); ++i) {
@@ -317,6 +334,10 @@ double barDiff(const Drum &g, int a, int b) {
         worst = std::max(worst, std::fabs(10.0 * std::log10((ea[i] + 1e-20) / (eb[i] + 1e-20))));
     }
     return worst;
+}
+
+double barDiff(const Drum &g, int a, int b, size_t len = 2 * kRate, size_t win = kRate / 200) {
+    return envDiff(g.out, a * len, g.out, b * len, len, win);
 }
 
 void cycles() {
@@ -417,6 +438,96 @@ void cycles() {
             check(false, fmt("cycle %d plays and stays bounded", kind).c_str(), fmt("peak %.2f", g.peakAbs()));
     }
     check(true, "every cycle plays and stays bounded");
+
+    // Other meters keep the pattern's start and its closing strokes at the bar's end.
+    for (const int perBar : {3 * kPPQN, 7 * kPPQN / 2, 5 * kPPQN}) {
+        Drum g({{"model", 6}, {"cycle", Tumbao}, {"bars", 0}, {"feel", 0.0f}});
+        g.f->noteOn(57, 100);
+        g.playSong(4.0 * perBar / 480.0 + 0.1, 0, 50.0f, perBar);
+        const size_t len = static_cast<size_t>(perBar) * 100;
+        const double again = barDiff(g, 1, 2, len, kRate / 25);
+        // The open tone of the pattern's last beat, a beat before the bar's end.
+        const double lastBeat = g.rms(2.0 * perBar / 480.0 - 0.5, 2.0 * perBar / 480.0 - 0.3);
+        check(again < 1.5 && lastBeat > -45.0, fmt("%d/%d bars repeat and end with the pattern's end", perBar == 3 * kPPQN ? 3 : perBar == 5 * kPPQN ? 5 : 7, perBar == 7 * kPPQN / 2 ? 8 : 4).c_str(),
+              fmt("again %.1f dB, last beat %.1f dB", again, lastBeat));
+    }
+    {
+        // 5/4: the extra beat is filler, played soft, and the downbeat accent stays on one.
+        Drum five({{"model", 2}, {"cycle", Kuku}, {"bars", 0}, {"feel", 0.0f}});
+        five.f->noteOn(55, 100);
+        five.playSong(2.5, 0, 50.0f, 5 * kPPQN);
+        const double one = five.rms(0.0, 0.05), extra = five.rms(1.0, 1.05);
+        check(extra < one - 6.0, "a 5/4 bar's extra beat is softer than its one", fmt("%.1f vs %.1f dB", extra, one));
+    }
+    {
+        // Stopped, a held voice taken for a legato note doesn't restart the bar.
+        Drum g({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}, {"voices", 1}});
+        g.f->noteOn(57, 100);
+        g.play(1.3);
+        g.f->noteOn(60, 100);
+        g.play(0.4);
+        check(g.rms(1.31, 1.49) < -100.0 && g.rms(1.5, 1.6) > -50.0, "a stolen held note keeps the bar going",
+              fmt("%.1f dB before the next step, %.1f after", g.rms(1.31, 1.49), g.rms(1.5, 1.6)));
+    }
+    {
+        // Stopping with a key down carries on from where the song was.
+        Drum a({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}}), b({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}});
+        a.f->noteOn(57, 100);
+        b.f->noteOn(57, 100);
+        a.playSong(1.3, 0);
+        a.playStopped(1.0);
+        b.playSong(2.3, 0);
+        const size_t at = static_cast<size_t>(1.3 * kRate) / kBlock * kBlock;
+        const double d = envDiff(a.out, at, b.out, at, static_cast<size_t>(0.9 * kRate), kRate / 25);
+        check(d < 1.5, "stopped with a key down, it plays on in time", fmt("%.1f dB from the song", d));
+    }
+    {
+        // During a count-in it plays the count-in's bar, then the song's. One
+        // bar a cycle, since the bar before the song's first is a fill.
+        Drum a({{"model", 6}, {"cycle", Tumbao}, {"bars", 0}, {"feel", 0.0f}}), b({{"model", 6}, {"cycle", Tumbao}, {"bars", 0}, {"feel", 0.0f}});
+        const double left = 672 * 0.64;
+        a.f->noteOn(57, 100);
+        a.playStopped(672.0 * kBlock / kRate, left);
+        a.playSong(1.5, 0);
+        b.f->noteOn(57, 100);
+        b.playSong(672.0 * kBlock / kRate + 1.5, 4 * kPPQN - static_cast<int64_t>(left));
+        const double d = envDiff(a.out, 0, b.out, 0, a.out.size() - kRate / 10, kRate / 25);
+        check(d < 1.5, "a count-in plays in the count-in's bar", fmt("%.1f dB from the song", d));
+    }
+    {
+        // All notes off drops strokes still waiting to land.
+        Drum a({{"model", 6}, {"cycle", Tumbao}, {"feel", 1.0f}}), b({{"model", 6}, {"cycle", Tumbao}, {"feel", 1.0f}});
+        a.f->noteOn(57, 100);
+        b.f->noteOn(57, 100);
+        a.play(0.5 + double(kBlock) / kRate);
+        b.play(0.5 + double(kBlock) / kRate);
+        a.f->allNotesOff();
+        b.f->noteOff(57);
+        a.play(0.1);
+        b.play(0.1);
+        const double quiet = a.rms(0.505, 0.53), late = b.rms(0.505, 0.53);
+        check(quiet < late - 10.0, "all notes off drops the strokes waiting", fmt("%.1f vs %.1f dB", quiet, late));
+    }
+    {
+        // A cuica held with the song rolling squeaks at its own note before the first stroke.
+        Drum g({{"model", 18}, {"cycle", Tumbao}, {"feel", 0.0f}});
+        g.f->noteOn(64, 100);
+        g.playSong(0.2, 20);
+        const double hz = noteHz(64), got = g.peak(hz * 0.9, hz * 1.1, 0.02, 0.18);
+        check(g.rms(0.02, 0.18) > -80.0 && std::fabs(cents(got, hz)) < 30.0, "a cuica rubs its own head before the first stroke",
+              fmt("%.1f dB at %+.0f cents", g.rms(0.02, 0.18), cents(got, hz)));
+    }
+    {
+        // With the song rolling, a note played again while a pressed stroke
+        // rings keeps the press until the next stroke.
+        Drum g({{"model", 5}, {"cycle", Talk}, {"feel", 0.0f}, {"press", 7.0f}});
+        g.f->noteOn(55, 100);
+        g.playSong(0.55, 0);
+        g.f->noteOn(55, 100);
+        g.playSong(0.3, static_cast<int64_t>(std::lround(g.out.size() * 480.0 / kRate)));
+        const double up = cents(g.peak(noteHz(55) * 1.3, noteHz(55) * 1.6, 0.57, 0.74), noteHz(55));
+        check(std::fabs(up - 700.0) < 40.0, "playing the note again keeps the press until the next stroke", fmt("%.0f cents", up));
+    }
 }
 
 } // namespace

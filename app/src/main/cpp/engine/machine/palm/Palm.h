@@ -86,6 +86,7 @@ class Palm final : public Machine {
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
     void onTransport(bool rolling, int64_t tickStart) override;
     void onBar(int64_t tickInBar, int32_t ticksPerBar, float swing, int64_t swingPair) override;
+    void onCountIn(double ticksLeft) override { countLeft = ticksLeft; }
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
@@ -202,15 +203,16 @@ class Palm final : public Machine {
     uint32_t clock = 0;
     int32_t quietSamples = 0;
     bool asleep = true;
-    /** Cycles: the tempo, the song's place (see Machine::onBar), and a clock
-     *  in ticks from the first held note for when the song is stopped. */
+    /** Cycles: the tempo, the song's place (see Machine::onBar), a clock in
+     *  ticks for when the song is stopped (from the first held note, or
+     *  where the song stopped, or the count-in's), and the count-in left. */
     float bpm = 120.0f;
     bool songRolling = false;
     int64_t songTick = 0, barTick = 0, blockTicks = 0;
     int32_t barTicks = 0;
     float swingPercent = 50.0f;
     int64_t swingPairTicks = 0;
-    double freeTick = 0.0;
+    double freeTick = 0.0, countLeft = 0.0;
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
 };
 

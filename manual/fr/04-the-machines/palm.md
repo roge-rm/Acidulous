@@ -63,7 +63,10 @@ pendant qu’elle sonne.
 Choisissez un **cycle** sur la page des mains et une note tenue joue un motif
 en mesure avec le morceau et son swing. Chaque motif dure une mesure et
 tourne pendant quelques mesures, avec un break sur la dernière. Quand le
-morceau est arrêté, la première note tenue lance la mesure.
+morceau est arrêté, la première note tenue lance la mesure; un décompte
+joue la mesure d’avant la première du morceau, et arrêter avec une touche
+enfoncée continue en mesure. Dans les mesures d’une autre longueur, le motif
+garde son début et sa fin, et un temps de plus se joue doucement.
 
 - **cycle** : **non**, **tumbao** (talon et pointe, un slap sur deux, des
   sons ouverts sur quatre), **kuku** (une partie de djembé, les slaps par
