@@ -2643,11 +2643,14 @@ private fun labels3(): Map<String, String> = mapOf(
     "Nexus:velocity" to "out|vel",
     "Nexus:voicemode" to "voice|mode",
     "Nexus:volume" to "out|volume",
+    "Palm:bars" to "cycle|bars",
     "Palm:bend" to "play|bend",
     "Palm:body" to "body",
+    "Palm:cycle" to "cycle",
     "Palm:damp" to "head|damp",
     "Palm:decay" to "head|decay",
     "Palm:drop" to "head|pitch drop",
+    "Palm:feel" to "cycle|feel",
     "Palm:flam" to "hands|flam",
     "Palm:hand" to "hand",
     "Palm:kit" to "kit",
@@ -2726,6 +2729,7 @@ private fun labels3(): Map<String, String> = mapOf(
     "Palm:model" to "instrument|model",
     "Palm:octave" to "play|octave",
     "Palm:position" to "hand|position",
+    "Palm:press" to "cycle|press",
     "Palm:rattle" to "body|rattle",
     "Palm:roll" to "hands|rolls",
     "Palm:spread" to "hands|spread",
@@ -3224,13 +3228,13 @@ private fun labels3(): Map<String, String> = mapOf(
     "Resonance:mac2_d1" to "macro 2|to 1",
     "Resonance:mac2_d2" to "macro 2|to 2",
     "Resonance:mac2_d3" to "macro 2|to 3",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Resonance:mac2_d4" to "macro 2|to 4",
     "Resonance:mac3" to "macros|macro 3",
     "Resonance:mac3_a1" to "macro 3|by 1",
     "Resonance:mac3_a2" to "macro 3|by 2",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Resonance:mac3_a3" to "macro 3|by 3",
     "Resonance:mac3_a4" to "macro 3|by 4",
     "Resonance:mac3_d1" to "macro 3|to 1",
@@ -6609,10 +6613,12 @@ private fun short3(): Map<String, String> = mapOf(
     "Nexus:velocity" to "vel",
     "Nexus:voicemode" to "mode",
     "Nexus:volume" to "volume",
+    "Palm:bars" to "bars",
     "Palm:bend" to "bend",
     "Palm:damp" to "damp",
     "Palm:decay" to "decay",
     "Palm:drop" to "pitch drop",
+    "Palm:feel" to "feel",
     "Palm:flam" to "flam",
     "Palm:mac1" to "macro 1",
     "Palm:mac1_a1" to "by 1",
@@ -6689,6 +6695,7 @@ private fun short3(): Map<String, String> = mapOf(
     "Palm:model" to "model",
     "Palm:octave" to "octave",
     "Palm:position" to "position",
+    "Palm:press" to "press",
     "Palm:rattle" to "rattle",
     "Palm:roll" to "rolls",
     "Palm:spread" to "spread",
@@ -7234,12 +7241,12 @@ private fun short3(): Map<String, String> = mapOf(
     "Resonance:mac7_d4" to "to 4",
     "Resonance:mac8" to "macro 8",
     "Resonance:mac8_a1" to "by 1",
-    "Resonance:mac8_a2" to "by 2",
-    "Resonance:mac8_a3" to "by 3",
-    "Resonance:mac8_a4" to "by 4",
 )
 
 private fun short4(): Map<String, String> = mapOf(
+    "Resonance:mac8_a2" to "by 2",
+    "Resonance:mac8_a3" to "by 3",
+    "Resonance:mac8_a4" to "by 4",
     "Resonance:mac8_d1" to "to 1",
     "Resonance:mac8_d2" to "to 2",
     "Resonance:mac8_d3" to "to 3",

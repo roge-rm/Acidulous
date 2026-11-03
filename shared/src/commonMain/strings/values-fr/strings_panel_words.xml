@@ -74,6 +74,7 @@
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
     <string name="pw_bag">poche</string>
+    <string name="pw_baladi">baladi</string>
     <string name="pw_balance">balance</string>
     <string name="pw_ballad">ballade</string>
     <string name="pw_bamboo">bambou</string>
@@ -461,6 +462,7 @@
     <string name="pw_glue">colle</string>
     <string name="pw_gong">gong</string>
     <string name="pw_grace">agrément</string>
+    <string name="pw_groove">groove</string>
     <string name="pw_gurdy">vielle</string>
     <string name="pw_grain">Grain</string>
     <string name="pw_grain_ee4ddd">grain</string>
@@ -591,6 +593,7 @@
     <string name="pw_kit">kit</string>
     <string name="pw_knock">coup</string>
     <string name="pw_kouxian">kouxian</string>
+    <string name="pw_kuku">kuku</string>
     <string name="pw_l">L</string>
     <string name="pw_l_07c342">l</string>
     <string name="pw_l1rate">l1vit</string>
@@ -683,6 +686,7 @@
     <string name="pw_makeup">compens.</string>
     <string name="pw_manuals">claviers</string>
     <string name="pw_map">carte</string>
+    <string name="pw_maqsum">maqsoum</string>
     <string name="pw_marimba">marimba</string>
     <string name="pw_marwa">marwa</string>
     <string name="pw_master">général</string>
@@ -1193,6 +1197,7 @@
     <string name="pw_the_odds">les chances</string>
     <string name="pw_the_room">la salle</string>
     <string name="pw_the_same_roll">même tirage</string>
+    <string name="pw_theka">theka</string>
     <string name="pw_thick">épais</string>
     <string name="pw_thin">thin</string>
     <string name="pw_thirds">tierces</string>
@@ -1245,6 +1250,7 @@
     <string name="pw_tube">tube</string>
     <string name="pw_tukey">tukey</string>
     <string name="pw_tulum">tulum</string>
+    <string name="pw_tumbao">tumbao</string>
     <string name="pw_tune">accordage</string>
     <string name="pw_tuned">accordé</string>
     <string name="pw_tuning">accordage</string>

@@ -1,7 +1,7 @@
 // Palm, hand drums: in tune, a tabla's harmonic overtones against a plain
 // head's, the strokes (muted dies first, a slap is bright, a bass stroke is
 // low), a djembe's body, a cajón's snares, a talking drum squeezed, a head
-// going sharp when struck hard, a finger damping it, rolls.
+// going sharp when struck hard, a finger damping it, rolls, cycles.
 //
 //   palm_test.sh
 #include <engine/machine/MachineRegistry.h>
@@ -107,6 +107,29 @@ struct Drum {
         double s = 0.0;
         for (size_t i = a; i < b; ++i) s += double(out[i]) * out[i];
         return 10.0 * std::log10(s / std::max<size_t>(1, b - a) + 1e-20);
+    }
+    /** Plays [seconds] with the song rolling from [tick] at 120 bpm in 4/4, swung [swing] over sixteenths. */
+    void playSong(double seconds, int64_t tick, float swing = 50.0f) {
+        float L[kBlock], R[kBlock];
+        const int blocks = static_cast<int>(seconds * kRate / kBlock);
+        const double ticksPerFrame = 120.0 * kPPQN / (60.0 * kRate);
+        const double start = static_cast<double>(tick) - static_cast<double>(out.size()) * ticksPerFrame;
+        for (int b = 0; b < blocks; ++b) {
+            const auto at = static_cast<double>(out.size());
+            const auto t0 = static_cast<int64_t>(start + at * ticksPerFrame);
+            const auto t1 = static_cast<int64_t>(start + (at + kBlock) * ticksPerFrame);
+            f->onTransport(true, t0);
+            f->onBar(t0 % (4 * kPPQN), 4 * kPPQN, swing, kPPQN / 2);
+            f->onBlock(t0, t1, 120.0f);
+            f->render(L, R, kBlock);
+            out.insert(out.end(), L, L + kBlock);
+        }
+    }
+    /** The first sample from [from] seconds louder than [floor]. */
+    double firstAbove(double from, float floor) const {
+        for (size_t i = static_cast<size_t>(from * kRate); i < out.size(); ++i)
+            if (std::fabs(out[i]) > floor) return static_cast<double>(i) / kRate;
+        return -1.0;
     }
     double peakAbs() const {
         double p = 0.0;
@@ -272,6 +295,130 @@ void lifecycle() {
     check(true, "every drum and stroke, every knob up, stays bounded");
 }
 
+/** The largest difference in loudness between bars [a] and [b] (two seconds each at 120 bpm), dB, in 5 ms windows
+ *  no more than 40 dB under the bar's loudest. The crack is noise, so samples never repeat exactly. */
+double barDiff(const Drum &g, int a, int b) {
+    const size_t len = 2 * kRate, win = kRate / 200;
+    std::vector<double> ea, eb;
+    double top = 1e-20;
+    for (size_t w = 0; w + win <= len; w += win) {
+        double x = 0.0, y = 0.0;
+        for (size_t i = 0; i < win; ++i) {
+            x += double(g.out[a * len + w + i]) * g.out[a * len + w + i];
+            y += double(g.out[b * len + w + i]) * g.out[b * len + w + i];
+        }
+        ea.push_back(x);
+        eb.push_back(y);
+        top = std::max({top, x, y});
+    }
+    double worst = 0.0;
+    for (size_t i = 0; i < ea.size(); ++i) {
+        if (std::max(ea[i], eb[i]) < top * 1e-4) continue;
+        worst = std::max(worst, std::fabs(10.0 * std::log10((ea[i] + 1e-20) / (eb[i] + 1e-20))));
+    }
+    return worst;
+}
+
+void cycles() {
+    std::printf("- cycles\n");
+    enum { Off, Tumbao, Kuku, Baladi, Maqsum, Theka, SixEight, Groove, Talk };
+    {
+        Drum g({{"model", 6}, {"cycle", Tumbao}, {"bars", 0}, {"feel", 0.0f}});
+        g.f->noteOn(57, 100);
+        g.play(8.0);
+        check(barDiff(g, 2, 3) < 1.5, "with no feel a held note plays the same bar again", fmt("%.1f dB", barDiff(g, 2, 3)));
+        check(g.rms(7.5, 8.0) > -60.0, "and keeps playing while held", fmt("%.1f dB", g.rms(7.5, 8.0)));
+        g.f->noteOff(57);
+        g.play(4.0);
+        check(g.f->activeVoices() == 0, "letting go stops it and frees the voice", fmt("%d left", g.f->activeVoices()));
+    }
+    {
+        Drum g({{"model", 6}, {"cycle", Tumbao}, {"bars", 0}, {"feel", 0.8f}});
+        g.f->noteOn(57, 100);
+        g.play(8.0);
+        check(barDiff(g, 2, 3) > 6.0, "with feel each bar is a little different", fmt("%.1f dB", barDiff(g, 2, 3)));
+    }
+    {
+        Drum g({{"model", 6}, {"cycle", Tumbao}, {"bars", 1}, {"feel", 0.0f}});
+        g.f->noteOn(57, 100);
+        g.play(10.0);
+        check(barDiff(g, 1, 2) > 6.0 && barDiff(g, 1, 3) < 1.5, "two bars a cycle: the second is a fill",
+              fmt("fill %.1f dB, again %.1f dB", barDiff(g, 1, 2), barDiff(g, 1, 3)));
+    }
+    {
+        Drum a({{"model", 8}, {"cycle", Baladi}, {"feel", 0.7f}}), b({{"model", 8}, {"cycle", Baladi}, {"feel", 0.7f}});
+        a.f->noteOn(60, 100);
+        a.play(9.0);
+        b.f->noteOn(60, 100);
+        b.play(9.0);
+        bool same = a.out == b.out;
+        a.f->reset();
+        a.out.clear();
+        a.f->noteOn(60, 100);
+        a.play(9.0);
+        same = same && a.out == b.out;
+        check(same, "a varied cycle plays the same again after a reset");
+    }
+    {
+        // From beat three the heel lands at once; from just after, the toe two sixteenths on.
+        Drum on({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}}), after({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}});
+        on.f->noteOn(57, 100);
+        on.playSong(1.0, 4 * kPPQN * 2 + 2 * kPPQN);
+        after.f->noteOn(57, 100);
+        after.playSong(1.0, 4 * kPPQN * 2 + 2 * kPPQN + 20);
+        const double first = after.firstAbove(0.0, 1e-4f);
+        check(on.firstAbove(0.0, 1e-4f) >= 0.0 && on.firstAbove(0.0, 1e-4f) < 0.005, "with the song rolling, strokes land on its sixteenths",
+              fmt("%.4f s", on.firstAbove(0.0, 1e-4f)));
+        check(std::fabs(first - 100.0 / 480.0) < 0.004, "joining after a step waits for the next one", fmt("%.4f s", first));
+    }
+    {
+        // Kuku's slap on the fourth sixteenth moves with the track's swing.
+        Drum straight({{"model", 2}, {"cycle", Kuku}, {"feel", 0.0f}}), swung({{"model", 2}, {"cycle", Kuku}, {"feel", 0.0f}});
+        straight.f->noteOn(55, 100);
+        swung.f->noteOn(55, 100);
+        straight.playSong(1.0, 0);
+        swung.playSong(1.0, 0, 66.667f);
+        size_t i = 0;
+        while (i < straight.out.size() && straight.out[i] == swung.out[i]) ++i;
+        const double at = static_cast<double>(i) / kRate * 480.0;
+        check(at > 175.0 && at < 185.0, "swing moves the offbeat sixteenths", fmt("first difference at tick %.1f", at));
+    }
+    {
+        // Two held notes share the pattern: bass strokes low, the rest high.
+        Drum one({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}}), two({{"model", 6}, {"cycle", Tumbao}, {"feel", 0.0f}});
+        one.f->noteOn(60, 100);
+        two.f->noteOn(60, 100);
+        two.f->noteOn(48, 100);
+        one.play(2.0);
+        two.play(2.0);
+        const double hz = noteHz(48);
+        check(two.level(hz, 0.0, 2.0) > one.level(hz, 0.0, 2.0) + 10.0, "two held notes: the lower drum takes the bass strokes",
+              fmt("%+.1f dB at the low note", two.level(hz, 0.0, 2.0) - one.level(hz, 0.0, 2.0)));
+    }
+    {
+        // The second hand presses the talking drum up.
+        Drum flat({{"model", 5}, {"cycle", Talk}, {"feel", 0.0f}, {"press", 0.0f}}), pressed({{"model", 5}, {"cycle", Talk}, {"feel", 0.0f}, {"press", 7.0f}});
+        flat.f->noteOn(55, 100);
+        pressed.f->noteOn(55, 100);
+        flat.play(2.0);
+        pressed.play(2.0);
+        // The press on the fourth sixteenth: 0.375 s, settled by 0.55.
+        const double up = cents(pressed.peak(noteHz(55) * 1.3, noteHz(55) * 1.6, 0.55, 0.74), noteHz(55));
+        check(std::fabs(up - 700.0) < 40.0, "a pressed stroke bends up by press", fmt("%.0f cents", up));
+    }
+    for (int kind = 1; kind <= Talk; ++kind) {
+        Drum g({{"model", static_cast<float>(kind % 19)}, {"cycle", static_cast<float>(kind)}, {"bars", 3}, {"feel", 1.0f}, {"press", 12.0f}, {"volume", 1.0f}});
+        g.f->noteOn(50, 127);
+        g.f->noteOn(62, 127);
+        g.play(18.0);
+        bool finite = true;
+        for (float v : g.out) finite = finite && std::isfinite(v);
+        if (!finite || g.peakAbs() >= 12.0 || g.rms(1.0, 16.0) < -60.0)
+            check(false, fmt("cycle %d plays and stays bounded", kind).c_str(), fmt("peak %.2f", g.peakAbs()));
+    }
+    check(true, "every cycle plays and stays bounded");
+}
+
 } // namespace
 
 int main() {
@@ -280,6 +427,7 @@ int main() {
     strokes();
     hands();
     lifecycle();
+    cycles();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

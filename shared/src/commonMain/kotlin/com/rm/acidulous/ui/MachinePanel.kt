@@ -5038,12 +5038,14 @@ private fun SympathPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
 
 private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko", "udu", "cuica")
 private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "velocity")
+private val PALM_CYCLES = listOf("off", "tumbao", "kuku", "baladi", "maqsum", "theka", "6/8", "groove", "talking")
+private val PALM_BARS = listOf("1", "2", "4", "8")
 
 /** Where a Palm macro route goes, in the engine's MacroDest order. */
 val PALM_MACRO_DESTS = listOf(
     "off", "position", "hand", "decay", "damp", "pitch drop", "squeeze", "rattle", "body",
     "rolls", "spread", "velocity", "volume", "flam",
-    "pitch",
+    "pitch", "feel", "press",
 )
 
 /** Palm: the macros, the drum and the hand, its body, the player and the kit. */
@@ -5117,6 +5119,12 @@ private fun PalmPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, 
                 }
             }
             else -> {
+                Group("cycle") {
+                    PanelStepKnob(b, "cycle", PALM_CYCLES, "cycle", PanelAmber)
+                    PanelSwitch(b, "bars", PALM_BARS, "bars")
+                    PanelKnob(b, "feel", "feel")
+                    PanelKnob(b, "press", "press")
+                }
                 Group("hands") {
                     PanelKnob(b, "roll", "rolls", PanelAmber)
                     PanelKnob(b, "flam", "flam")

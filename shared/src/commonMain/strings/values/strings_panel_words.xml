@@ -110,6 +110,7 @@
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
     <string name="pw_bag">bag</string>
+    <string name="pw_baladi">baladi</string>
     <string name="pw_balance">balance</string>
     <string name="pw_ballad">ballad</string>
     <string name="pw_bamboo">bamboo</string>
@@ -575,6 +576,7 @@
     <string name="pw_grit">Grit</string>
     <string name="pw_grit_69794c">grit</string>
     <string name="pw_grit_with_b">grit with b</string>
+    <string name="pw_groove">groove</string>
     <string name="pw_groupings">groupings</string>
     <string name="pw_growl">growl</string>
     <string name="pw_growl_rate">growl rate</string>
@@ -718,6 +720,7 @@
     <string name="pw_kit">kit</string>
     <string name="pw_knock">knock</string>
     <string name="pw_kouxian">kouxian</string>
+    <string name="pw_kuku">kuku</string>
     <string name="pw_l">L</string>
     <string name="pw_l_07c342">l</string>
     <string name="pw_l1rate">l1rate</string>
@@ -841,6 +844,7 @@
     <string name="pw_mangle">mangle</string>
     <string name="pw_manuals">manuals</string>
     <string name="pw_map">map</string>
+    <string name="pw_maqsum">maqsum</string>
     <string name="pw_marimba">marimba</string>
     <string name="pw_marwa">marwa</string>
     <string name="pw_master">master</string>
@@ -1430,6 +1434,7 @@
     <string name="pw_the_room">the room</string>
     <string name="pw_the_same_roll">the same roll</string>
     <string name="pw_theatre">theatre</string>
+    <string name="pw_theka">theka</string>
     <string name="pw_thick">thick</string>
     <string name="pw_thin">thin</string>
     <string name="pw_thirds">thirds</string>
@@ -1497,6 +1502,7 @@
     <string name="pw_tube">tube</string>
     <string name="pw_tukey">tukey</string>
     <string name="pw_tulum">tulum</string>
+    <string name="pw_tumbao">tumbao</string>
     <string name="pw_tune">tune</string>
     <string name="pw_tune_n">tune %d</string>
     <string name="pw_tuned">tuned</string>

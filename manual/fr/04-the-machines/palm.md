@@ -58,6 +58,38 @@ elle y reste pour l’étouffer.
 Avec le MPE, glisser un doigt vers le haut le pose sur la peau et l’étouffe
 pendant qu’elle sonne.
 
+## Cycles
+
+Choisissez un **cycle** sur la page des mains et une note tenue joue un motif
+en mesure avec le morceau et son swing. Chaque motif dure une mesure et
+tourne pendant quelques mesures, avec un break sur la dernière. Quand le
+morceau est arrêté, la première note tenue lance la mesure.
+
+- **cycle** : **non**, **tumbao** (talon et pointe, un slap sur deux, des
+  sons ouverts sur quatre), **kuku** (une partie de djembé, les slaps par
+  deux), **baladi** et **maqsoum** (des rythmes de darbouka en frappes
+  basses et sur le bord), **theka** (huit frappes de tabla avec une basse
+  pressée), **6/8** (douze par mesure, par trois), **groove** (la basse sur
+  un et trois, les slaps sur deux et quatre) ou **aisselle** (frappes
+  ouvertes et pressées, la peau arrêtée entre les deux).
+- **mesures** : combien de mesures font un cycle, la dernière étant un
+  break. À 1, pas de break.
+- **toucher** : combien chaque mesure change : des frappes douces ajoutées
+  ou enlevées, sons ouverts et slaps échangés, le volume et le placement qui
+  bougent un peu. À 0, chaque mesure se joue telle qu’écrite. Les
+  changements suivent le numéro de la mesure, donc un morceau se joue
+  pareil à chaque fois.
+- **pression** : de combien de demi-tons la seconde main fait monter la peau
+  sur une frappe pressée.
+
+Tenez deux notes et elles se partagent le motif : les basses et les sons
+graves vont au tambour le plus grave, le reste au plus aigu. Avec une seule
+note, les sons graves sont joués une quarte en dessous. Dans un kit, tenez
+deux pads, comme le tabla et le bayan de **Tabla Theka**.
+
+Les roulés et les flas sont coupés pendant un cycle. Relâchez et il
+s’arrête, et la dernière frappe résonne.
+
 ## Kit
 
 Activez **kit** et les touches à partir de do2 deviennent seize pads, chacun son propre tambour : une seule piste joue tout un kit de percussions à main. Le séquenceur affiche la grille de batterie, une ligne par pad, nommée d’après son tambour et sa frappe.
@@ -81,7 +113,7 @@ course de cette commande à 1. La hauteur déplace tous les tambours, 24
 demi-tons à 1. Le modèle, l’accordage, le coup, les choix par pas et les pads
 d’un kit ne sont pas accessibles; dans un kit, les routes bougent les boutons
 que tous les pads partagent. Un changement de position, de main, de déclin,
-d’amortir, de chute, de corps, d’écart, de vélocité ou de fla s’entend au coup
+d’amortir, de chute, de corps, d’écart, de vélocité, de fla, de toucher ou de pression s’entend au coup
 suivant, roulés compris. Serrer, grésil, roulés et volume
 bougent tout de suite. Touchez le nom d’une macro pour la renommer.
 
@@ -92,3 +124,5 @@ bougent tout de suite. Touchez le nom d’une macro pour la renommer.
   pour slap.
 - **Bayan Swoop** et **Talking Squeeze** se jouent en appuyant : jouez une
   note, puis pesez sur la touche ou poussez la molette.
+- Les présélections **cycles** jouent un motif depuis une seule note tenue.
+  **Conga Pair** et **Tabla Theka** en veulent deux.
