@@ -143,6 +143,110 @@ void staysBounded(const char *type) {
 
 // --- Smash ----------------------------------------------------------------------
 
+/** Runs a mono signal through at 120 with the song rolling, [key] as the sidechain if given. */
+Stereo runRolling(Effect &fx, const std::vector<float> &in, const std::vector<float> *key = nullptr,
+                  const ModTransport *transport = nullptr) {
+    ModTransport t;
+    t.rolling = true;
+    fx.setTransport(transport != nullptr ? *transport : t);
+    Stereo s{in, in};
+    const double ticksPerSample = kTicksPerBeat * 120.0 / 60.0 / kRate;
+    for (size_t at = 0; at < in.size(); at += kBlock) {
+        const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, in.size() - at));
+        fx.setKey(key != nullptr ? key->data() + at : nullptr);
+        fx.onBlock(static_cast<int64_t>(at * ticksPerSample), static_cast<int64_t>((at + n) * ticksPerSample), 120.0f);
+        fx.run(s.l.data() + at, s.r.data() + at, n, false);
+    }
+    return s;
+}
+
+/** The beat: each band ducking on a rhythm or under another track. */
+void smashBeat() {
+    // A beat at 120 is 24000 frames; a sixteenth 6000.
+    const auto bass = tone(80.0f, 0.2f, 96000);
+    const auto music = noise(0.3f, 96000);
+    {
+        // Every new knob turned but each band's duck off: as without them, bit for bit.
+        auto plain = make("Smash");
+        auto off = make("Smash", {{"lowdepth", 20.0f}, {"middepth", 3.0f}, {"recover", 600.0f}, {"sidechain", 3.0f}});
+        const auto key = noise(0.5f, 96000, 7);
+        ok("beat: every duck off plays as before, to the bit",
+           worst(runRolling(*plain, music).l, runRolling(*off, music, &key).l) == 0.0);
+    }
+    // Only the beat: no squash, no lift and depth 0, so what moves is the duck.
+    auto beat = [&](std::initializer_list<std::pair<const char *, float>> extra) {
+        auto fx = make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}, {"lowdepth", 12.0f}, {"recover", 100.0f}});
+        for (const auto &[name, value] : extra) set(*fx, name, value);
+        return fx;
+    };
+    {
+        // Low on the beats: down at each beat, back up before the next, at depth 0.
+        auto fx = beat({{"lowduck", 2.0f}});
+        const auto out = runRolling(*fx, bass).l;
+        const double at = dB(rms(out, 24000, 24480) / rms(bass, 24000, 24480));
+        const double before = dB(rms(out, 46000, 47520) / rms(bass, 46000, 47520));
+        ok("beat: the lows duck on the beat, at depth 0", at < -7.0 && before > -1.0,
+           num(at) + " dB on the beat, " + num(before) + " dB before the next");
+        // Down by the time the beat lands: the 5 ms before it already going.
+        const double lead = dB(rms(out, 23880, 24000) / rms(bass, 23880, 24000));
+        ok("beat: the duck starts just before the beat", lead < -1.0 && lead > -12.0, num(lead) + " dB");
+        double step = 0.0, stepIn = 0.0;
+        for (size_t i = 1; i < out.size(); ++i) {
+            step = std::max(step, double(std::fabs(out[i] - out[i - 1])));
+            stepIn = std::max(stepIn, double(std::fabs(bass[i] - bass[i - 1])));
+        }
+        ok("beat: no step bigger than the tone's own", step <= stepIn * 1.05, num(step) + " vs " + num(stepIn));
+    }
+    {
+        // Offbeats on the highs leave a bass alone.
+        auto fx = beat({{"highduck", 3.0f}, {"highdepth", 12.0f}});
+        const auto out = runRolling(*fx, bass).l;
+        const double d = dB(rms(out, 30000, 30480) / rms(bass, 30000, 30480));
+        ok("beat: the highs' offbeats leave a bass alone", std::fabs(d) < 0.3, num(d) + " dB on an offbeat");
+    }
+    {
+        // Stopped, the rhythms don't play.
+        auto fx = beat({{"lowduck", 2.0f}});
+        ok("beat: stopped, nothing ducks", worst(run(*fx, bass).l, run(*make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}}), bass).l) < 1e-6);
+    }
+    {
+        // Swung all the way, the second sixteenth lands at tick 90, not 60.
+        auto swung = beat({{"lowduck", 5.0f}, {"recover", 20.0f}});
+        ModTransport sw;
+        sw.rolling = true;
+        sw.swing = 75.0f;
+        const auto out = runRolling(*swung, bass, nullptr, &sw).l;
+        size_t low = 0;
+        double lowest = 1e9;
+        for (size_t w = 3000; w + 480 < 12000; w += 120) {
+            const double r = rms(out, w, w + 480) / rms(bass, w, w + 480);
+            if (r < lowest) { lowest = r; low = w + 240; }
+        }
+        ok("beat: swing moves the second sixteenth with the track", low > 8400 && low < 9600, "deepest at frame " + std::to_string(low));
+    }
+    {
+        // Keyed: a burst on the key every beat ducks the lows under it; sidechain own, nothing.
+        std::vector<float> key(96000, 0.0f);
+        for (size_t b = 12000; b < key.size(); b += 24000)
+            for (size_t i = 0; i < 2400; ++i) key[b + i] = 0.8f * std::sin(2.0f * float(M_PI) * 60.0f * i / kRate);
+        auto fx = beat({{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"threshold", -24.0f}});
+        const auto out = runRolling(*fx, bass, &key).l;
+        const double under = dB(rms(out, 13000, 14000) / rms(bass, 13000, 14000));
+        const double clear = dB(rms(out, 34000, 35000) / rms(bass, 34000, 35000));
+        // The low band holds most of an 80 Hz tone but not all, so 12 dB on it is about 9 on the tone.
+        ok("keyed: the lows duck under the key's hits", under < -7.0 && clear > -1.0,
+           num(under) + " dB under a hit, " + num(clear) + " dB between");
+        auto own = beat({{"lowduck", 1.0f}});
+        ok("keyed: with no track keyed, nothing ducks",
+           worst(runRolling(*own, bass).l, run(*make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}}), bass).l) < 1e-6);
+        // Reset puts it all back: the same twice.
+        auto twice = make("Smash", {{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"midduck", 4.0f}, {"highduck", 9.0f}});
+        const auto a = runRolling(*twice, music, &key).l;
+        twice->reset();
+        ok("beat: after a reset it plays the same again", worst(a, runRolling(*twice, music, &key).l) == 0.0);
+    }
+}
+
 void smash() {
     printf("- smash\n");
     const auto music = noise(0.3f, 48000);
@@ -181,6 +285,7 @@ void smash() {
         const double a = rms(run(*flat, bass).l, 48000, 96000), b = rms(run(*lifted, bass).l, 48000, 96000);
         ok("the low band's gain moves a bass note", dB(b / a) > 4.0 && dB(b / a) < 7.0, num(dB(b / a)) + " dB");
     }
+    smashBeat();
     staysBounded("Smash");
 }
 

@@ -1292,8 +1292,17 @@ std::vector<std::pair<int64_t, int>> gSourceNotes;
 /** `--material drums` on an effect: a plain drum loop, every hit as loud as its kind, instead of the usual source. */
 std::string gEffectMaterial;
 
+/**
+ * Smash with a band ducking: the band's drums go round the effect, as they
+ * would on a track of their own, and come back in after it (gBesideDrums), so
+ * the duck is heard against a kick it doesn't touch.
+ */
+bool gDrumsBeside = false;
+std::vector<float> gBesideDrums;
+
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     gSourceNotes.clear();
+    gBesideDrums.clear();
     const float bars = 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
     // A reverb gets longer to ring out, since a big hall outlasts three seconds.
@@ -1370,7 +1379,12 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         std::vector<Hit> bass;
         const int line[16] = {33, 33, 45, 33, 36, 33, 43, 33, 29, 29, 41, 29, 31, 31, 43, 38};
         for (int i = 0; i < 16; ++i) bass.push_back({i * 0.5f, 0.4f, line[i], i % 2 == 0 ? 110 : 80});
-        add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.8f);
+        if (gDrumsBeside) {
+            gBesideDrums = renderPart("Hexbeat", "Squared", drums, bpm, frames);
+            for (float &v : gBesideDrums) v *= 0.8f;
+        } else {
+            add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.8f);
+        }
         add(renderPart("Reflux", "Classic", bass, bpm, frames), 0.8f);
         add(renderPart("Trinity", "Electric Piano", {
             {0.0f, 1.5f, 57, 90}, {0.0f, 1.5f, 60, 90}, {0.0f, 1.5f, 64, 90}, {0.0f, 1.5f, 67, 90},
@@ -1398,10 +1412,13 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
     // Except Horn's. Horn blows harder the louder the track is, and a brass
     // only speaks properly from a lead at a normal track level.
     const float target = effect == "Horn" ? kSourceLoudness + 6.0f : kSourceLoudness;
-    const float level = kLoudness(out, 0, stop);
+    std::vector<float> whole = out;
+    for (size_t i = 0; i < gBesideDrums.size() && i < whole.size(); ++i) whole[i] += gBesideDrums[i];
+    const float level = kLoudness(whole, 0, stop);
     if (level > -190.0f) {
         const float gain = std::pow(10.0f, (target - level) / 20.0f);
         for (float &v : out) v *= gain;
+        for (float &v : gBesideDrums) v *= gain;
     }
 
     if (effect == "Deesser") {
@@ -1431,15 +1448,44 @@ float gDryLoudness = -200.0f;
 Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
     Take out;
     int64_t stop = 0;
+    gDrumsBeside = false;
+    if (effect == "Smash") {
+        for (const char *name : {"lowduck", "midduck", "highduck"}) {
+            const int32_t i = fx->params().indexOf(name);
+            gDrumsBeside = gDrumsBeside || (i >= 0 && std::lround(fx->params().get(i)) >= 1);
+        }
+    }
     std::vector<float> src = effectSource(effect, bpm, stop);
-    gDryLoudness = kLoudness(src, 0, stop);
+    {
+        std::vector<float> whole = src;
+        for (size_t i = 0; i < gBesideDrums.size() && i < whole.size(); ++i) whole[i] += gBesideDrums[i];
+        gDryLoudness = kLoudness(whole, 0, stop);
+    }
     const auto frames = static_cast<int64_t>(src.size() / 2);
     out.offAt = stop;
     out.stereo.reserve(src.size());
     float L[kBlock], R[kBlock];
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
+    // Smash with a band keyed: another track's kick on every beat as the
+    // sidechain, which the source's own kick lines up with.
+    std::vector<float> key;
+    if (effect == "Smash") {
+        bool keyed = false;
+        for (const char *name : {"lowduck", "midduck", "highduck"}) {
+            const int32_t i = fx->params().indexOf(name);
+            keyed = keyed || (i >= 0 && std::lround(fx->params().get(i)) == 1);
+        }
+        if (keyed) {
+            std::vector<Hit> kicks;
+            for (int b = 0; b < 8; ++b) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
+            const auto kick = renderPart("Hexbeat", "Squared", kicks, bpm, frames);
+            key.resize(static_cast<size_t>(frames) + kBlock, 0.0f);
+            for (int64_t i = 0; i < frames; ++i) key[static_cast<size_t>(i)] = kick[static_cast<size_t>(i) * 2] * 0.8f;
+        }
+    }
     for (int64_t at = 0; at < frames; at += kBlock) {
         const int32_t n = static_cast<int32_t>(std::min<int64_t>(kBlock, frames - at));
+        if (!key.empty()) fx->setKey(key.data() + at);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
         for (int32_t i = 0; i < n; ++i) {
@@ -1455,10 +1501,13 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {
-            out.stereo.push_back(L[i]);
-            out.stereo.push_back(R[i]);
+            const size_t k = static_cast<size_t>(at + i) * 2;
+            const bool beside = k + 1 < gBesideDrums.size();
+            out.stereo.push_back(L[i] + (beside ? gBesideDrums[k] : 0.0f));
+            out.stereo.push_back(R[i] + (beside ? gBesideDrums[k + 1] : 0.0f));
         }
     }
+    gDrumsBeside = false;
     return out;
 }
 

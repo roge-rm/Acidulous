@@ -1037,6 +1037,16 @@ int main(int argc, char **argv) {
             rows.push_back(r);
             forced.clear();
         }
+        // Smash's beat: every band ducking, two on rhythms and one keyed, adds work the default skips.
+        if (name == "Smash" && forced.empty()) {
+            forced.emplace_back("lowduck", 2.0f);
+            forced.emplace_back("midduck", 5.0f);
+            forced.emplace_back("highduck", 3.0f);
+            Result r = timeEffect(name);
+            r.name += " beat";
+            rows.push_back(r);
+            forced.clear();
+        }
         // The Transient's accent grid adds a detector the default skips.
         if (name == "Transient" && forced.empty()) {
             forced.emplace_back("grid", 1.0f);

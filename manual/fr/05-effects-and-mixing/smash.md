@@ -21,6 +21,25 @@
 À une profondeur de 0, ou avec **haut** et **bas** à 0, la piste passe
 intacte.
 
+### Rythme
+
+- **att. grave**, **att. méd.**, **att. aigu** *(extra)* : chaque bande peut
+  baisser sur un rythme à elle : temps, contretemps, croches, 1/16, 2 & 4,
+  blanches, 3-3-2 ou pointé. Les graves peuvent baisser sur la grosse caisse
+  et les aigus sur les contretemps. Les rythmes comptent depuis le début du
+  morceau en mesures de quatre temps, suivent le swing de la piste et ne
+  jouent que pendant la lecture. À **entrée lat.**, la bande baisse plutôt
+  sous la piste choisie dans **entrée lat.** : plus cette piste dépasse le
+  seuil, plus la bande descend.
+- **entrée lat.** : la piste sous laquelle baisse une bande réglée sur
+  entrée lat.
+- **prof. grave**, **prof. méd.**, **prof. aigu** : jusqu’où descend chaque
+  bande, jusqu’à 24 dB.
+- **retour** : le temps que met une bande à remonter, de 20 ms à 1 s.
+
+La baisse agit sur toute la bande, la piste telle qu’elle était aussi, donc
+elle est aussi profonde à toute **prof.**
+
 ## Astuces
 
 - Sur une basse qui disparaît dans le haut-parleur d’un téléphone, **Loud**
@@ -28,3 +47,8 @@ intacte.
 - Sur un envoi de réverbération ou d’écho, **Air** remonte les queues sans
   toucher aux coups.
 - Un **temps** rapide avec **entrée** montée fait grogner une basse.
+- Sur une basse ou une nappe, **Pump Lows** baisse les graves à chaque temps
+  sans aucun routage. **Seesaw** baisse les graves sur le temps et les aigus
+  sur le contretemps.
+- Les sons **entrée lat.**, comme **Kick Room**, demandent de régler
+  **entrée lat.** sur la piste de la grosse caisse.

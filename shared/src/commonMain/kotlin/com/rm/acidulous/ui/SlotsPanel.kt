@@ -625,6 +625,14 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "grid" to listOf("grid", "depth", "rate", "length"),
         "out" to listOf("gain"),
     ),
+    "Smash" to listOf(
+        "smash" to listOf("depth", "time", "threshold", "down", "up"),
+        "bands" to listOf("low", "mid", "high", "in"),
+        // Each band's duck: a rhythm from the song, or under the sidechain's track.
+        "beat" to listOf("lowduck", "midduck", "highduck", "sidechain"),
+        "duck" to listOf("lowdepth", "middepth", "highdepth", "recover"),
+        "out" to listOf("gain"),
+    ),
     "Midside" to listOf(
         "levels" to listOf("width", "mid", "side"),
         "eq" to listOf("midtilt", "sidetilt", "mono"),
@@ -919,7 +927,7 @@ private val EXTRA = mapOf(
     "Rotary" to setOf("tempo"), // the horn turning on the beat
     "Grain" to setOf("freeze", "feedback"),
     "Resonator" to setOf("metal"), // stiff strings, toward a bell
-    "Smash" to setOf("up"), // the lift, which a compressor doesn't have
+    "Smash" to setOf("up", "lowduck", "midduck", "highduck"), // the lift, which a compressor doesn't have; the bands on the beat
     "Acid" to setOf("pattern", "accent", "follow", "slides"),
     "Mouth" to setOf("move", "words"),
     "Tape" to setOf("stop", "stoptime"),
@@ -1020,6 +1028,7 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
     name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
     name == "rate" && type == "Transient" -> listOf("1/16T", "1/16", "1/8")
+    name.endsWith("duck") && type == "Smash" -> SMASH_DUCKS
     name == "grid" && type == "Spectral" -> listOf("1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T", "1/32")
     name == "order" && type == "Spectral" -> listOf("forward", "reverse", "bounce", "random")
     name == "renew" && type == "Spectral" -> listOf("never", "1 lap", "2 laps", "4 laps", "8 laps")
@@ -1195,6 +1204,9 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
     name == "mid" && type.lowercase() == "midside" -> "mid~centre"
     else -> name
 }
+
+/** Smash's duck for each band: off, under the sidechain's track, then the rhythms in the engine's order. */
+private val SMASH_DUCKS = listOf("off", "sidechain", "beats", "offbeat", "8ths", "16ths", "2 & 4", "halves", "3-3-2", "dotted")
 
 /** The slots whose `key` is a musical key, not a filter's tracking. */
 private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel", "acid")
