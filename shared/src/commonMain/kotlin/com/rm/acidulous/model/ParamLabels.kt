@@ -13,7 +13,7 @@ package com.rm.acidulous.model
  * words, split at the bar. One string rather than a list of them, because
  * fifteen hundred lists is more than a class initialiser may hold.
  */
-val PANEL_LABELS: Map<String, String> = labels0() + labels1() + labels2() + labels3() + labels4()
+val PANEL_LABELS: Map<String, String> = labels0() + labels1() + labels2() + labels3() + labels4() + labels5()
 
 /** The same parameter without its section, for the strip's narrow gutter. */
 val PANEL_SHORT: Map<String, String> = short0() + short1() + short2() + short3() + short4()
@@ -4031,6 +4031,9 @@ private fun labels4(): Map<String, String> = mapOf(
     "Trinity:unispread" to "unison|spread",
     "Trinity:velamt" to "out|vel",
     "Trinity:voicemode" to "voice|mode",
+)
+
+private fun labels5(): Map<String, String> = mapOf(
     "Trinity:volume" to "out|volume",
     "Trinity:wheel" to "voice|wheel",
 )
