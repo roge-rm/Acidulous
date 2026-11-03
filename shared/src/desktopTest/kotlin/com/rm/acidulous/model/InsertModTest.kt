@@ -34,6 +34,13 @@ class InsertModTest {
     }
 
     @Test
+    fun `an effect preset keeps the slot's sidechain unless it names one`() {
+        val t = Fixtures.song().tracks[0].withEffect(0, "Compressor").withEffectParam(0, SIDECHAIN_PARAM, 0.25f)
+        assertEquals(0.25f, t.withEffectPatch(0, mapOf("ratio" to 0.5f)).effectAt(0).params[SIDECHAIN_PARAM])
+        assertEquals(0.5f, t.withEffectPatch(0, mapOf(SIDECHAIN_PARAM to 0.5f)).effectAt(0).params[SIDECHAIN_PARAM])
+    }
+
+    @Test
     fun `an effect preset keeps the slot's mod`() {
         val t = modded().tracks[0].withEffectPatch(2, mapOf("cutoff" to 0.9f, "reso" to 0.2f))
         val fx = t.effectAt(2)

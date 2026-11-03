@@ -192,7 +192,8 @@ bool Smash::process(float *L, float *R, int32_t frames, bool stereoIn) {
             const double tick = songAt + static_cast<double>(i) * ticksPerFrame;
             float keyDb = -120.0f;
             if (anyKeyed) {
-                const float k = std::fabs(key_[i]);
+                const float ka = std::fabs(key_[i]);
+                const float k = std::isfinite(ka) ? ka : 0.0f;
                 keyEnv = dsp::guardDenormal(keyEnv + (k - keyEnv) * (k > keyEnv ? keyAttack : recoverCoeff));
                 keyDb = 20.0f * std::log10(std::max(keyEnv, 1e-6f));
             }

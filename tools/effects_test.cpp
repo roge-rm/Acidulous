@@ -239,6 +239,17 @@ void smashBeat() {
         auto own = beat({{"lowduck", 1.0f}});
         ok("keyed: with no track keyed, nothing ducks",
            worst(runRolling(*own, bass).l, run(*make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}}), bass).l) < 1e-6);
+        // One NaN in the key must not latch the duck.
+        {
+            std::vector<float> bad = key;
+            bad[20000] = std::nanf("");
+            auto nf = beat({{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"threshold", -24.0f}});
+            const auto o = runRolling(*nf, bass, &bad);
+            bool fin = true;
+            for (size_t i = 0; i < o.l.size(); ++i) fin = fin && std::isfinite(o.l[i]) && std::isfinite(o.r[i]);
+            const double after = dB(rms(o.l, 34000, 35000) / rms(bass, 34000, 35000));
+            ok("keyed: a NaN in the key doesn't latch the duck", fin && after > -1.0, num(after) + " dB after");
+        }
         // Reset puts it all back: the same twice.
         auto twice = make("Smash", {{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"midduck", 4.0f}, {"highduck", 9.0f}});
         const auto a = runRolling(*twice, music, &key).l;
