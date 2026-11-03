@@ -159,6 +159,11 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = hit(p, 0.0f, 0.15f, note, velocity);
         p.lastOff = hit(p, 6.0f, 0.15f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(9.0f);
+    } else if (kind == "halo") {
+        // Nothing played: for a machine rung by the song alone (Sympath with
+        // a sidechain), eight seconds of the song and its ring-out.
+        p.lastOff = secondsToFrames(8.0f);
+        p.frames = p.lastOff;
     } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
@@ -773,6 +778,12 @@ struct Material {
     std::unique_ptr<::acidulous::machine::formulate::Program> program;
     std::unique_ptr<::acidulous::machine::nexus::Graph> graph;
     std::vector<float> input; // mono, published a block at a time
+    /**
+     * Another track for a machine with a sidechain: stereo, looped over its
+     * first `songLoop` frames, handed over as the key and mixed into the take.
+     */
+    std::vector<float> song;
+    int64_t songLoop = 0;
 };
 
 /**
@@ -1111,6 +1122,7 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
 
     float L[kBlock], R[kBlock];
     std::vector<float> inBlock(static_cast<size_t>(kBlock) * 2, 0.0f);
+    float keyBlock[kBlock] = {};
     size_t next = 0;
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
 
@@ -1138,6 +1150,14 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
             }
             InputBus::get().publish(inBlock.data(), kBlock);
         }
+        const bool keyed = mat.songLoop > 0;
+        if (keyed) {
+            for (int32_t i = 0; i < kBlock; ++i) {
+                const size_t src = static_cast<size_t>((at + i) % mat.songLoop) * 2;
+                keyBlock[i] = (mat.song[src] + mat.song[src + 1]) * 0.5f;
+            }
+            m->setKey(keyBlock);
+        }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
         m->onBlock(t0, t1, bpm);
@@ -1150,10 +1170,15 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
             fx->process(L, R, kBlock, t0, t1, bpm);
         }
         for (int32_t i = 0; i < kBlock; ++i) {
-            out.stereo.push_back(L[i]);
-            out.stereo.push_back(stereo ? R[i] : L[i]);
+            const size_t src = keyed ? static_cast<size_t>((at + i) % mat.songLoop) * 2 : 0;
+            // A little under the key's level, so the two together stay under full scale.
+            out.stereo.push_back(L[i] + (keyed ? 0.7f * mat.song[src] : 0.0f));
+            out.stereo.push_back((stereo ? R[i] : L[i]) + (keyed ? 0.7f * mat.song[src + 1] : 0.0f));
         }
     }
+    // The song stops with the phrase; the machine rings out on silence.
+    static const float kNoKey[kBlock] = {};
+    if (mat.songLoop > 0) m->setKey(kNoKey);
 
     // The ring-out. It stops 60 dB under the peak, the same floor the tail
     // measurement uses. It has to stay quiet for a tenth of a second, since a
@@ -1806,6 +1831,15 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         };
         dress();
         loadInput(input, mat);
+        // Sympath listening to another track hears the band the effects
+        // get, looped, and it's mixed into the take.
+        for (int32_t i = 0; i < count && bank.unit == "Sympath"; ++i) {
+            if (std::strcmp(defs[i].name, "sidechain") == 0 && defs[i].map(r.norm[static_cast<size_t>(i)]) >= 0.5f) {
+                int64_t stop = 0;
+                mat.song = effectSource(bank.unit, opt.bpm, stop);
+                mat.songLoop = stop;
+            }
+        }
 
         const Kit *kit = kitFor(bank.unit);
         // --note wins over the patch's note, then the middle of its range,

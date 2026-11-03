@@ -339,6 +339,31 @@ Result timeInserts(const std::string &machine, const std::string &fx, int32_t pe
 }
 
 /**
+ * `--key`: a song for a machine with a sidechain (Sympath) to hear, A minor
+ * chord tones plucked every eighth over noise on the beat, handed over as the
+ * key every block. Empty without the flag.
+ */
+std::vector<float> gKeySong;
+void buildKeySong() {
+    const int32_t n = kSr * 4;
+    gKeySong.assign(static_cast<size_t>(n), 0.0f);
+    const double notes[] = {220.0, 261.63, 329.63, 392.0};
+    uint32_t seed = 1;
+    for (int32_t i = 0; i < n; ++i) {
+        const int32_t eighth = kSr / 4, at = i % eighth;
+        const double t = static_cast<double>(at) / kSr, hz = notes[(i / eighth) % 4];
+        double v = 0.3 * std::exp(-t / 0.2) * std::sin(6.283185307179586 * hz * t);
+        seed = seed * 1664525u + 1013904223u;
+        if ((i / eighth) % 2 == 0) v += 0.2 * std::exp(-t / 0.05) * (static_cast<double>(seed >> 8) / 8388608.0 - 1.0);
+        gKeySong[static_cast<size_t>(i)] = static_cast<float>(v);
+    }
+}
+void keyFor(Machine *m, int32_t block) {
+    if (gKeySong.empty()) return;
+    m->setKey(gKeySong.data() + (static_cast<size_t>(block) * kBlock) % (gKeySong.size() - kBlock));
+}
+
+/**
  * What a machine costs with nothing to play, like a track that isn't used in
  * the current scene. Most tracks are idle most of the time, so if idle isn't
  * nearly free a song pays for every track all the time.
@@ -356,6 +381,7 @@ Result timeIdle(const std::string &name) {
     std::vector<float> L(kBlock), R(kBlock);
     // No Player: not one note, ever.
     for (int32_t b = 0; b < kBlocks; ++b) {
+        keyFor(m, b);
         std::fill(L.begin(), L.end(), 0.0f);
         std::fill(R.begin(), R.end(), 0.0f);
         const double t0 = nowUs();
@@ -513,6 +539,7 @@ Result timeMachine(const std::string &name) {
     Player player;
     for (int32_t b = 0; b < kBlocks; ++b) {
         player.tick(m, b);
+        keyFor(m, b);
         std::fill(L.begin(), L.end(), 0.0f);
         std::fill(R.begin(), R.end(), 0.0f);
         const double t0 = nowUs();
@@ -834,6 +861,10 @@ int main(int argc, char **argv) {
     std::vector<std::string> args;
     for (int i = 0; i < argc; ++i) {
         const std::string a = argv[i];
+        if (a == "--key") {
+            buildKeySong();
+            continue;
+        }
         if (a == "--rate" && i + 1 < argc) {
             gNotesPerSecond = std::max(0.1, atof(argv[++i]));
             continue;

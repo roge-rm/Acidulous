@@ -66,10 +66,19 @@ struct Strings {
         p.jump(i, p.def(i).unmap(value));
     }
     float bpm = 120.0f;
+    /** Another track's sound, handed over as the key a block at a time while it lasts, then silence. */
+    std::vector<float> song;
+    size_t songAt = 0;
+    bool keyed = false;
     void play(double seconds) {
         float L[kBlock], R[kBlock];
+        static const float silence[kBlock] = {};
         const int blocks = static_cast<int>(seconds * kRate / kBlock);
         for (int b = 0; b < blocks; ++b) {
+            if (keyed) {
+                f->setKey(songAt + kBlock <= song.size() ? song.data() + songAt : silence);
+                songAt += kBlock;
+            }
             f->onBlock(0, 0, bpm);
             f->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
@@ -291,6 +300,203 @@ void lifecycle() {
     }
 }
 
+/**
+ * A song for the strings to hear: each of [notes] in turn, a plucked tone
+ * with three harmonics every [every] seconds, [seconds] long.
+ */
+std::vector<float> songOf(std::initializer_list<double> notes, double every, double seconds, float amp = 0.3f) {
+    std::vector<float> out(static_cast<size_t>(seconds * kRate), 0.0f);
+    const std::vector<double> ns(notes);
+    size_t k = 0;
+    for (double at = 0.0; at < seconds; at += every, ++k) {
+        const double hz = noteHz(ns[k % ns.size()]);
+        const auto a = static_cast<size_t>(at * kRate);
+        for (size_t i = a; i < out.size() && i < a + static_cast<size_t>(1.5 * kRate); ++i) {
+            const double t = static_cast<double>(i - a) / kRate;
+            const double env = std::exp(-t / 0.3) * std::min(1.0, t / 0.003);
+            double v = 0.0;
+            for (int h = 1; h <= 3; ++h) v += std::sin(6.283185307179586 * hz * h * t) / h;
+            out[i] += static_cast<float>(amp * env * v);
+        }
+    }
+    return out;
+}
+
+/** 19 equal steps to the octave, key 60 where it was, as the ratios a track's tuning hands a machine. */
+std::vector<float> nineteen() {
+    std::vector<float> r(128);
+    for (int n = 0; n < 128; ++n) r[static_cast<size_t>(n)] = static_cast<float>(std::pow(2.0, (n - 60) / 19.0) / std::pow(2.0, (n - 60) / 12.0));
+    return r;
+}
+
+void song() {
+    std::printf("- the song\n");
+    // Sa C#, Bilawal: C# D# F F# G# A# C. A song on G# (on the scale) and on D (off it).
+    const auto ringing = [&](std::initializer_list<std::pair<const char *, float>> knobs, std::initializer_list<double> notes, bool keyed) {
+        auto g = std::make_unique<Strings>(knobs);
+        g->song = songOf(notes, 0.5, 2.0);
+        g->keyed = keyed;
+        g->play(3.0);
+        return g;
+    };
+    {
+        // Off: no track picked, or nothing to ring, is the machine without the song, to the bit.
+        auto plain = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"tarbs", 1.0f}});
+        plain->f->noteOn(61, 100);
+        plain->play(2.0);
+        auto none = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"tarbs", 1.0f}});
+        none->song = songOf({68}, 0.5, 2.0);
+        none->keyed = true;
+        none->f->noteOn(61, 100);
+        none->play(2.0);
+        auto still = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"tarbs", 1.0f}, {"sidechain", 1.0f}, {"ring", 0.0f}});
+        still->song = none->song;
+        still->keyed = true;
+        still->f->noteOn(61, 100);
+        still->play(2.0);
+        check(plain->out == none->out && plain->out == still->out, "with no track picked, or no ring, nothing changes", "to the bit");
+    }
+    {
+        auto on = ringing({{"sidechain", 1.0f}, {"tarbs", 1.0f}}, {68}, true);
+        auto off = ringing({{"sidechain", 1.0f}, {"tarbs", 1.0f}}, {62}, true);
+        auto deaf = ringing({{"sidechain", 0.0f}, {"tarbs", 1.0f}}, {68}, true);
+        const double songDb = 10.0 * std::log10([&] { double s = 0; for (float v : on->song) s += double(v) * v; return s / on->song.size(); }());
+        const double r = on->rms(0.5, 2.0);
+        check(r > deaf->rms(0.5, 2.0) + 30.0, "the song rings the strings with nothing played", fmt("%.1f dB, the song %.1f dB", r, songDb));
+        check(r > off->rms(0.5, 2.0) + 6.0, "more for a song on the scale than off it", fmt("%.1f vs %.1f dB", r, off->rms(0.5, 2.0)));
+        check(on->rms(2.5, 3.0) > -90.0, "and they ring on after it stops", fmt("%.1f dB", on->rms(2.5, 3.0)));
+        on->play(12.0);
+        check(on->f->sleeping(), "then go back to sleep", "");
+        auto soft = ringing({{"sidechain", 1.0f}, {"tarbs", 1.0f}, {"ring", 0.25f}}, {68}, true);
+        check(soft->rms(0.5, 2.0) < r - 6.0, "ring sets how hard", fmt("%.1f vs %.1f dB", soft->rms(0.5, 2.0), r));
+        auto tanpura = ringing({{"sidechain", 1.0f}, {"model", Tanpura}}, {68}, true);
+        check(tanpura->f->sleeping() && tanpura->rms(0.0, 3.0) < -150.0, "a model with no free strings stays asleep", "");
+    }
+    {
+        // Played and rung by a song, listening, then reset and again: the same to the bit.
+        auto g = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{
+            {"sidechain", 1.0f}, {"listen", 0.6f}, {"bloom", 0.8f}, {"chikari", 0.5f}});
+        g->song = songOf({57, 60, 64, 67}, 0.25, 3.0);
+        g->keyed = true;
+        g->f->noteOn(57, 100);
+        g->play(3.0);
+        const std::vector<float> first = g->out;
+        g->f->allNotesOff();
+        g->f->reset();
+        g->out.clear();
+        g->songAt = 0;
+        g->f->noteOn(57, 100);
+        g->play(3.0);
+        check(g->out == first, "after a reset the song plays out the same", "to the bit");
+    }
+    {
+        // Every song knob up, a full-scale song on Sa: bounded.
+        auto g = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{
+            {"sidechain", 1.0f}, {"ring", 1.0f}, {"bloom", 1.0f}, {"tarbs", 1.0f}, {"listen", 1.0f}, {"volume", 1.0f}});
+        g->song = songOf({61, 68, 73}, 0.25, 6.0, 1.0f);
+        g->keyed = true;
+        g->play(6.0);
+        bool finite = true;
+        for (float v : g->out) finite = finite && std::isfinite(v);
+        check(finite && g->peakAbs() < 8.0, "a full-scale song with every knob up stays bounded", fmt("peak %.2f", g->peakAbs()));
+    }
+    {
+        // Bloom: four times as long, about as loud while the song plays.
+        auto mid = ringing({{"sidechain", 1.0f}, {"tarbs", 1.0f}}, {68}, true);
+        auto longer = ringing({{"sidechain", 1.0f}, {"tarbs", 1.0f}, {"bloom", 1.0f}}, {68}, true);
+        mid->play(3.0);
+        longer->play(3.0);
+        const double dm = mid->rms(1.0, 2.0) - mid->rms(5.0, 6.0), dl = longer->rms(1.0, 2.0) - longer->rms(5.0, 6.0);
+        check(dl < dm - 10.0, "bloom lets them ring longer", fmt("%.1f vs %.1f dB fallen in 4 s", dl, dm));
+        check(std::fabs(longer->rms(0.5, 2.0) - mid->rms(0.5, 2.0)) < 6.0, "and about as loud under the song",
+              fmt("%+.1f dB", longer->rms(0.5, 2.0) - mid->rms(0.5, 2.0)));
+    }
+    {
+        // Listening: an A minor chord over and over, the strings tuned to Bilawal on C#.
+        auto g = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"sidechain", 1.0f}, {"listen", 1.0f}});
+        g->song = songOf({57, 60, 64}, 0.25, 6.0);
+        g->keyed = true;
+        g->play(2.0);
+        // Over one chord the strings settle and stay.
+        std::vector<float> was;
+        int moves = 0;
+        for (int step = 0; step < 20; ++step) {
+            std::vector<float> now;
+            for (int i = 0; i < g->f->tarbStrings(); ++i) now.push_back(g->f->tarbAim(i));
+            if (!was.empty() && now != was) ++moves;
+            was = now;
+            g->play(0.1);
+        }
+        check(moves == 0, "over one chord the strings settle", fmt("%d retunings in 2 s", moves));
+        int onChord = 0;
+        for (int i = 0; i < g->f->tarbStrings(); ++i) {
+            const int pc = static_cast<int>(std::lround(69.0 + 12.0 * std::log2(g->f->tarbHz(i) / 440.0))) % 12;
+            onChord += pc == 9 || pc == 0 || pc == 4 ? 1 : 0;
+        }
+        if (onChord != g->f->tarbStrings()) {
+            for (int i = 0; i < g->f->tarbStrings(); ++i) std::printf("    %.1f -> %.1f\n", 69.0 + 12.0 * std::log2(g->f->tarbHz(i) / 440.0), 69.0 + 12.0 * std::log2(g->f->tarbAim(i) / 440.0));
+        }
+        check(onChord == g->f->tarbStrings(), "listening, the strings retune to the chord the song plays",
+              fmt("%d of %d on A C E", onChord, g->f->tarbStrings()));
+        // Then a C major: they follow it.
+        g->song = songOf({60, 64, 67}, 0.25, 4.0);
+        g->songAt = 0;
+        g->play(3.0);
+        int onC = 0;
+        for (int i = 0; i < g->f->tarbStrings(); ++i) {
+            const int pc = static_cast<int>(std::lround(69.0 + 12.0 * std::log2(g->f->tarbAim(i) / 440.0))) % 12;
+            onC += pc == 0 || pc == 4 || pc == 7 ? 1 : 0;
+        }
+        check(onC == g->f->tarbStrings(), "and follow it to the next", fmt("%d of %d on C E G", onC, g->f->tarbStrings()));
+        // A slow listen learns the key instead: a scale over many notes keeps more of them.
+        auto slow = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"sidechain", 1.0f}, {"listen", 0.1f}});
+        slow->song = songOf({57, 59, 60, 62, 64, 65, 67}, 0.25, 6.0);
+        slow->keyed = true;
+        slow->play(6.0);
+        int distinct = 0;
+        bool seen[12] = {};
+        for (int i = 0; i < slow->f->tarbStrings(); ++i) {
+            const int pc = static_cast<int>(std::lround(69.0 + 12.0 * std::log2(slow->f->tarbAim(i) / 440.0))) % 12;
+            if (!seen[pc]) ++distinct;
+            seen[pc] = true;
+        }
+        check(distinct >= 6 && !seen[1] && !seen[3] && !seen[6] && !seen[8] && !seen[10], "a slow listen learns the key's notes",
+              fmt("%d notes, none off A minor", distinct));
+    }
+    {
+        // A tuning: the strings sit on its keys and retune when it changes.
+        const auto ratios = nineteen();
+        auto g = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"tarbs", 1.0f}});
+        g->f->noteOn(61, 100);
+        g->play(0.2);
+        const float first = g->f->tarbHz(0);
+        g->f->setTuning(ratios.data());
+        g->play(0.2);
+        double worst = 0.0;
+        for (int i = 0; i < g->f->tarbStrings(); ++i) {
+            const double steps = 19.0 * std::log2(g->f->tarbHz(i) / 261.6255653);
+            worst = std::max(worst, std::fabs(steps - std::round(steps)) * 1200.0 / 19.0);
+        }
+        check(g->f->tarbHz(0) != first && worst < 0.5, "in 19 equal the sympathetic strings move onto its steps", fmt("%.2f cents off at worst", worst));
+        auto l = std::make_unique<Strings>(std::initializer_list<std::pair<const char *, float>>{{"sidechain", 1.0f}, {"listen", 1.0f}});
+        l->f->setTuning(ratios.data());
+        // Keys 60, 65 and 71 in 19 equal: C, a major third up, a fifth up.
+        l->song.assign(static_cast<size_t>(4.0 * kRate), 0.0f);
+        for (int k : {60, 66, 71}) {
+            const double hz = 261.6255653 * std::pow(2.0, (k - 60) / 19.0);
+            for (size_t i = 0; i < l->song.size(); ++i) l->song[i] += 0.1f * static_cast<float>(std::sin(6.283185307179586 * hz * i / kRate));
+        }
+        l->keyed = true;
+        l->play(3.0);
+        int on = 0;
+        for (int i = 0; i < l->f->tarbStrings(); ++i) {
+            const int step = static_cast<int>(std::lround(19.0 * std::log2(l->f->tarbAim(i) / 261.6255653))) % 19;
+            on += step == 0 || step == 6 || step == 11 ? 1 : 0;
+        }
+        check(on == l->f->tarbStrings(), "and listening, they find the song's notes in its steps", fmt("%d of %d", on, l->f->tarbStrings()));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -300,6 +506,7 @@ int main() {
     tanpura();
     hands();
     lifecycle();
+    song();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -169,10 +169,10 @@ class MacroNamesTest {
     @Test
     fun sympathBankHasItsFamiliesInOrder() {
         val bank = FactoryBanks.of("Sympath")
-        assertEquals(96, bank.size)
+        assertEquals(102, bank.size)
         assertEquals("Init", bank.first().name)
         val families = bank.map { it.family }.distinct()
-        assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge"), families)
+        assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge", "song"), families)
     }
 
     @Test

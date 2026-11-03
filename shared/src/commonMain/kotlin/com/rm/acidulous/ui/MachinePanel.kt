@@ -5003,6 +5003,16 @@ private fun SympathPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("sympathy") {
                     PanelKnob(b, "tarbs", "tarbs", PanelAmber)
                     PanelKnob(b, "chikari", "chikari")
+                    PanelKnob(b, "bloom", "bloom")
+                }
+                Group("song") {
+                    // The track whose sound rings the strings: off, or the track.
+                    val songLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", songLabels, "from track", PanelPink)
+                    PanelKnob(b, "ring", "ring~strings")
+                    PanelKnob(b, "listen", "listen")
                 }
                 Group("tanpura") {
                     PanelStepKnob(b, "first", SYMPATH_FIRSTS, "first")

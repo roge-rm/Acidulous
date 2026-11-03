@@ -13,6 +13,11 @@ Under the played strings lie sympathetic strings that are never touched.
 They're tuned to the scale of the piece, so any note that lands on one of
 theirs sets it ringing, and it rings on after the note has gone.
 
+The rest of the song can ring them too. Pick another track and its sound
+shakes the sympathetic and drone strings, so they ring under whatever that
+track plays, even with nothing played on Sympath. Turn up **listen** and they
+retune themselves to the notes that track plays.
+
 ## Strings
 
 - **model** - **sitar** (eleven sympathetic strings and two drone strings),
@@ -41,10 +46,27 @@ theirs sets it ringing, and it rings on after the note has gone.
 
 - **tarbs** - how loud the sympathetic strings ring.
 - **chikari** - strikes the drone strings with each new note.
+- **bloom** - how long the sympathetic and drone strings ring, from a
+  quarter as long to four times as long. They ring about as loud either way.
 - **first** - the tanpura's first string: **pa**, **ma**, **ni** or **sa**
   an octave down. The other three are Sa, Sa and Sa an octave down.
 - **cycle** - how many beats the tanpura takes to pluck its four strings
   and start again: **2**, **4**, **6** or **8**. It follows the tempo.
+
+## Song
+
+- **from track** - the track whose sound rings the sympathetic and drone
+  strings, or **off**. Only models with sympathetic or drone strings can be
+  rung: sitar, shamisen, sarod, the veenas, e-sitar and the bowed ones.
+- **ring** - how hard that track shakes them.
+- **listen** - at 0 the strings stay on **sa** and **scale**. Turn it up and
+  they retune to the notes the track plays, gliding to each new set. A
+  little learns the song's key over several bars; all the way follows each
+  chord. The drone strings settle on the note the track leans on most.
+
+The strings follow the track's tuning. In a tuning with more than twelve
+notes an octave, **scale** takes the nearest steps of the tuning, and
+**listen** hears the tuning's own steps.
 
 ## Hands
 
@@ -67,7 +89,8 @@ The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves the notes played after it, 24 semitones at 1. The
-model, tune, sa, scale, first, cycle, voices, octave and bend can't be reached.
+model, tune, sa, scale, first, cycle, voices, octave, bend and the track can't
+be reached.
 A change to the pluck, position, chikari or velocity is heard from the next
 note; the rest move at once, and so does the pluck on a bowed one. Tap a
 macro's name to rename it.
@@ -76,6 +99,9 @@ macro's name to rename it.
 
 - Set **sa** to the key of the song and **scale** to its scale, and the
   sympathetic strings ring along with the tune.
+- Put Sympath on a track with no clips, point **from track** at the drums or
+  the band and turn **listen** up: the song gets a halo of strings in its own
+  key. The **song** patches point at track 1.
 - The tanpura only plucks while a note is held: hold Sa for as long as the
   drone should go.
 - **Sitar** has one voice: play legato for meend, and press harder to pull
