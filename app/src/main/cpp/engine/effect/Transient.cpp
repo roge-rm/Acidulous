@@ -25,13 +25,20 @@ constexpr float kSplitOff = 21.0f;
 constexpr int64_t kStepTicks[3] = {kPPQN / 6, kPPQN / 4, kPPQN / 2};
 /**
  * The hit detector's high way: energy above kHighFrom Hz over kHighAvg
- * seconds, a hit when it's kHighRise times its recent peak (5 dB). The peak
- * hears it kHighLate seconds late and falls in kHighFall seconds, so a saw's
- * click every cycle isn't a hit down to about 40 Hz, and a 32nd roll's hits
- * at 180 bpm, 42 ms apart, are.
+ * seconds. A hit is when it's kHighRise times (2.6 dB) its peak over the
+ * last few ms: what it was kHighLate seconds ago, or before that, falling in
+ * kRecentFall seconds. So a roll's hits count over the last one's ring, and
+ * an organ's ripple or a noise's grain doesn't.
+ *
+ * A saw's click every cycle would count too, so a jump of kSpike times (6 dB)
+ * is a spike, and a hit must come kSpikeGap seconds after the last spike
+ * started, longer than a 31 Hz cycle and shorter than a 32nd at 200 bpm.
+ * Sooner, as in a flam, it must be kPeakRise times its recent peak (5 dB),
+ * which hears it as late and falls in kHighFall seconds, and later at least
+ * that peak, so a click coming up out of a hit's tail isn't a hit.
  */
-constexpr float kHighFrom = 400.0f, kHighAvg = 0.001f, kHighRise = 3.2f;
-constexpr float kHighLate = 0.002f, kHighFall = 0.022f;
+constexpr float kHighFrom = 400.0f, kHighAvg = 0.001f, kHighRise = 1.8f, kHighLate = 0.002f, kRecentFall = 0.008f;
+constexpr float kSpike = 4.0f, kSpikeGap = 0.033f, kPeakRise = 3.2f, kHighFall = 0.03f;
 /**
  * Energy under kHighFloor (-80 dB), or under kHighShare of the level's
  * (-30 dB), is nothing to the high way: what's left of a bass note's
@@ -58,19 +65,21 @@ constexpr float kAccentFrom = 0.3f;
  * the last one's step.
  */
 constexpr float kHitHold = 0.015f, kHitEnd = 0.5f, kHitMost = 0.035f;
+/** The most the accent may move the gain from one sample to the next, in dB. */
+constexpr float kAccentSlew = 0.05f;
 /**
- * The most the accent may move the gain from one sample to the next, in dB.
- * When the level rises faster than kRiseFrom dB a sample, as at the very
- * start of a hit, it may move by the rest of the rise too. The level is the
- * envelope smoothed over kLevel seconds, so noise's peaks don't count.
+ * In a hit's first kQuick seconds, while it has a click of its own, which
+ * covers the change, the accent may move up to kQuickSlew dB a sample. A
+ * click is a high way hit, or a spike kClickPeak times (3 dB) the recent peak.
+ * Only a hit whose level lifts kQuickLift times (2.3 dB) gets it: a bass's
+ * click coming up out of the last hit's tail can start a hit, but not loudly.
  */
-constexpr float kAccentSlew = 0.05f, kRiseFrom = 0.1f, kLevel = 0.0005f;
+constexpr float kQuickSlew = 0.75f, kQuick = 0.003f, kClickPeak = 2.0f, kQuickLift = 1.3f;
 /**
- * A hit with high energy at least kQuickShare of its level's (-20 dB) starts
- * with a click that covers a quicker change: up to kQuickSlew dB a sample
- * for its first kQuick seconds.
+ * Turned on, the grid listens this long (seconds) before a hit can start, so
+ * the detector isn't fooled by what it missed while off.
  */
-constexpr float kQuickShare = 0.01f, kQuickSlew = 0.75f, kQuick = 0.00075f;
+constexpr float kWarmUp = 0.02f;
 /**
  * A hit up to a quarter step early counts as the step it's early for, so
  * a played-in or rounded note isn't put on the step before.
@@ -122,14 +131,13 @@ void Transient::prepare(int32_t sampleRate) {
     hpCoeff = dsp::onePoleCoeff(1.0f / (dsp::kTwoPi * kHighFrom), sr);
     hiECoeff = dsp::onePoleCoeff(kHighAvg, sr);
     hiFall = 1.0f - dsp::onePoleCoeff(kHighFall, sr);
+    spikeGapMost = static_cast<int32_t>(kSpikeGap * sr);
+    recentFall = 1.0f - dsp::onePoleCoeff(kRecentFall, sr);
     pastLength = std::clamp(static_cast<int32_t>(kHighLate * sr), 1, kPastMost);
     envRelease = dsp::onePoleCoeff(kEnvRelease, sr);
     envUp = dsp::onePoleCoeff(kEnvUp, sr);
     accentStep = kAccentSlew / 6.0206f;
     quickStep = kQuickSlew / 6.0206f;
-    riseFrom = kRiseFrom / 6.0206f;
-    riseRatio = std::exp2(riseFrom);
-    levelCoeff = dsp::onePoleCoeff(kLevel, sr);
     reset();
 }
 
@@ -137,12 +145,14 @@ void Transient::reset() {
     low[0] = low[1] = 0.0f;
     fastA = slowA = holdS = fallS = 0.0f;
     for (auto &side : hpLow) for (float &lp : side) lp = 0.0f;
-    hiE = hiPeak = 0.0f;
+    hiE = hiPeak = hiRecent = 0.0f;
+    inSpike = false;
+    sinceSpike = spikeGap = spikeGapMost;
     std::fill(hiPast, hiPast + kPastMost, 0.0f);
     pastAt = 0;
-    env = envLow = hitPeak = level = 0.0f;
+    env = envLow = hitPeak = 0.0f;
     hitFrames = wait = quick = 0;
-    inHit = false;
+    inHit = asleep = false;
     accent = accentNow = 0.0f;
 }
 
@@ -201,6 +211,19 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
         const float ring = std::clamp(std::log2((holdS + kFloor) / (fallS + kFloor)), 0.0f, kMostApart);
         float shape = attack * apart + sustain * ring;
         if (grid || accentNow != 0.0f) {
+            if (asleep) {
+                // Back from off: start listening from silence, and wait while it catches up.
+                asleep = false;
+                for (auto &side : hpLow) for (float &lp : side) lp = 0.0f;
+                std::fill(hiPast, hiPast + kPastMost, 0.0f);
+                hiE = hiPeak = hiRecent = env = envLow = hitPeak = 0.0f;
+                inSpike = false;
+                sinceSpike = spikeGap = spikeGapMost;
+                wait = static_cast<int32_t>(kWarmUp * sr);
+                quick = 0;
+                inHit = false;
+                accent = 0.0f;
+            }
             // The high way, on the part that's shaped.
             float e = 0.0f;
             for (int c = 0; c < chans; ++c) {
@@ -216,18 +239,30 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
             hiPast[pastAt] = hiE;
             if (++pastAt >= pastLength) pastAt = 0;
             hiPeak = std::max(dsp::guardDenormal(hiPeak * hiFall), late);
+            hiRecent = std::max(dsp::guardDenormal(hiRecent * recentFall), late);
             // The low way.
             env = dsp::guardDenormal(x > env ? x : env + (x - env) * envRelease);
             envLow = env < envLow ? env : dsp::guardDenormal(envLow + (env - envLow) * envUp);
+            const bool spike = hiE > kSpike * late + kHighFloor;
+            if (spike && !inSpike) {
+                spikeGap = sinceSpike;
+                sinceSpike = 0;
+            } else if (sinceSpike < spikeGapMost) {
+                ++sinceSpike;
+            }
+            inSpike = spike;
+            const bool high = hiE > kHighRise * hiRecent + kHighFloor && hiE > kHighShare * env * env &&
+                              (((spike ? spikeGap : sinceSpike) >= spikeGapMost && hiE > hiPeak) || hiE > kPeakRise * hiPeak);
+            // Its own click: a hit by the high way, or a spike well over the recent peak.
+            const bool click = high || (spike && hiE > kClickPeak * hiPeak && hiE > kHighShare * env * env);
             if (wait > 0) {
-                // Waiting: both ways follow the hit up, so it can't start again on its own rise.
+                // Waiting: the low way follows the hit up, so it can't start again on its
+                // own rise. The high way hears it 2 ms late anyway.
                 --wait;
-                hiPeak = std::max(hiPeak, hiE);
                 envLow = std::max(envLow, env);
-            } else if (const bool high = hiE > kHighRise * hiPeak + kHighFloor && hiE > kHighShare * env * env; high || env > kEnvRise * envLow + kFloor) {
+            } else if (high || env > kEnvRise * envLow + kFloor) {
                 wait = static_cast<int32_t>(kWait * sr);
-                quick = static_cast<int32_t>(kQuick * sr);
-                hiPeak = hiE;
+                quick = env > kQuickLift * envLow ? static_cast<int32_t>(kQuick * sr) : 0;
                 envLow = env;
                 inHit = true;
                 hitPeak = env;
@@ -245,19 +280,16 @@ bool Transient::process(float *L, float *R, int32_t frames, bool stereoIn) {
             }
             // Turned off, it eases out and then stops, back to the plain sum above.
             const float to = grid ? accent * depth * std::clamp((apart - kAccentFrom) / (1.0f - kAccentFrom), 0.0f, 1.0f) : 0.0f;
-            // A hit's own fast rise or click covers a quicker change.
-            const float levelWas = level;
-            level = dsp::guardDenormal(level + (env - level) * levelCoeff);
+            // A hit's own click covers a quicker change.
             float slew = accentStep;
-            // The log only when it's rising that fast, which is seldom.
-            if (level + kFloor > riseRatio * (levelWas + kFloor))
-                slew += std::log2((level + kFloor) / (levelWas + kFloor)) - riseFrom;
             if (quick > 0) {
                 --quick;
-                if (hiE > kQuickShare * env * env) slew = std::max(slew, quickStep);
+                if (click) slew = std::max(slew, quickStep);
             }
             accentNow += std::clamp(to - accentNow, -slew, slew);
             shape += accentNow;
+        } else {
+            asleep = true;
         }
         const float g = std::exp2(std::clamp(shape, kLeast, kMost));
         if (splitting) {

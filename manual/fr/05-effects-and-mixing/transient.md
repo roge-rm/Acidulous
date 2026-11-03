@@ -24,7 +24,8 @@ pas de seuil à régler : un coup doux et un coup fort sont traités pareil.
   touchez-en un pour passer à plat, haut, bas. Un coup sur un pas haut a plus
   d’attaque, sur un pas bas moins. Le pas est celui où le coup commence, et il
   suit la position du morceau et le swing de la piste. Seulement pendant la
-  lecture.
+  lecture. Dans un roulement très rapide sur un tambour qui résonne, certains
+  coups restent plats.
 - **prof.** : combien un pas haut ou bas ajoute ou enlève, en dB.
 - **vitesse** : la longueur d’un pas : 1/16 triolet, 1/16 ou 1/8.
 - **longueur** : combien de pas avant que la rangée recommence.

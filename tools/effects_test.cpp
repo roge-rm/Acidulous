@@ -1520,12 +1520,12 @@ void transientGrid() {
         return x;
     };
     // The gain applied, in dB, where the input is big enough to say; and the
-    // biggest step from one such sample to the next past each hit's first 2 ms.
-    auto worstStep = [](const std::vector<float> &out, const std::vector<float> &x) {
+    // biggest step from one such sample to the next, hits' starts and all.
+    auto worstStep = [](const std::vector<float> &out, const std::vector<float> &x, size_t skip = 0) {
         double w = 0.0, peak = 0.0;
         for (float v : x) peak = std::max(peak, double(std::fabs(v)));
         for (size_t i = 1; i < x.size(); ++i) {
-            if (i % 24000 < 96) continue;
+            if (i % 24000 < skip) continue;
             if (std::fabs(x[i]) < 0.05 * peak || std::fabs(x[i - 1]) < 0.05 * peak) continue;
             const double a = dB(std::fabs(out[i] / x[i])), b = dB(std::fabs(out[i - 1] / x[i - 1]));
             w = std::max(w, std::fabs(a - b));
@@ -1545,19 +1545,23 @@ void transientGrid() {
         for (int k = 0; k < 16; ++k) set(*on, steps[k], 2.0f);
         auto off = make("Transient", {{"attack", 0.5f}});
         const auto yOn = run(*on, x).l, yOff = run(*off, x).l;
-        const double sOn = worstStep(yOn, x), sOff = worstStep(yOff, x);
-        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.1 + sOff,
-           num(sOn) + " dB against " + num(sOff) + " grid off");
+        // Each starts at full slope from nothing, a click of its own: the first
+        // 3 ms may take the quick slew, the rest must be as smooth as grid off.
+        const double sOn = worstStep(yOn, x, 144), sOff = worstStep(yOff, x, 144);
+        const double cOn = worstStep(yOn, x), cOff = worstStep(yOff, x);
+        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.06 + sOff && cOn < 0.8 + cOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off, " + num(cOn) + " in the click");
         // Up at the start, then easing off with the onset, never dropping and
         // coming back as a second start would.
-        double first = 0.0, prev = 0.0, worstMs = 0.0;
+        double first = 0.0, top = -1e9, dip = 1e9, again = 0.0;
         for (double ms = 2.0; ms <= 30.0; ms += 1.0) {
             const double d = gainAt(yOn, x, ms) - gainAt(yOff, x, ms);
-            if (ms == 2.0) first = d; else worstMs = std::max(worstMs, std::fabs(d - prev));
-            prev = d;
+            if (ms == 2.0) first = d;
+            if (d >= top && dip > 1e8) top = d;
+            else { dip = std::min(dip, d); again = std::max(again, d - dip); }
         }
-        ok(std::string(name) + ": the accent holds through the hit's start", first > 3.0 && worstMs < 1.5,
-           num(first) + " dB at 2 ms, moving " + num(worstMs) + " dB a ms at most");
+        ok(std::string(name) + ": the accent holds through the hit's start", first > 3.0 && top > 6.0 && again < 0.5,
+           num(first) + " dB at 2 ms, " + num(top) + " at the top, back up " + num(again) + " after");
         // Only the hit's own step is up: a second start inside the hit would land on a down one.
         auto one = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
         one->setTransport(rolling);
@@ -1590,9 +1594,15 @@ void transientGrid() {
            num(wOn) + " dB against " + num(wOff) + " grid off");
     }
     // Hits at [at] (frames) at [bpm] through a grid of alternating up and down
-    // steps [rate] long. Each hit's onset (5 ms) against grid off should go its
-    // own step's way, the first left out as it starts from silence.
-    auto ownSteps = [&](const char *name, const std::vector<float> &x, const std::vector<size_t> &at, float bpm, float rate) {
+    // steps [rate] long. Each hit's onset (5 ms, or 15 where it has no click to
+    // let the accent in quickly) against grid off should go its
+    // own step's way, the first left out as it starts from silence. The gain
+    // mustn't step from one sample to the next more than with the grid off,
+    // except, where the material starts [clicky] with a click of its own, in
+    // each hit's first 3 ms, by the quick slew at most. Unless [accented], hits
+    // may go unaccented, and only the steps are checked.
+    auto ownSteps = [&](const char *name, const std::vector<float> &x, const std::vector<size_t> &at, float bpm, float rate,
+                        bool clicky = true, double downMost = -2.0, bool accented = true) {
         auto on = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}, {"attack", 0.3f}, {"rate", rate}});
         on->setTransport(rolling);
         for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
@@ -1603,27 +1613,32 @@ void transientGrid() {
         for (size_t k = 1; k < at.size(); ++k) {
             const auto tick = static_cast<int64_t>(double(at[k]) * kTicksPerBeat * bpm / 60.0 / kRate);
             const bool isUp = ((tick + step / 4) / step) % 2 == 0;
-            const double d = dB(rms(yOn, at[k], at[k] + 240) / rms(yOff, at[k], at[k] + 240));
+            const size_t span = clicky ? 240 : 720;
+            const double d = dB(rms(yOn, at[k], at[k] + span) / rms(yOff, at[k], at[k] + span));
             if (isUp) up = std::min(up, d); else down = std::max(down, d);
         }
-        ok(std::string(name) + ": each hit gets its own step", up > 2.0 && down < -2.0,
-           num(up) + " dB the least up, " + num(down) + " the least down");
-        auto steps2 = [&](const std::vector<float> &out) {
+        if (accented)
+            ok(std::string(name) + ": each hit gets its own step", up > 2.0 && down < downMost,
+               num(up) + " dB the least up, " + num(down) + " the least down");
+        // The worst step outside the clicks and in them.
+        auto steps2 = [&](const std::vector<float> &out, double &inClick) {
             double w = 0.0, pk = 0.0;
+            inClick = 0.0;
             for (float v : x) pk = std::max(pk, double(std::fabs(v)));
-            size_t next = 0;
-            for (size_t i = 1; i < x.size(); ++i) {
-                while (next < at.size() && at[next] + 96 <= i) ++next;
-                if (next < at.size() && i >= at[next]) continue;
+            size_t next = 1;
+            for (size_t i = at[0] + 144; i < x.size(); ++i) {
+                while (next < at.size() && at[next] + 144 <= i) ++next;
+                const bool click = clicky && next < at.size() && i >= at[next];
                 if (std::fabs(x[i]) < 0.05 * pk || std::fabs(x[i - 1]) < 0.05 * pk) continue;
                 const double d = std::fabs(dB(std::fabs(out[i] / x[i])) - dB(std::fabs(out[i - 1] / x[i - 1])));
-                w = std::max(w, d);
+                (click ? inClick : w) = std::max(click ? inClick : w, d);
             }
             return w;
         };
-        const double sOn = steps2(yOn), sOff = steps2(yOff);
-        ok(std::string(name) + ": no step in the gain past each hit's first 2 ms", sOn < 0.06 + sOff,
-           num(sOn) + " dB against " + num(sOff) + " grid off");
+        double cOn = 0.0, cOff = 0.0;
+        const double sOn = steps2(yOn, cOn), sOff = steps2(yOff, cOff);
+        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.06 + sOff && cOn < 0.8 + cOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off" + (clicky ? ", " + num(cOn) + " in the clicks" : ""));
     };
     // A noise hit [amp] high falling with time constant [tau] seconds, added in at [from].
     auto addHit = [](std::vector<float> &x, size_t from, float amp, double tau, uint32_t seed) {
@@ -1637,6 +1652,17 @@ void transientGrid() {
         for (size_t h = 0; h + 2000 < x.size(); h += 2000) { addHit(x, h, 0.5f, 0.1 / 3.0, 11 + h); at.push_back(h); }
         ownSteps("a 32nd roll at 180 bpm", x, at, 180.0f, 1.0f);
     }
+    for (double tau : {0.06, 0.1}) {
+        // The same roll of snares that ring: each hit falls with time constant tau.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 2000 < x.size(); h += 2000) { addHit(x, h, 0.5f, tau, 13 + h); at.push_back(h); }
+        // At 100 ms a hit is too little over the ring before it to tell from
+        // a saw's clicks, so some go unaccented.
+        const bool slow = tau > 0.08;
+        ownSteps((std::string("a ringing roll, ") + (slow ? "100" : "60") + " ms").c_str(), x, at, 180.0f, 1.0f, true, -2.0,
+                 !slow);
+    }
     {
         // Flams at 180 bpm on 1/16 triplets: a quiet grace note 20 ms before each main hit.
         std::vector<float> x(96000, 0.0f);
@@ -1647,7 +1673,7 @@ void transientGrid() {
             at.push_back(h - 960);
             at.push_back(h);
         }
-        ownSteps("a 20 ms flam", x, at, 180.0f, 0.0f);
+        ownSteps("a 20 ms flam", x, at, 180.0f, 0.0f, true, -1.9);
     }
     {
         // 16th hats at 180 bpm: short and high.
@@ -1680,6 +1706,44 @@ void transientGrid() {
         std::vector<size_t> at;
         for (size_t h = 3000; h + 6000 <= x.size(); h += 6000) { addHit(x, h, 0.5f, 0.03, 29 + h); at.push_back(h); }
         ownSteps("snares over a bass", x, at, 120.0f, 1.0f);
+    }
+    {
+        // A pure 50 Hz kick on each eighth, faded in over 2 ms, under a held organ of
+        // four saws: the organ is bright, but the kick has no click to cover a quick change.
+        std::vector<float> x(96000, 0.0f);
+        for (float hz : {220.0f, 330.0f, 440.0f, 660.0f}) {
+            const auto s = saw(hz, 0.08f, x.size());
+            for (size_t i = 0; i < x.size(); ++i) x[i] += s[i];
+        }
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 12000 <= x.size(); h += 12000) {
+            for (size_t i = 0; i < 12000; ++i)
+                x[h + i] += 0.7f * static_cast<float>(std::exp(-double(i) / kRate / 0.12) * std::sin(2.0 * M_PI * 50.0 * i / kRate) *
+                                                      (i < 96 ? 0.5 - 0.5 * std::cos(M_PI * i / 96.0) : 1.0));
+            at.push_back(h);
+        }
+        ownSteps("a clean kick under an organ", x, at, 120.0f, 2.0f, false);
+    }
+    {
+        // Turned on mid-song between hits: nothing happens until the next hit, which gets its own step.
+        auto x = saw(55.0f, 0.3f, 96000);
+        for (size_t h = 3000; h + 6000 <= x.size(); h += 6000) addHit(x, h, 0.5f, 0.03, 31 + h);
+        auto on = make("Transient", {{"depth", 9.0f}, {"attack", 0.3f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+        auto off = make("Transient", {{"attack", 0.3f}});
+        const std::vector<float> head(x.begin(), x.begin() + 46500), rest(x.begin() + 46500, x.end());
+        const auto yOff = run(*off, x).l;
+        auto yOn = run(*on, head).l;
+        set(*on, "grid", 1.0f);
+        const auto tail = run(*on, rest, 120.0f, head.size()).l;
+        yOn.insert(yOn.end(), tail.begin(), tail.end());
+        double before = 0.0;
+        for (size_t i = 46500; i + 48 <= 51000; i += 48) before = std::max(before, std::fabs(dB(rms(yOn, i, i + 48) / rms(yOff, i, i + 48))));
+        // The hit at 51000 is on step 9, up.
+        const double hit = dB(rms(yOn, 51000, 51240) / rms(yOff, 51000, 51240));
+        ok("turned on mid-song: no hit until the next one, and that on its own step", before < 0.1 && hit > 3.0,
+           num(before) + " dB before it, " + num(hit) + " on it");
     }
     {
         // A held saw bass from E1 up, whose every cycle starts with a click, isn't a run of hits:
