@@ -1293,17 +1293,24 @@ std::vector<std::pair<int64_t, int>> gSourceNotes;
 std::string gEffectMaterial;
 
 /**
- * Smash with a band ducking: the band's drums go round the effect, as they
- * would on a track of their own, and come back in after it (gBesideDrums), so
- * the duck is heard against a kick it doesn't touch.
+ * Smash with a band ducking plays its own material (see effectSource), and
+ * a quiet kick goes round the effect, as it would on a track of its own, and
+ * comes back in after it (gBesideDrums), so the duck is heard against a
+ * kick it doesn't touch.
  */
 bool gDrumsBeside = false;
 std::vector<float> gBesideDrums;
+/** The same with a band at sidechain: the beside kick is the key's, on every beat. */
+bool gKeyedBeside = false;
+/** Leave the beside drums out of the take, to measure the effected part alone. */
+bool gNoBeside = std::getenv("ACIDULOUS_NO_BESIDE") != nullptr;
+/** The Smash duck material's length, in bars of four beats. */
+constexpr int kDuckBars = 16;
 
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     gSourceNotes.clear();
     gBesideDrums.clear();
-    const float bars = 2.0f;
+    const float bars = gDrumsBeside ? static_cast<float>(kDuckBars) : 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
     // A reverb gets longer to ring out, since a big hall outlasts three seconds.
     const int64_t frames = stop + secondsToFrames(effect == "Reverb" || effect == "Vessel" ? 6.0f : 3.0f);
@@ -1312,7 +1319,35 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
     };
 
-    if (gEffectMaterial == "drums") {
+    if (gDrumsBeside) {
+        // Smash ducking: everything held through the beat, so the duck is the
+        // only movement. A pad, a bass and air on top, one chord every two bars
+        // overlapping the next; a kick beside, quiet, on 1 (or on every beat,
+        // the key's own, for a band at sidechain).
+        const int chords[4][4] = {{57, 60, 64, 67}, {53, 57, 60, 64}, {55, 59, 62, 67}, {52, 55, 59, 64}};
+        const int roots[4] = {33, 29, 31, 28};
+        std::vector<Hit> pad, bass;
+        for (int c = 0; c < kDuckBars / 2; ++c) {
+            const float at = static_cast<float>(c * 8) - (c > 0 ? 0.1f : 0.0f);
+            for (int n : chords[c % 4]) pad.push_back({at, 8.2f, n, 90});
+            bass.push_back({at, 8.2f, roots[c % 4], 100});
+        }
+        add(renderPart("Trinity", "Warm Pad", pad, bpm, frames), 0.7f);
+        add(renderPart("Trinity", "Sub Bass", bass, bpm, frames), 0.8f);
+        Rng air(0x5a5a5u);
+        float hp[2] = {0.0f, 0.0f};
+        for (int64_t i = 0; i < stop; ++i) {
+            for (int c = 0; c < 2; ++c) {
+                const float x = air.next() * 0.03f;
+                hp[c] += (x - hp[c]) * 0.35f; // a one-pole low, taken away: the top left
+                out[static_cast<size_t>(i) * 2 + c] += x - hp[c];
+            }
+        }
+        std::vector<Hit> kicks;
+        for (int b = 0; b < kDuckBars * 4; b += gKeyedBeside ? 1 : 4) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
+        gBesideDrums = renderPart("Hexbeat", "Squared", kicks, bpm, frames);
+        for (float &v : gBesideDrums) v *= 0.35f;
+    } else if (gEffectMaterial == "drums") {
         // Kick on the beat, snare on 2 and 4, a closed hat every sixteenth at
         // one velocity: a flat loop with no groove of its own.
         std::vector<Hit> drums;
@@ -1379,12 +1414,7 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         std::vector<Hit> bass;
         const int line[16] = {33, 33, 45, 33, 36, 33, 43, 33, 29, 29, 41, 29, 31, 31, 43, 38};
         for (int i = 0; i < 16; ++i) bass.push_back({i * 0.5f, 0.4f, line[i], i % 2 == 0 ? 110 : 80});
-        if (gDrumsBeside) {
-            gBesideDrums = renderPart("Hexbeat", "Squared", drums, bpm, frames);
-            for (float &v : gBesideDrums) v *= 0.8f;
-        } else {
-            add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.8f);
-        }
+        add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.8f);
         add(renderPart("Reflux", "Classic", bass, bpm, frames), 0.8f);
         add(renderPart("Trinity", "Electric Piano", {
             {0.0f, 1.5f, 57, 90}, {0.0f, 1.5f, 60, 90}, {0.0f, 1.5f, 64, 90}, {0.0f, 1.5f, 67, 90},
@@ -1448,11 +1478,13 @@ float gDryLoudness = -200.0f;
 Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
     Take out;
     int64_t stop = 0;
-    gDrumsBeside = false;
+    gDrumsBeside = gKeyedBeside = false;
     if (effect == "Smash") {
         for (const char *name : {"lowduck", "midduck", "highduck"}) {
             const int32_t i = fx->params().indexOf(name);
-            gDrumsBeside = gDrumsBeside || (i >= 0 && std::lround(fx->params().get(i)) >= 1);
+            const long v = i >= 0 ? std::lround(fx->params().get(i)) : 0;
+            gDrumsBeside = gDrumsBeside || v >= 1;
+            gKeyedBeside = gKeyedBeside || v == 1;
         }
     }
     std::vector<float> src = effectSource(effect, bpm, stop);
@@ -1477,7 +1509,7 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         }
         if (keyed) {
             std::vector<Hit> kicks;
-            for (int b = 0; b < 8; ++b) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
+            for (int b = 0; b < kDuckBars * 4; ++b) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
             const auto kick = renderPart("Hexbeat", "Squared", kicks, bpm, frames);
             key.resize(static_cast<size_t>(frames) + kBlock, 0.0f);
             for (int64_t i = 0; i < frames; ++i) key[static_cast<size_t>(i)] = kick[static_cast<size_t>(i) * 2] * 0.8f;
@@ -1502,12 +1534,12 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {
             const size_t k = static_cast<size_t>(at + i) * 2;
-            const bool beside = k + 1 < gBesideDrums.size();
+            const bool beside = !gNoBeside && k + 1 < gBesideDrums.size();
             out.stereo.push_back(L[i] + (beside ? gBesideDrums[k] : 0.0f));
             out.stereo.push_back(R[i] + (beside ? gBesideDrums[k + 1] : 0.0f));
         }
     }
-    gDrumsBeside = false;
+    gDrumsBeside = gKeyedBeside = false;
     return out;
 }
 

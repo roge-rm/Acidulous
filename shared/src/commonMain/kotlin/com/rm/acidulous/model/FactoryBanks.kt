@@ -15335,35 +15335,35 @@ internal object FactoryBanks {
         family = "wreck")
 
     private fun fx_smash12() = Patch("fx.Smash", "Pump Lows",
-        mapOf("depth" to 0.5f, "gain" to 0.5729167f, "lowduck" to 0.222222224f, "midduck" to 0.222222224f, "lowdepth" to 0.416666657f, "middepth" to 0.125f, "recover" to 0.5616594f),
+        mapOf("depth" to 0.5f, "gain" to 0.5729167f, "lowduck" to 0.222222224f, "midduck" to 0.222222224f, "lowdepth" to 0.75f, "middepth" to 0.25f, "recover" to 0.612955332f),
         family = "beat")
 
     private fun fx_smash13() = Patch("fx.Smash", "Seesaw",
-        mapOf("depth" to 0.5f, "gain" to 0.5520833f, "lowduck" to 0.222222224f, "highduck" to 0.333333343f),
+        mapOf("depth" to 0.5f, "gain" to 0.5520833f, "lowduck" to 0.222222224f, "highduck" to 0.333333343f, "lowdepth" to 0.6666667f, "highdepth" to 1f, "recover" to 0.5315515f),
         family = "beat")
 
     private fun fx_smash14() = Patch("fx.Smash", "Half Time",
-        mapOf("depth" to 0.5f, "gain" to 0.5729167f, "lowduck" to 0.7777778f, "midduck" to 0.6666667f, "lowdepth" to 0.416666657f, "middepth" to 0.25f, "recover" to 0.7316421f),
+        mapOf("depth" to 0.5f, "gain" to 0.59375f, "lowduck" to 0.7777778f, "midduck" to 0.6666667f, "lowdepth" to 0.75f, "middepth" to 0.416666657f, "recover" to 0.76577574f),
         family = "beat")
 
     private fun fx_smash15() = Patch("fx.Smash", "Tresillo",
-        mapOf("depth" to 0.5f, "gain" to 0.5416667f, "lowduck" to 0.8888889f, "highduck" to 0.5555556f, "highdepth" to 0.166666672f, "recover" to 0.384475619f),
+        mapOf("depth" to 0.5f, "gain" to 0.5833333f, "lowduck" to 0.8888889f, "midduck" to 0.8888889f, "lowdepth" to 0.75f, "middepth" to 0.333333343f, "recover" to 0.497417837f),
         family = "beat")
 
     private fun fx_smash16() = Patch("fx.Smash", "Chop",
-        mapOf("depth" to 0.6f, "threshold" to 0.458333343f, "gain" to 0.6354167f, "lowduck" to 0.5555556f, "midduck" to 0.5555556f, "highduck" to 0.5555556f, "lowdepth" to 0.625f, "middepth" to 0.625f, "highdepth" to 0.625f, "recover" to 0.207291767f),
+        mapOf("depth" to 0.6f, "threshold" to 0.458333343f, "gain" to 0.6979167f, "lowduck" to 0.5555556f, "midduck" to 0.5555556f, "highduck" to 0.5555556f, "lowdepth" to 0.8333333f, "middepth" to 0.8333333f, "highdepth" to 0.8333333f, "recover" to 0.32023403f),
         family = "beat")
 
     private fun fx_smash17() = Patch("fx.Smash", "Kick Room",
-        mapOf("depth" to 0.4f, "gain" to 0.5625f, "lowduck" to 0.111111112f, "midduck" to 0.111111112f, "lowdepth" to 0.5f, "middepth" to 0.125f, "recover" to 0.5315515f),
+        mapOf("depth" to 0.4f, "gain" to 0.5625f, "lowduck" to 0.111111112f, "midduck" to 0.111111112f, "lowdepth" to 0.75f, "middepth" to 0.25f, "recover" to 0.5315515f),
         family = "sidechain")
 
     private fun fx_smash18() = Patch("fx.Smash", "Under It",
-        mapOf("depth" to 0.7f, "threshold" to 0.458333343f, "gain" to 0.6458333f, "lowduck" to 0.111111112f, "midduck" to 0.111111112f, "highduck" to 0.111111112f, "lowdepth" to 0.5833333f, "middepth" to 0.333333343f, "highdepth" to 0.208333328f, "recover" to 0.6456324f),
+        mapOf("depth" to 0.7f, "threshold" to 0.458333343f, "gain" to 0.625f, "lowduck" to 0.111111112f, "midduck" to 0.111111112f, "highduck" to 0.111111112f, "lowdepth" to 0.5833333f, "middepth" to 0.333333343f, "highdepth" to 0.208333328f, "recover" to 0.6456324f),
         family = "sidechain")
 
     private fun fx_smash19() = Patch("fx.Smash", "Keyed Seesaw",
-        mapOf("depth" to 0.5f, "gain" to 0.5520833f, "lowduck" to 0.111111112f, "highduck" to 0.333333343f, "lowdepth" to 0.458333343f, "highdepth" to 0.333333343f, "recover" to 0.497417837f),
+        mapOf("depth" to 0.5f, "gain" to 0.5520833f, "lowduck" to 0.111111112f, "highduck" to 0.333333343f, "lowdepth" to 0.6666667f, "highdepth" to 1f, "recover" to 0.497417837f),
         family = "sidechain")
 
     private val fx_smash: List<Patch> by lazy { listOf(fx_smash0(), fx_smash1(), fx_smash2(), fx_smash3(), fx_smash4(), fx_smash5(), fx_smash6(), fx_smash7(), fx_smash8(), fx_smash9(), fx_smash10(), fx_smash11(), fx_smash12(), fx_smash13(), fx_smash14(), fx_smash15(), fx_smash16(), fx_smash17(), fx_smash18(), fx_smash19()) }

@@ -117,10 +117,10 @@ patch "Pump Lows" family=beat
   depth          0.5
   threshold      -24 dB
   lowduck        #2
-  lowdepth       10 dB
+  lowdepth       18 dB
   midduck        #2
-  middepth       3 dB
-  recover        180 ms
+  middepth       6 dB
+  recover        220 ms
   gain           3.5 dB
 
 patch Seesaw family=beat
@@ -128,10 +128,10 @@ patch Seesaw family=beat
   depth          0.5
   threshold      -24 dB
   lowduck        #2
-  lowdepth       9 dB
+  lowdepth       16 dB
   highduck       #3
-  highdepth      9 dB
-  recover        150 ms
+  highdepth      24 dB
+  recover        160 ms
   gain           2.5 dB
 
 patch "Half Time" family=beat
@@ -139,44 +139,44 @@ patch "Half Time" family=beat
   depth          0.5
   threshold      -24 dB
   lowduck        #7
-  lowdepth       10 dB
+  lowdepth       18 dB
   midduck        #6
-  middepth       6 dB
-  recover        350 ms
-  gain           3.5 dB
+  middepth       10 dB
+  recover        400 ms
+  gain           4.5 dB
 
 patch Tresillo family=beat
-  # The lows on 3-3-2, the top flickering on every sixteenth.
+  # The lows and mids on 3-3-2, the lows deepest: a push across the bar.
   depth          0.5
   threshold      -24 dB
   lowduck        #8
-  lowdepth       9 dB
-  highduck       #5
-  highdepth      4 dB
-  recover        90 ms
-  gain           2 dB
+  lowdepth       18 dB
+  midduck        #8
+  middepth       8 dB
+  recover        140 ms
+  gain           4 dB
 
 patch Chop family=beat
   # Every band down hard on every sixteenth and back fast: a pad cut into a rhythm.
   depth          0.6
   threshold      -26 dB
   lowduck        #5
-  lowdepth       15 dB
+  lowdepth       20 dB
   midduck        #5
-  middepth       15 dB
+  middepth       20 dB
   highduck       #5
-  highdepth      15 dB
-  recover        45 ms
-  gain           6.5 dB
+  highdepth      20 dB
+  recover        70 ms
+  gain           9.5 dB
 
 patch "Kick Room" family=sidechain
   # The lows get out of the kick's way and the mids a little: a bass under a kick.
   depth          0.4
   threshold      -24 dB
   lowduck        #1
-  lowdepth       12 dB
+  lowdepth       18 dB
   midduck        #1
-  middepth       3 dB
+  middepth       6 dB
   recover        160 ms
   gain           3 dB
 
@@ -191,15 +191,15 @@ patch "Under It" family=sidechain
   highduck       #1
   highdepth      5 dB
   recover        250 ms
-  gain           7 dB
+  gain           6 dB
 
 patch "Keyed Seesaw" family=sidechain
   # The lows under the kick's track, the highs on the offbeats from the song.
   depth          0.5
   threshold      -24 dB
   lowduck        #1
-  lowdepth       11 dB
+  lowdepth       16 dB
   highduck       #3
-  highdepth      8 dB
+  highdepth      24 dB
   recover        140 ms
   gain           2.5 dB
