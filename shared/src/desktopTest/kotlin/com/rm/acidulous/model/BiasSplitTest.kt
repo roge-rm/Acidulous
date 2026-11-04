@@ -21,6 +21,10 @@ class BiasSplitTest {
     private val names = mapOf(11L to "s-intro", 22L to "s-verse", 33L to "s-chorus")
     private val nameOf: (Long) -> String? = { names[it] }
 
+    private val List<Pair<String, TakeRef>>.keys get() = map { it.first }
+    private val List<Pair<String, TakeRef>>.values get() = map { it.second }
+    private operator fun List<Pair<String, TakeRef>>.get(scene: String): TakeRef? = lastOrNull { it.first == scene }?.second
+
     @Test
     fun consecutiveMarksPairIntoWindows() {
         val marks = listOf(
@@ -28,7 +32,7 @@ class BiasSplitTest {
         )
         val out = splitTake(marks, 24L * barFrames, "samples/take.wav", nameOf)
 
-        assertEquals(listOf("s-intro", "s-verse", "s-chorus"), out.keys.toList())
+        assertEquals(listOf("s-intro", "s-verse", "s-chorus"), out.keys)
         assertEquals(0, out["s-intro"]!!.offset)
         assertEquals(8 * barFrames, out["s-intro"]!!.frames)
         assertEquals(8 * barFrames, out["s-verse"]!!.offset)
@@ -63,7 +67,7 @@ class BiasSplitTest {
             listOf(mark(0, 11), mark(4 * barFrames, 22)),
             4L * barFrames + 500, "samples/take.wav", nameOf,
         )
-        assertEquals(listOf("s-intro"), out.keys.toList())
+        assertEquals(listOf("s-intro"), out.keys)
         assertNull(out["s-verse"])
     }
 
@@ -74,17 +78,18 @@ class BiasSplitTest {
             listOf(mark(0, 11), mark(4 * barFrames, 99)),
             8L * barFrames, "samples/take.wav", nameOf,
         )
-        assertEquals(listOf("s-intro"), out.keys.toList())
+        assertEquals(listOf("s-intro"), out.keys)
     }
 
-    /** Go round the song twice and the second pass is the one kept. */
+    /** Go round the song twice and both passes are kept, in order. */
     @Test
-    fun goingRoundAgainReplacesTheFirstPass() {
+    fun goingRoundAgainKeepsBothPasses() {
         val out = splitTake(
             listOf(mark(0, 11), mark(4 * barFrames, 22), mark(8 * barFrames, 11)),
             12L * barFrames, "samples/take.wav", nameOf,
         )
-        assertEquals(8 * barFrames, out["s-intro"]!!.offset)
+        assertEquals(listOf("s-intro", "s-verse", "s-intro"), out.keys)
+        assertEquals(listOf(0, 8 * barFrames), out.filter { it.first == "s-intro" }.map { it.second.offset })
     }
 
     @Test

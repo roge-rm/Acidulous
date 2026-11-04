@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,6 +55,10 @@ import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.takeForFile
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.reframed
+import com.rm.acidulous.model.headRoom
+import com.rm.acidulous.model.stackLength
+import com.rm.acidulous.model.stack
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -175,6 +180,10 @@ fun AudioLanes(
             // been written to the song yet.
             val take = if (drag?.lane == lane) drag?.take else stored
             val shape = TakePeaks.rememberShape(root, take?.file.orEmpty())
+            // A stack's other files, by name. Takes from one recording share a file.
+            val stackShapes = take?.takes?.map { it.file }?.distinct().orEmpty().associateWith { f ->
+                key(f) { TakePeaks.rememberShape(root, f) }
+            }
             val isMuted = (b.value("mute${lane + 1}") ?: 0f) >= 0.5f
             Row(
                 Modifier.fillMaxWidth().weight(1f).padding(bottom = 1.dp),
@@ -251,7 +260,24 @@ fun AudioLanes(
                                 Size((to - from).coerceAtLeast(1f), size.height),
                             )
                             val survey = shape
-                            if (survey != null && survey.frames > 0) {
+                            if (take.pieces.isNotEmpty() && take.frames > 0) {
+                                // A stack: each piece from its own take's file.
+                                val stack = take.stack()
+                                for (p in take.pieces) {
+                                    val t = stack.getOrNull(p.take) ?: continue
+                                    val whole = stackShapes[t.file] ?: continue
+                                    if (whole.frames <= 0) continue
+                                    val x0 = from + span * p.start / take.frames
+                                    val x1 = (from + span * p.end / take.frames).coerceAtMost(to)
+                                    if (x1 <= x0) continue
+                                    val columns = whole.peaks.size / 2
+                                    val c0 = (columns.toLong() * (t.offset + p.start).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
+                                    val c1 = (columns.toLong() * (t.offset + p.end) / whole.frames).toInt().coerceIn(c0 + 1, columns)
+                                    val wanted = (x1 - x0) / (span * (p.end - p.start) / take.frames)
+                                    val shown = ((c1 - c0) * wanted).toInt()
+                                    drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour)
+                                }
+                            } else if (survey != null && survey.frames > 0) {
                                 // Which columns of the file this region covers.
                                 // The cache holds the whole file, so trimming
                                 // just changes these two numbers.
@@ -436,7 +462,8 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
                 LaneDrag.Part.Tail, LaneDrag.Part.FadeOut -> atTick - tail
                 LaneDrag.Part.Body -> ((change.position.x - down.position.x) / w * total).roundToInt()
             }
-            latest = apply(stored, part, dTicks, total, grid, fileFrames())
+            // A stack moves its takes and pieces with the region.
+            latest = apply(stored, part, dTicks, total, grid, fileFrames()).reframed(stored)
             onDrag(LaneDrag(lane, part, latest))
         }
         onCommit(latest)
@@ -474,7 +501,7 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
         // the recording and the rest stays in place, like trimming the lead-in
         // before a vocal. Offset and start move together.
         LaneDrag.Part.Head -> {
-            val d = frames(dTicks).coerceIn(-take.offset, take.frames - frames(PPQN / 8))
+            val d = frames(dTicks).coerceAtMost(take.frames - frames(PPQN / 8)).coerceAtLeast(-take.headRoom())
             take.copy(
                 offset = take.offset + d,
                 frames = take.frames - d,
@@ -484,7 +511,7 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
         // The tail is the end of the recording and can't go past the end of
         // the file.
         LaneDrag.Part.Tail -> {
-            val room = (fileFrames - take.offset).coerceAtLeast(1)
+            val room = (take.stackLength() ?: (fileFrames - take.offset)).coerceAtLeast(1)
             take.copy(frames = (take.frames + frames(dTicks)).coerceIn(frames(PPQN / 8), room))
                 .withFadesInside()
         }

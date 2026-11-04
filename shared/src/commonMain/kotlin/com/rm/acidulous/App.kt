@@ -68,6 +68,8 @@ import com.rm.acidulous.model.updateClip
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.withRecorded
+import com.rm.acidulous.model.stack
 import com.rm.acidulous.model.writeTextSafely
 import com.rm.acidulous.res.*
 import com.rm.acidulous.ui.BiasArm
@@ -1443,11 +1445,24 @@ fun App(modifier: Modifier = Modifier) {
         scope.launch {
             val whole = withContext(Dispatchers.Default) { TakePeaks.load(EngineSync.sampleRoot, rel) }
             var next = editor.song
+            // Each pass of a looping scene goes on its cell's stack in turn.
             for ((sceneId, take) in takes) {
                 val drawn = if (whole == null) take
                             else take.copy(peaks = TakePeaks.slice(whole, take.offset, take.frames))
                 next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { c ->
-                    c.withTake(lane, drawn)
+                    c.withRecorded(lane, drawn)
+                }
+            }
+            // A stacked lane's grid shape is drawn from what it plays.
+            for (sceneId in takes.map { it.first }.distinct()) {
+                val held = next.tracks.getOrNull(track)?.clips?.get(sceneId)?.audio?.lane(lane) ?: continue
+                if (held.takes.isEmpty()) continue
+                val shapes = held.stack().map { it.file }.distinct().associateWith { f ->
+                    if (f == rel) whole else withContext(Dispatchers.Default) { TakePeaks.load(EngineSync.sampleRoot, f) }
+                }
+                val peaks = TakePeaks.comp(held) { shapes[it] } ?: continue
+                next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { c ->
+                    c.withTake(lane, held.copy(peaks = peaks))
                 }
             }
             // One song edit for the whole take, so undoing a recording is one

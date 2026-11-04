@@ -314,7 +314,9 @@ fun Song.samplesInUse(): Set<String> = buildSet {
         for (clip in t.clips.values) {
             val audio = clip.audio ?: continue
             for (take in audio.lanes) {
-                if (take != null && take.file.isNotEmpty()) add(take.file)
+                if (take == null) continue
+                if (take.file.isNotEmpty()) add(take.file)
+                for (t in take.takes) if (t.file.isNotEmpty()) add(t.file)
             }
         }
     }

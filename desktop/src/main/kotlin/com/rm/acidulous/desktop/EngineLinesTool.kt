@@ -18,6 +18,8 @@ import com.rm.acidulous.model.SongEngine
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.StackTake
+import com.rm.acidulous.model.Piece
 import com.rm.acidulous.model.withEffect
 import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.model.Track
@@ -34,7 +36,8 @@ import kotlin.system.exitProcess
  *     ./gradlew :desktop:engineLines --args="squelch"   into desktop/build/engine-lines
  *
  * Arguments: the song (squelch, the demo, sampled, a pad playing a user
- * sample, tape, that pad and an audio track playing a take, or frozen, that
+ * sample, tape, that pad and an audio track playing a take, comped, the tape
+ * with a stack of two takes played in pieces, or frozen, that
  * pad and a bass line frozen here and zipped with its frozen audio), seconds to render (0 for all of it), tail seconds and bits (32 is
  * float). The folder is the engineLines.out property. It writes
  * <song>.zip, <song>.txt and <song>-app.wav. The zip is written as the app
@@ -55,6 +58,7 @@ fun main(args: Array<String>) {
         "squelch" -> DemoSong.build()
         "sampled" -> EngineLinesTool.sampledSong(user)
         "tape" -> EngineLinesTool.tapeSong(user)
+        "comped" -> EngineLinesTool.compedSong(user)
         "macros" -> EngineLinesTool.macroSong()
         "frozen" -> kotlinx.coroutines.runBlocking { EngineLinesTool.frozenSong(user) }
         "tailover" -> kotlinx.coroutines.runBlocking {
@@ -210,6 +214,28 @@ object EngineLinesTool {
             clips = mapOf(scene.id to Clip(bars = 2, audio = ClipAudio(listOf(take, null, take.copy(offset = 12000, fadeIn = 480))))),
         )
         return base.copy(name = "Tape", tracks = base.tracks + tape)
+    }
+
+    /**
+     * [tapeSong] with lane 1 holding a stack of two takes from two files,
+     * played half and half, and lane 3 left as it is.
+     */
+    fun compedSong(user: File): Song {
+        val base = tapeSong(user)
+        writeHit(File(user, "samples/take2.wav"), seconds = 2f, hz = 440.0)
+        val scene = base.scenes.single()
+        val tape = base.tracks.last()
+        val clip = tape.clips.getValue(scene.id)
+        val lane = clip.audio!!.lanes[0]!!
+        val comped = lane.copy(
+            takes = listOf(
+                StackTake(lane.file, lane.offset, 0, lane.frames),
+                StackTake("samples/take2.wav", 0, 0, lane.frames),
+            ),
+            pieces = listOf(Piece(0, 48000, 1), Piece(48000, lane.frames, 0)),
+        )
+        val audio = ClipAudio(listOf(comped) + clip.audio!!.lanes.drop(1))
+        return base.copy(name = "Comped", tracks = base.tracks.dropLast(1) + tape.copy(clips = mapOf(scene.id to clip.copy(audio = audio))))
     }
 
     /** A decaying tone, [seconds] long, as a 16-bit mono WAV at 48 kHz. */

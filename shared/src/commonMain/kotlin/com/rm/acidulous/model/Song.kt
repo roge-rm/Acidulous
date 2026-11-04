@@ -297,7 +297,38 @@ data class TakeRef(
     @EncodeDefault(EncodeDefault.Mode.NEVER) val fadeOut: Int = 0,
     /** A rough shape for the grid to draw, so a cell doesn't need the disk. */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val peaks: List<Float> = emptyList(),
+    /**
+     * Every take in this lane's stack, take 0 first, when there's more than
+     * one. Take 0 is always [file] and [offset]. Empty for a lane with one
+     * take, which is what every older song has.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val takes: List<StackTake> = emptyList(),
+    /**
+     * Which take plays where, in frames of this region. Empty plays [file]
+     * from [offset] as a one-take lane does. See `model/Bias.kt`.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val pieces: List<Piece> = emptyList(),
 )
+
+/**
+ * One take in a lane's stack. All of a stack's takes were recorded against
+ * the same cycle, so region frame `at` is frame `offset + at` of every take.
+ * [offset] can be negative when a take began after the region did.
+ *
+ * [start] and [end] are the region frames it has audio for: a pass you
+ * punched into or stopped part way through covers less than the region.
+ */
+@Serializable
+data class StackTake(
+    val file: String,
+    val offset: Int,
+    val start: Int,
+    val end: Int,
+)
+
+/** A stretch of a region, [start, end) in region frames, played from take [take]. */
+@Serializable
+data class Piece(val start: Int, val end: Int, val take: Int)
 
 /**
  * What a tape holds in one cell: four lanes that play together.

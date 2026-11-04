@@ -28,6 +28,20 @@ the sound library, so you can undo the split and place it by hand.
 One lane records at a time. If the recorder fell behind and left a gap in the
 take, it isn't split and is kept whole instead.
 
+## Loop recording and takes
+
+Record while a scene loops and each pass becomes a take on that lane, stacked
+on the ones before. You hear the newest. If you stop part way through a pass,
+the new take plays only where it has audio and the one before plays the rest.
+Each cell keeps its own stack.
+
+Recording onto a lane that already holds a take adds to its stack too, as long
+as it was recorded at the same tempo against the same scene length. Otherwise
+it replaces it.
+
+Each lane's card on the page shows which take you hear, like **take 2/3**. Tap
+it to hear the next one. Undo takes back a pass or a pick.
+
 ## The editor
 
 Opening a cell shows the four lanes:
@@ -73,8 +87,8 @@ input slots the recording window shows.
 
 ## Flattening
 
-**comp** mixes the four lanes (with their levels, mutes and fades) into one file
-in lane 1. The patch's tape colour isn't baked in, and the original recordings
+**comp** mixes the four lanes (with their levels, mutes, fades and the takes
+they play) into one file in lane 1. The patch's tape colour isn't baked in, and the original recordings
 stay in the library.
 
 ## Patches

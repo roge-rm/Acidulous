@@ -319,9 +319,9 @@ internal actual object EngineNative {
     private external fun jni_nativeLoadReel(rack: Int, spec: String): String
     actual suspend fun nativeLoadReel(rack: Int, spec: String): String {
         val dry_ = DryLines.writer.get()
-        if (dry_ != null) { dry_.call("LoadReel") { int(rack); spec(spec, intArrayOf(2)) }; return "" }
+        if (dry_ != null) { dry_.call("LoadReel") { int(rack); spec(spec, intArrayOf(2, 3)) }; return "" }
         EngineLines.sent++
-        EngineLines.writer?.call("LoadReel") { int(rack); spec(spec, intArrayOf(2)) }
+        EngineLines.writer?.call("LoadReel") { int(rack); spec(spec, intArrayOf(2, 3)) }
         val result_ = jni_nativeLoadReel(rack, spec)
         return result_
     }

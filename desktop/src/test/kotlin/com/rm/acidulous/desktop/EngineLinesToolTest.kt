@@ -164,4 +164,24 @@ class EngineLinesToolTest {
         assertTrue(File(other, "samples/take.wav").readBytes().contentEquals(File(user, "samples/take.wav").readBytes()))
         assertFalse(File(other, "engine.txt").exists())
     }
+
+    @Test
+    fun aSongZipCarriesEveryTakeInAStack() {
+        val song = EngineLinesTool.compedSong(user)
+        val recording = EngineLinesTool.record(song, user)
+        assertEquals(emptyList<String>(), recording.unportable)
+        val reel = recording.text.lines().single { it.startsWith("LoadReel 1 ") }
+        assertTrue(reel, "take|" in reel && "|zip:samples/take2.wav|0" in reel)
+        assertTrue(reel, "piece|" in reel)
+
+        val zip = File(out, "comped.zip")
+        assertEquals(3, SongBundle.write(song, user, zip, recording.text))
+        ZipFile(zip).use { z ->
+            val names = z.entries().toList().map { it.name }.toSet()
+            assertTrue(names.toString(), "samples/take2.wav" in names && "samples/take.wav" in names)
+        }
+        val other = File(out, "other-comped").apply { deleteRecursively(); mkdirs() }
+        val back = runBlocking { SongBundle.read(zip, other) }!!
+        assertEquals(song.tracks[1].clips, back.tracks[1].clips)
+    }
 }

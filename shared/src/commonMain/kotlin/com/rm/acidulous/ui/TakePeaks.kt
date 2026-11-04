@@ -12,6 +12,8 @@ import com.rm.acidulous.engine.NativeEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.rm.acidulous.model.TAKE_PEAK_COLUMNS
+import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.stack
 
 /**
  * The shape of a take, stored in the document instead of read from disk.
@@ -82,6 +84,29 @@ object TakePeaks {
             }
             out.add(lo)
             out.add(hi)
+        }
+        return out
+    }
+
+    /**
+     * A stacked lane's coarse shape: each column from the take its pieces
+     * play there, silence between them. Null if [shapeOf] lacks a file the
+     * pieces use, or the lane has no pieces.
+     */
+    fun comp(take: TakeRef, columns: Int = TAKE_PEAK_COLUMNS, shapeOf: (String) -> Survey?): List<Float>? {
+        if (take.pieces.isEmpty() || take.frames <= 0) return null
+        val stack = take.stack()
+        val out = ArrayList<Float>(columns * 2)
+        for (i in 0 until columns) {
+            val from = (take.frames.toLong() * i / columns).toInt()
+            val to = (take.frames.toLong() * (i + 1) / columns).toInt()
+            val mid = (from + to) / 2
+            val p = take.pieces.firstOrNull { mid >= it.start && mid < it.end }
+            val t = p?.let { stack.getOrNull(it.take) }
+            if (t == null) { out.add(0f); out.add(0f); continue }
+            val whole = shapeOf(t.file) ?: return null
+            val col = slice(whole, t.offset + from, (to - from).coerceAtLeast(1), 1)
+            if (col.size == 2) out.addAll(col) else { out.add(0f); out.add(0f) }
         }
         return out
     }

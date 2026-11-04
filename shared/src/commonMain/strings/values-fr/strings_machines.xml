@@ -107,6 +107,8 @@
     <string name="bias_take_bpm">%.1f bpm</string>
     <string name="bias_audio">audio…</string>
     <string name="bias_clear">vider</string>
+    <!-- Bias: which take of a lane\'s stack is heard, and how many there are. -->
+    <string name="bias_take_of">prise %1$d/%2$d</string>
 
     <!-- Nexus -->
     <plurals name="nexus_modules">

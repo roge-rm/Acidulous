@@ -112,6 +112,12 @@ struct Reel {
         /** Hints to the kernel which frames a cell is about to play. */
         void willNeed(int32_t from, int32_t count) const {
             if (!map) return;
+            // A stacked take's offset is negative when it starts after the region does.
+            if (from < 0) {
+                count += from;
+                from = 0;
+            }
+            if (count <= 0 || from >= frames) return;
             const size_t unit = sizeof(int16_t);
             map->willNeed(static_cast<size_t>(from) * unit, static_cast<size_t>(count) * unit);
             if (stereo) {

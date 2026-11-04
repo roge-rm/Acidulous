@@ -31,6 +31,21 @@ découpage et le placer à la main.
 Un seul couloir enregistre à la fois. Si l’enregistreur a pris du retard et
 laissé un trou dans la prise, elle n’est pas découpée et reste entière.
 
+## Enregistrer en boucle et prises
+
+Enregistrez pendant qu’une scène boucle et chaque passage devient une prise sur
+ce couloir, empilée sur les précédentes. Vous entendez la plus récente. Si vous
+arrêtez au milieu d’un passage, la nouvelle prise ne joue que là où elle a du
+son et la précédente joue le reste. Chaque cellule garde sa propre pile.
+
+Enregistrer sur un couloir qui a déjà une prise l’ajoute aussi à sa pile, si
+elle a été enregistrée au même tempo sur la même longueur de scène. Sinon elle
+la remplace.
+
+La carte de chaque couloir sur la page montre quelle prise vous entendez, comme
+**prise 2/3**. Touchez-la pour entendre la suivante. Annuler retire un passage
+ou un choix.
+
 ## L’éditeur
 
 Ouvrir une cellule montre les quatre couloirs :
@@ -80,8 +95,8 @@ emplacements d’entrée que montre la fenêtre d’enregistrement.
 
 ## Aplatir
 
-**comp** mélange les quatre couloirs (avec leurs niveaux, muets et fondus) en
-un seul fichier dans le couloir 1. La couleur de bande du son n’est pas
+**comp** mélange les quatre couloirs (avec leurs niveaux, muets, fondus et les
+prises qu’ils jouent) en un seul fichier dans le couloir 1. La couleur de bande du son n’est pas
 incluse, et les enregistrements d’origine restent dans la bibliothèque.
 
 ## Sons
