@@ -46,6 +46,30 @@ La carte de chaque couloir sur la page montre quelle prise vous entendez, comme
 **prise 2/3**. Touchez-la pour entendre la suivante. Annuler retire un passage
 ou un choix.
 
+## Choisir par phrase
+
+Touchez un couloir qui a plus d’une prise et ses prises s’affichent en rangées
+fines dessous, la prise 1 en haut, alignées dans le temps avec le couloir. Le
+couloir lui-même montre ce que vous entendez. Des lignes pâles coupent le
+couloir en phrases là où la plupart des prises se taisent, les mêmes phrases
+pour toutes les prises.
+
+- touchez une **phrase** sur le couloir pour la choisir, puis touchez la
+  **rangée d’une prise** dans cette phrase pour entendre cette prise là.
+  Toucher une rangée n’importe où choisit la phrase sous votre doigt
+- glissez le long de la **rangée d’une prise** pour entendre cette prise sur
+  exactement le passage glissé, pour un mot ou une respiration que les phrases
+  ne séparent pas
+- touchez le **numéro** d’une prise pour **partout**, qui la fait jouer sur tout
+  le couloir, ou **supprimer la prise**, qui la retire de la pile. Là où on
+  l’entendait, la prise qui a le plus de son à cet endroit joue à sa place
+- touchez de nouveau la phrase choisie pour ranger les rangées
+
+Les raccords entre prises font un fondu enchaîné tout seuls, à un point calme
+tout près. Chaque choix est une étape d’annulation. L’enregistrement d’une prise
+supprimée reste dans la bibliothèque de sons, comme tout enregistrement, et
+vous pouvez l’y supprimer.
+
 ## L’éditeur
 
 Ouvrir une cellule montre les quatre couloirs :

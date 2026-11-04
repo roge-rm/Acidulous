@@ -59,6 +59,12 @@ import com.rm.acidulous.model.reframed
 import com.rm.acidulous.model.headRoom
 import com.rm.acidulous.model.stackLength
 import com.rm.acidulous.model.stack
+import com.rm.acidulous.model.takeCount
+import com.rm.acidulous.model.phraseAt
+import com.rm.acidulous.model.choosing
+import com.rm.acidulous.model.hearing
+import com.rm.acidulous.model.withoutTake
+import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -89,7 +95,7 @@ import org.jetbrains.compose.resources.StringResource
  * string built from these numbers, so writing every frame of a drag would
  * decode the take every frame, which is far too slow for a long take.
  */
-private val GutterW = 34.dp
+internal val GutterW = 34.dp
 private val RulerH = 16.dp
 private val HandleGrab = 22.dp
 
@@ -157,8 +163,21 @@ fun AudioLanes(
     val commit: (Int, TakeRef?) -> Unit = { lane, take ->
         editor.editClip(trackIndex, sceneId) { c2 -> c2.withTake(lane, take) }
     }
+    // Comping: one stacked lane at a time shows its takes under it, and one
+    // of its phrases can be picked.
+    var open by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    var phrase by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    val openTake = clip.audio?.lane(open)?.takeIf { it.takeCount > 1 }
+    if (open >= 0 && openTake == null && drag == null) { open = -1; phrase = -1 }
+    val cuts = Phrasing.rememberCuts(root, if (drag == null) openTake else null)
+    // The lane's gesture handler outlives a recomposition, so it reads these fresh.
+    val cutsNow by rememberUpdatedState(cuts)
+    val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f) }
 
-    Column(modifier.background(c.bgDeep)) {
+    // The take rows get at most this much of the editor's height and scroll past it.
+    var heightPx by remember { mutableStateOf(0) }
+    val rowsMax = with(androidx.compose.ui.platform.LocalDensity.current) { (heightPx * 0.45f).toDp() }
+    Column(modifier.background(c.bgDeep).onSizeChanged { heightPx = it.height }) {
         // The ruler: bar numbers along the cycle, so a repeat shows as a
         // second pass rather than a longer bar.
         Row(Modifier.fillMaxWidth().height(RulerH)) {
@@ -236,6 +255,18 @@ fun AudioLanes(
                                         handleGrabPx = HandleGrab.toPx(),
                                         onDrag = { drag = it },
                                         onCommit = { d -> drag = null; commit(lane, d) },
+                                        onTap = { x ->
+                                            if (stored.takeCount > 1) {
+                                                val at = frameAt(stored, total, size.width.toFloat(), x)
+                                                val i = phraseAt(if (open == lane) cutsNow ?: listOf(0, stored.frames) else listOf(0, stored.frames), at)
+                                                // Tapping the picked phrase again puts the takes away.
+                                                when {
+                                                    open != lane -> { open = lane; phrase = -1 }
+                                                    phrase == i -> { open = -1; phrase = -1 }
+                                                    else -> phrase = i
+                                                }
+                                            }
+                                        },
                                     )
                                 }
                             },
@@ -317,6 +348,7 @@ fun AudioLanes(
                                 val x = to - take.fadeOut * perFrame
                                 drawLine(c.teal, Offset(x, 0f), Offset(to, size.height), 1.5f)
                             }
+                            if (open == lane && drag == null) drawPhrases(take, cuts, phrase, from, span, to, c.textMid, c.accent)
                         }
                     }
                     if (take == null) {
@@ -331,6 +363,18 @@ fun AudioLanes(
                         drawLine(c.accent, Offset(x, 0f), Offset(x, size.height), 1.5f)
                     }
                 }
+            }
+            if (open == lane && stored != null && stored.takeCount > 1) {
+                TakeRows(
+                    take = stored, total = total, cuts = cuts ?: listOf(0, stored.frames), phrase = phrase,
+                    maxHeight = rowsMax, root = root, playheadTick = playheadTick,
+                    onChoose = { k, from, to, at ->
+                        if (at >= 0) phrase = at
+                        compEdit(lane) { it.choosing(k, from, to) }
+                    },
+                    onEverywhere = { k -> compEdit(lane) { it.hearing(k) } },
+                    onDelete = { k -> compEdit(lane) { it.withoutTake(k) } },
+                )
             }
         }
     }
@@ -420,6 +464,8 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
     handleGrabPx: Float,
     onDrag: (LaneDrag?) -> Unit,
     onCommit: (TakeRef) -> Unit,
+    /** A tap that didn't move, at this x. */
+    onTap: (Float) -> Unit,
 ) {
     awaitEachGesture {
         val down = awaitFirstDown()
@@ -454,8 +500,10 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
         // so it moves by the drag.
         val head = stored.startTick
         val tail = stored.startTick + stored.lengthTicks()
+        var moved = false
         drag(down.id) { change ->
             change.consume()
+            if (abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) moved = true
             val atTick = (change.position.x / w * total).roundToInt()
             val dTicks = when (part) {
                 LaneDrag.Part.Head, LaneDrag.Part.FadeIn -> atTick - head
@@ -466,7 +514,8 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
             latest = apply(stored, part, dTicks, total, grid, fileFrames()).reframed(stored)
             onDrag(LaneDrag(lane, part, latest))
         }
-        onCommit(latest)
+        // A tap writes nothing, so it isn't an undo step.
+        if (moved) onCommit(latest) else { onDrag(null); onTap(down.position.x) }
     }
 }
 

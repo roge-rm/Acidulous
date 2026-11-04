@@ -4244,10 +4244,8 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                     // A stack: tap to hear the next take over the whole lane.
                     if (take != null && take.takeCount > 1) {
                         TextButton(onClick = {
-                            editor.editClip(trackIndex, sceneId) { cl ->
-                                val held = cl.audio?.lane(lane) ?: return@editClip cl
-                                val next = held.hearing((held.heardTake() + 1) % held.takeCount)
-                                cl.withTake(lane, next.copy(peaks = TakePeaks.comp(next) { TakePeaks.cached(it) } ?: next.peaks))
+                            compEdit(scope, editor, trackIndex, sceneId, lane) { held ->
+                                held.hearing((held.heardTake() + 1) % held.takeCount)
                             }
                         }) {
                             Text(

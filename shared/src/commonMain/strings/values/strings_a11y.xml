@@ -204,6 +204,7 @@
     <!-- The four-track's lanes -->
     <string name="a11y_lane_mute">Lane %d mute</string>
     <string name="a11y_lane_arm">Lane %d record</string>
+    <string name="a11y_take_row">Take %d</string>
     <!-- A sample's trim, as a share of the whole sound. -->
     <string name="a11y_trim_start">Trim start</string>
     <string name="a11y_trim_end">Trim end</string>

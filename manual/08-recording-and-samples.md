@@ -71,8 +71,9 @@ in scenes where the track was empty. The full recording also stays in the sound
 library, so you can undo the split and place it by hand.
 
 If the scene loops while you record, each pass is kept as a take on that lane,
-and you hear the newest. Each cell keeps its own stack of takes, and you pick
-one on **Bias**'s page.
+and you hear the newest. Each cell keeps its own stack of takes. Tap the lane
+in the cell to see them, then pick the best take for each phrase, or drag along
+a take for an exact stretch (see **Bias**).
 
 Trimming, fades, crossfades, flattening lanes and tempo following are on
 **Bias**'s page. None of them change the file.

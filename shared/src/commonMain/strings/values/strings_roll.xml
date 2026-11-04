@@ -73,6 +73,8 @@
     <string name="tape_comp_failed">That cell couldn\'t be flattened (%s).</string>
     <!-- Flatten the lanes into one take. -->
     <string name="tape_comp">comp</string>
+    <string name="tape_take_everywhere">use everywhere</string>
+    <string name="tape_take_delete">delete take</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">on</string>

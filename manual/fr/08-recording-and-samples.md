@@ -80,7 +80,9 @@ sons, donc vous pouvez annuler le découpage et le placer à la main.
 
 Si la scène boucle pendant l’enregistrement, chaque passage est gardé comme une
 prise sur ce couloir, et vous entendez la plus récente. Chaque cellule garde sa
-propre pile de prises, et vous en choisissez une sur la page de **Bias**.
+propre pile de prises. Touchez le couloir dans la cellule pour les voir, puis
+choisissez la meilleure prise pour chaque phrase, ou glissez le long d’une
+prise pour un passage exact (voir **Bias**).
 
 La coupe, les fondus, les fondus enchaînés, l’aplatissement des couloirs et le
 suivi du tempo sont sur la page de **Bias**. Aucun d’eux ne change le fichier.

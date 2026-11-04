@@ -42,6 +42,27 @@ it replaces it.
 Each lane's card on the page shows which take you hear, like **take 2/3**. Tap
 it to hear the next one. Undo takes back a pass or a pick.
 
+## Choosing by phrase
+
+Tap a lane that has more than one take and its takes show as thin rows under
+it, take 1 at the top, lined up in time with the lane. The lane itself shows
+what you hear. Faint lines cut the lane into phrases where most takes go
+quiet, the same phrases for every take.
+
+- tap a **phrase** on the lane to pick it, then tap a **take's row** inside it
+  to hear that take there. Tapping a row anywhere picks the phrase under your
+  finger
+- drag along a **take's row** to hear that take over exactly the stretch you
+  drag, for a word or a breath the phrases don't split
+- tap a take's **number** for **use everywhere**, which plays it over the whole
+  lane, or **delete take**, which takes it off the stack. Where it was heard,
+  the take with the most audio there plays instead
+- tap the picked phrase again to put the rows away
+
+The joins between takes crossfade by themselves at a nearby quiet point. Each
+choice is one undo step. A deleted take's recording stays in the sound
+library, as every recording does, so you can delete it there.
+
 ## The editor
 
 Opening a cell shows the four lanes:
