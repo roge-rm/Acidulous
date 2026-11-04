@@ -296,7 +296,7 @@ void Sympath::prepare(int32_t rate) {
         v.bowCut.setSampleRate(sampleRate);
     }
     tarbZing.setSampleRate(sampleRate);
-    for (dsp::Svf &b : hearBands) b.setSampleRate(sampleRate / static_cast<float>(kHearDown));
+    ear.prepare(sampleRate, kHearDown, kHearLowHz);
     hearBuilt = false;
     skinTone.setSampleRate(sampleRate);
     skinTone.set(1400.0f, 0.3f);
@@ -347,10 +347,8 @@ void Sympath::reset() {
     tarbT60 = kTarbT60;
     droneT60 = kDroneT60;
     bloomTrim = 1.0f;
-    for (dsp::Svf &b : hearBands) b.reset();
-    for (float &h : heard) h = 0.0f;
-    hearLp[0] = hearLp[1] = hearSum = 0.0f;
-    hearPhase = hearUntil = 0;
+    ear.reset();
+    hearUntil = 0;
     glideTick = 0;
     songCount = 0;
     songRoot = -1;
@@ -491,12 +489,8 @@ void Sympath::tuneHearing() {
     }
     // Bands from note 48, one on each key, about two thirds of a semitone
     // wide: three octaves, or two in a tuning of more than 24 steps.
-    hearCount = (hearPeriod <= 24 ? 3 : 2) * hearPeriod;
-    for (int b = 0; b < hearCount; ++b) {
-        hearBands[b].set(noteHz(static_cast<float>(48 + b)), 1.0f);
-        hearBands[b].reset();
-        heard[b] = 0.0f;
-    }
+    ear.setCount((hearPeriod <= 24 ? 3 : 2) * hearPeriod);
+    for (int b = 0; b < ear.count; ++b) ear.setBand(b, noteHz(static_cast<float>(48 + b)));
     songCount = 0;
     songRoot = -1;
     songSig = 0;
@@ -505,31 +499,19 @@ void Sympath::tuneHearing() {
 void Sympath::hear(const float *song, int32_t frames, float listen) {
     if (!hearBuilt || hearGen != tuningGen) tuneHearing();
     if (hearPeriod <= 0) return;
-    const float lowCoef = 1.0f - std::exp(-6.2831853f * kHearLowHz / sampleRate);
     const float downRate = sampleRate / static_cast<float>(kHearDown);
     // How long the bands remember: eight seconds at the bottom, one at the top.
     const float memory = 8.0f * std::pow(1.0f / 8.0f, clampf(listen, 0.0f, 1.0f));
     const float keep = 1.0f - std::exp(-1.0f / (memory * downRate));
     const int every = std::max(1, static_cast<int>(kHearEvery * downRate));
     for (int32_t i = 0; i < frames; ++i) {
-        hearLp[0] += (song[i] - hearLp[0]) * lowCoef;
-        hearLp[1] += (hearLp[0] - hearLp[1]) * lowCoef;
-        hearSum += hearLp[1];
-        if (++hearPhase < kHearDown) continue;
-        const float x = hearSum * (1.0f / static_cast<float>(kHearDown));
-        hearPhase = 0;
-        hearSum = 0.0f;
-        for (int b = 0; b < hearCount; ++b) {
-            const float y = hearBands[b].step(x).bp * hearBands[b].bandNorm();
-            heard[b] = dsp::undenormal(heard[b] + (y * y - heard[b]) * keep);
-        }
+        if (!ear.step(song[i], keep)) continue;
         if (--hearUntil <= 0) {
             hearUntil = every;
             chooseSongNotes(listen);
         }
     }
-    hearLp[0] = dsp::undenormal(hearLp[0]);
-    hearLp[1] = dsp::undenormal(hearLp[1]);
+    ear.settle();
 }
 
 void Sympath::chooseSongNotes(float listen) {
@@ -537,8 +519,9 @@ void Sympath::chooseSongNotes(float listen) {
     float steps[kHearSteps] = {};
     // Steps finer than a semitone are narrower than the bands, so a band
     // only counts where it's louder than both its neighbours.
-    for (int b = 0; b < hearCount; ++b) {
-        if (n > 12 && ((b > 0 && heard[b - 1] > heard[b]) || (b + 1 < hearCount && heard[b + 1] > heard[b]))) continue;
+    const float *heard = ear.heard;
+    for (int b = 0; b < ear.count; ++b) {
+        if (n > 12 && ((b > 0 && heard[b - 1] > heard[b]) || (b + 1 < ear.count && heard[b + 1] > heard[b]))) continue;
         steps[b % n] += heard[b];
     }
     float loudest = 0.0f;

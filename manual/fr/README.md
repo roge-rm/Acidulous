@@ -23,7 +23,7 @@
     - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
     - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.
     - [Brazen](04-the-machines/brazen.md) : des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.
-    - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
+    - [Chanter](04-the-machines/chanter.md) : cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes et peuvent suivre la basse du morceau, une poche qui se vide, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.
     - [Draw](04-the-machines/draw.md) : des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.
     - [Timber](04-the-machines/timber.md) : des bois modélisés : anches et flûtes.
     - [Tongue](04-the-machines/tongue.md) : une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.

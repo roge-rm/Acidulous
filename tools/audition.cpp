@@ -768,6 +768,37 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     return p;
 }
 
+/** Chanter's song demos: slow, one bass root a bar, so the drones can be heard moving. */
+constexpr float kChanterSongBpm = 80.0f;
+constexpr int kChanterSongBars = 8;
+
+/** Steps from the key: I, IV, bVII, V, played twice. */
+constexpr int kChanterSongSteps[4] = {0, 5, -2, 7};
+
+/**
+ * The chanter over the bass: the key's note held for the first four bars, so
+ * only the drones move, then a plain tune on each bar's chord.
+ */
+Phrase chanterSongPhrase(int tonic, int velocity) {
+    Phrase p;
+    const float beat = 60.0f / kChanterSongBpm;
+    hit(p, 0.0f, 16.0f * beat, tonic, velocity);
+    static const int kTune[4][4] = {{0, 4, 7, 4}, {5, 9, 5, 0}, {2, 5, 10, 7}, {7, 4, 2, 0}};
+    for (int bar = 0; bar < 4; ++bar) {
+        for (int q = 0; q < 4; ++q) {
+            const float at = (16.0f + static_cast<float>(bar * 4 + q)) * beat;
+            p.lastOff = hit(p, at, beat, tonic + kTune[bar][q], velocity);
+        }
+    }
+    p.frames = p.lastOff + secondsToFrames(2.0f);
+    std::stable_sort(p.events.begin(), p.events.end(),
+                     [](const NoteEvent &a, const NoteEvent &b) { return a.frame < b.frame; });
+    return p;
+}
+
+/** The bass the chanter follows: the key's note between E2 and D#3, one per bar. */
+std::vector<float> chanterSongBass(int tonic, int64_t frames);
+
 // --- What gets mounted -------------------------------------------------------
 
 /**
@@ -1259,6 +1290,9 @@ struct Hit { float beat, beats; int note, velocity; };
 /** How loud every effect source is, in the units of kLoudness. */
 constexpr float kSourceLoudness = -20.0f;
 
+/** The bass under Chanter's song demos, kept under the pipes. */
+constexpr float kChanterSongLoudness = -24.0f;
+
 std::vector<float> renderPart(const std::string &unit, const std::string &patchName,
                               const std::vector<Hit> &hits, float bpm, int64_t frames,
                               const std::vector<std::pair<std::string, float>> &overrides = {}) {
@@ -1499,6 +1533,21 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
             out[static_cast<size_t>(i) * 2] += rng.next() * 0.005f;
             out[static_cast<size_t>(i) * 2 + 1] += rng.next() * 0.005f;
         }
+    }
+    return out;
+}
+
+std::vector<float> chanterSongBass(int tonic, int64_t frames) {
+    const int root = 40 + ((tonic - 40) % 12 + 12) % 12;
+    std::vector<Hit> bass;
+    for (int bar = 0; bar < kChanterSongBars; ++bar) {
+        bass.push_back({static_cast<float>(bar * 4), 4.0f, root + kChanterSongSteps[bar % 4], 100});
+    }
+    std::vector<float> out = renderPart("Trinity", "Felt Bass", bass, kChanterSongBpm, frames);
+    const float level = kLoudness(out, 0, frames);
+    if (level > -190.0f) {
+        const float gain = std::pow(10.0f, (kChanterSongLoudness - level) / 20.0f);
+        for (float &v : out) v *= gain;
     }
     return out;
 }
@@ -1889,7 +1938,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         m->allNotesOff();
         m->reset();
         // The patches leave the track to the song, so it's set here: track 1.
-        const bool song = bank.unit == "Sympath" && patch.family == "song";
+        const bool song = (bank.unit == "Sympath" || bank.unit == "Chanter") && patch.family == "song";
         for (int32_t i = 0; i < count && song; ++i) {
             if (std::strcmp(defs[i].name, "sidechain") == 0) r.norm[static_cast<size_t>(i)] = defs[i].unmap(1.0f);
         }
@@ -1923,9 +1972,16 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         };
         dress();
         loadInput(input, mat);
-        // Sympath's song patches listen to another track: the band the
+        // Sympath's and Chanter's song patches listen to another track: the band the
         // effects get, looped, and it's mixed into the take.
-        if (song) {
+        // Chanter's get a bass alone instead, one root a bar.
+        const bool chanterSong = song && bank.unit == "Chanter";
+        if (chanterSong) {
+            const int tonic = opt.note > 0 ? opt.note : patch.note > 0 ? patch.note : 69;
+            const Phrase p = chanterSongPhrase(tonic, opt.velocity);
+            mat.song = chanterSongBass(tonic, p.frames);
+            mat.songLoop = p.frames;
+        } else if (song) {
             int64_t stop = 0;
             mat.song = effectSource(bank.unit, opt.bpm, stop);
             mat.songLoop = stop;
@@ -1998,9 +2054,10 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             // module's default. Without this those knobs go back to zero and
             // the render can be silent.
             dress();
-            const Phrase listen = listenKind == "loop" ? dicePhrase(m.get(), opt.bpm, opt.velocity)
-                                                       : buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range);
-            take = render(m.get(), listen, opt.bpm, mat, &chain);
+            const Phrase listen = chanterSong          ? chanterSongPhrase(note, opt.velocity)
+                                  : listenKind == "loop" ? dicePhrase(m.get(), opt.bpm, opt.velocity)
+                                                         : buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range);
+            take = render(m.get(), listen, chanterSong ? kChanterSongBpm : opt.bpm, mat, &chain);
         }
     }
 
