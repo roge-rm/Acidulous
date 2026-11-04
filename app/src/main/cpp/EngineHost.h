@@ -52,6 +52,10 @@ class EngineHost {
      */
     bool mountInputEffect(int slot, const std::string &typeName);
     std::string loadReel(int rack, const std::string &spec);
+    /** Listens through a phrase on a Bias, or stops with an empty spec. See Bias::swapObject. */
+    std::string listenReel(int rack, const std::string &spec);
+    /** Frames played since listening started on [rack], -1 when not listening. */
+    int64_t listenPlayed(int rack) const;
     /**
      * Where converted long takes are stored. Set once at startup. If empty,
      * long takes are held in memory up to the resident limit instead.
@@ -706,6 +710,14 @@ class EngineHost {
     /** One file as a source: held in memory if short, mapped if long. */
     std::shared_ptr<const audio::Reel::Source> sourceFor(const std::string &path,
                                                          int64_t &residentFrames, int &mappedCount);
+    /** [path] as a source, shared with a reel that already holds it. */
+    std::shared_ptr<const audio::Reel::Source> sharedSource(const std::string &path,
+                                                            int64_t &residentFrames, int &mappedCount);
+    std::unique_ptr<audio::Reel> parseReel(const std::string &spec, int64_t &totalFrames, int &mapped,
+                                           size_t &files);
+    /** The sources mounted reels hold, by path, size and time, so a reload reuses them. */
+    std::mutex reelSourcesLock;
+    std::unordered_map<std::string, std::weak_ptr<const audio::Reel::Source>> reelSources;
     /** Where converted long takes are stored. See setCacheRoot. */
     std::string cacheRoot;
 

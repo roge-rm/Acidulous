@@ -1950,19 +1950,131 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
  * Each distinct file is decoded once however many lines use it, as int16
  * with mono kept mono (see engine/core/Reel.h). An empty spec clears the reel.
  */
+/**
+ * [path] as a source, reusing one a reel already holds if the file hasn't
+ * changed since, so a reel that only changes its pieces, or listening
+ * through a phrase, decodes nothing.
+ */
+std::shared_ptr<const audio::Reel::Source> EngineHost::sharedSource(const std::string &path,
+                                                                   int64_t &residentFrames,
+                                                                   int &mappedCount) {
+    struct stat st {};
+    std::string key = path;
+    if (::stat(path.c_str(), &st) == 0) {
+        key += '|' + std::to_string(static_cast<long long>(st.st_size)) + '|' +
+               std::to_string(static_cast<long long>(st.st_mtime));
+    }
+    {
+        std::lock_guard<std::mutex> hold(reelSourcesLock);
+        auto it = reelSources.find(key);
+        if (it != reelSources.end()) {
+            if (auto held = it->second.lock()) return held;
+        }
+    }
+    auto made = sourceFor(path, residentFrames, mappedCount);
+    if (made == nullptr) return nullptr;
+    std::lock_guard<std::mutex> hold(reelSourcesLock);
+    // Forget sources nothing holds any more, so the map doesn't grow.
+    for (auto it = reelSources.begin(); it != reelSources.end();) {
+        it = it->second.expired() ? reelSources.erase(it) : std::next(it);
+    }
+    reelSources[key] = made;
+    return made;
+}
+
 std::string EngineHost::loadReel(int rack, const std::string &spec) {
     if (rack < 0 || rack >= kRackCount) return "no such rack";
     // An empty spec arrives after an audio track is deleted, when the Bias is
     // already gone, so that's not an error.
     if (awaitMachine(sEngine, rack, "Bias") == nullptr) return spec.empty() ? "" : "that rack is not a Bias";
 
-    auto reel = std::make_unique<audio::Reel>();
-    std::string error;
-    // Distinct paths, decoded once each. Local, since each reel owns its
-    // sources and racks don't share them.
-    std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
     int64_t totalFrames = 0;
     int mapped = 0;
+    size_t files = 0;
+    auto reel = parseReel(spec, totalFrames, mapped, files);
+
+    LOGI("reel on rack %d: %zu cells, %zu files (%d mapped), %.1f MB resident", rack,
+         reel->cells.size(), files, mapped,
+         static_cast<double>(totalFrames) * sizeof(int16_t) / (1024.0 * 1024.0));
+
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.machineType = "Bias";
+    mount.rack = rack;
+    mount.slot = 0;
+    // Handed over before the mount: on failure the retry deletes it.
+    mount.object = reel.release();
+    mount.deleter = deleteAs<audio::Reel>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    return "";
+}
+
+/**
+ * Listening through a phrase on a Bias. The first line is
+ *
+ *   listen|lane|from|to
+ *
+ * and the rest is a reel spec with one cell per pass, lane 0 each, in the
+ * order they play. An empty spec stops listening.
+ */
+std::string EngineHost::listenReel(int rack, const std::string &spec) {
+    if (rack < 0 || rack >= kRackCount) return "no such rack";
+    if (awaitMachine(sEngine, rack, "Bias") == nullptr) return spec.empty() ? "" : "that rack is not a Bias";
+
+    std::unique_ptr<audio::Listen> listen;
+    if (!spec.empty()) {
+        const size_t eol = spec.find('\n');
+        const std::string head = spec.substr(0, eol);
+        std::vector<std::string> f;
+        std::string part;
+        std::istringstream fields(head);
+        while (std::getline(fields, part, '|')) f.push_back(part);
+        if (f.size() < 4 || f[0] != "listen") return "listen: no header";
+        listen = std::make_unique<audio::Listen>();
+        listen->lane = std::atoi(f[1].c_str());
+        listen->from = std::atoi(f[2].c_str());
+        listen->to = std::atoi(f[3].c_str());
+        int64_t totalFrames = 0;
+        int mapped = 0;
+        size_t files = 0;
+        auto reel = parseReel(eol == std::string::npos ? "" : spec.substr(eol + 1), totalFrames, mapped, files);
+        for (auto &cell : reel->cells) {
+            if (cell.lanes[0].source) listen->passes.push_back(std::move(cell.lanes[0]));
+        }
+        for (const auto &r : listen->passes) {
+            for (const auto &t : r.takes) {
+                if (t.source) t.source->willNeed(t.offset + listen->from, kSampleRate);
+            }
+            if (r.source) r.source->willNeed(r.offset + listen->from, kSampleRate);
+        }
+        if (!listen->playable()) return "listen: nothing to play";
+    }
+
+    Mount mount;
+    mount.kind = Mount::Kind::Object;
+    mount.machineType = "Bias";
+    mount.rack = rack;
+    mount.slot = 1;
+    mount.object = listen.release();
+    mount.deleter = deleteAs<audio::Listen>;
+    if (!mountObjectWithRetry(mount)) return "mount queue full";
+    return "";
+}
+
+int64_t EngineHost::listenPlayed(int rack) const {
+    if (rack < 0 || rack >= kRackCount) return -1;
+    const auto live = sEngine.readLive(); // it may be being replaced (see Retirer::ReadGuard)
+    Machine *m = sEngine.racks[rack].currentMachine();
+    if (m == nullptr || std::strcmp(m->typeName(), "Bias") != 0) return -1;
+    return static_cast<machine::Bias *>(m)->listenPlayed();
+}
+
+/** A reel from its spec (see loadReel), its files read through sharedSource. */
+std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int64_t &totalFrames,
+                                                   int &mapped, size_t &files) {
+    auto reel = std::make_unique<audio::Reel>();
+    // Distinct paths, looked up once each.
+    std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
 
     std::istringstream lines(spec);
     std::string line;
@@ -1993,7 +2105,7 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
             if (r->takes.empty()) r->takes.push_back({r->source, r->offset});
             if (isTake) {
                 auto &src = decoded[f[3]];
-                if (src == nullptr) src = sourceFor(f[3], totalFrames, mapped);
+                if (src == nullptr) src = sharedSource(f[3], totalFrames, mapped);
                 // A take that won't read stays in the stack as a gap, so the
                 // pieces' take numbers still line up. settle() drops its pieces.
                 r->takes.push_back({src, std::atoi(f[4].c_str())});
@@ -2012,7 +2124,7 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
 
         auto &src = decoded[f[2]];
         if (src == nullptr) {
-            src = sourceFor(f[2], totalFrames, mapped);
+            src = sharedSource(f[2], totalFrames, mapped);
             if (src == nullptr) continue;
         }
 
@@ -2059,20 +2171,8 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         }
     }
 
-    LOGI("reel on rack %d: %zu cells, %zu files (%d mapped), %.1f MB resident", rack,
-         reel->cells.size(), decoded.size(), mapped,
-         static_cast<double>(totalFrames) * sizeof(int16_t) / (1024.0 * 1024.0));
-
-    Mount mount;
-    mount.kind = Mount::Kind::Object;
-    mount.machineType = "Bias";
-    mount.rack = rack;
-    mount.slot = 0;
-    // Handed over before the mount: on failure the retry deletes it.
-    mount.object = reel.release();
-    mount.deleter = deleteAs<audio::Reel>;
-    if (!mountObjectWithRetry(mount)) return "mount queue full";
-    return "";
+    files = decoded.size();
+    return reel;
 }
 
 std::string EngineHost::buildCloud(int rack, const float *spectrum01, int32_t count) {

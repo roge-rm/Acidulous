@@ -134,6 +134,8 @@ internal expect object EngineNative {
     fun nativeSetParam(rackId: Int, unit: String, name: String, value: Float, record: Boolean, quantise: Int): Boolean // line
     suspend fun nativeLoadTake(rack: Int, path: String): String // line path=path
     suspend fun nativeLoadReel(rack: Int, spec: String): String // line spec=spec:2,3
+    suspend fun nativeListenReel(rack: Int, spec: String): String
+    fun nativeListenPlayed(rack: Int): Long
     fun nativeSetCacheRoot(path: String)
     suspend fun nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String // line
     suspend fun nativeLoadEffectFormula(rack: Int, unit: String, formula: String): String // line

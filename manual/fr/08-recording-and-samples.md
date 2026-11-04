@@ -82,7 +82,8 @@ Si la scène boucle pendant l’enregistrement, chaque passage est gardé comme 
 prise sur ce couloir, et vous entendez la plus récente. Chaque cellule garde sa
 propre pile de prises. Touchez le couloir dans la cellule pour les voir, puis
 choisissez la meilleure prise pour chaque phrase, ou glissez le long d’une
-prise pour un passage exact (voir **Bias**).
+prise pour un passage exact. L’écoute joue une phrase de chaque prise tour à
+tour, et un toucher garde celle que vous voulez (voir **Bias**).
 
 La coupe, les fondus, les fondus enchaînés, l’aplatissement des couloirs et le
 suivi du tempo sont sur la page de **Bias**. Aucun d’eux ne change le fichier.

@@ -63,6 +63,21 @@ The joins between takes crossfade by themselves at a nearby quiet point. Each
 choice is one undo step. A deleted take's recording stays in the sound
 library, as every recording does, so you can delete it there.
 
+## Listening through
+
+With a phrase picked, tap **▶** left of the ruler. The phrase loops with a
+second before it, each pass with the next take that has audio there, and the
+take playing is lit on its row. Tap any row to keep that take for the phrase,
+which stops listening. Tap **■** to stop without changing anything.
+
+Only this lane plays while you listen, at its level, even if it's muted. The
+song carries on as it was, and the lane joins it again when you stop. Picking
+another phrase, editing the lane or leaving the cell also stops listening.
+
+With a keyboard, move to a lane with takes and press **Enter**. Left and right
+pick the phrase, up and down the take, and Enter keeps it. While listening,
+Enter keeps the take playing. **Esc** stops.
+
 ## The editor
 
 Opening a cell shows the four lanes:

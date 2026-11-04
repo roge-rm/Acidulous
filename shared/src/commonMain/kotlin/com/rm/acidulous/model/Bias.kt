@@ -56,27 +56,35 @@ fun reelSpec(song: Song, track: Track, root: File): String = buildString {
         val audio = track.audioLanes(scene.id) ?: continue
         for (lane in 0 until BIAS_LANES) {
             val take = audio.lane(lane) ?: continue
-            val file = File(root, take.file)
-            if (!file.isFile) continue
-            append(scene.engineId).append('|').append(lane).append('|')
-            append(file.absolutePath).append('|')
-            append(take.offset).append('|').append(take.frames).append('|')
-            append(take.startTick).append('|').append(take.ticks).append('|')
-            append(take.bpm).append('|').append(if (take.loop) '1' else '0')
-            append('|').append(take.fadeIn).append('|').append(take.fadeOut)
-            append('\n')
-            // A stack: the region line was take 0, then the rest in order and
-            // the pieces. A take whose file is missing is still sent, so the
-            // pieces' take numbers line up, and the engine plays it as a gap.
-            for (t in take.takes.drop(1)) {
-                append("take|").append(scene.engineId).append('|').append(lane).append('|')
-                append(File(root, t.file).absolutePath).append('|').append(t.offset).append('\n')
-            }
-            for (p in take.pieces) {
-                append("piece|").append(scene.engineId).append('|').append(lane).append('|')
-                append(p.start).append('|').append(p.end).append('|').append(p.take).append('\n')
-            }
+            appendRegion(scene.engineId, lane, take, root)
         }
+    }
+}
+
+/**
+ * [take]'s lines in a reel spec as lane [lane] of cell [sceneId]. Nothing if
+ * its file is missing.
+ */
+internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef, root: File) {
+    val file = File(root, take.file)
+    if (!file.isFile) return
+    append(sceneId).append('|').append(lane).append('|')
+    append(file.absolutePath).append('|')
+    append(take.offset).append('|').append(take.frames).append('|')
+    append(take.startTick).append('|').append(take.ticks).append('|')
+    append(take.bpm).append('|').append(if (take.loop) '1' else '0')
+    append('|').append(take.fadeIn).append('|').append(take.fadeOut)
+    append('\n')
+    // A stack: the region line was take 0, then the rest in order and
+    // the pieces. A take whose file is missing is still sent, so the
+    // pieces' take numbers line up, and the engine plays it as a gap.
+    for (t in take.takes.drop(1)) {
+        append("take|").append(sceneId).append('|').append(lane).append('|')
+        append(File(root, t.file).absolutePath).append('|').append(t.offset).append('\n')
+    }
+    for (p in take.pieces) {
+        append("piece|").append(sceneId).append('|').append(lane).append('|')
+        append(p.start).append('|').append(p.end).append('|').append(p.take).append('\n')
     }
 }
 

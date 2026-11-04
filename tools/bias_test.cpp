@@ -737,6 +737,75 @@ void oneTakeIsUnchanged() {
        !second.comped() && play(second) == play(region(other, 500, kBarFrames, kBarTicks)));
 }
 
+/**
+ * Listening through a phrase: a loop of the lane, each pass from the next
+ * take, playing instead of the song and whatever the transport is doing.
+ */
+void listeningThroughPlaysEachTakeInTurn() {
+    printf("- listening through\n");
+    Rig rig;
+    Reel::Cell cell{1, {}};
+    cell.lanes[0] = region(flat(kBarFrames, 500), 0, kBarFrames, kBarTicks);
+    rig.reel.cells = {cell};
+    rig.mount();
+
+    // Three takes, each a flat level, and a phrase in the middle.
+    const int32_t from = kBarFrames / 4, to = kBarFrames / 2, lead = 4800;
+    auto takes = std::vector<std::shared_ptr<Reel::Source>>{flat(kBarFrames, 1000), flat(kBarFrames, 2000), flat(kBarFrames, 3000)};
+    audio::Listen listen;
+    listen.lane = 0;
+    listen.from = from - lead;
+    listen.to = to;
+    for (int k = 0; k < 3; ++k) {
+        Reel::Region r = region(takes[0], 0, kBarFrames, kBarTicks);
+        r.takes = {{takes[0], 0}, {takes[1], 0}, {takes[2], 0}};
+        r.pieces = {{0, from, 0}, {from, to, k}, {to, kBarFrames, 0}};
+        r.settle();
+        listen.passes.push_back(r);
+    }
+    ok("no listening, no position", rig.bias->listenPlayed() == -1);
+    rig.bias->swapObject(1, &listen);
+    ok("listening starts at nothing played", rig.bias->listenPlayed() == 0);
+
+    // Stopped transport: the song alone would be silent.
+    const int32_t len = listen.length();
+    std::vector<float> out;
+    for (int64_t done = 0; done < static_cast<int64_t>(len) * 4; done += 256) {
+        rig.bias->onScene(1, 0, false, false);
+        rig.bias->render(rig.L, rig.R, 256);
+        out.insert(out.end(), rig.L, rig.L + 256);
+    }
+    const auto at = [&](int64_t pass, int32_t inLoop) { return out[static_cast<size_t>(pass * len + inLoop)] * 32768.0f; };
+    ok("the lead-in plays the comp as it is", std::fabs(at(0, lead / 2) - 1000.0f) < 0.5f, std::to_string(at(0, lead / 2)));
+    ok("pass one plays take one over the phrase", std::fabs(at(0, len - 2000) - 1000.0f) < 0.5f, std::to_string(at(0, len - 2000)));
+    ok("pass two plays take two", std::fabs(at(1, len - 2000) - 2000.0f) < 0.5f, std::to_string(at(1, len - 2000)));
+    ok("pass three plays take three", std::fabs(at(2, len - 2000) - 3000.0f) < 0.5f, std::to_string(at(2, len - 2000)));
+    ok("then round to take one", std::fabs(at(3, len - 2000) - 1000.0f) < 0.5f, std::to_string(at(3, len - 2000)));
+    ok("the lead-in of pass two is still the comp", std::fabs(at(1, lead / 2) - 1000.0f) < 0.5f);
+    float step = 0.0f;
+    for (size_t i = 1; i < out.size(); ++i) step = std::max(step, std::fabs(out[i] - out[i - 1]));
+    ok("no step anywhere, the loop's ends and joins included", step * 32768.0f < 60.0f, std::to_string(step * 32768.0f));
+    ok("the position counts the frames played", rig.bias->listenPlayed() == static_cast<int64_t>(out.size()));
+
+    // A muted lane is still heard while listening, at the lane's level.
+    rig.bias->params().set(machine::Bias::Mute1, 1.0f);
+    rig.bias->params().set(machine::Bias::Lane1, 0.5f);
+    rig.bias->params().jumpAll();
+    rig.bias->swapObject(1, &listen);
+    rig.bias->render(rig.L, rig.R, 256);
+    rig.bias->render(rig.L, rig.R, 256);
+    rig.bias->render(rig.L, rig.R, 256);
+    ok("a muted lane is heard at its level", std::fabs(rig.L[100] * 32768.0f - 500.0f) < 0.5f, std::to_string(rig.L[100] * 32768.0f));
+
+    // Stopping hands the listen back and the song plays again.
+    rig.bias->params().set(machine::Bias::Mute1, 0.0f);
+    rig.bias->params().set(machine::Bias::Lane1, 1.0f);
+    rig.bias->params().jumpAll();
+    ok("stopping hands back what was listened to", rig.bias->swapObject(1, nullptr) == &listen);
+    ok("and there's no position", rig.bias->listenPlayed() == -1);
+    ok("the song plays as before", near(rig.probe(1, kBarTicks / 2), 500.0f / 32768.0f));
+}
+
 } // namespace
 
 int main() {
@@ -762,6 +831,7 @@ int main() {
     aJoinCrossfades();
     aJoinFindsAQuietSpot();
     oneTakeIsUnchanged();
+    listeningThroughPlaysEachTakeInTurn();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

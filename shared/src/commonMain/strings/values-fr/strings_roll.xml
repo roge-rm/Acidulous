@@ -75,6 +75,7 @@
     <string name="tape_comp">comp</string>
     <string name="tape_take_everywhere">partout</string>
     <string name="tape_take_delete">supprimer la prise</string>
+    <string name="tape_take_phrase">pour cette phrase</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">act</string>

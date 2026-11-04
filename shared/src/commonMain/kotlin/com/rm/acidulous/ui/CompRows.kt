@@ -4,6 +4,7 @@ import com.rm.acidulous.io.*
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -160,6 +161,9 @@ private data class Pick(val take: Int, val from: Int, val to: Int)
  * A stacked lane's takes, one thin row each, take 1 at the top. The number
  * at the left opens the take's menu. The rows scroll, with a bar, once
  * there are more than [maxHeight] holds.
+ *
+ * While listening through ([onKeep] set) the take playing is lit, and a tap
+ * on any row keeps that take for the phrase. [cursor] is the keyboard's take.
  */
 @Composable
 internal fun TakeRows(
@@ -174,8 +178,12 @@ internal fun TakeRows(
     onChoose: (Int, Int, Int, Int) -> Unit,
     onEverywhere: (Int) -> Unit,
     onDelete: (Int) -> Unit,
+    playing: Int = -1,
+    cursor: Int = -1,
+    onKeep: ((Int) -> Unit)? = null,
 ) {
     val c = Acid.colors
+    val keep by rememberUpdatedState(onKeep)
     val stack = take.stack()
     val scroll = rememberScrollState()
     var pick by remember { mutableStateOf<Pick?>(null) }
@@ -186,13 +194,27 @@ internal fun TakeRows(
                 val shape = TakePeaks.rememberShape(root, t.file)
                 val heard = take.pieces.ifEmpty { listOf(com.rm.acidulous.model.Piece(0, take.frames, 0)) }.filter { it.take == k }
                 var menu by remember { mutableStateOf(false) }
+                val lit = k == playing
+                val forPhrase = stringResource(Res.string.tape_take_phrase)
+                val everywhere = stringResource(Res.string.tape_take_everywhere)
+                val delete = stringResource(Res.string.tape_take_delete)
+                val actions = buildList {
+                    if (onKeep != null) add(action(forPhrase) { onKeep(k) })
+                    else if (phrase in 0 until cuts.size - 1) add(action(forPhrase) { onChoose(k, cuts[phrase], cuts[phrase + 1], phrase) })
+                    add(action(everywhere) { onEverywhere(k) })
+                    add(action(delete) { onDelete(k) })
+                }
                 Row(Modifier.fillMaxWidth().height(RowH).padding(bottom = 1.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         Modifier.width(GutterW).fillMaxHeight()
                             .clip(RoundedCornerShape(2.dp))
-                            .background(if (heard.isNotEmpty()) c.control else c.card)
+                            .background(if (lit) c.accent.copy(alpha = 0.45f) else if (heard.isNotEmpty()) c.control else c.card)
                             .clickable { menu = true }
-                            .button(stringResource(Res.string.a11y_take_row, k + 1)),
+                            .button(
+                                stringResource(Res.string.a11y_take_row, k + 1),
+                                if (lit) stringResource(Res.string.a11y_playing) else null,
+                                actions,
+                            ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
@@ -203,11 +225,11 @@ internal fun TakeRows(
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             ScaledMenu(menuScroll) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(Res.string.tape_take_everywhere), fontSize = 12.sp, color = c.text) },
+                                    text = { Text(everywhere, fontSize = 12.sp, color = c.text) },
                                     onClick = { menu = false; onEverywhere(k) },
                                 )
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(Res.string.tape_take_delete), fontSize = 12.sp, color = c.red) },
+                                    text = { Text(delete, fontSize = 12.sp, color = c.red) },
                                     onClick = { menu = false; onDelete(k) },
                                 )
                             }
@@ -217,14 +239,17 @@ internal fun TakeRows(
                     Box(
                         Modifier.weight(1f).fillMaxHeight()
                             .clip(RoundedCornerShape(2.dp))
-                            .background(c.card)
+                            .background(if (lit) c.accent.copy(alpha = 0.12f) else c.card)
+                            .then(if (k == cursor) Modifier.border(1.dp, c.teal, RoundedCornerShape(2.dp)) else Modifier)
                             .pointerInput(k, take, total) {
                                 rowGestures(
                                     take, total, k,
                                     onPick = { pick = it },
                                     onTap = { at ->
+                                        val keeping = keep
                                         val i = phraseAt(latestCuts, at)
-                                        if (i >= 0) onChoose(k, latestCuts[i], latestCuts[i + 1], i)
+                                        if (keeping != null) keeping(k)
+                                        else if (i >= 0) onChoose(k, latestCuts[i], latestCuts[i + 1], i)
                                     },
                                     onDrag = { from, to -> pick = null; onChoose(k, from, to, -1) },
                                 )

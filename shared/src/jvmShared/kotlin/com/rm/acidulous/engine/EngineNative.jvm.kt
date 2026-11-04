@@ -325,6 +325,10 @@ internal actual object EngineNative {
         val result_ = jni_nativeLoadReel(rack, spec)
         return result_
     }
+    @JvmName("nativeListenReel")
+    private external fun blocking_nativeListenReel(rack: Int, spec: String): String
+    actual suspend fun nativeListenReel(rack: Int, spec: String): String = blocking_nativeListenReel(rack, spec)
+    actual external fun nativeListenPlayed(rack: Int): Long
     actual external fun nativeSetCacheRoot(path: String)
     @JvmName("nativeLoadFormula")
     private external fun jni_nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String

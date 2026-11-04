@@ -75,6 +75,7 @@
     <string name="tape_comp">comp</string>
     <string name="tape_take_everywhere">use everywhere</string>
     <string name="tape_take_delete">delete take</string>
+    <string name="tape_take_phrase">use for this phrase</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">on</string>

@@ -70,6 +70,23 @@ tout près. Chaque choix est une étape d’annulation. L’enregistrement d’u
 supprimée reste dans la bibliothèque de sons, comme tout enregistrement, et
 vous pouvez l’y supprimer.
 
+## Écouter chaque prise
+
+Une phrase choisie, touchez **▶** à gauche de la règle. La phrase tourne en
+boucle avec une seconde avant elle, chaque passage avec la prise suivante qui a
+du son à cet endroit, et la prise qui joue s’allume sur sa rangée. Touchez une
+rangée pour garder cette prise pour la phrase, ce qui arrête l’écoute. Touchez
+**■** pour arrêter sans rien changer.
+
+Seul ce couloir joue pendant l’écoute, à son niveau, même s’il est muet. Le
+morceau continue comme avant, et le couloir le rejoint quand vous arrêtez.
+Choisir une autre phrase, modifier le couloir ou quitter la cellule arrête
+aussi l’écoute.
+
+Au clavier, allez sur un couloir qui a des prises et appuyez sur **Entrée**.
+Gauche et droite choisissent la phrase, haut et bas la prise, et Entrée la
+garde. Pendant l’écoute, Entrée garde la prise qui joue. **Échap** arrête.
+
 ## L’éditeur
 
 Ouvrir une cellule montre les quatre couloirs :

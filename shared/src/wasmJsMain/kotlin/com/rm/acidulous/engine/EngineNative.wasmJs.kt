@@ -334,6 +334,12 @@ private fun async_nativeLoadTake(arena: Int, rack: Int, path: Int): Int =
 private fun async_nativeLoadReel(arena: Int, rack: Int, spec: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadReel(arena, rack, spec)")
 
+private fun async_nativeListenReel(arena: Int, rack: Int, spec: Int): Int =
+    js("globalThis.acid._acid_async_nativeListenReel(arena, rack, spec)")
+
+private fun raw_nativeListenPlayed(env: Int, rack: Int): Long =
+    js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeListenPlayed(env, 0, rack)")
+
 private fun raw_nativeSetCacheRoot(env: Int, path: Int): Unit =
     js("globalThis.acid._Java_com_rm_acidulous_engine_EngineNative_nativeSetCacheRoot(env, 0, path)")
 
@@ -1426,6 +1432,23 @@ internal actual object EngineNative {
         Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeListenReel(rack: Int, spec: String): String {
+        val arena_ = Jni.openArena()
+        val jspec = Jni.string(spec)
+        val ticket_ = async_nativeListenReel(arena_, rack, jspec)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual fun nativeListenPlayed(rack: Int): Long {
+        val raw_ = raw_nativeListenPlayed(Jni.env, rack)
+        val result_ = raw_
+        Jni.release()
         return result_
     }
 

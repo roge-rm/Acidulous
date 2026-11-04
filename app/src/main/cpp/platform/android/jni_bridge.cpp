@@ -647,6 +647,19 @@ Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeListenReel(JNIEnv *env, jobject, jint rack, jstring spec) {
+    const char *p = spec != nullptr ? env->GetStringUTFChars(spec, nullptr) : "";
+    const std::string out = host().listenReel(rack, p);
+    if (spec != nullptr) env->ReleaseStringUTFChars(spec, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeListenPlayed(JNIEnv *, jobject, jint rack) {
+    return static_cast<jlong>(host().listenPlayed(rack));
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     const std::string out = host().loadTake(rack, p);

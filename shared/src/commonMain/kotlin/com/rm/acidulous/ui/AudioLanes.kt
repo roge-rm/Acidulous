@@ -4,7 +4,9 @@ import com.rm.acidulous.io.*
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -21,6 +23,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +40,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,6 +62,9 @@ import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.heardIn
+import com.rm.acidulous.model.keeping
+import com.rm.acidulous.model.listenPlan
 import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.takeForFile
 import com.rm.acidulous.model.takeForWholeFile
@@ -174,6 +188,96 @@ fun AudioLanes(
     val cutsNow by rememberUpdatedState(cuts)
     val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f) }
 
+    // Listening through the picked phrase (see Listening). It stops when it
+    // no longer matches what's shown: another phrase or lane, an edit, a
+    // drag, or leaving the editor.
+    val listen = Listening.session?.takeIf { it.on(trackIndex, sceneId) }
+    val plan = if (openTake != null && cuts != null && phrase in 0 until cuts.size - 1) {
+        openTake.listenPlan(open, cuts[phrase], cuts[phrase + 1])
+    } else {
+        null
+    }
+    SideEffect {
+        if (listen != null) {
+            val now = clip.audio?.lane(listen.plan.lane)?.copy(peaks = emptyList())
+            if (listen.plan.lane != open || listen.phrase != phrase || drag != null ||
+                now != listen.take.copy(peaks = emptyList())) Listening.stop()
+        }
+    }
+    DisposableEffect(trackIndex, sceneId) {
+        onDispose { if (Listening.session?.on(trackIndex, sceneId) == true) Listening.stop() }
+    }
+    var played by remember { mutableStateOf(-1L) }
+    LaunchedEffect(listen) {
+        played = -1L
+        if (listen == null) return@LaunchedEffect
+        while (true) {
+            withFrameNanos { }
+            played = Listening.played(trackIndex)
+        }
+    }
+    val playingTake by remember(listen) { derivedStateOf { listen?.plan?.takeAt(played) ?: -1 } }
+    /** Where listening is, as a tick of the cycle on lane [lane], or null on any other lane. */
+    fun listenTick(lane: Int): Int? {
+        val l = listen ?: return null
+        if (l.plan.lane != lane || played < 0) return null
+        val t = l.take
+        if (t.frames <= 0) return null
+        return t.startTick + (l.plan.frameAt(played).toLong() * t.lengthTicks() / t.frames).toInt()
+    }
+    val keep: (Listening.Session, Int) -> Unit = { l, k ->
+        Listening.stop()
+        compEdit(l.plan.lane) { it.keeping(l.plan, k) }
+    }
+
+    // The keyboard: Enter on a stacked lane starts comping it. Left and right
+    // pick the phrase, up and down the take, Enter keeps it (or, while
+    // listening, the take playing). Esc stops.
+    var keyLane by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    var keyTake by remember(trackIndex, sceneId) { mutableStateOf(0) }
+    val clipNow by rememberUpdatedState(clip)
+    val listenNow by rememberUpdatedState(listen)
+    fun compKey(lane: Int, code: Int): Boolean {
+        val st = clipNow.audio?.lane(lane)?.takeIf { it.takeCount > 1 } ?: return false
+        val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
+            code == KeyCodes.KEYCODE_DPAD_CENTER
+        val cs = (if (open == lane) cutsNow else null) ?: listOf(0, st.frames)
+        val count = cs.size - 1
+        if (keyLane != lane) {
+            if (!enter) return false
+            keyLane = lane
+            if (open != lane) { open = lane; phrase = 0 } else if (phrase !in 0 until count) phrase = 0
+            keyTake = st.heardIn(cs[phrase.coerceIn(0, count - 1)], cs[phrase.coerceIn(0, count - 1) + 1])
+            return true
+        }
+        val l = listenNow?.takeIf { it.plan.lane == lane }
+        when (code) {
+            KeyCodes.KEYCODE_ESCAPE -> { keyLane = -1; if (l != null) Listening.stop() }
+            KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {
+                val d = if (code == KeyCodes.KEYCODE_DPAD_LEFT) -1 else 1
+                phrase = (phrase + d).coerceIn(0, count - 1)
+                keyTake = st.heardIn(cs[phrase], cs[phrase + 1])
+            }
+            KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN -> {
+                val d = if (code == KeyCodes.KEYCODE_DPAD_UP) -1 else 1
+                if (l == null) keyTake = (keyTake + d).coerceIn(0, st.takeCount - 1)
+            }
+            else -> {
+                if (!enter) return false
+                if (l != null) {
+                    val k = l.plan.takeAt(Listening.played(trackIndex))
+                    if (k >= 0) keep(l, k)
+                } else if (phrase in 0 until count) {
+                    val k = keyTake
+                    val a = cs[phrase]
+                    val b = cs[phrase + 1]
+                    compEdit(lane) { it.choosing(k, a, b) }
+                }
+            }
+        }
+        return true
+    }
+
     // The take rows get at most this much of the editor's height and scroll past it.
     var heightPx by remember { mutableStateOf(0) }
     val rowsMax = with(androidx.compose.ui.platform.LocalDensity.current) { (heightPx * 0.45f).toDp() }
@@ -181,7 +285,14 @@ fun AudioLanes(
         // The ruler: bar numbers along the cycle, so a repeat shows as a
         // second pass rather than a longer bar.
         Row(Modifier.fillMaxWidth().height(RulerH)) {
-            Box(Modifier.width(GutterW))
+            if (listen != null || (plan != null && openTake != null)) {
+                ListenButton(listening = listen != null) {
+                    if (listen != null) Listening.stop()
+                    else if (plan != null && openTake != null) Listening.start(trackIndex, sceneId, phrase, openTake, plan)
+                }
+            } else {
+                Box(Modifier.width(GutterW))
+            }
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 Canvas(Modifier.fillMaxSize()) {
                     val bars = (total + ticksPerBar - 1) / ticksPerBar
@@ -240,10 +351,22 @@ fun AudioLanes(
                         )
                     }
                 }
+                var keyFocused by remember { mutableStateOf(false) }
                 Box(
                     Modifier.weight(1f).fillMaxHeight()
                         .clip(RoundedCornerShape(3.dp))
                         .background(c.card)
+                        .then(
+                            if (stored != null && stored.takeCount > 1) {
+                                Modifier
+                                    .then(if (keyFocused) Modifier.border(1.dp, if (keyLane == lane) c.accent else c.teal, RoundedCornerShape(3.dp)) else Modifier)
+                                    .onFocusChanged { keyFocused = it.isFocused; if (!it.isFocused && keyLane == lane) keyLane = -1 }
+                                    .focusable()
+                                    .onKeyEvent { ev -> ev.type == KeyEventType.KeyDown && compKey(lane, ev.press.keyCode) }
+                            } else {
+                                Modifier
+                            },
+                        )
                         .then(
                             if (take == null) {
                                 Modifier.clickable { picking = lane }
@@ -358,7 +481,7 @@ fun AudioLanes(
                         )
                     }
                     Canvas(Modifier.fillMaxSize()) {
-                        val head = playheadTick() ?: return@Canvas
+                        val head = (if (listen != null) listenTick(lane) else playheadTick()) ?: return@Canvas
                         val x = size.width * head.coerceIn(0, total) / total
                         drawLine(c.accent, Offset(x, 0f), Offset(x, size.height), 1.5f)
                     }
@@ -367,13 +490,17 @@ fun AudioLanes(
             if (open == lane && stored != null && stored.takeCount > 1) {
                 TakeRows(
                     take = stored, total = total, cuts = cuts ?: listOf(0, stored.frames), phrase = phrase,
-                    maxHeight = rowsMax, root = root, playheadTick = playheadTick,
+                    maxHeight = rowsMax, root = root,
+                    playheadTick = { if (listen != null) listenTick(lane) else playheadTick() },
                     onChoose = { k, from, to, at ->
                         if (at >= 0) phrase = at
                         compEdit(lane) { it.choosing(k, from, to) }
                     },
                     onEverywhere = { k -> compEdit(lane) { it.hearing(k) } },
                     onDelete = { k -> compEdit(lane) { it.withoutTake(k) } },
+                    playing = if (listen?.plan?.lane == lane) playingTake else -1,
+                    cursor = if (keyLane == lane && listen == null) keyTake else -1,
+                    onKeep = listen?.takeIf { it.plan.lane == lane }?.let { l -> { k: Int -> keep(l, k) } },
                 )
             }
         }

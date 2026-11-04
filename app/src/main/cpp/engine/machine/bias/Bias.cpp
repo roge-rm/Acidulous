@@ -124,6 +124,14 @@ void Bias::reset() {
 int64_t Bias::heldBytes() const { return held::bytes(reel); }
 
 void *Bias::swapObject(int32_t slot, void *object) {
+    if (slot == 1) {
+        auto *old = const_cast<audio::Listen *>(listen);
+        listen = static_cast<const audio::Listen *>(object);
+        listenAt = 0;
+        listenHint = 0;
+        listenFrames.store(listen != nullptr ? 0 : -1, std::memory_order_relaxed);
+        return old;
+    }
     if (slot != 0) return object; // nothing else is mounted here, so hand it back
     auto *old = const_cast<audio::Reel *>(reel);
     reel = static_cast<const audio::Reel *>(object);
@@ -136,6 +144,7 @@ void *Bias::swapObject(int32_t slot, void *object) {
 
 Bias::~Bias() {
     delete reel;
+    delete listen;
 }
 
 void Bias::onScene(int64_t sceneId, int64_t tick, bool isPlaying, bool clipMuted) {
@@ -166,6 +175,12 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     bias::ColourSpec spec = colourOf();
     if (colourBypass) spec.any = false;
     colour.setBlock(spec);
+    if (listen != nullptr && listen->playable()) {
+        renderListen(L, R, frames);
+        addInput(L, R, frames);
+        if (spec.any) colour.process(L, R, frames);
+        return true;
+    }
     if (cell == nullptr || !playing || muted) {
         // A muted or empty cell still runs the tape colour, since blank tape
         // still hisses. It's skipped when there's no colour (the default).
@@ -354,6 +369,54 @@ bool Bias::render(float *L, float *R, int32_t frames) {
     if (spec.any) colour.process(L, R, frames);
     reseed = false;
     return true; // always stereo, since lanes can differ
+}
+
+/** The audio input at the Monitor level, if it's on. */
+void Bias::addInput(float *L, float *R, int32_t frames) {
+    const float monitor = paramOfIndex(Monitor);
+    if (monitor <= 0.0001f) return;
+    const InputBus &bus = InputBus::get();
+    if (!bus.live()) return;
+    const float *in = bus.block();
+    const int32_t n = bus.frames() < frames ? bus.frames() : frames;
+    for (int32_t i = 0; i < n; ++i) {
+        L[i] += in[static_cast<size_t>(i) * 2] * monitor;
+        R[i] += in[static_cast<size_t>(i) * 2 + 1] * monitor;
+    }
+}
+
+/**
+ * Listening through: the loop at the lane's level, its mute ignored, each
+ * pass from the next take. It plays at the takes' own speed, and fades in
+ * and out at the loop's ends so the jump back doesn't click.
+ */
+void Bias::renderListen(float *L, float *R, int32_t frames) {
+    const audio::Listen &ls = *listen;
+    const int32_t len = ls.length();
+    const auto passes = static_cast<int64_t>(ls.passes.size());
+    const int32_t lane = ls.lane >= 0 && ls.lane < audio::kReelLanes ? ls.lane : 0;
+    const float level = paramOfIndex(Lane1 + lane) * dsp::dbToGain(paramOfIndex(Gain));
+    const int32_t half = len / 2 > 0 ? len / 2 : 1;
+    const int32_t edge = audio::kListenEdgeFrames < half ? audio::kListenEdgeFrames : half;
+    const float perEdge = 1.0f / static_cast<float>(edge);
+    for (int32_t i = 0; i < frames; ++i) {
+        const int64_t pass = listenAt / len;
+        const auto in = static_cast<int32_t>(listenAt % len);
+        if (in == 0) listenHint = 0;
+        const audio::Reel::Region &r = ls.passes[static_cast<size_t>(pass % passes)];
+        const int64_t at = ls.from + in;
+        float l = 0.0f, rr = 0.0f;
+        r.soundAt(at, listenHint, l, rr);
+        float g = r.fadeAt(at) * level;
+        const float a = (static_cast<float>(in) + 0.5f) * perEdge;
+        const float b = (static_cast<float>(len - in) - 0.5f) * perEdge;
+        const float e = a < b ? a : b;
+        if (e < 1.0f) g *= e;
+        L[i] += l * g;
+        R[i] += rr * g;
+        ++listenAt;
+    }
+    listenFrames.store(listenAt, std::memory_order_relaxed);
 }
 
 } // namespace acidulous::machine

@@ -1,4 +1,5 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include "Colour.h"
 #include <engine/dsp/Wsola.h>
@@ -77,8 +78,18 @@ class Bias final : public Machine {
      */
     void setColourBypass(bool on) { colourBypass = on; }
 
-    /** Slot 0 is the reel. Nothing else is mounted here. */
+    /**
+     * Slot 0 is the reel. Slot 1 is listening through a phrase (an
+     * `audio::Listen`, or null to stop), which plays instead of the song
+     * whether or not the transport runs, and leaves the reel alone.
+     */
     void *swapObject(int32_t slot, void *object) override;
+
+    /**
+     * Frames played since listening started, or -1 when not listening. Which
+     * pass is playing is this over the loop's length. Any thread.
+     */
+    int64_t listenPlayed() const { return listenFrames.load(std::memory_order_relaxed); }
     int64_t heldBytes() const override;
     // Frees what was mounted and not swapped back out (on the retire worker).
     ~Bias() override;
@@ -90,6 +101,8 @@ class Bias final : public Machine {
 
   private:
     bias::ColourSpec colourOf();
+    void renderListen(float *L, float *R, int32_t frames);
+    void addInput(float *L, float *R, int32_t frames);
 
     bias::Colour colour;
     dsp::Biquad bleedHp[2];
@@ -110,6 +123,10 @@ class Bias final : public Machine {
     /** The piece each comped lane last read, so reading on finds the next without a search. */
     int32_t pieceHint[audio::kReelLanes] = {};
     int64_t cycleTick = 0;
+    const audio::Listen *listen = nullptr;
+    int64_t listenAt = 0;
+    int32_t listenHint = 0;
+    std::atomic<int64_t> listenFrames{-1};
     float sampleRate = 48000.0f;
     bool playing = false;
     bool muted = false;

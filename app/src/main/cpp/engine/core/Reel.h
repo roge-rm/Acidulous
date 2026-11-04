@@ -238,6 +238,23 @@ struct Reel {
         }
 
         /**
+         * The lane at [at] region frames, comped or plain, scaled to +-1,
+         * before `fadeAt`. Audio thread.
+         */
+        void soundAt(int64_t at, int32_t &hint, float &l, float &r) const {
+            if (comped()) {
+                compAt(at, hint, l, r);
+                return;
+            }
+            l = r = 0.0f;
+            if (source == nullptr) return;
+            const int64_t s = offset + at;
+            if (s < 0 || s >= source->frames) return;
+            l = static_cast<float>(source->lp[static_cast<size_t>(s)]) * (1.0f / 32768.0f);
+            r = static_cast<float>(source->rp[static_cast<size_t>(s)]) * (1.0f / 32768.0f);
+        }
+
+        /**
          * Tidies the pieces and moves each join to a quiet spot. Run once
          * when the reel is built, never on the audio thread.
          *
@@ -392,6 +409,28 @@ struct Reel {
         }
         return nullptr;
     }
+};
+
+/** How long listening through fades in and out at each end of its loop: 10 ms at 48 kHz. */
+constexpr int32_t kListenEdgeFrames = 480;
+
+/**
+ * Listening through a phrase: one lane played over and over on a loop of
+ * [from, to), with a different take over the phrase on each pass. Each pass
+ * is the whole lane as it would be with that take kept, settled like any
+ * comp, so its joins sound as they will after keeping it.
+ *
+ * Built on a worker, mounted whole and never changed, like a Reel. Its
+ * sources are the reel's own, so it costs no decoding.
+ */
+struct Listen {
+    int32_t lane = 0;
+    int32_t from = 0; // region frames: the lead-in starts here
+    int32_t to = 0;   // and the phrase ends here
+    std::vector<Reel::Region> passes; // in the order they play
+
+    int32_t length() const { return to - from; }
+    bool playable() const { return length() > 0 && !passes.empty(); }
 };
 
 /**
