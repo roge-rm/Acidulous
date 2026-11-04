@@ -170,7 +170,7 @@ class ListenThroughTest {
                 val laneClosed = px(16f) + (h - px(16f)) / 8f
                 it.tap(Offset(x(1.0), laneClosed))
                 it.settle(20)
-                val lanes = h - px(16f) - px(48f) - px(18f) // three take rows and the comp tools
+                val lanes = h - px(16f) - px(84f) - px(18f) // three take rows and the comp tools
                 val laneOpen = px(16f) + lanes / 8f
                 // The middle phrase, then the button left of the ruler.
                 it.tap(Offset(x(4.0), laneOpen))
@@ -197,8 +197,8 @@ class ListenThroughTest {
                 // Again, and a tap on take 2's row keeps it for the phrase.
                 it.tap(button)
                 val again = Listening.session!!
-                val row0 = px(16f) + lanes / 4f + px(8f)
-                it.tap(Offset(x(6.5), row0 + px(16f)))
+                val row0 = px(16f) + lanes / 4f + px(14f)
+                it.tap(Offset(x(6.5), row0 + px(28f)))
                 it.settle(10)
                 assertNull("keeping ends listening", Listening.session)
                 it.shot("listen-$tag-4-kept.png")

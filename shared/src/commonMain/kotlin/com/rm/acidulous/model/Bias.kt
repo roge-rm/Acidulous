@@ -216,7 +216,10 @@ fun TakeRef.lengthTicks(): Int =
  */
 data class Mark(
     val frame: Long, val sceneId: Long, val tick: Int, val cycleTicks: Int, val bpm: Float,
-)
+) {
+    /** The song stopped here while recording: no cell, just the end of the one before. */
+    val isEnd: Boolean get() = cycleTicks <= 0
+}
 
 /** Turns the engine's flat array of longs, five per mark, into marks. */
 fun marksFrom(raw: LongArray, count: Int): List<Mark> = (0 until count).map { i ->
@@ -242,7 +245,8 @@ const val MIN_TAKE_FRAMES = ENGINE_RATE / 4
  * order they were recorded.
  *
  * No audio is copied: one file, several cells, each a window into it. The last
- * segment runs to [totalFrames], where the recording stopped. A scene that
+ * segment runs to an end mark, where the song stopped, or else to
+ * [totalFrames], where the recording stopped. A scene that
  * loops gives a segment per pass, and each one goes on that cell's stack (see
  * [Clip.withRecorded]).
  *
@@ -255,9 +259,16 @@ fun splitTake(
     file: String,
     sceneIdOf: (Long) -> String?,
 ): List<Pair<String, TakeRef>> {
+    // Only this file's marks: a frame going backwards means the ones before
+    // it were left from an earlier recording, and a mark past the end of the
+    // file can't belong to it.
+    val from = (1 until marks.size).lastOrNull { marks[it].frame < marks[it - 1].frame } ?: 0
+    val inFile = marks.drop(from).filter { it.frame in 0 until totalFrames }
     val out = ArrayList<Pair<String, TakeRef>>()
-    for ((i, m) in marks.withIndex()) {
-        val end = if (i + 1 < marks.size) marks[i + 1].frame else totalFrames
+    for ((i, m) in inFile.withIndex()) {
+        // An end mark is where the song stopped: it only ends the one before.
+        if (m.isEnd) continue
+        val end = if (i + 1 < inFile.size) inFile[i + 1].frame else totalFrames
         val frames = (end - m.frame).toInt()
         if (frames < MIN_TAKE_FRAMES) continue
         val sceneId = sceneIdOf(m.sceneId) ?: continue
@@ -267,6 +278,54 @@ fun splitTake(
         )
     }
     return out
+}
+
+/**
+ * The split take in passes, one undo step each. A pass ends when a cell comes
+ * round again, so a loop recorded four times is four passes, newest undone
+ * first, and one run through the song is one.
+ */
+fun recordingPasses(takes: List<Pair<String, TakeRef>>): List<List<Pair<String, TakeRef>>> {
+    val out = ArrayList<List<Pair<String, TakeRef>>>()
+    var pass = ArrayList<Pair<String, TakeRef>>()
+    for (t in takes) {
+        if (pass.any { it.first == t.first }) {
+            out += pass
+            pass = ArrayList()
+        }
+        pass += t
+    }
+    if (pass.isNotEmpty()) out += pass
+    return out
+}
+
+/**
+ * The track after each pass of a recording onto [lane], in order: one undo
+ * step each. [drawn] gives a pass its waveform, and [comp] a stacked lane the
+ * shape of what it plays (null leaves it as it is).
+ */
+fun Song.recordedSteps(
+    track: Int,
+    lane: Int,
+    takes: List<Pair<String, TakeRef>>,
+    drawn: (TakeRef) -> TakeRef = { it },
+    comp: (TakeRef) -> List<Float>? = { null },
+): List<Track> {
+    var next = this
+    val steps = ArrayList<Track>()
+    for (pass in recordingPasses(takes)) {
+        for ((sceneId, take) in pass) {
+            next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { it.withRecorded(lane, drawn(take)) }
+        }
+        for (sceneId in pass.map { it.first }.distinct()) {
+            val held = next.tracks.getOrNull(track)?.clips?.get(sceneId)?.audio?.lane(lane) ?: continue
+            if (held.takes.isEmpty()) continue
+            val peaks = comp(held) ?: continue
+            next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { it.withTake(lane, held.copy(peaks = peaks)) }
+        }
+        next.tracks.getOrNull(track)?.let { steps += it }
+    }
+    return steps
 }
 
 // --- Take stacks -------------------------------------------------------------
@@ -285,6 +344,18 @@ fun TakeRef.heardTake(): Int {
     if (pieces.isEmpty()) return 0
     return pieces.groupBy { it.take }
         .maxByOrNull { (_, ps) -> ps.sumOf { (it.end - it.start).toLong() } }?.key ?: 0
+}
+
+/**
+ * The file the lane plays, for its name on the card, or null when its pieces
+ * come from more than one file.
+ */
+fun TakeRef.heardFile(): String? {
+    if (takes.isEmpty()) return file
+    val heard = if (blend) takes.indices.toList()
+                else pieces.ifEmpty { listOf(Piece(0, frames, 0)) }.filter { it.end > it.start }.map { it.take }
+    return heard.mapNotNull { takes.getOrNull(it)?.file }.distinct().singleOrNull()
+        ?: if (heard.isEmpty()) file else null
 }
 
 /** Take [k] heard over the whole lane, as far as it has audio. */

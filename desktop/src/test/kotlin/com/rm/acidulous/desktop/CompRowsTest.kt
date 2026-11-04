@@ -153,13 +153,13 @@ class CompRowsTest {
                 val laneClosed = px(16f) + (h - px(16f)) / 8f
                 it.tap(Offset(x(1.0), laneClosed))
                 it.settle(20)
-                // Open: three 16 dp rows take their height from the lanes.
-                val lanes = h - px(16f) - px(48f) - px(18f) // three take rows and the comp tools
+                // Open: three 28 dp rows take their height from the lanes.
+                val lanes = h - px(16f) - px(84f) - px(18f) // three take rows and the comp tools
                 val laneOpen = px(16f) + lanes / 8f
                 it.tap(Offset(x(6.5), laneOpen))
                 it.shot("$tag-2-phrase.png")
                 // Take 1's row, in the middle phrase.
-                val row0 = px(16f) + lanes / 4f + px(8f)
+                val row0 = px(16f) + lanes / 4f + px(14f)
                 it.tap(Offset(x(4.0), row0))
                 it.settle(10)
                 it.shot("$tag-3-chosen.png")
@@ -169,7 +169,7 @@ class CompRowsTest {
                 assertTrue("the phrase starts in the gap: ${middle.start}", middle.start in (2.5 * rate).toInt()..(3.2 * rate).toInt())
                 assertTrue("and ends in the next: ${middle.end}", middle.end in (5.1 * rate).toInt()..(5.8 * rate).toInt())
                 // Drag along take 2's row from 6 s to 7 s.
-                val row1 = row0 + px(16f)
+                val row1 = row0 + px(28f)
                 it.sendPointerEvent(PointerEventType.Press, Offset(x(6.0), row1))
                 for (s in 1..10) {
                     it.sendPointerEvent(PointerEventType.Move, Offset(x(6.0 + s / 10.0), row1))

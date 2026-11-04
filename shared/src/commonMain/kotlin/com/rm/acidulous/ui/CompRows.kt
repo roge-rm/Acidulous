@@ -71,7 +71,7 @@ import kotlin.math.abs
  * Drag along a row and it plays over exactly the stretch you dragged. Each is
  * one undo step that writes the lane's pieces; the engine places the joins.
  */
-private val RowH = 16.dp
+private val RowH = 28.dp
 
 /** The region frame under [x] on a lane [width] wide. */
 internal fun frameAt(take: TakeRef, total: Int, width: Float, x: Float): Int {

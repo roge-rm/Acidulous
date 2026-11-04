@@ -200,8 +200,8 @@ class CompToolsTest {
                 it.tap(Offset(x(1.0), px(16f) + (h - px(16f)) / 8f))
                 it.settle(30)
                 // Three rows under lane 1, then the tools.
-                val lanes = h - px(16f) - px(48f) - px(18f)
-                val bar = px(16f) + lanes / 4f + px(48f) + px(9f)
+                val lanes = h - px(16f) - px(84f) - px(18f)
+                val bar = px(16f) + lanes / 4f + px(84f) + px(9f)
                 it.shot("c5-$tag-1-scores.png")
                 // Suggest, the first tool.
                 it.tap(Offset(gutter + px(20f), bar))
@@ -220,11 +220,11 @@ class CompToolsTest {
                 assertTrue("and off again", it.until(3000) { !lane(0).blend })
 
                 // Lane 2, one take: open it and line it up on lane 1.
-                it.tap(Offset(x(1.0), px(16f) + lanes / 4f + px(48f) + px(18f) + lanes / 8f))
+                it.tap(Offset(x(1.0), px(16f) + lanes / 4f + px(84f) + px(18f) + lanes / 8f))
                 it.settle(30)
                 // One row under lane 2, then the tools.
-                val lanes2 = h - px(16f) - px(16f) - px(18f)
-                val bar2 = px(16f) + lanes2 / 2f + px(16f) + px(9f)
+                val lanes2 = h - px(16f) - px(28f) - px(18f)
+                val bar2 = px(16f) + lanes2 / 2f + px(28f) + px(9f)
                 it.shot("c5-$tag-4-double.png")
                 it.tap(Offset(gutter + px(24f), bar2))
                 assertTrue("the double moved", it.until(8000) { lane(1).pieces.isNotEmpty() })

@@ -136,4 +136,46 @@ class BiasStackTest {
         editor.undo(0)
         assertEquals(1, lane().takeCount)
     }
+
+    /** A loop recorded three times is three undo steps, newest first, as the manual says. */
+    @Test
+    fun eachPassOfALoopRecordingIsItsOwnUndoStep() {
+        val track = Track(id = "t", name = "t", machine = Machine(BIAS_MACHINE))
+        val song = Song(name = "x", scenes = listOf(Scene(id = "s", name = "s")), tracks = listOf(track))
+        val editor = SongEditor(song) { _, _ -> }
+        fun lane() = editor.song.tracks[0].clips["s"]?.audio?.lane(0)
+        val takes = (0 until 3).map { "s" to pass(offset = it * 2 * barFrames) }
+        val steps = editor.song.recordedSteps(0, 0, takes)
+        assertEquals(3, steps.size)
+        for (step in steps) editor.edit(0) { step }
+        assertEquals(3, lane()!!.takeCount)
+        editor.undo(0)
+        assertEquals(2, lane()!!.takeCount)
+        assertEquals(1, lane()!!.heardTake())
+        editor.undo(0)
+        assertEquals(1, lane()!!.takeCount)
+        editor.undo(0)
+        assertEquals(null, lane())
+    }
+
+    /** One run through the song crosses three scenes in one pass: one undo step. */
+    @Test
+    fun oneRunThroughTheSongIsOnePass() {
+        val takes = listOf("a" to pass(0), "b" to pass(1), "c" to pass(2), "a" to pass(3), "b" to pass(4))
+        assertEquals(listOf(listOf("a", "b", "c"), listOf("a", "b")), recordingPasses(takes).map { p -> p.map { it.first } })
+    }
+
+    /** The card names the file you hear, or none when the pieces mix files. */
+    @Test
+    fun theCardNamesTheHeardTakesFile() {
+        val lane = Clip(bars = 2).withRecorded(0, pass(0, file = "samples/a.wav"))
+            .withRecorded(0, pass(0, file = "samples/b.wav")).audio!!.lane(0)!!
+        assertEquals("samples/b.wav", lane.heardFile())
+        assertEquals("samples/a.wav", lane.hearing(0).heardFile())
+        val mixed = lane.copy(pieces = lane.pieces.overlay(0, barFrames, 0))
+        assertEquals(null, mixed.heardFile())
+        // Passes of one recording share a file, so mixing them still names it.
+        val loop = Clip(bars = 2).withRecorded(0, pass(0)).withRecorded(0, pass(2 * barFrames)).audio!!.lane(0)!!
+        assertEquals("samples/take.wav", loop.copy(pieces = loop.pieces.overlay(0, barFrames, 0)).heardFile())
+    }
 }

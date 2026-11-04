@@ -555,13 +555,19 @@ void Engine::renderBlock(const float *in, float *out) {
         //
         // Not while counting in or stopped. The scheduler's tick stands still
         // during a count-in, so a mark there would put the count-in's silence
-        // at the top of the take.
+        // at the top of the take. A stop while recording writes an end mark
+        // instead, so the take ends where the song did.
         const int32_t armed = armedRack.load(std::memory_order_relaxed);
-        if (playing && !counting && armed >= 0 && armed < kRackCount) {
-            if (capture.overflowed()) marks.poison();
-            marks.observe(framesBefore, scheduler.rackSceneId(armed),
-                          scheduler.rackCycleTick(armed), scheduler.rackCycleTicks(armed),
-                          clock.bpm());
+        if (armed >= 0 && armed < kRackCount) {
+            if (playing && !counting) {
+                if (capture.overflowed()) marks.poison();
+                marks.observe(framesBefore, scheduler.rackSceneId(armed),
+                              scheduler.rackCycleTick(armed), scheduler.rackCycleTicks(armed),
+                              clock.bpm(), clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames),
+                              clock.samplesPerTickNow());
+            } else {
+                marks.halt(framesBefore);
+            }
         }
     }
     // After the capture, like the monitor, so auditioning a file doesn't

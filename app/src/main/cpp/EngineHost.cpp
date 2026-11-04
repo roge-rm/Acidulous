@@ -2937,6 +2937,10 @@ std::string EngineHost::startCapture(const std::string &path, int source) {
     const auto which = source == 1 ? Capture::FromMaster : Capture::FromInput;
     // Recording with no input open would write a silent file, so refuse.
     if (which == Capture::FromInput && !sAudio.isInputRunning()) return "audio input is not open";
+    // A new file starts with no marks. The audio thread only stamps them while
+    // a capture runs, so this can't race it.
+    if (sEngine.capture.armed()) return "already recording";
+    sEngine.marks.reset();
     std::string error;
     if (!sEngine.capture.start(path, kSampleRate, which, error)) return error;
     return "";

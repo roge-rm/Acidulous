@@ -84,6 +84,7 @@ import com.rm.acidulous.model.followsTempo
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
 import com.rm.acidulous.model.hearing
+import com.rm.acidulous.model.heardFile
 import com.rm.acidulous.model.heardTake
 import com.rm.acidulous.model.takeCount
 import com.rm.acidulous.model.withSetting
@@ -4226,7 +4227,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
             Group("lane ${lane + 1}") {
                 Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
                     Text(
-                        take?.file?.substringAfterLast('/') ?: "empty",
+                        // The heard take's name, or "comp" when its pieces mix files.
+                        if (take == null) "empty"
+                        else take.heardFile()?.substringAfterLast('/') ?: stringResource(Res.string.bias_heard_comp),
                         color = if (take == null) c.textDim else c.textHi,
                         fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,

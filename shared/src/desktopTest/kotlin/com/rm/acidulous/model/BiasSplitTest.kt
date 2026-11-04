@@ -102,4 +102,46 @@ class BiasSplitTest {
         assertEquals(90.5f, marks[0].bpm, 0.001f)
         assertEquals(3840, marks[1].cycleTicks)
     }
+
+    /**
+     * Marks left from an earlier recording, ahead of this one's. The engine
+     * now clears them when a capture starts; the split ignores them anyway.
+     */
+    @Test
+    fun marksFromAnEarlierRecordingAreIgnored() {
+        val cell = 2 * barFrames
+        val stale = listOf(mark(0, 11), mark(cell, 11), mark(2 * cell, 11), mark(5 * cell, 11))
+        val fresh = listOf(mark(0, 11), mark(cell, 11))
+        val out = splitTake(stale + fresh, cell + cell / 2L, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertEquals(listOf(cell, cell / 2), out.values.map { it.frames })
+    }
+
+    @Test
+    fun aMarkPastTheEndOfTheFileMakesNoTake() {
+        val cell = 2 * barFrames
+        val out = splitTake(listOf(mark(0, 11), mark(cell, 11), mark(3 * cell, 11)), cell * 2L, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertTrue(out.values.all { it.offset + it.frames <= cell * 2 })
+    }
+
+    /** The song stopped while still armed: the take ends there, not at disarm. */
+    @Test
+    fun aStopEndsTheLastPass() {
+        val cell = 2 * barFrames
+        val stop = Mark(cell + cell / 2L, 0, 0, 0, 0f)
+        val out = splitTake(listOf(mark(0, 11), mark(cell, 11), stop), 11L * cell, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertEquals(listOf(cell, cell / 2), out.values.map { it.frames })
+    }
+
+    /** Playing again after a stop, still armed, starts a new pass after the gap. */
+    @Test
+    fun playingAgainAfterAStopStartsANewPass() {
+        val cell = 2 * barFrames
+        val stop = Mark(cell.toLong(), 0, 0, 0, 0f)
+        val out = splitTake(listOf(mark(0, 11), stop, mark(cell + cell / 2, 11)), 3L * cell, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell + cell / 2), out.values.map { it.offset })
+        assertEquals(listOf(cell, 3 * cell - (cell + cell / 2)), out.values.map { it.frames })
+    }
 }
