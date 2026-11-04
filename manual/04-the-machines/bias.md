@@ -28,6 +28,85 @@ the sound library, so you can undo the split and place it by hand.
 One lane records at a time. If the recorder fell behind and left a gap in the
 take, it isn't split and is kept whole instead.
 
+## Loop recording and takes
+
+Record while a scene loops and each pass becomes a take on that lane, stacked
+on the ones before. You hear the newest. If you stop part way through a pass,
+the new take plays only where it has audio and the one before plays the rest.
+Each cell keeps its own stack.
+
+Recording onto a lane that already holds a take adds to its stack too, as long
+as it was recorded at the same tempo against the same scene length. Otherwise
+it replaces it.
+
+Each lane's card on the page shows which take you hear, like **take 2/3**. Tap
+it to hear the next one. Undo takes back a pass or a pick.
+
+## Choosing by phrase
+
+Tap a lane that has more than one take and its takes show as thin rows under
+it, take 1 at the top, lined up in time with the lane. The lane itself shows
+what you hear. Faint lines cut the lane into phrases where most takes go
+quiet, the same phrases for every take.
+
+- tap a **phrase** on the lane to pick it, then tap a **take's row** inside it
+  to hear that take there. Tapping a row anywhere picks the phrase under your
+  finger
+- drag along a **take's row** to hear that take over exactly the stretch you
+  drag, for a word or a breath the phrases don't split
+- tap a take's **number** for **use everywhere**, which plays it over the whole
+  lane, or **delete take**, which takes it off the stack. Where it was heard,
+  the take with the most audio there plays instead
+- tap the picked phrase again to put the rows away
+
+The joins between takes crossfade by themselves at a nearby quiet point. Each
+choice is one undo step. A deleted take's recording stays in the sound
+library, as every recording does, so you can delete it there.
+
+## Listening through
+
+With a phrase picked, tap **▶** left of the ruler. The phrase loops with a
+second before it, each pass with the next take that has audio there, and the
+take playing is lit on its row. Tap any row to keep that take for the phrase,
+which stops listening. Tap **■** to stop without changing anything.
+
+Only this lane plays while you listen, at its level, even if it's muted. The
+song carries on as it was, and the lane joins it again when you stop. Picking
+another phrase, editing the lane or leaving the cell also stops listening.
+
+With a keyboard, move to a lane with takes and press **Enter**. Left and right
+pick the phrase, up and down the take, and Enter keeps it. While listening,
+Enter keeps the take playing. **Esc** stops.
+
+## Suggest, line up and blend
+
+Under the take rows are the comp tools.
+
+- **suggest** picks the best take in every phrase, as one undo step. Each take
+  is scored on how close its pitch sits to the notes of the track's tuning
+  (the song's, unless the track has its own), how close it hits the beat and
+  the other takes, clipping and background noise. On a lane lined up on
+  another, the other lane's hits are the beat. The scores show faintly at the
+  end of each phrase on the rows, the best one lit. A take that's much quieter
+  than the others in a phrase scores 0
+- **line up** moves this lane onto another lane's timing word by word, for a
+  double that's a little early or late. Each phrase is cut into words at its
+  hits and short gaps, and each word moves on its own, by at most 50 ms. Words
+  stay in order and never run into each other. With more than one other lane
+  it asks which. It then reads **lined up**: tap it to put the lane back
+  exactly where it was. A lane with one take shows this too, when another lane
+  has audio
+- **blend** plays every take on the lane together, each at about the same
+  level, and the sum at the level of one take. It's a quick double or a small
+  choir. Tap it again to go back to your choices, which it keeps
+- **line up takes**, with blend on, lines every take up word by word before
+  they play together: on the lane this one is lined up on, or else on the lane
+  as you'd hear it with blend off. Tap it again to put them back
+- **spread**, with blend on, places the takes across the stereo field, from all
+  in the middle to the first and last at the edges. The level stays the same
+
+In a blend, the lane draws every take faintly and their sum over them.
+
 ## The editor
 
 Opening a cell shows the four lanes:
@@ -73,8 +152,8 @@ input slots the recording window shows.
 
 ## Flattening
 
-**comp** mixes the four lanes (with their levels, mutes and fades) into one file
-in lane 1. The patch's tape colour isn't baked in, and the original recordings
+**comp** mixes the four lanes (with their levels, mutes, fades and the takes
+they play) into one file in lane 1. The patch's tape colour isn't baked in, and the original recordings
 stay in the library.
 
 ## Patches

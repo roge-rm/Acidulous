@@ -98,7 +98,15 @@ struct Rig {
         // The count before this block's frames go in (see the note in
         // Engine.cpp). A mark names the frame its cell begins at.
         marks.observe(frames, scheduler.rackSceneId(armed), scheduler.rackCycleTick(armed),
-                      scheduler.rackCycleTicks(armed), clock.bpm());
+                      scheduler.rackCycleTicks(armed), clock.bpm(),
+                      clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames), clock.samplesPerTickNow());
+        frames += kBlockFrames;
+    }
+
+    /** One block with the transport stopped, as Engine does while still capturing. */
+    void stoppedBlock() {
+        clock.advance(kBlockFrames);
+        marks.halt(frames);
         frames += kBlockFrames;
     }
 
@@ -112,7 +120,7 @@ struct Rig {
         for (int32_t i = 0; i < marks.count(); ++i) {
             const CaptureMark &m = marks.at(i);
             out += std::to_string(m.frame) + "@s" + std::to_string(m.sceneId) + "+" +
-                   std::to_string(m.tick) + " ";
+                   std::to_string(m.tick) + (m.cycleTicks == 0 ? "(end) " : " ");
         }
         return out;
     }
@@ -241,11 +249,74 @@ void aLauncherSequence() {
        near(r.marks.at(1).frame - r.marks.at(0).frame, 2 * kBarFrames) &&
            near(r.marks.at(2).frame - r.marks.at(1).frame, 2 * kBarFrames),
        r.report());
-    // Within a block of the top, not exactly on it. The launcher's clock is
-    // read once a block, so a cycle that turns over inside one is seen a tick
-    // or two late. A tick at 120bpm is 2ms and a block is 1.3ms.
-    ok("and each at the top of its cycle",
-       r.marks.at(1).tick <= 2 && r.marks.at(2).tick <= 2, r.report());
+    // The launcher sees a cycle turn over a tick late, so the mark is backed
+    // up to the top. A pass at tick 1 grew the stacked region by a tick and
+    // left the older takes a tick off.
+    ok("and each at the top of its cycle, on its exact frame",
+       r.marks.at(1).tick == 0 && r.marks.at(2).tick == 0 && r.marks.at(3).tick == 0 &&
+           r.marks.at(1).frame == 2 * kBarFrames && r.marks.at(2).frame == 4 * kBarFrames,
+       r.report());
+}
+
+/** A clip launched while recording starts its take at its top too. */
+void aClipLaunchedWhileRecording() {
+    printf("- a clip launched part way through a recording\n");
+    Rig r;
+    r.scene(11, 2);
+    r.clip(0, 0, 2);
+    r.commit();
+    r.transport.setLauncher(true);
+    r.play(0);
+    r.run(1.0);
+    r.transport.launchClip(0, 11);
+    r.run(5.0);
+    ok("its first pass starts at tick 0, and the next a cycle later",
+       r.marks.count() == 2 && r.marks.at(0).tick == 0 && r.marks.at(1).tick == 0 &&
+           r.marks.at(1).frame - r.marks.at(0).frame == 2 * kBarFrames,
+       r.report());
+}
+
+/**
+ * Stopping the song while still armed ends the take there. It used to run on
+ * to wherever the capture was stopped, and a 22 second take filled a two
+ * second cell.
+ */
+void aStopEndsTheTake() {
+    printf("- stopping the song while recording ends the take\n");
+    Rig r;
+    r.scene(11, 4);
+    r.clip(0, 0, 4);
+    r.commit();
+    r.play();
+    r.run(3.0);
+    const int64_t stopAt = r.frames;
+    for (int i = 0; i < 750; ++i) r.stoppedBlock(); // a second stopped
+    for (int i = 0; i < 750; ++i) r.stoppedBlock(); // stays one end mark
+    ok("an end mark where the song stopped",
+       r.marks.count() == 2 && r.marks.at(1).cycleTicks == 0 && r.marks.at(1).frame == stopAt,
+       r.report());
+    // Play again from the top, the capture still running.
+    const int64_t againAt = r.frames;
+    r.clock.reset();
+    r.scheduler.start(0);
+    r.run(1.0);
+    ok("and playing again starts a new pass at the top",
+       r.marks.count() == 3 && r.marks.at(2).sceneId == 11 && r.marks.at(2).tick == 0 &&
+           r.marks.at(2).frame == againAt,
+       r.report());
+}
+
+/** In clip mode a rack whose clip stops is in no cell, which ends the take too. */
+void aStoppedClipEndsTheTake() {
+    printf("- a clip that stops ends the take\n");
+    CaptureMarks m;
+    m.reset();
+    m.observe(0, 11, 0, 960, 120.0f);
+    m.observe(64, 11, 1, 960, 120.0f);
+    m.observe(128, 0, 0, 0, 120.0f);
+    m.observe(192, 0, 0, 0, 120.0f);
+    ok("one end mark", m.count() == 2 && m.at(1).cycleTicks == 0 && m.at(1).frame == 128,
+       std::to_string(m.count()));
 }
 
 /**
@@ -314,6 +385,9 @@ int main() {
     aPunchIn();
     aSceneWithItsOwnTempo();
     aLauncherSequence();
+    aClipLaunchedWhileRecording();
+    aStopEndsTheTake();
+    aStoppedClipEndsTheTake();
     recordingOntoScenesWithNoClipYet();
     anOverflowPoisonsTheSplit();
     tooManyBoundaries();

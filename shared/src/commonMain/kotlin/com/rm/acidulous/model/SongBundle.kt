@@ -179,7 +179,11 @@ object SongBundle {
             t.copy(clips = t.clips.mapValues { (_, clip) ->
                 val audio = clip.audio ?: return@mapValues clip
                 clip.copy(audio = audio.copy(lanes = audio.lanes.map { take ->
-                    take?.let { renamed[it.file.trim()]?.let { name -> it.copy(file = name) } ?: it }
+                    take?.let {
+                        val moved = renamed[it.file.trim()]?.let { name -> it.copy(file = name) } ?: it
+                        if (moved.takes.isEmpty()) moved
+                        else moved.copy(takes = moved.takes.map { t -> renamed[t.file.trim()]?.let { name -> t.copy(file = name) } ?: t })
+                    }
                 }))
             }, machine = t.machine.copy(settings = t.machine.settings.mapValues { (_, value) -> repointValue(value, renamed) }),
                 effects = t.effects.map { repointSlot(it, renamed) })
@@ -203,8 +207,12 @@ object SongBundle {
             }
             for (clip in track.clips.values) {
                 for (take in clip.audio?.lanes.orEmpty()) {
-                    val file = take?.file?.trim() ?: continue
-                    if (file.isNotEmpty() && !file.startsWith("/") && File(userRoot, file).isFile) found += file
+                    if (take == null) continue
+                    // Every take in a stack goes in the zip, heard or not.
+                    for (name in listOf(take.file) + take.takes.map { it.file }) {
+                        val file = name.trim()
+                        if (file.isNotEmpty() && !file.startsWith("/") && File(userRoot, file).isFile) found += file
+                    }
                 }
             }
         }

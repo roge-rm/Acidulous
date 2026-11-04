@@ -83,6 +83,10 @@ import com.rm.acidulous.model.bpmOf
 import com.rm.acidulous.model.followsTempo
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.hearing
+import com.rm.acidulous.model.heardFile
+import com.rm.acidulous.model.heardTake
+import com.rm.acidulous.model.takeCount
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -4223,7 +4227,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
             Group("lane ${lane + 1}") {
                 Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
                     Text(
-                        take?.file?.substringAfterLast('/') ?: "empty",
+                        // The heard take's name, or "comp" when its pieces mix files.
+                        if (take == null) "empty"
+                        else take.heardFile()?.substringAfterLast('/') ?: stringResource(Res.string.bias_heard_comp),
                         color = if (take == null) c.textDim else c.textHi,
                         fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -4237,6 +4243,19 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                             stringResource(Res.string.bias_take_bpm, take.bpm), color = c.accent,
                             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         )
+                    }
+                    // A stack: tap to hear the next take over the whole lane.
+                    if (take != null && take.takeCount > 1) {
+                        TextButton(onClick = {
+                            compEdit(scope, editor, trackIndex, sceneId, lane) { held ->
+                                held.hearing((held.heardTake() + 1) % held.takeCount)
+                            }
+                        }) {
+                            Text(
+                                stringResource(Res.string.bias_take_of, take.heardTake() + 1, take.takeCount),
+                                color = c.textMid, fontSize = 11.sp,
+                            )
+                        }
                     }
                     Row {
                         TextButton(onClick = { picking = lane }) {

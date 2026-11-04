@@ -6,12 +6,27 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import java.awt.EventQueue
 import java.io.File
+import java.lang.reflect.InvocationTargetException
 import java.nio.file.Files
 
+/**
+ * OpenFiles runs on the UI thread, and [OpenFiles.add] queues a [OpenFiles.next]
+ * there, so each test runs there too. From the test thread that queued call
+ * could take a file while the test looks for it.
+ */
 class OpenFilesTest {
+    private fun onUi(body: () -> Unit) {
+        try {
+            EventQueue.invokeAndWait(body)
+        } catch (e: InvocationTargetException) {
+            throw e.cause ?: e
+        }
+    }
+
     @After
-    fun reset() {
+    fun reset() = onUi {
         OpenFiles.running = false
         OpenFiles.drain()
         Incoming.doc = null
@@ -25,7 +40,7 @@ class OpenFilesTest {
     }
 
     @Test
-    fun theNextFileWaitsForTheImportAndItsDialog() {
+    fun theNextFileWaitsForTheImportAndItsDialog() = onUi {
         val list = files("one.zip", "two.zip", "bank.acpreset")
         OpenFiles.add(list)
         OpenFiles.running = true
@@ -59,7 +74,7 @@ class OpenFilesTest {
     }
 
     @Test
-    fun aFileOpenedAloneIsNotHeldByANotice() {
+    fun aFileOpenedAloneIsNotHeldByANotice() = onUi {
         OpenFiles.running = true
         Incoming.dialogOpen = { true }
         OpenFiles.add(files("one.acpreset"))

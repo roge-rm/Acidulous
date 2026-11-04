@@ -107,6 +107,10 @@
     <string name="bias_take_bpm">%.1f bpm</string>
     <string name="bias_audio">audio…</string>
     <string name="bias_clear">clear</string>
+    <!-- Bias: which take of a lane\'s stack is heard, and how many there are. -->
+    <string name="bias_take_of">take %1$d/%2$d</string>
+    <!-- Bias: the lane card's name when its pieces come from more than one recording. -->
+    <string name="bias_heard_comp">comp</string>
 
     <!-- Nexus -->
     <plurals name="nexus_modules">

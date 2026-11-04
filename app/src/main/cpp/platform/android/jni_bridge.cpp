@@ -647,6 +647,39 @@ Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(JNIEnv *env, jobject, j
 }
 
 JNIEXPORT jstring JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeListenReel(JNIEnv *env, jobject, jint rack, jstring spec) {
+    const char *p = spec != nullptr ? env->GetStringUTFChars(spec, nullptr) : "";
+    const std::string out = host().listenReel(rack, p);
+    if (spec != nullptr) env->ReleaseStringUTFChars(spec, p);
+    return env->NewStringUTF(out.c_str());
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeListenPlayed(JNIEnv *, jobject, jint rack) {
+    return static_cast<jlong>(host().listenPlayed(rack));
+}
+
+/** Scores of a stack's takes by phrase (see EngineHost::scoreTakes), or null. */
+JNIEXPORT jfloatArray JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeScoreTakes(JNIEnv *env, jobject, jstring spec) {
+    const std::vector<float> v = host().scoreTakes(toStdString(env, spec));
+    if (v.empty()) return nullptr;
+    jfloatArray out = env->NewFloatArray(static_cast<jsize>(v.size()));
+    if (out != nullptr) env->SetFloatArrayRegion(out, 0, static_cast<jsize>(v.size()), v.data());
+    return out;
+}
+
+/** Shifts that line a double up on its lead, one per phrase (see EngineHost::lineUpTakes), or null. */
+JNIEXPORT jfloatArray JNICALL
+Java_com_rm_acidulous_engine_EngineNative_nativeLineUp(JNIEnv *env, jobject, jstring spec) {
+    const std::vector<float> v = host().lineUpTakes(toStdString(env, spec));
+    if (v.empty()) return nullptr;
+    jfloatArray out = env->NewFloatArray(static_cast<jsize>(v.size()));
+    if (out != nullptr) env->SetFloatArrayRegion(out, 0, static_cast<jsize>(v.size()), v.data());
+    return out;
+}
+
+JNIEXPORT jstring JNICALL
 Java_com_rm_acidulous_engine_EngineNative_nativeLoadTake(JNIEnv *env, jobject, jint rack, jstring path) {
     const char *p = path != nullptr ? env->GetStringUTFChars(path, nullptr) : "";
     const std::string out = host().loadTake(rack, p);
