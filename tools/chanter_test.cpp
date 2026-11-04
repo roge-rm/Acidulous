@@ -642,6 +642,31 @@ void follow() {
         run();
         check(first == g.out, "following and a finite bag repeat after a reset");
     }
+    // A fine tuning, 24 steps an octave from 25 Hz: the bands still reach
+    // 250 Hz, and the bass is heard on the tuning's own key low and high.
+    for (int want : {19, 72}) {
+        static float ratios[128];
+        for (int n = 0; n < 128; ++n) ratios[n] = static_cast<float>(25.0 * std::pow(2.0, n / 24.0) / noteHz(n));
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.8f}, {"drift", 0.0f}});
+        g.f->setTuning(ratios);
+        const double hz = 25.0 * std::pow(2.0, want / 24.0);
+        double phase = 0.0;
+        float L[kBlock], R[kBlock], key[kBlock];
+        g.f->noteOn(69, 100);
+        for (int b = 0; b < kRate * 3 / kBlock; ++b) {
+            for (int i = 0; i < kBlock; ++i) {
+                phase += hz / kRate;
+                double v = 0.0;
+                for (int h = 1; h <= 6; ++h) v += std::sin(6.283185307179586 * h * phase) / h;
+                key[i] = static_cast<float>(0.25 * v);
+            }
+            g.f->setKey(key);
+            g.f->onBlock(0, 0, 120.0f);
+            g.f->render(L, R, kBlock);
+        }
+        check(g.f->followRoot() == want, fmt("24 steps an octave: a %.0f Hz bass is heard on its key", hz).c_str(),
+              fmt("heard %d, wanted %d", g.f->followRoot(), want));
+    }
     std::printf("- off, the drones stay as they were\n");
     for (float kind : {static_cast<float>(Highland), static_cast<float>(Gurdy), static_cast<float>(Smallpipes)}) {
         Pipes plain({{"model", kind}});
@@ -698,9 +723,9 @@ void windBag() {
         check(least > 0.99f, "a fair wind keeps up with a tune", fmt("pressure at least %.2f after the start", least));
     }
     std::printf("- the drones die\n");
-    // Endless bag, sag up: let go and the drones groan down and choke one by one.
+    // A good wind and sag up: let go and the drones groan down and choke one by one.
     {
-        Pipes g({{"model", Highland}, {"sag", 1.0f}, {"bag", 0.5f}, {"drift", 0.0f}, {"air", 0.0f}});
+        Pipes g({{"model", Highland}, {"wind", 0.9f}, {"sag", 1.0f}, {"bag", 0.5f}, {"drift", 0.0f}, {"air", 0.0f}});
         g.f->noteOn(69, 100);
         g.play(2.0);
         g.f->noteOff(69);
@@ -720,6 +745,29 @@ void windBag() {
         const double dying = g.peak(90.0, 120.0, 2.0 + last - 0.25, 2.0 + last);
         check(cents(dying, full) < -40.0, "and groan down as they go", fmt("the bass drone %+.0f cents", cents(dying, full)));
         check(g.rms(5.5, 6.0) < -90.0, "and then they're gone", fmt("%.1f dB", g.rms(5.5, 6.0)));
+    }
+    // Sag only bends the pitch: a touch of it on an endless bag empties as fast
+    // as none and chokes nothing.
+    {
+        auto tail = [](float sagAmount, float &leastOpen) {
+            Pipes g({{"model", Highland}, {"sag", sagAmount}, {"bag", 0.5f}, {"drift", 0.0f}, {"air", 0.0f}});
+            g.f->noteOn(69, 100);
+            g.play(1.0);
+            g.f->noteOff(69);
+            leastOpen = 1.0f;
+            float L[kBlock], R[kBlock];
+            for (int b = 0; b < kRate * 2 / kBlock; ++b) {
+                g.f->onBlock(0, 0, 120.0f);
+                g.f->render(L, R, kBlock);
+                g.out.insert(g.out.end(), L, L + kBlock);
+                for (int d = 0; d < 3; ++d) leastOpen = std::min(leastOpen, g.f->droneOpen(d));
+            }
+            return g.rms(1.9, 2.4);
+        };
+        float open0 = 0.0f, open1 = 0.0f;
+        const double none = tail(0.0f, open0), touch = tail(0.01f, open1);
+        check(std::fabs(touch - none) < 1.0 && open1 == 1.0f, "a touch of sag empties as none does and chokes nothing",
+              fmt("%.1f vs %.1f dB, drones open %.2f", touch, none, open1));
     }
     // A finite bag empties after a long phrase let go.
     {

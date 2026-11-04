@@ -3272,9 +3272,10 @@ patch "Tired Piper" family=bag note=67 range=65..79 role=lead
   mac8_a2  -0.15
 
 patch "Dying Drones" family=bag note=69 range=67..81 role=lead
-  # An endless bag, but let go and the drones groan down and die one by one.
+  # Wind enough for any tune, but let go and the drones groan down and die one by one.
   grace          25 ms
   drones         0.9
+  wind           0.9
   sag            1
   bag            0.6 s
   volume         0.624

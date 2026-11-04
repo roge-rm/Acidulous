@@ -68,18 +68,18 @@ Les bourdons peuvent suivre la basse d’une autre piste.
 - **vent** : la part de ce que les tuyaux consomment que le souffle du
   sonneur remet. À 1, la poche ne se vide jamais. À 0,5, elle suit tout
   juste le jeu, les silences la remplissent, et en dessous un long air la
-  vide : la pression tient jusqu’à ce que la poche mollisse, puis baisse.
-  Lâchez, et le reste est pressé à travers les bourdons. Sur la vielle,
-  c’est le bras sur la manivelle : la roue ralentit pendant un long air et
-  continue sur son élan quand on la laisse. Les launeddas n’ont pas de
-  poche : le vent règle la fréquence à laquelle le joueur inspire par le
-  nez, avec un creux de pression à chaque fois.
+  vide : la pression tient jusqu’à ce que la poche mollisse, puis baisse,
+  le chalumeau s’amincit et les bourdons s’étouffent un par un. Lâchez, et
+  le reste est pressé à travers les bourdons. Sur la vielle, c’est le bras
+  sur la manivelle : la roue ralentit pendant un long air et continue sur
+  son élan quand on la laisse. Les launeddas n’ont pas de poche : le vent
+  règle la fréquence à laquelle le joueur inspire par le nez, avec un creux
+  de pression à chaque fois.
 - **affaiss.** : de combien la hauteur baisse quand la pression tombe.
-  Quand la poche se vide, le chalumeau baisse et s’amincit et les bourdons
-  s’étouffent un par un, chacun descendant encore en mourant, le
-  gémissement des cornemuses. Avec le vent à 1, l’affaissement donne quand
-  même ce gémissement quand les bourdons s’éteignent après la dernière
-  note.
+  Quand la poche se vide, le chalumeau baisse et chaque bourdon descend
+  encore en mourant, le gémissement des cornemuses. Avec le vent à 1,
+  l’affaissement donne quand même ce gémissement quand les bourdons
+  s’éteignent après la dernière note.
 
 ## Vielle à roue
 

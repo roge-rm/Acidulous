@@ -614,12 +614,18 @@ void Chanter::checkTuning() {
 void Chanter::tuneEar() {
     earGen = tuningGen;
     earBuilt = true;
-    // A band on every key of the tuning from 30 to 250 Hz, as many as fit.
-    earFirst = 0;
-    while (earFirst < 127 && noteHz(static_cast<float>(earFirst)) < kBassLowHz) ++earFirst;
+    // A band on every key of the tuning from 30 to 250 Hz. A tuning with
+    // more keys there than bands takes every second or third key, so the
+    // bands still reach 250 Hz.
+    int first = 0, last = -1;
+    while (first < 127 && noteHz(static_cast<float>(first)) < kBassLowHz) ++first;
+    for (int key = first; key <= 127 && noteHz(static_cast<float>(key)) <= kBassHighHz; ++key) last = key;
+    const int keys = last - first + 1;
+    const int stride = keys > kEarBands ? (keys + kEarBands - 1) / kEarBands : 1;
     int n = 0;
-    while (n < kEarBands && earFirst + n <= 127 && noteHz(static_cast<float>(earFirst + n)) <= kBassHighHz) {
-        earHz[n] = noteHz(static_cast<float>(earFirst + n));
+    for (int key = first; key <= last && n < kEarBands; key += stride) {
+        earKey[n] = key;
+        earHz[n] = noteHz(static_cast<float>(key));
         ear.setBand(n, earHz[n]);
         ++n;
     }
@@ -675,7 +681,7 @@ void Chanter::chooseBass(float follow, float seconds) {
             break;
         }
     }
-    const int key = earFirst + best;
+    const int key = earKey[best];
     auto sameClass = [&](int a, int b) {
         const float c = std::fmod(std::fabs(1200.0f * std::log2(noteHz(static_cast<float>(a)) / noteHz(static_cast<float>(b)))), 1200.0f);
         return c < 30.0f || c > 1170.0f;
@@ -750,8 +756,10 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
     if (!playing) sinceRelease += dt;
     const float wind = clampf(paramOf(Wind), 0.0f, 1.0f);
     const float sag = clampf(paramOf(Sag), 0.0f, 1.0f);
-    // A finite bag, or a sag as it empties; neither, and the bag is as it always was.
-    const bool shaped = wind < 1.0f || sag > 0.0f;
+    // A finite bag (or the launeddas' breaths); at wind 1 the bag is as it
+    // always was. Sag only bends the pitch.
+    const bool finite = wind < 1.0f && kind != Launeddas;
+    const bool shaped = wind < 1.0f;
     if (!shaped) {
         const float aim = playing || sinceRelease < paramOf(Bag) ? 1.0f : 0.0f;
         bag += (aim - bag) * (1.0f - std::exp(-dt / (aim > bag ? kFills : kEmpties)));
@@ -760,8 +768,8 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // The piper blows while playing and for `bag` seconds after.
         const bool piping = playing || sinceRelease < paramOf(Bag);
         float aim = piping ? 1.0f : 0.0f;
-        float fallTime = kEmpties * (1.0f + 4.0f * sag);
-        if (wind < 1.0f && kind != Launeddas) {
+        float fallTime = kEmpties;
+        if (finite) {
             // The bag holds so much air. The pipes use it as they sound, the
             // wind puts back its share of what they'd use playing, and once
             // the piper stops blowing the arm squeezes the rest out through
@@ -779,7 +787,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
             aim = x * (2.0f - x);
             fallTime = kind == Gurdy ? 0.15f : 0.05f;
         }
-        if (kind == Launeddas && wind < 1.0f && playing) {
+        if (!finite && playing) {
             // No bag: circular breathing. A breath in through the nose every
             // 1.5 to 7.5 s, and the cheeks don't quite hold the pressure.
             cheekAt += dt;
@@ -850,10 +858,10 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         bool chanterOn = playing && bag > 0.3f;
         // As the pressure sags the pipes go flat, and each drone chokes as
         // it passes that drone's point, falling further as it dies.
+        // Only a finite bag chokes them; sag sets how far the pitch falls.
         float chanterGroan = 0.0f, droneGroan[kDrones] = {};
         bool reopened[kDrones] = {};
-        if (shaped) {
-            chanterGroan = -sag * kChanterGroan * (1.0f - bag);
+        if (finite) {
             const float chokeCoef = 1.0f - std::exp(-dt / kChokeTime);
             for (int d = 0; d < k.drones; ++d) {
                 if (!choked[d] && bag < kChoke[d] && sounding) {
@@ -863,6 +871,16 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
                     reopened[d] = true;
                 }
                 open[d] += ((choked[d] ? 0.0f : 1.0f) - open[d]) * chokeCoef;
+            }
+        } else {
+            for (int d = 0; d < kDrones; ++d) {
+                choked[d] = false;
+                open[d] = 1.0f;
+            }
+        }
+        if (sag > 0.0f) {
+            chanterGroan = -sag * kChanterGroan * (1.0f - bag);
+            for (int d = 0; d < k.drones; ++d) {
                 const float q = clampf((1.0f - bag) / (1.0f - kChoke[d]), 0.0f, 1.0f);
                 droneGroan[d] = -sag * kDroneGroan * (q * q + 0.5f * (1.0f - open[d]));
             }
@@ -948,7 +966,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         // Each drone's push, followed per sample when it can choke or dip.
         const bool eachPush = shaped || gliding;
         float dronePushAim[kDrones] = {};
-        for (int d = 0; d < k.drones; ++d) dronePushAim[d] = kDronePush * push * (shaped ? open[d] : 1.0f) * (1.0f - dip[d]);
+        for (int d = 0; d < k.drones; ++d) dronePushAim[d] = kDronePush * push * (finite ? open[d] : 1.0f) * (1.0f - dip[d]);
         const float pushCoef = 1.0f - std::exp(-1.0f / (kDronePushTime * sampleRate));
         sounding = bag > 0.05f;
         const float chanterPush = chanterOn ? kChanterPush * push : 0.0f;
@@ -1026,7 +1044,7 @@ bool Chanter::render(float *L, float *R, int32_t frames) {
         const float tone = 0.55f + 0.3f * grip;
         const float rosinCents = rosinTrim(grip, clampf(paramOf(Wheel), 0.0f, 1.0f));
         // A wheel slowing down pulls every string flat.
-        const float stringGroan = shaped ? -sag * kStringGroan * (1.0f - bag) : 0.0f;
+        const float stringGroan = sag > 0.0f ? -sag * kStringGroan * (1.0f - bag) : 0.0f;
         auto tuneString = [&](Bowed &s, float note, bool bowing) {
             s.hz = noteHz(note + drift * kDriftCents * 0.002f);
             s.wave.setFrequency(noteHz(note + (drift * kDriftCents * 0.2f + rosinCents) * 0.01f));

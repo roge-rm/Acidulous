@@ -13009,7 +13009,7 @@ internal object FactoryBanks {
         low = 65, high = 79)
 
     private fun chanter88() = Patch("Chanter", "Dying Drones",
-        mapOf("drones" to 0.9f, "bag" to 0.075f, "grace" to 0.416666657f, "volume" to 0.624f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.275f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.675f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.75f, "mac4_d1" to 0.375f, "mac4_a1" to 0.675f, "mac5_d1" to 0.9375f, "mac5_a1" to 0.175000012f, "mac6_d1" to 0.125f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.199999988f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.375f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f, "sag" to 1f),
+        mapOf("drones" to 0.9f, "bag" to 0.075f, "grace" to 0.416666657f, "volume" to 0.624f, "mac1_d1" to 0.0625f, "mac1_a1" to 0.275f, "mac2_d1" to 0.1875f, "mac2_a1" to 0.675f, "mac3_d1" to 0.3125f, "mac3_a1" to 0.75f, "mac4_d1" to 0.375f, "mac4_a1" to 0.675f, "mac5_d1" to 0.9375f, "mac5_a1" to 0.175000012f, "mac6_d1" to 0.125f, "mac6_a1" to 0.75f, "mac7_d1" to 1f, "mac7_a1" to 0.199999988f, "mac8_d1" to 0.3125f, "mac8_d2" to 0.375f, "mac8_a1" to 0.4f, "mac8_a2" to 0.425f, "wind" to 0.9f, "sag" to 1f),
         mapOf("macro1" to "Drones Back", "macro2" to "Hard Reed", "macro3" to "Squeeze", "macro4" to "Breath", "macro5" to "Short Wind", "macro6" to "Long Bag", "macro7" to "Less Sag", "macro8" to "Steady"),
         family = "bag",
         low = 67, high = 81)

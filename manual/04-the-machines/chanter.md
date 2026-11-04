@@ -63,16 +63,16 @@ The drones can follow another track's bass.
 - **wind** - how much of what the pipes use the piper's breath puts back.
   At 1 the bag never runs out. At 0.5 it just keeps up with playing,
   rests fill it up again, and under that a long tune drains it: the
-  pressure holds until the bag goes soft, then sags. Let go and what's left
-  is squeezed out through the drones. On the hurdy-gurdy it's the arm on
-  the crank: the wheel slows over a long tune and coasts down when it's
-  left. The launeddas have no bag, so wind sets how often the player
-  breathes in through the nose, with a dip in the pressure each time.
+  pressure holds until the bag goes soft, then sags, the chanter goes thin
+  and the drones choke one by one. Let go and what's left is squeezed out
+  through the drones. On the hurdy-gurdy it's the arm on the crank: the
+  wheel slows over a long tune and coasts down when it's left. The
+  launeddas have no bag, so wind sets how often the player breathes in
+  through the nose, with a dip in the pressure each time.
 - **sag** - how far the pitch falls as the pressure goes. As the bag
-  empties the chanter goes flat and thin and the drones choke one by one,
-  each falling further as it dies, the groan pipes make. With wind at 1,
-  sag still gives you that groan once the drones run down after the last
-  note.
+  empties the chanter goes flat and each drone falls further as it dies,
+  the groan pipes make. With wind at 1, sag still gives you that groan as
+  the drones run down after the last note.
 
 ## Hurdy-gurdy
 

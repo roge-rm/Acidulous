@@ -216,11 +216,12 @@ class Chanter final : public Machine {
     float open[kDrones]{}, dronePushNow[kDrones]{};
     bool choked[kDrones]{};
 
-    /** Listening: bands on the keys from 30 to 250 Hz, the first band's key, and each band's pitch. */
-    static constexpr int kEarBands = 64;
+    /** Listening: bands on the keys from 30 to 250 Hz, each band's key and pitch. */
+    static constexpr int kEarBands = 192;
     dsp::KeyEar<kEarBands> ear;
     float earHz[kEarBands]{};
-    int earFirst = 0, earUntil = 0;
+    int earKey[kEarBands]{};
+    int earUntil = 0;
     bool earBuilt = false;
     float tuningSeen[128]{};
     bool tuningSeenEqual = true;
