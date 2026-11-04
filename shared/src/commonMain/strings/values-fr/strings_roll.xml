@@ -76,6 +76,16 @@
     <string name="tape_take_everywhere">partout</string>
     <string name="tape_take_delete">supprimer la prise</string>
     <string name="tape_take_phrase">pour cette phrase</string>
+    <!-- ui/CompBar.kt: the comp tools over a lane's takes. -->
+    <!-- Fill every phrase with its best take. -->
+    <string name="tape_comp_suggest">suggérer</string>
+    <!-- Move this lane's phrases onto another lane's timing, and the lane to follow. -->
+    <string name="tape_comp_line_up">aligner</string>
+    <string name="tape_comp_line_up_to">sur le couloir %d</string>
+    <!-- Lit while the lane is lined up; tapping it puts it back. -->
+    <string name="tape_comp_lined_up">aligné</string>
+    <!-- Play every take at once. -->
+    <string name="tape_comp_blend">mêler</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">act</string>

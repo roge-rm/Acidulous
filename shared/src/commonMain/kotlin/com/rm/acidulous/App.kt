@@ -725,6 +725,9 @@ fun App(modifier: Modifier = Modifier) {
             // A normalised export measures first: the same render into no
             // file, then a gain to reach the target, but never past a true
             // peak of -1 dBTP, which lossy encoders need as headroom.
+            // Listening through a phrase would be all the render heard. The
+            // engine drops it too, this keeps the editor in step.
+            withContext(Dispatchers.Main) { com.rm.acidulous.ui.Listening.stop() }
             var gainDb = 0f
             if (options.normalise && options.format.audio) {
                 // A render starts from the song (see pushForRender). Runs on

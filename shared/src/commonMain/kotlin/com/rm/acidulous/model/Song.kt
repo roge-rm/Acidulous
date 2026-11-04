@@ -308,6 +308,12 @@ data class TakeRef(
      * from [offset] as a one-take lane does. See `model/Bias.kt`.
      */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val pieces: List<Piece> = emptyList(),
+    /**
+     * Every take in the stack plays at once instead of the pieces, as a
+     * double or a choir, at about the level of one take. The pieces are
+     * kept for when it's turned off.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val blend: Boolean = false,
 )
 
 /**
@@ -326,9 +332,18 @@ data class StackTake(
     val end: Int,
 )
 
-/** A stretch of a region, [start, end) in region frames, played from take [take]. */
+/**
+ * A stretch of a region, [start, end) in region frames, played from take
+ * [take]. [shift] plays the take that many frames later (negative is
+ * earlier): lining up a double sets it per phrase.
+ */
 @Serializable
-data class Piece(val start: Int, val end: Int, val take: Int)
+data class Piece(
+    val start: Int,
+    val end: Int,
+    val take: Int,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val shift: Int = 0,
+)
 
 /**
  * What a tape holds in one cell: four lanes that play together.

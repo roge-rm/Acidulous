@@ -78,6 +78,13 @@ import com.rm.acidulous.model.phraseAt
 import com.rm.acidulous.model.choosing
 import com.rm.acidulous.model.hearing
 import com.rm.acidulous.model.withoutTake
+import com.rm.acidulous.model.leadsFor
+import com.rm.acidulous.model.linedUp
+import com.rm.acidulous.model.linedUpBy
+import com.rm.acidulous.model.lineUpSpec
+import com.rm.acidulous.model.suggested
+import com.rm.acidulous.model.unshifted
+import com.rm.acidulous.model.blending
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -181,18 +188,21 @@ fun AudioLanes(
     // of its phrases can be picked.
     var open by remember(trackIndex, sceneId) { mutableStateOf(-1) }
     var phrase by remember(trackIndex, sceneId) { mutableStateOf(-1) }
-    val openTake = clip.audio?.lane(open)?.takeIf { it.takeCount > 1 }
+    // A lane with one take opens too when there's another lane to line it up on.
+    val openTake = clip.audio?.lane(open)?.takeIf { it.takeCount > 1 || clip.leadsFor(open).isNotEmpty() }
     if (open >= 0 && openTake == null && drag == null) { open = -1; phrase = -1 }
     val cuts = Phrasing.rememberCuts(root, if (drag == null) openTake else null)
     // The lane's gesture handler outlives a recomposition, so it reads these fresh.
     val cutsNow by rememberUpdatedState(cuts)
     val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f) }
+    val scores = Scoring.rememberScores(root, if (drag == null) openTake?.takeIf { it.takeCount > 1 } else null, cuts)
 
     // Listening through the picked phrase (see Listening). It stops when it
     // no longer matches what's shown: another phrase or lane, an edit, a
     // drag, or leaving the editor.
     val listen = Listening.session?.takeIf { it.on(trackIndex, sceneId) }
-    val plan = if (openTake != null && cuts != null && phrase in 0 until cuts.size - 1) {
+    // A blend plays every take at once, so there's nothing to listen through.
+    val plan = if (openTake != null && !openTake.blend && cuts != null && phrase in 0 until cuts.size - 1) {
         openTake.listenPlan(open, cuts[phrase], cuts[phrase + 1])
     } else {
         null
@@ -211,9 +221,13 @@ fun AudioLanes(
     LaunchedEffect(listen) {
         played = -1L
         if (listen == null) return@LaunchedEffect
+        var started = false
         while (true) {
             withFrameNanos { }
-            played = Listening.played(trackIndex)
+            val now = Listening.played(trackIndex)
+            // The engine stops listening by itself for a render or a freeze.
+            if (now >= 0) started = true else if (started) { Listening.stop(); break }
+            played = now
         }
     }
     val playingTake by remember(listen) { derivedStateOf { listen?.plan?.takeAt(played) ?: -1 } }
@@ -379,7 +393,7 @@ fun AudioLanes(
                                         onDrag = { drag = it },
                                         onCommit = { d -> drag = null; commit(lane, d) },
                                         onTap = { x ->
-                                            if (stored.takeCount > 1) {
+                                            if (stored.takeCount > 1 || clipNow.leadsFor(lane).isNotEmpty()) {
                                                 val at = frameAt(stored, total, size.width.toFloat(), x)
                                                 val i = phraseAt(if (open == lane) cutsNow ?: listOf(0, stored.frames) else listOf(0, stored.frames), at)
                                                 // Tapping the picked phrase again puts the takes away.
@@ -425,8 +439,8 @@ fun AudioLanes(
                                     val x1 = (from + span * p.end / take.frames).coerceAtMost(to)
                                     if (x1 <= x0) continue
                                     val columns = whole.peaks.size / 2
-                                    val c0 = (columns.toLong() * (t.offset + p.start).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
-                                    val c1 = (columns.toLong() * (t.offset + p.end) / whole.frames).toInt().coerceIn(c0 + 1, columns)
+                                    val c0 = (columns.toLong() * (t.offset + p.start - p.shift).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
+                                    val c1 = (columns.toLong() * (t.offset + p.end - p.shift) / whole.frames).toInt().coerceIn(c0 + 1, columns)
                                     val wanted = (x1 - x0) / (span * (p.end - p.start) / take.frames)
                                     val shown = ((c1 - c0) * wanted).toInt()
                                     drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour)
@@ -487,7 +501,7 @@ fun AudioLanes(
                     }
                 }
             }
-            if (open == lane && stored != null && stored.takeCount > 1) {
+            if (open == lane && stored != null && openTake != null) {
                 TakeRows(
                     take = stored, total = total, cuts = cuts ?: listOf(0, stored.frames), phrase = phrase,
                     maxHeight = rowsMax, root = root,
@@ -501,6 +515,33 @@ fun AudioLanes(
                     playing = if (listen?.plan?.lane == lane) playingTake else -1,
                     cursor = if (keyLane == lane && listen == null) keyTake else -1,
                     onKeep = listen?.takeIf { it.plan.lane == lane }?.let { l -> { k: Int -> keep(l, k) } },
+                    scores = scores,
+                )
+            }
+            if (open == lane && stored != null && openTake != null) {
+                val cs = cuts
+                CompBar(
+                    take = stored,
+                    leads = clip.leadsFor(lane),
+                    lined = stored.linedUp,
+                    onSuggest = {
+                        if (cs != null) scope.launch {
+                            val sc = Scoring.scores(root, stored, cs) ?: return@launch
+                            compEdit(lane) { it.suggested(cs, sc) }
+                        }
+                    },
+                    onLineUp = { l ->
+                        val lead = clip.audio?.lane(l)
+                        if (cs != null && lead != null && root != null) scope.launch {
+                            val shifts = withContext(Dispatchers.Default) {
+                                val spec = stored.lineUpSpec(lead, cs, root)
+                                if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
+                            } ?: return@launch
+                            compEdit(lane) { it.linedUpBy(cs, shifts) }
+                        }
+                    },
+                    onUnline = { compEdit(lane) { it.unshifted() } },
+                    onBlend = { on -> compEdit(lane) { it.blending(on) } },
                 )
             }
         }
@@ -536,6 +577,7 @@ fun CompButton(
         enabled = lanes > 0,
         onClick = {
             val theClip = clip ?: return@TextButton
+            Listening.stop()
             val scene = song.scenes.firstOrNull { it.id == sceneId } ?: return@TextButton
             val bpm = song.bpmOf(sceneId)
             val ticks = song.cycleTicks(sceneId, theClip)

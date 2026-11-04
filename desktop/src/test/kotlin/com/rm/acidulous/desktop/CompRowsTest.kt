@@ -154,7 +154,7 @@ class CompRowsTest {
                 it.tap(Offset(x(1.0), laneClosed))
                 it.settle(20)
                 // Open: three 16 dp rows take their height from the lanes.
-                val lanes = h - px(16f) - px(48f)
+                val lanes = h - px(16f) - px(48f) - px(18f) // three take rows and the comp tools
                 val laneOpen = px(16f) + lanes / 8f
                 it.tap(Offset(x(6.5), laneOpen))
                 it.shot("$tag-2-phrase.png")

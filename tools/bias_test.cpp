@@ -17,6 +17,7 @@
 #include <vector>
 
 #include <engine/core/Reel.h>
+#include <engine/core/TakeScore.h>
 #include <engine/core/Mapping.h>
 #include <engine/core/ReelCache.h>
 #include <engine/format/WavReader.h>
@@ -806,6 +807,305 @@ void listeningThroughPlaysEachTakeInTurn() {
     ok("the song plays as before", near(rig.probe(1, kBarTicks / 2), 500.0f / 32768.0f));
 }
 
+
+// --- C5: suggest, line up and blend ---------------------------------------
+
+/** A piece's shift reads its take that many frames later; zero is the plain read. */
+void aShiftedPieceReadsLater() {
+    printf("- a shifted piece\n");
+    Rig rig;
+    const int32_t total = kBarFrames * 2;
+    auto file = ramped(total, 0, total);
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(file, 0, kBarFrames, kBarTicks);
+    r.takes = {{file, 0}, {file, 0}};
+    r.pieces = {{0, kBarFrames / 2, 0}, {kBarFrames / 2, kBarFrames, 1, -1000}};
+    r.settle();
+    ok("a shift keeps a whole-take piece from merging", r.pieces.size() == 2, std::to_string(r.pieces.size()));
+    rig.reel.cells = {cell};
+    rig.mount();
+    const int32_t at = kBarFrames * 3 / 4;
+    ok("a piece shifted 1000 frames earlier reads 1000 frames on",
+       near(rig.probe(1, at / kFramesPerTick), expectRamp(at + 1000)));
+    ok("the unshifted piece reads where it is", near(rig.probe(1, kBarTicks / 4), expectRamp(kBarFrames / 4)));
+
+    Reel::Region whole = region(file, 0, kBarFrames, kBarTicks);
+    whole.pieces = {{0, kBarFrames, 0, 480}};
+    whole.settle();
+    ok("one shifted piece over the whole region stays a comp", whole.comped());
+}
+
+/** Noise from its own seed, at an RMS of [rms]. */
+std::shared_ptr<Reel::Source> noise(int32_t frames, float rms, uint32_t seed) {
+    auto s = std::make_shared<Reel::Source>();
+    std::vector<int16_t> planes(static_cast<size_t>(frames));
+    uint32_t x = seed;
+    for (int32_t i = 0; i < frames; ++i) {
+        x = x * 1664525u + 1013904223u;
+        const float u = static_cast<float>(x >> 8) / 16777216.0f * 2.0f - 1.0f; // rms 1/sqrt(3)
+        planes[static_cast<size_t>(i)] = toI16(u * rms * 1.7320508f);
+    }
+    s->hold(std::move(planes), frames, false);
+    return s;
+}
+
+float rmsOf(const std::vector<float> &v, size_t from, size_t to) {
+    double e = 0.0;
+    for (size_t i = from; i < to; ++i) e += static_cast<double>(v[i]) * v[i];
+    return static_cast<float>(std::sqrt(e / static_cast<double>(to - from)));
+}
+
+/** Blending a stack: every take at once, at about the level of one. */
+void aBlendSitsAtOneTakesLevel() {
+    printf("- blend\n");
+    Rig rig;
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(noise(kBarFrames, 0.1f, 1), 0, kBarFrames, kBarTicks);
+    r.takes = {{r.source, 0}, {noise(kBarFrames, 0.2f, 2), 0}, {noise(kBarFrames, 0.05f, 3), 0}};
+    // Take three only sings the second half, so the scale has to move.
+    r.takes[2].start = kBarFrames / 2;
+    r.takes[2].end = kBarFrames;
+    r.pieces = {{0, kBarFrames, 1}};
+    r.blend = true;
+    r.settle();
+    ok("a blend keeps every take", r.comped() && r.takes.size() == 3);
+    rig.reel.cells = {cell};
+    rig.mount();
+    const std::vector<float> out = playCell(rig, kBarFrames);
+    const float first = rmsOf(out, 4800, kBarFrames / 2 - 4800);
+    const float second = rmsOf(out, kBarFrames / 2 + 4800, kBarFrames - 4800);
+    const auto db = [](float v) { return 20.0f * std::log10(v / 0.1f); };
+    ok("two takes blend at the middle take's level", std::fabs(db(first)) < 1.0f, std::to_string(db(first)) + " dB");
+    ok("three takes too", std::fabs(db(second)) < 1.0f, std::to_string(db(second)) + " dB");
+    float step = 0.0f;
+    const auto mid = static_cast<size_t>(kBarFrames / 2);
+    const float before = rmsOf(out, mid - 2400, mid - 240), after = rmsOf(out, mid + 240, mid + 2400);
+    step = std::fabs(db(after) - db(before));
+    ok("and the level holds as a take comes in", step < 1.5f, std::to_string(step) + " dB");
+
+    // A blend of one take is the take itself.
+    Reel::Region one = region(noise(kBarFrames, 0.1f, 1), 0, kBarFrames, kBarTicks);
+    one.blend = true;
+    one.settle();
+    ok("a blend of one take is a plain lane", !one.comped());
+
+    // Played twice through reset(), it's the same.
+    rig.bias->reset();
+    ok("it repeats after a reset", playCell(rig, kBarFrames) == out);
+}
+
+// Material for the scorers: a sung line with the dirt a phone puts on it.
+//
+// Notes on the song's eighths at 120 bpm, three phrases of six with a rest
+// between, half a second of room tone first, a low rumble under it all and a
+// little hiss. Each take can be sharp or flat, late, clipped or noisy.
+struct Sung {
+    float drift = 0.0f;    // cents a note drifts by its end, alternating sharp and flat by phrase
+    int32_t late = 0;      // frames
+    float drive = 1.0f;    // gain before a hard clip
+    float hiss = 0.002f;   // noise peak
+    float detune = 0.0f;   // cents, whole take
+    bool bright = true;    // the timbre: a second singer is darker
+    uint32_t seed = 7;
+};
+
+constexpr int32_t kEighth = 12000;      // at 120 bpm
+constexpr int32_t kLead = 24000;        // half a second of room
+constexpr int32_t kPhraseNotes = 6;
+constexpr int32_t kPhrases = 3;
+constexpr int32_t kPhraseGap = 48000;   // a second's rest
+constexpr int32_t kPhraseLen = kPhraseNotes * kEighth;
+constexpr int32_t kSungFrames = kLead + kPhrases * (kPhraseLen + kPhraseGap);
+
+int32_t phraseStart(int32_t p) { return kLead + p * (kPhraseLen + kPhraseGap); }
+
+std::vector<float> sungFloat(const Sung &o) {
+    std::vector<float> out(static_cast<size_t>(kSungFrames), 0.0f);
+    const int midi[kPhraseNotes] = {57, 60, 62, 64, 62, 60};
+    double phase = 0.0;
+    for (int32_t p = 0; p < kPhrases; ++p) {
+        for (int32_t n = 0; n < kPhraseNotes; ++n) {
+            const int32_t on = phraseStart(p) + n * kEighth + o.late;
+            const int32_t len = kEighth - 1920; // 40 ms between notes
+            for (int32_t i = 0; i < len && on + i < kSungFrames; ++i) {
+                const float t = static_cast<float>(i) / kRate;
+                const float frac = static_cast<float>(i) / len;
+                const float cents = o.detune + (p % 2 == 0 ? 1.0f : -1.0f) * o.drift * frac +
+                                    8.0f * std::sin(6.2831853f * 5.5f * t);
+                const double hz = 440.0 * std::pow(2.0, (midi[n] - 69) / 12.0 + cents / 1200.0);
+                phase += 6.283185307 * hz / kRate;
+                float v = 0.0f;
+                for (int k = 1; k <= 8; ++k) {
+                    const float amp = o.bright ? 1.0f / k : 1.0f / (k * k);
+                    v += amp * static_cast<float>(std::sin(phase * k));
+                }
+                const float attack = std::min(1.0f, i / 480.0f);
+                const float release = std::min(1.0f, (len - i) / 1440.0f);
+                out[static_cast<size_t>(on + i)] += 0.3f * v * attack * release;
+            }
+        }
+    }
+    uint32_t x = o.seed;
+    for (int32_t i = 0; i < kSungFrames; ++i) {
+        x = x * 1664525u + 1013904223u;
+        const float u = static_cast<float>(x >> 8) / 16777216.0f * 2.0f - 1.0f;
+        float v = out[static_cast<size_t>(i)] * o.drive;
+        v = std::clamp(v, -1.0f, 1.0f);
+        v += 0.02f * std::sin(6.2831853f * 45.0f * i / kRate) + u * o.hiss;
+        out[static_cast<size_t>(i)] = v;
+    }
+    return out;
+}
+
+std::shared_ptr<Reel::Source> sung(const Sung &o) {
+    const std::vector<float> f = sungFloat(o);
+    auto s = std::make_shared<Reel::Source>();
+    std::vector<int16_t> planes(f.size());
+    for (size_t i = 0; i < f.size(); ++i) planes[i] = toI16(f[i]);
+    s->hold(std::move(planes), static_cast<int32_t>(f.size()), false);
+    return s;
+}
+
+std::vector<int32_t> sungCuts() {
+    std::vector<int32_t> cuts = {0};
+    for (int32_t p = 1; p < kPhrases; ++p) cuts.push_back(phraseStart(p) - kPhraseGap / 2);
+    cuts.push_back(kSungFrames);
+    return cuts;
+}
+
+/** [a] scored against [b], take-major, phrases from sungCuts. */
+std::vector<takescore::Score> scorePair(const std::shared_ptr<Reel::Source> &a,
+                                        const std::shared_ptr<Reel::Source> &b, bool grid = true) {
+    takescore::Stack st;
+    st.takes = {{a.get(), 0, 0, kSungFrames}, {b.get(), 0, 0, kSungFrames}};
+    st.cuts = sungCuts();
+    st.gridStep = grid ? kEighth / 2.0 : 0.0;
+    st.sampleRate = kRate;
+    return takescore::scoreStack(st);
+}
+
+/** True if take 0 beats take 1 in every phrase, with the scores in [why]. */
+bool beatsEveryPhrase(const std::vector<takescore::Score> &s, std::string &why, bool pitched = true) {
+    const auto phrases = static_cast<int32_t>(s.size() / 2);
+    bool all = true;
+    char buf[160];
+    for (int32_t p = 0; p < phrases; ++p) {
+        const auto &a = s[static_cast<size_t>(p)];
+        const auto &b = s[static_cast<size_t>(phrases + p)];
+        snprintf(buf, sizeof buf, "[%.0f v %.0f: %.1f/%.1f c %.1f/%.1f ms %g/%g clips %.0f/%.0f dB] ", a.score, b.score,
+                 a.pitchCents, b.pitchCents, a.timingMs, b.timingMs, a.clips, b.clips, a.snrDb, b.snrDb);
+        why += buf;
+        if (!(a.score > b.score)) all = false;
+        if (pitched && std::isnan(a.pitchCents)) all = false;
+    }
+    return all;
+}
+
+void theScorersPickTheCleanTake() {
+    printf("- scoring takes by phrase\n");
+    const auto steady = sung({});
+    std::string why;
+    ok("a steady take beats one drifting sharp and flat", beatsEveryPhrase(scorePair(steady, sung({35.0f})), why), why);
+    why.clear();
+    ok("an on-time take beats one 30 ms late", beatsEveryPhrase(scorePair(steady, sung({0.0f, 1440})), why), why);
+    why.clear();
+    ok("an unclipped take beats a clipped one", beatsEveryPhrase(scorePair(steady, sung({0.0f, 0, 4.0f})), why), why);
+    why.clear();
+    ok("a clean take beats a noisy one", beatsEveryPhrase(scorePair(steady, sung({0.0f, 0, 1.0f, 0.06f, 0.0f, true, 9})), why), why);
+    why.clear();
+    // Late against the other take alone, with no grid to measure from.
+    ok("with no grid, the late take still loses to the takes that agree", [&] {
+        takescore::Stack st;
+        const auto late = sung({0.0f, 1440}), again = sung({0.0f, 0, 1.0f, 0.002f, 0.0f, true, 11});
+        st.takes = {{again.get(), 0, 0, kSungFrames}, {late.get(), 0, 0, kSungFrames}, {steady.get(), 0, 0, kSungFrames}};
+        st.cuts = sungCuts();
+        st.sampleRate = kRate;
+        const auto s = takescore::scoreStack(st);
+        const int32_t n = kPhrases;
+        bool all = true;
+        for (int32_t p = 0; p < n; ++p) {
+            char buf[64];
+            snprintf(buf, sizeof buf, "[%.1f/%.1f/%.1f ms] ", s[p].timingMs, s[n + p].timingMs, s[2 * n + p].timingMs);
+            why += buf;
+            if (!(s[n + p].score < s[p].score && s[n + p].score < s[2 * n + p].score)) all = false;
+        }
+        return all;
+    }(), why);
+    why.clear();
+
+    // Drums: no pitch, so they're judged on the rest.
+    const auto drums = [](int32_t late, uint32_t seed) {
+        auto s = std::make_shared<Reel::Source>();
+        std::vector<int16_t> planes(static_cast<size_t>(kSungFrames));
+        uint32_t x = seed;
+        for (int32_t i = 0; i < kSungFrames; ++i) {
+            x = x * 1664525u + 1013904223u;
+            const float u = static_cast<float>(x >> 8) / 16777216.0f * 2.0f - 1.0f;
+            float v = u * 0.002f + 0.02f * std::sin(6.2831853f * 45.0f * i / kRate);
+            for (int32_t p = 0; p < kPhrases; ++p) {
+                const int32_t into = i - phraseStart(p) - late;
+                if (into < 0 || into >= kPhraseLen) continue;
+                const int32_t k = into % (kEighth / 2);
+                v += u * 0.5f * std::exp(-static_cast<float>(k) / 1200.0f);
+            }
+            planes[static_cast<size_t>(i)] = toI16(v);
+        }
+        s->hold(std::move(planes), kSungFrames, false);
+        return s;
+    };
+    const auto ds = scorePair(drums(0, 3), drums(1440, 5));
+    ok("drums on time beat drums late, with no pitch to read", beatsEveryPhrase(ds, why, false) && std::isnan(ds[0].pitchCents), why);
+    why.clear();
+
+    // A take missing a phrase can't be chosen there.
+    takescore::Stack st;
+    st.takes = {{steady.get(), 0, 0, kSungFrames}, {steady.get(), 0, 0, sungCuts()[1]}};
+    st.cuts = sungCuts();
+    st.sampleRate = kRate;
+    const auto part = takescore::scoreStack(st);
+    ok("a take with no audio in a phrase has no score there",
+       !std::isnan(part[kPhrases].score) && std::isnan(part[kPhrases + 1].score) && std::isnan(part[kPhrases + 2].score));
+}
+
+/** A double 30 ms behind its lead moves onto it. */
+void aLateDoubleLinesUp() {
+    printf("- lining up a double\n");
+    const auto lead = sung({});
+    const auto dbl = sung({0.0f, 1440, 1.0f, 0.003f, 12.0f, false, 21});
+    const Reel::Region l = region(lead, 0, kSungFrames, kBarTicks);
+    const Reel::Region d = region(dbl, 0, kSungFrames, kBarTicks);
+    const std::vector<float> shifts = takescore::lineUp(l, d, sungCuts(), 2400, kRate);
+    bool all = shifts.size() == static_cast<size_t>(kPhrases);
+    std::string why;
+    for (float s : shifts) {
+        why += std::to_string(s) + " ";
+        if (std::isnan(s) || std::fabs(s + 1440.0f) > 144.0f) all = false;
+    }
+    ok("each phrase of a 30 ms late double shifts back to within 3 ms", all, why);
+
+    // Played with those shifts, the double's hits land on the lead's.
+    Reel::Region moved = d;
+    const auto cuts = sungCuts();
+    moved.takes = {{dbl, 0}};
+    for (size_t i = 0; i < shifts.size(); ++i) {
+        moved.pieces.push_back({cuts[i], cuts[i + 1], 0, static_cast<int32_t>(std::lround(shifts[i]))});
+    }
+    moved.settle();
+    const std::vector<float> again = takescore::lineUp(l, moved, cuts, 2400, kRate);
+    float worst = 0.0f;
+    for (float s : again) worst = std::isnan(s) ? 1e9f : std::max(worst, std::fabs(s));
+    std::string residue;
+    for (float s : again) residue += std::to_string(s) + " ";
+    ok("and once moved there is nothing left to move", worst < 144.0f, residue);
+
+    // Too far off to be the same performance: left alone.
+    const auto far = sung({0.0f, 4800, 1.0f, 0.003f, 12.0f, false, 23});
+    const std::vector<float> none = takescore::lineUp(l, region(far, 0, kSungFrames, kBarTicks), cuts, 2400, kRate);
+    bool left = true;
+    for (float s : none) left = left && (std::isnan(s) || std::fabs(s) <= 2400.0f);
+    ok("a double 100 ms off is never moved past the limit", left);
+}
+
 } // namespace
 
 int main() {
@@ -832,6 +1132,10 @@ int main() {
     aJoinFindsAQuietSpot();
     oneTakeIsUnchanged();
     listeningThroughPlaysEachTakeInTurn();
+    aShiftedPieceReadsLater();
+    aBlendSitsAtOneTakesLevel();
+    theScorersPickTheCleanTake();
+    aLateDoubleLinesUp();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

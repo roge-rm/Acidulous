@@ -66,9 +66,9 @@ void followScene(Machine *m, int64_t tick) {
 }
 
 /**
- * A comped Bias lane: two takes, three pieces, joins in sound and in
- * silence, so a reset has piece positions and crossfades to forget. Bias
- * owns and deletes it.
+ * A comped Bias lane: two takes, three pieces (one shifted), joins in
+ * sound and in silence, so a reset has piece positions and crossfades to
+ * forget, and a lane blending two takes. Bias owns and deletes it.
  */
 audio::Reel *compedReel() {
     constexpr int32_t kFrames = 240000;
@@ -93,8 +93,19 @@ audio::Reel *compedReel() {
     r.ticks = 2400;
     r.loop = true;
     r.takes = {{r.source, 0}, {take(331.0f, 30000), 0}};
-    r.pieces = {{0, 30500, 0}, {30500, 90000, 1}, {90000, kFrames, 0}};
+    // The middle piece lined up 700 frames earlier.
+    r.pieces = {{0, 30500, 0}, {30500, 90000, 1, -700}, {90000, kFrames, 0}};
     r.settle();
+    // And a second lane blending two takes, one starting late.
+    audio::Reel::Region &b = c.lanes[1];
+    b.source = take(147.0f, 50000);
+    b.frames = kFrames;
+    b.ticks = 2400;
+    b.loop = true;
+    b.takes = {{b.source, 0}, {take(196.0f, 60000), 300}};
+    b.takes[1].start = 20000;
+    b.blend = true;
+    b.settle();
     return reel;
 }
 

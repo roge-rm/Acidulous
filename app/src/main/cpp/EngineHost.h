@@ -57,6 +57,23 @@ class EngineHost {
     /** Frames played since listening started on [rack], -1 when not listening. */
     int64_t listenPlayed(int rack) const;
     /**
+     * Scores every take of a stack over each phrase (see
+     * audio::takescore::scoreStack). The spec is
+     *
+     *   score|gridStep|gridPhase|cut,cut,...
+     *
+     * then the lane as a reel spec, cell 1 lane 0. Returns takes, phrases,
+     * then five numbers per take per phrase, take-major. Empty on error.
+     */
+    std::vector<float> scoreTakes(const std::string &spec);
+    /**
+     * How far to shift each phrase of a double to sit on its lead. The spec
+     * is `lineup|maxShift|cut,cut,...`, the lead as cell 1 lane 0 and the
+     * double as cell 2 lane 0. One shift per phrase in frames, NaN where it
+     * can't tell. Empty on error.
+     */
+    std::vector<float> lineUpTakes(const std::string &spec);
+    /**
      * Where converted long takes are stored. Set once at startup. If empty,
      * long takes are held in memory up to the resident limit instead.
      */
@@ -714,7 +731,9 @@ class EngineHost {
     std::shared_ptr<const audio::Reel::Source> sharedSource(const std::string &path,
                                                             int64_t &residentFrames, int &mappedCount);
     std::unique_ptr<audio::Reel> parseReel(const std::string &spec, int64_t &totalFrames, int &mapped,
-                                           size_t &files);
+                                           size_t &files, bool settle = true);
+    /** Stops listening through on every Bias. Only with the audio thread stopped. */
+    void dropListening();
     /** The sources mounted reels hold, by path, size and time, so a reload reuses them. */
     std::mutex reelSourcesLock;
     std::unordered_map<std::string, std::weak_ptr<const audio::Reel::Source>> reelSources;

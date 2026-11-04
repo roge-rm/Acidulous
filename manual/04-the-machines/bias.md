@@ -78,6 +78,24 @@ With a keyboard, move to a lane with takes and press **Enter**. Left and right
 pick the phrase, up and down the take, and Enter keeps it. While listening,
 Enter keeps the take playing. **Esc** stops.
 
+## Suggest, line up and blend
+
+Under the take rows are the comp tools.
+
+- **suggest** picks the best take in every phrase, as one undo step. Each take
+  is scored on how steady its pitch is, how close it hits the beat and the
+  other takes, clipping and background noise. The scores show faintly at the
+  end of each phrase on the rows, the best one lit. A take that's much quieter
+  than the others in a phrase scores 0
+- **line up** moves this lane's phrases onto another lane's timing, each phrase
+  on its own and by at most 50 ms, for a double that's a little early or late.
+  With more than one other lane it asks which. It then reads **lined up**: tap
+  it to put the lane back where it was. A lane with one take shows this too,
+  when another lane has audio
+- **blend** plays every take on the lane together, each at about the same
+  level, and the sum at the level of one take. It's a quick double or a small
+  choir. Tap it again to go back to your choices, which it keeps
+
 ## The editor
 
 Opening a cell shows the four lanes:

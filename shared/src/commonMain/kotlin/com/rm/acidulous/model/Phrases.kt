@@ -207,13 +207,13 @@ fun TakeRef.choosing(k: Int, start: Int, end: Int): TakeRef {
     return if (next == pieces) this else copy(takes = stack(), pieces = next)
 }
 
-/** Neighbouring pieces of one take merged, empty ones dropped. */
+/** Neighbouring pieces of one take at the same shift merged, empty ones dropped. */
 fun List<Piece>.joined(): List<Piece> {
     val out = ArrayList<Piece>()
     for (p in sortedBy { it.start }) {
         if (p.end <= p.start) continue
         val last = out.lastOrNull()
-        if (last != null && last.take == p.take && last.end == p.start) out[out.size - 1] = last.copy(end = p.end)
+        if (last != null && last.take == p.take && last.shift == p.shift && last.end == p.start) out[out.size - 1] = last.copy(end = p.end)
         else out += p
     }
     return out

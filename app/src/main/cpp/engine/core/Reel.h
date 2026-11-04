@@ -154,8 +154,25 @@ struct Reel {
         struct Take {
             std::shared_ptr<const Source> source;
             int32_t offset = 0;
+            /**
+             * The region frames it has audio for. A take from loop recording
+             * shares its file with the passes either side, so a blend must
+             * not read past these. Pieces are already kept inside them.
+             */
+            int32_t start = INT32_MIN / 2;
+            int32_t end = INT32_MAX / 2;
+            /** Its level in a blend, set by settle(). */
+            float gain = 1.0f;
         };
         std::vector<Take> takes;
+
+        /**
+         * Every take plays at once instead of the pieces, as a double or a
+         * choir from the stack. Each take is brought to the stack's middle
+         * level and the sum is scaled by the square root of how many sound,
+         * so it sits at the level of one take.
+         */
+        bool blend = false;
 
         /**
          * A stretch of the region, [start, end) in region frames, played from
@@ -166,15 +183,21 @@ struct Reel {
             int32_t start = 0;
             int32_t end = 0;
             int32_t take = 0;
+            /**
+             * How many frames later the take plays here: frame [at] of the
+             * region reads take frame `offset + at - shift`. Negative pulls
+             * it earlier. Lining up a double sets it per phrase.
+             */
+            int32_t shift = 0;
         };
         /** Sorted and settled (see settle()). Empty plays `source` whole. */
         std::vector<Piece> pieces;
 
-        bool comped() const { return !pieces.empty(); }
+        bool comped() const { return !pieces.empty() || blend; }
 
         /** Whether any take this region plays is stereo. */
         bool stereo() const {
-            if (pieces.empty()) return source != nullptr && source->stereo;
+            if (!comped()) return source != nullptr && source->stereo;
             for (const Take &t : takes) {
                 if (t.source != nullptr && t.source->stereo) return true;
             }
@@ -217,6 +240,10 @@ struct Reel {
          * pieces crossed. The answer doesn't depend on the hint.
          */
         void compAt(int64_t at, int32_t &hint, float &l, float &r) const {
+            if (blend) {
+                blendAt(at, l, r);
+                return;
+            }
             l = r = 0.0f;
             const int32_t n = static_cast<int32_t>(pieces.size());
             if (n == 0) return;
@@ -228,12 +255,57 @@ struct Reel {
             hint = k;
             for (int32_t j = k; j < n && j <= k + 1; ++j) {
                 if (at < soundsFrom(static_cast<size_t>(j)) || at >= soundsTo(static_cast<size_t>(j))) continue;
-                const Take &t = takes[static_cast<size_t>(pieces[static_cast<size_t>(j)].take)];
-                const int64_t s = t.offset + at;
+                const Piece &p = pieces[static_cast<size_t>(j)];
+                const Take &t = takes[static_cast<size_t>(p.take)];
+                const int64_t s = t.offset + at - p.shift;
                 if (s < 0 || s >= t.source->frames) continue;
                 const float g = pieceGain(static_cast<size_t>(j), at) * (1.0f / 32768.0f);
                 l += static_cast<float>(t.source->lp[static_cast<size_t>(s)]) * g;
                 r += static_cast<float>(t.source->rp[static_cast<size_t>(s)]) * g;
+            }
+        }
+
+        /** Take [t]'s level at [at] region frames: equal power over a fade at either end of its audio. */
+        float takeEdge(const Take &t, int64_t at) const {
+            constexpr float kPer = 1.0f / static_cast<float>(kJoinFadeFrames);
+            if (at < t.start || at >= t.end) return 0.0f;
+            float g = 1.0f;
+            if (t.start > 0) g = static_cast<float>(at - t.start) * kPer;
+            if (t.end < frames) {
+                const float k2 = static_cast<float>(t.end - at) * kPer;
+                g = g < k2 ? g : k2;
+            }
+            if (g >= 1.0f) return 1.0f;
+            return std::sin(g * 1.5707963f);
+        }
+
+        /**
+         * Every take at once at [at] region frames, scaled to +-1. Audio
+         * thread: a few takes, one square root, nothing allocated.
+         *
+         * Divided by the square root of the summed power of the takes
+         * sounding, so N takes that don't correlate sum to the level of one,
+         * and a take starting or stopping moves the scale smoothly. Below
+         * one take's worth it isn't raised, so a lone take still fades.
+         */
+        void blendAt(int64_t at, float &l, float &r) const {
+            l = r = 0.0f;
+            float power = 0.0f;
+            for (const Take &t : takes) {
+                if (t.source == nullptr) continue;
+                const float w = takeEdge(t, at);
+                if (w <= 0.0f) continue;
+                const int64_t s = t.offset + at;
+                if (s < 0 || s >= t.source->frames) continue;
+                power += w * w;
+                const float g = w * t.gain * (1.0f / 32768.0f);
+                l += static_cast<float>(t.source->lp[static_cast<size_t>(s)]) * g;
+                r += static_cast<float>(t.source->rp[static_cast<size_t>(s)]) * g;
+            }
+            if (power > 1.0f) {
+                const float k = 1.0f / std::sqrt(power);
+                l *= k;
+                r *= k;
             }
         }
 
@@ -267,6 +339,10 @@ struct Reel {
          * side of it are quietest.
          */
         void settle() {
+            if (blend) {
+                settleBlend();
+                return;
+            }
             if (pieces.empty()) return;
             if (takes.empty()) takes.push_back({source, offset});
             std::vector<Piece> kept;
@@ -283,7 +359,8 @@ struct Reel {
             for (const Piece &p : kept) {
                 if (!out.empty() && out.back().end > p.start) out.back().end = p.start;
                 if (!out.empty() && out.back().end - out.back().start < kJoinFadeFrames) out.pop_back();
-                if (!out.empty() && out.back().take == p.take && out.back().end == p.start) {
+                if (!out.empty() && out.back().take == p.take && out.back().shift == p.shift &&
+                    out.back().end == p.start) {
                     out.back().end = p.end;
                     continue;
                 }
@@ -292,7 +369,7 @@ struct Reel {
             if (!out.empty() && out.back().end - out.back().start < kJoinFadeFrames) out.pop_back();
             pieces = std::move(out);
 
-            if (pieces.size() == 1 && pieces[0].start == 0 && pieces[0].end == frames) {
+            if (pieces.size() == 1 && pieces[0].start == 0 && pieces[0].end == frames && pieces[0].shift == 0) {
                 const Take &t = takes[static_cast<size_t>(pieces[0].take)];
                 source = t.source;
                 offset = t.offset;
@@ -316,31 +393,73 @@ struct Reel {
                 if (p.start > 0 && !startJoined) {
                     const int32_t lo = k > 0 ? pieces[static_cast<size_t>(k - 1)].end + kJoinFadeFrames : kJoinFadeFrames / 2;
                     const int32_t hi = p.end - kJoinFadeFrames;
-                    p.start = quietest(p.start, lo, hi, p.take, -1);
+                    p.start = quietest(p.start, lo, hi, &p, nullptr);
                 }
                 if (p.end < frames) {
                     const int32_t lo = p.start + kJoinFadeFrames;
                     int32_t hi = frames - kJoinFadeFrames / 2;
-                    int32_t other = -1;
+                    const Piece *other = nullptr;
                     if (k + 1 < n) {
                         const Piece &q = pieces[static_cast<size_t>(k + 1)];
                         hi = joined ? q.end - kJoinFadeFrames : q.start - kJoinFadeFrames;
-                        if (joined) other = q.take;
+                        if (joined) other = &q;
                     }
-                    p.end = quietest(p.end, lo, hi, p.take, other);
+                    p.end = quietest(p.end, lo, hi, &p, other);
                     if (joined) pieces[static_cast<size_t>(k + 1)].start = p.end;
                 }
             }
         }
 
       private:
-        /** The energy of take [t] over the quiet window centred on [at]. */
-        double energyNear(int32_t t, int32_t at) const {
-            if (t < 0) return 0.0;
-            const Take &k = takes[static_cast<size_t>(t)];
+        /**
+         * A blend: every take with a source, each brought to the middle
+         * level of the stack, at most 12 dB either way. The level is the
+         * RMS over the take's own audio, so a take that's mostly silence
+         * still counts the singing.
+         */
+        void settleBlend() {
+            if (takes.empty()) takes.push_back({source, offset});
+            if (takes.size() < 2) {
+                blend = false;
+                takes.clear();
+                return;
+            }
+            pieces.clear();
+            std::vector<double> levels;
+            for (Take &t : takes) {
+                if (t.source == nullptr) continue;
+                const int32_t a = std::max(t.start, 0);
+                const int32_t b = std::min(t.end, frames);
+                double e = 0.0;
+                int64_t n = 0;
+                for (int32_t i = a; i < b; ++i) {
+                    const int64_t s = static_cast<int64_t>(t.offset) + i;
+                    if (s < 0 || s >= t.source->frames) continue;
+                    const double l = t.source->lp[static_cast<size_t>(s)];
+                    const double r = t.source->rp[static_cast<size_t>(s)];
+                    e += 0.5 * (l * l + r * r);
+                    ++n;
+                }
+                const double rms = n > 0 ? std::sqrt(e / static_cast<double>(n)) : 0.0;
+                t.gain = static_cast<float>(rms);
+                if (rms > 0.0) levels.push_back(rms);
+            }
+            if (levels.empty()) return;
+            std::sort(levels.begin(), levels.end());
+            const double middle = levels[levels.size() / 2];
+            for (Take &t : takes) {
+                const double rms = t.gain;
+                t.gain = rms > 0.0 ? static_cast<float>(std::clamp(middle / rms, 0.25, 4.0)) : 1.0f;
+            }
+        }
+
+        /** The energy of piece [p]'s take over the quiet window centred on [at]. */
+        double energyNear(const Piece *p, int32_t at) const {
+            if (p == nullptr) return 0.0;
+            const Take &k = takes[static_cast<size_t>(p->take)];
             double e = 0.0;
             for (int32_t i = at - kJoinQuietFrames / 2; i < at + kJoinQuietFrames / 2; ++i) {
-                const int64_t s = static_cast<int64_t>(k.offset) + i;
+                const int64_t s = static_cast<int64_t>(k.offset) + i - p->shift;
                 if (s < 0 || s >= k.source->frames) continue;
                 const double l = k.source->lp[static_cast<size_t>(s)];
                 const double r = k.source->rp[static_cast<size_t>(s)];
@@ -351,10 +470,10 @@ struct Reel {
 
         /**
          * The quietest point for a join near [at], within [lo, hi], summed
-         * over takes [a] and [b] (-1 for none). The nearest wins a tie, so a
-         * join in silence stays where it was put.
+         * over pieces [a] and [b] (null for none). The nearest wins a tie, so
+         * a join in silence stays where it was put.
          */
-        int32_t quietest(int32_t at, int32_t lo, int32_t hi, int32_t a, int32_t b) const {
+        int32_t quietest(int32_t at, int32_t lo, int32_t hi, const Piece *a, const Piece *b) const {
             lo = std::max(lo, at - kJoinSearchFrames);
             hi = std::min(hi, at + kJoinSearchFrames);
             if (lo > hi) return at;

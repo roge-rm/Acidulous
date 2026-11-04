@@ -29,6 +29,7 @@
 #include <engine/dsp/Wavetable.h>
 #include <engine/format/WavWriter.h>
 #include <engine/core/Reel.h>
+#include <engine/core/TakeScore.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
@@ -1408,6 +1409,9 @@ bool EngineHost::renderTargets(const std::vector<RenderTarget> &targets, float t
     sEngine.transport.requestStop();
     float silent[kBlockFrames * 2];
     sEngine.renderBlock(nullptr, silent); // apply the stop
+    // Listening through a phrase plays instead of the song, so it would be
+    // all a render heard.
+    dropListening();
 
     // Start from silence, so nothing from before (filter and delay state,
     // tails) bleeds into the start of the file.
@@ -1945,7 +1949,13 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
  * order, and piece start and end are frames into the region:
  *
  *   take|sceneId|lane|absPath|offset
- *   piece|sceneId|lane|start|end|take
+ *   piece|sceneId|lane|start|end|take|shift
+ *   span|sceneId|lane|take|start|end
+ *   blend|sceneId|lane
+ *
+ * A piece's shift is optional and plays its take that many frames later.
+ * A span gives the region frames a take has audio for, and blend plays
+ * every take at once instead of the pieces (see Reel::Region::blend).
  *
  * Each distinct file is decoded once however many lines use it, as int16
  * with mono kept mono (see engine/core/Reel.h). An empty spec clears the reel.
@@ -2069,9 +2079,88 @@ int64_t EngineHost::listenPlayed(int rack) const {
     return static_cast<machine::Bias *>(m)->listenPlayed();
 }
 
+namespace {
+/** The first line of an analysis spec split at '|', and the rest after it. */
+std::vector<std::string> headOf(const std::string &spec, std::string &rest) {
+    const size_t eol = spec.find('\n');
+    rest = eol == std::string::npos ? "" : spec.substr(eol + 1);
+    std::vector<std::string> f;
+    std::string part;
+    std::istringstream fields(spec.substr(0, eol));
+    while (std::getline(fields, part, '|')) f.push_back(part);
+    return f;
+}
+
+std::vector<int32_t> cutsOf(const std::string &list) {
+    std::vector<int32_t> cuts;
+    std::string part;
+    std::istringstream items(list);
+    while (std::getline(items, part, ',')) {
+        if (!part.empty()) cuts.push_back(std::atoi(part.c_str()));
+    }
+    return cuts;
+}
+} // namespace
+
+std::vector<float> EngineHost::scoreTakes(const std::string &spec) {
+    std::string rest;
+    const auto f = headOf(spec, rest);
+    if (f.size() < 4 || f[0] != "score") return {};
+    int64_t totalFrames = 0;
+    int mapped = 0;
+    size_t files = 0;
+    // Unsettled, so a lane playing one take whole still shows every take.
+    auto reel = parseReel(rest, totalFrames, mapped, files, false);
+    const audio::Reel::Cell *cell = reel->find(1);
+    if (cell == nullptr || !cell->lanes[0].source) return {};
+    const audio::Reel::Region &r = cell->lanes[0];
+    audio::takescore::Stack stack;
+    stack.gridStep = std::atof(f[1].c_str());
+    stack.gridPhase = std::atof(f[2].c_str());
+    stack.cuts = cutsOf(f[3]);
+    stack.sampleRate = static_cast<float>(kSampleRate);
+    if (r.takes.empty()) {
+        stack.takes.push_back({r.source.get(), r.offset, 0, r.frames});
+    } else {
+        for (const auto &t : r.takes) stack.takes.push_back({t.source.get(), t.offset, t.start, t.end});
+    }
+    if (stack.cuts.size() < 2) return {};
+    const auto scores = audio::takescore::scoreStack(stack);
+    const auto takes = static_cast<int32_t>(stack.takes.size());
+    const auto phrases = static_cast<int32_t>(stack.cuts.size() - 1);
+    std::vector<float> out = {static_cast<float>(takes), static_cast<float>(phrases)};
+    for (const auto &sc : scores) {
+        out.insert(out.end(), {sc.score, sc.pitchCents, sc.timingMs, sc.clips, sc.snrDb});
+    }
+    return out;
+}
+
+std::vector<float> EngineHost::lineUpTakes(const std::string &spec) {
+    std::string rest;
+    const auto f = headOf(spec, rest);
+    if (f.size() < 3 || f[0] != "lineup") return {};
+    int64_t totalFrames = 0;
+    int mapped = 0;
+    size_t files = 0;
+    auto reel = parseReel(rest, totalFrames, mapped, files);
+    const audio::Reel::Cell *lead = reel->find(1);
+    const audio::Reel::Cell *dbl = reel->find(2);
+    if (lead == nullptr || dbl == nullptr || !lead->has(0) || !dbl->has(0)) return {};
+    return audio::takescore::lineUp(lead->lanes[0], dbl->lanes[0], cutsOf(f[2]), std::atoi(f[1].c_str()),
+                                    static_cast<float>(kSampleRate));
+}
+
+void EngineHost::dropListening() {
+    for (int rack = 0; rack < kRackCount; ++rack) {
+        Machine *m = sEngine.racks[rack].currentMachine();
+        if (m == nullptr || std::strcmp(m->typeName(), "Bias") != 0) continue;
+        delete static_cast<audio::Listen *>(m->swapObject(1, nullptr));
+    }
+}
+
 /** A reel from its spec (see loadReel), its files read through sharedSource. */
 std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int64_t &totalFrames,
-                                                   int &mapped, size_t &files) {
+                                                   int &mapped, size_t &files, bool settle) {
     auto reel = std::make_unique<audio::Reel>();
     // Distinct paths, looked up once each.
     std::unordered_map<std::string, std::shared_ptr<const audio::Reel::Source>> decoded;
@@ -2084,9 +2173,10 @@ std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int6
         std::string part;
         std::istringstream fields(line);
         while (std::getline(fields, part, '|')) f.push_back(part);
-        if (!f.empty() && (f[0] == "take" || f[0] == "piece")) {
+        if (!f.empty() && (f[0] == "take" || f[0] == "piece" || f[0] == "span" || f[0] == "blend")) {
             const bool isTake = f[0] == "take";
-            if (f.size() < (isTake ? 5u : 6u)) {
+            const size_t need = isTake ? 5u : f[0] == "piece" ? 6u : f[0] == "span" ? 6u : 3u;
+            if (f.size() < need) {
                 LOGE("reel: short %s line: %s", f[0].c_str(), line.c_str());
                 continue;
             }
@@ -2103,14 +2193,23 @@ std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int6
                 continue;
             }
             if (r->takes.empty()) r->takes.push_back({r->source, r->offset});
-            if (isTake) {
+            if (f[0] == "blend") {
+                r->blend = true;
+            } else if (f[0] == "span") {
+                const int32_t k = std::atoi(f[3].c_str());
+                if (k >= 0 && k < static_cast<int32_t>(r->takes.size())) {
+                    r->takes[static_cast<size_t>(k)].start = std::atoi(f[4].c_str());
+                    r->takes[static_cast<size_t>(k)].end = std::atoi(f[5].c_str());
+                }
+            } else if (isTake) {
                 auto &src = decoded[f[3]];
                 if (src == nullptr) src = sharedSource(f[3], totalFrames, mapped);
                 // A take that won't read stays in the stack as a gap, so the
                 // pieces' take numbers still line up. settle() drops its pieces.
                 r->takes.push_back({src, std::atoi(f[4].c_str())});
             } else {
-                r->pieces.push_back({std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), std::atoi(f[5].c_str())});
+                r->pieces.push_back({std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), std::atoi(f[5].c_str()),
+                                     f.size() > 6 ? std::atoi(f[6].c_str()) : 0});
             }
             continue;
         }
@@ -2155,7 +2254,7 @@ std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int6
     // Comped lanes: tidy the pieces and move the joins to quiet spots.
     for (auto &cell : reel->cells) {
         for (auto &r : cell.lanes) {
-            if (r.source) r.settle();
+            if (r.source && settle) r.settle();
         }
     }
 
@@ -2453,6 +2552,8 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
     Machine *m = sEngine.racks[rack].currentMachine();
     if (m == nullptr || std::strcmp(m->typeName(), "Bias") != 0) return "that rack is not a Bias";
     auto *bias = static_cast<machine::Bias *>(m);
+    // Listening through would be all the comp heard.
+    delete static_cast<audio::Listen *>(bias->swapObject(1, nullptr));
 
     WavWriter writer;
     std::string error;
@@ -2548,6 +2649,8 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.transport.requestStop();
     float scratch[kBlockFrames * 2];
     sEngine.renderBlock(nullptr, scratch);
+    // Listening through a phrase plays instead of the song.
+    dropListening();
 
     // Start clean, with nothing ringing from before.
     //

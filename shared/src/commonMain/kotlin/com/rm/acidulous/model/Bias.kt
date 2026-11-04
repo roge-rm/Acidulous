@@ -44,7 +44,12 @@ fun Track.hasAudio(): Boolean =
  * after the first and a line per piece:
  *
  *     take|sceneId|lane|absPath|offset
- *     piece|sceneId|lane|start|end|take
+ *     piece|sceneId|lane|start|end|take[|shift]
+ *
+ * and a blended lane says where each take has audio, then that it blends:
+ *
+ *     span|sceneId|lane|take|start|end
+ *     blend|sceneId|lane
  *
  * Paths are absolute because the engine has no root, and scene ids are engine
  * ids because that's what the scheduler hands back. Missing files are skipped
@@ -63,9 +68,10 @@ fun reelSpec(song: Song, track: Track, root: File): String = buildString {
 
 /**
  * [take]'s lines in a reel spec as lane [lane] of cell [sceneId]. Nothing if
- * its file is missing.
+ * its file is missing. [spans] says where each take of a stack has audio,
+ * which a blend and the take scorer need.
  */
-internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef, root: File) {
+internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef, root: File, spans: Boolean = take.blend) {
     val file = File(root, take.file)
     if (!file.isFile) return
     append(sceneId).append('|').append(lane).append('|')
@@ -82,10 +88,19 @@ internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef,
         append("take|").append(sceneId).append('|').append(lane).append('|')
         append(File(root, t.file).absolutePath).append('|').append(t.offset).append('\n')
     }
+    if (spans && take.takes.isNotEmpty()) {
+        for ((k, t) in take.takes.withIndex()) {
+            append("span|").append(sceneId).append('|').append(lane).append('|')
+            append(k).append('|').append(t.start).append('|').append(t.end).append('\n')
+        }
+    }
     for (p in take.pieces) {
         append("piece|").append(sceneId).append('|').append(lane).append('|')
-        append(p.start).append('|').append(p.end).append('|').append(p.take).append('\n')
+        append(p.start).append('|').append(p.end).append('|').append(p.take)
+        if (p.shift != 0) append('|').append(p.shift)
+        append('\n')
     }
+    if (take.blend && take.takes.size > 1) append("blend|").append(sceneId).append('|').append(lane).append('\n')
 }
 
 /**

@@ -329,6 +329,12 @@ internal actual object EngineNative {
     private external fun blocking_nativeListenReel(rack: Int, spec: String): String
     actual suspend fun nativeListenReel(rack: Int, spec: String): String = blocking_nativeListenReel(rack, spec)
     actual external fun nativeListenPlayed(rack: Int): Long
+    @JvmName("nativeScoreTakes")
+    private external fun blocking_nativeScoreTakes(spec: String): FloatArray?
+    actual suspend fun nativeScoreTakes(spec: String): FloatArray? = blocking_nativeScoreTakes(spec)
+    @JvmName("nativeLineUp")
+    private external fun blocking_nativeLineUp(spec: String): FloatArray?
+    actual suspend fun nativeLineUp(spec: String): FloatArray? = blocking_nativeLineUp(spec)
     actual external fun nativeSetCacheRoot(path: String)
     @JvmName("nativeLoadFormula")
     private external fun jni_nativeLoadFormula(rack: Int, formula: String, arp: String, duty: String, vol: String): String

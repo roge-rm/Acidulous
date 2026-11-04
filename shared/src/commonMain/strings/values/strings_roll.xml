@@ -76,6 +76,16 @@
     <string name="tape_take_everywhere">use everywhere</string>
     <string name="tape_take_delete">delete take</string>
     <string name="tape_take_phrase">use for this phrase</string>
+    <!-- ui/CompBar.kt: the comp tools over a lane's takes. -->
+    <!-- Fill every phrase with its best take. -->
+    <string name="tape_comp_suggest">suggest</string>
+    <!-- Move this lane's phrases onto another lane's timing, and the lane to follow. -->
+    <string name="tape_comp_line_up">line up</string>
+    <string name="tape_comp_line_up_to">on lane %d</string>
+    <!-- Lit while the lane is lined up; tapping it puts it back. -->
+    <string name="tape_comp_lined_up">lined up</string>
+    <!-- Play every take at once. -->
+    <string name="tape_comp_blend">blend</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">on</string>

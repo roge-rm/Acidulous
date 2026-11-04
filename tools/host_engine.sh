@@ -24,7 +24,7 @@ mkdir -p "$OUT"
 SRC=$(find "$CPP/engine/machine" "$CPP/engine/dsp" "$CPP/engine/effect" -name '*.cpp')
 # Molt's analyser, the onsets Dice and Pollen read, and our own file writing.
 SRC="$SRC $CPP/engine/core/Utterance.cpp $CPP/engine/core/Take.cpp $CPP/engine/core/SampleEdit.cpp"
-SRC="$SRC $CPP/engine/core/Tuner.cpp"
+SRC="$SRC $CPP/engine/core/Tuner.cpp $CPP/engine/core/TakeScore.cpp"
 # The modifiers and the rack that runs them, for inputmod_test.
 SRC="$SRC $(find "$CPP/engine/inputmod" -name '*.cpp') $CPP/engine/rack/Rack.cpp"
 # The Engine itself, for render_test. The sequencer is all headers and

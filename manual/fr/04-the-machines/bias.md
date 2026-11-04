@@ -87,6 +87,25 @@ Au clavier, allez sur un couloir qui a des prises et appuyez sur **Entrée**.
 Gauche et droite choisissent la phrase, haut et bas la prise, et Entrée la
 garde. Pendant l’écoute, Entrée garde la prise qui joue. **Échap** arrête.
 
+## Suggérer, aligner et mêler
+
+Sous les rangées de prises se trouvent les outils de montage.
+
+- **suggérer** choisit la meilleure prise dans chaque phrase, en une seule
+  étape d’annulation. Chaque prise est notée sur la stabilité de sa hauteur, la
+  justesse de ses attaques par rapport au temps et aux autres prises, la
+  saturation et le bruit de fond. Les notes s’affichent en pâle au bout de
+  chaque phrase sur les rangées, la meilleure allumée. Une prise beaucoup plus
+  faible que les autres dans une phrase a 0
+- **aligner** déplace les phrases de ce couloir sur le jeu d’un autre couloir,
+  chaque phrase à part et d’au plus 50 ms, pour une doublure un peu en avance
+  ou en retard. S’il y a plus d’un autre couloir, il demande lequel. Il affiche
+  ensuite **aligné** : touchez-le pour remettre le couloir comme avant. Un
+  couloir d’une seule prise l’affiche aussi, quand un autre couloir a du son
+- **mêler** joue toutes les prises du couloir ensemble, chacune à peu près au
+  même niveau, et la somme au niveau d’une prise. C’est une doublure rapide ou
+  une petite chorale. Touchez-le encore pour revenir à vos choix, qu’il garde
+
 ## L’éditeur
 
 Ouvrir une cellule montre les quatre couloirs :

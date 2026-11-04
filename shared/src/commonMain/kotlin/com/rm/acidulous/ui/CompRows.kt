@@ -38,13 +38,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.TakeScores
 import com.rm.acidulous.model.findPhrases
 import com.rm.acidulous.model.lengthTicks
 import com.rm.acidulous.model.phraseAt
@@ -181,8 +185,12 @@ internal fun TakeRows(
     playing: Int = -1,
     cursor: Int = -1,
     onKeep: ((Int) -> Unit)? = null,
+    /** Each take's score by phrase, shown faintly where a phrase has room for it. */
+    scores: TakeScores? = null,
 ) {
     val c = Acid.colors
+    val measurer = rememberTextMeasurer()
+    val scoreStyle = TextStyle(fontSize = 8.sp, fontFamily = FontFamily.Monospace)
     val keep by rememberUpdatedState(onKeep)
     val stack = take.stack()
     val scroll = rememberScrollState()
@@ -192,7 +200,9 @@ internal fun TakeRows(
         Column(Modifier.fillMaxWidth().verticalScrollWithBar(scroll)) {
             for ((k, t) in stack.withIndex()) key(k) {
                 val shape = TakePeaks.rememberShape(root, t.file)
-                val heard = take.pieces.ifEmpty { listOf(com.rm.acidulous.model.Piece(0, take.frames, 0)) }.filter { it.take == k }
+                // Blending, every take is heard all through.
+                val heard = if (take.blend) listOf(com.rm.acidulous.model.Piece(0, take.frames, k))
+                else take.pieces.ifEmpty { listOf(com.rm.acidulous.model.Piece(0, take.frames, 0)) }.filter { it.take == k }
                 var menu by remember { mutableStateOf(false) }
                 val lit = k == playing
                 val forPhrase = stringResource(Res.string.tape_take_phrase)
@@ -266,20 +276,37 @@ internal fun TakeRows(
                             if (whole != null && whole.frames > 0 && take.frames > 0) {
                                 val columns = whole.peaks.size / 2
                                 // The take's audio, dim, then the stretches it's heard over on top.
-                                fun stretch(a: Int, b: Int, colour: Color) {
+                                // A lined-up piece reads its take [shift] frames off.
+                                fun stretch(a: Int, b: Int, colour: Color, shift: Int = 0) {
                                     val x0 = xOf(a)
                                     val x1 = xOf(b)
                                     if (x1 <= x0) return
-                                    val c0 = (columns.toLong() * (t.offset + a).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
-                                    val c1 = (columns.toLong() * (t.offset + b) / whole.frames).toInt().coerceIn(c0 + 1, columns)
+                                    val c0 = (columns.toLong() * (t.offset + a - shift).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
+                                    val c1 = (columns.toLong() * (t.offset + b - shift) / whole.frames).toInt().coerceIn(c0 + 1, columns)
                                     val full = span * (b - a) / take.frames
                                     val shown = if (full > 0f) ((c1 - c0) * (x1 - x0) / full).toInt() else 0
                                     drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour)
                                 }
                                 stretch(maxOf(t.start, 0), minOf(t.end, take.frames), c.textDim.copy(alpha = 0.6f))
-                                for (p in heard) stretch(maxOf(p.start, t.start), minOf(p.end, t.end), c.accent)
+                                for (p in heard) stretch(maxOf(p.start, t.start + p.shift), minOf(p.end, t.end + p.shift), c.accent, p.shift)
                             }
                             drawPhrases(take, cuts, phrase, from, span, to, c.textMid, c.accent)
+                            // Scores, faint, at the end of each phrase that has room; the best brighter.
+                            if (scores != null && scores.takes == stack.size && scores.phrases == cuts.size - 1) {
+                                for (i in 0 until cuts.size - 1) {
+                                    val v = scores.score(k, i)
+                                    if (v.isNaN()) continue
+                                    val best = scores.best(i, -1) == k
+                                    val layout = measurer.measure(
+                                        v.toInt().toString(),
+                                        scoreStyle.copy(color = if (best) c.accent.copy(alpha = 0.8f) else c.textDim.copy(alpha = 0.7f)),
+                                    )
+                                    val x1 = xOf(cuts[i + 1])
+                                    val x0 = xOf(cuts[i])
+                                    if (x1 - x0 < layout.size.width + 6f || layout.size.height > size.height + 2f) continue
+                                    drawText(layout, topLeft = Offset(x1 - layout.size.width - 3f, (size.height - layout.size.height) / 2f))
+                                }
+                            }
                             pick?.takeIf { it.take == k }?.let { p ->
                                 val a = xOf(minOf(p.from, p.to))
                                 val b = xOf(maxOf(p.from, p.to))

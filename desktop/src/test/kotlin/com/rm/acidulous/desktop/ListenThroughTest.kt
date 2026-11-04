@@ -170,7 +170,7 @@ class ListenThroughTest {
                 val laneClosed = px(16f) + (h - px(16f)) / 8f
                 it.tap(Offset(x(1.0), laneClosed))
                 it.settle(20)
-                val lanes = h - px(16f) - px(48f)
+                val lanes = h - px(16f) - px(48f) - px(18f) // three take rows and the comp tools
                 val laneOpen = px(16f) + lanes / 8f
                 // The middle phrase, then the button left of the ruler.
                 it.tap(Offset(x(4.0), laneOpen))

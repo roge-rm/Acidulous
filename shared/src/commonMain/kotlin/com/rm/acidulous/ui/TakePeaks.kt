@@ -106,7 +106,7 @@ object TakePeaks {
             val t = p?.let { stack.getOrNull(it.take) }
             if (t == null) { out.add(0f); out.add(0f); continue }
             val whole = shapeOf(t.file) ?: return null
-            val col = slice(whole, t.offset + from, (to - from).coerceAtLeast(1), 1)
+            val col = slice(whole, t.offset + from - p.shift, (to - from).coerceAtLeast(1), 1)
             if (col.size == 2) out.addAll(col) else { out.add(0f); out.add(0f) }
         }
         return out

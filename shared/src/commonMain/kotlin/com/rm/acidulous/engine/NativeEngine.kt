@@ -429,6 +429,10 @@ object NativeEngine {
     suspend fun listenReel(rack: Int, spec: String): String = EngineNative.nativeListenReel(rack, spec)
     /** Frames played since listening started on [rack], -1 when not listening. */
     fun listenPlayed(rack: Int): Long = EngineNative.nativeListenPlayed(rack)
+    /** A stack's takes scored by phrase, flat, or null. See `model/Comp.kt` (scoreSpec). */
+    suspend fun scoreTakes(spec: String): FloatArray? = EngineNative.nativeScoreTakes(spec)
+    /** The shift that lines up each phrase of a double, or null. See `model/Comp.kt` (lineUpSpec). */
+    suspend fun lineUp(spec: String): FloatArray? = EngineNative.nativeLineUp(spec)
 
     /**
      * Where takes too long to hold in memory are converted to. Set once at
