@@ -356,7 +356,7 @@ val TakeRef.takeCount: Int get() = takes.size.coerceAtLeast(1)
 /** The take heard over the most of the lane: 0 for a one-take lane. */
 fun TakeRef.heardTake(): Int {
     if (pieces.isEmpty()) return 0
-    return pieces.groupBy { it.take }
+    return heardPieces().groupBy { it.take }
         .maxByOrNull { (_, ps) -> ps.sumOf { (it.end - it.start).toLong() } }?.key ?: 0
 }
 
@@ -367,7 +367,7 @@ fun TakeRef.heardTake(): Int {
 fun TakeRef.heardFile(): String? {
     if (takes.isEmpty()) return file
     val heard = if (blend) takes.indices.toList()
-                else pieces.ifEmpty { listOf(Piece(0, frames, 0)) }.filter { it.end > it.start }.map { it.take }
+                else if (pieces.isEmpty()) listOf(0) else heardPieces().map { it.take }
     return heard.mapNotNull { takes.getOrNull(it)?.file }.distinct().singleOrNull()
         ?: if (heard.isEmpty()) file else null
 }
@@ -437,37 +437,39 @@ fun Clip.withRecorded(lane: Int, pass: TakeRef): Clip {
 
 /**
  * This lane after a trim, given what it was. A one-take lane needs nothing.
- * A stack keeps every take and piece on the same audio: the region's start
- * moved by the same frames in each take.
+ * A stack keeps every take, piece and nudge on the same audio: the region's
+ * start moved by the same frames in each take.
+ *
+ * Nothing is cut to the new region. Takes, pieces and nudges past its ends
+ * stay as they were, so dragging an end back out brings them back, as a
+ * one-take lane's file does. The engine only plays what's inside.
  */
 fun TakeRef.reframed(old: TakeRef): TakeRef {
     if (takes.isEmpty()) return this
     val d = offset - old.offset
+    if (d == 0) return this
     val moved = takes.map {
         it.copy(
-            offset = it.offset + d, start = (it.start - d).coerceIn(0, frames), end = (it.end - d).coerceIn(0, frames),
-            nudges = it.nudges.mapNotNull { n ->
-                val s = (n.start - d).coerceIn(0, frames)
-                val e = (n.end - d).coerceIn(0, frames)
-                if (e > s) n.copy(start = s, end = e) else null
-            },
+            offset = it.offset + d, start = it.start - d, end = it.end - d,
+            nudges = it.nudges.map { n -> n.copy(start = n.start - d, end = n.end - d) },
         )
     }
-    val cut = pieces.mapNotNull { p ->
-        val s = (p.start - d).coerceIn(0, frames)
-        val e = (p.end - d).coerceIn(0, frames)
-        if (e > s) p.copy(start = s, end = e) else null
-    }
-    // An empty piece list would play take 0 whole, so a trim that leaves no
-    // piece keeps an empty one, which the engine plays as silence.
-    return copy(takes = moved, pieces = cut.ifEmpty { listOf(Piece(0, 0, 0)) })
+    return copy(takes = moved, pieces = pieces.map { it.copy(start = it.start - d, end = it.end - d) })
 }
 
 /** How far back a stacked lane's head can be dragged: to the earliest audio in it. */
-fun TakeRef.headRoom(): Int = if (takes.isEmpty()) offset else takes.minOf { it.start }.coerceAtLeast(0)
+fun TakeRef.headRoom(): Int = if (takes.isEmpty()) offset else (-takes.minOf { it.start }).coerceAtLeast(0)
 
 /** How long a stacked lane can be: to the latest audio in it. Null for a one-take lane. */
 fun TakeRef.stackLength(): Int? = if (takes.isEmpty()) null else takes.maxOf { it.end }
+
+/** The pieces as far as they're inside the region, which is what plays. */
+fun TakeRef.heardPieces(): List<Piece> =
+    pieces.mapNotNull { p ->
+        val s = maxOf(p.start, 0)
+        val e = minOf(p.end, frames)
+        if (e > s) p.copy(start = s, end = e) else null
+    }
 
 /**
  * Whether this track's takes follow the song's tempo.

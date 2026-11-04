@@ -82,7 +82,31 @@ class BiasStackTest {
         val trimmed = lane.copy(offset = lane.offset + d, frames = lane.frames - d).reframed(lane)
         assertEquals(listOf(d, 2 * barFrames + d), trimmed.takes.map { it.offset })
         assertEquals(trimmed.offset, trimmed.takes[0].offset)
-        assertEquals(listOf(Piece(0, 2 * barFrames - d, 1)), trimmed.pieces)
+        assertEquals(listOf(Piece(0, 2 * barFrames - d, 1)), trimmed.heardPieces())
+    }
+
+    /** A trim only hides: dragging an end back out brings back takes, pieces and nudges as they were. */
+    @Test
+    fun trimmingInThenOutRestoresTheLane() {
+        val clip = Clip(bars = 2).withRecorded(0, pass(0)).withRecorded(0, pass(2 * barFrames, frames = barFrames))
+        val held = clip.audio!!.lane(0)!!
+        val lane = held.copy(takes = held.takes.mapIndexed { k, t -> if (k == 1) t.copy(nudges = listOf(Nudge(1000, 9000, 120))) else t })
+        val d = barFrames + 4000
+
+        // The head, past the join and the nudge.
+        val headIn = lane.copy(offset = lane.offset + d, frames = lane.frames - d).reframed(lane)
+        assertEquals(listOf(Piece(0, barFrames - 4000, 0)), headIn.heardPieces())
+        assertEquals(d, headIn.headRoom())
+        val headOut = headIn.copy(offset = headIn.offset - d, frames = headIn.frames + d).reframed(headIn)
+        assertEquals(lane, headOut)
+        assertEquals(0, headOut.headRoom())
+
+        // The tail, back past the join.
+        val tailIn = lane.copy(frames = lane.frames - d).reframed(lane)
+        assertEquals(listOf(Piece(0, barFrames - 4000, 1)), tailIn.heardPieces())
+        assertEquals(lane.frames, tailIn.stackLength())
+        val tailOut = tailIn.copy(frames = tailIn.frames + d).reframed(tailIn)
+        assertEquals(lane, tailOut)
     }
 
     @Test

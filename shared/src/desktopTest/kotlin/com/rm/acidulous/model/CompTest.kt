@@ -149,9 +149,27 @@ class CompTest {
         val more = lined.stacked(pass)
         assertFalse(more.blendLinedUp)
         assertTrue(more.takes.all { it.nudges.isEmpty() })
-        // A trim moves the nudges with the audio.
+        // A trim moves the nudges with the audio and keeps what it hides.
         val trimmed = lined.copy(offset = 500, frames = frames - 500).reframed(lined)
-        assertEquals(listOf(Nudge(0, 500, -300), Nudge(500, 8500, 120)), trimmed.takes[1].nudges)
+        assertEquals(listOf(Nudge(-500, 500, -300), Nudge(500, 8500, 120)), trimmed.takes[1].nudges)
+    }
+
+    /** Suggest and line up work on a copy off the main thread; an edit or a new lead in the meantime voids the answer. */
+    @Test
+    fun anAnswerOnlyLandsOnTheLanesItWasWorkedOutFrom() {
+        val lead = TakeRef(file = "samples/d.wav", offset = 0, frames = frames, bpm = 120f, ticks = 12 * PPQN)
+        val clip = Clip(bars = 3).withTake(0, lane()).withTake(1, lead)
+        val analysed = clip.audio!!.lane(0)!!
+        assertTrue(clip.stillAsAnalysed(0, analysed, 1, lead))
+        assertTrue(clip.stillAsAnalysed(0, analysed, -1, null))
+        // A new shape alone doesn't matter.
+        assertTrue(clip.withTake(0, analysed.copy(peaks = listOf(0.5f))).stillAsAnalysed(0, analysed, 1, lead))
+        // The lane was edited.
+        assertFalse(clip.withTake(0, analysed.choosing(1, 0, 2 * ENGINE_RATE)).stillAsAnalysed(0, analysed, 1, lead))
+        assertFalse(clip.withTake(0, null).stillAsAnalysed(0, analysed, -1, null))
+        // The lead was.
+        assertFalse(clip.withTake(1, lead.copy(offset = 100)).stillAsAnalysed(0, analysed, 1, lead))
+        assertFalse(clip.withTake(1, null).stillAsAnalysed(0, analysed, 1, lead))
     }
 
     @Test

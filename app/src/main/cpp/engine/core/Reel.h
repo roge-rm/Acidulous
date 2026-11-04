@@ -512,8 +512,11 @@ struct Reel {
         void settleBlend() {
             if (takes.empty()) takes.push_back({source, offset});
             if (takes.size() < 2) {
+                // Not a blend after all: the pieces of a stack this small
+                // could name takes that aren't there, so it plays plain.
                 blend = false;
                 takes.clear();
+                pieces.clear();
                 return;
             }
             pieces.clear();

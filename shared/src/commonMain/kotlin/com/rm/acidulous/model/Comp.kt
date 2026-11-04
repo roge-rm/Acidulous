@@ -201,6 +201,20 @@ fun Clip.leadOf(lane: Int): TakeRef? {
 }
 
 /**
+ * Whether lane [lane] is still [analysed] and, given a [lead], lane
+ * [leadLane] still [lead]: an answer worked out from them off the main
+ * thread still fits. The drawn shape doesn't count.
+ */
+fun Clip.stillAsAnalysed(lane: Int, analysed: TakeRef, leadLane: Int, lead: TakeRef?): Boolean {
+    fun TakeRef.unshaped() = copy(peaks = emptyList())
+    val now = audio?.lane(lane) ?: return false
+    if (now.unshaped() != analysed.unshaped()) return false
+    if (lead == null) return true
+    val l = audio?.lane(leadLane) ?: return false
+    return l.unshaped() == lead.unshaped()
+}
+
+/**
  * What a lined-up blend lines its takes up on: the lead if this lane
  * doubles one, else the lane as you hear it with blend off (your comp, or
  * take 1).

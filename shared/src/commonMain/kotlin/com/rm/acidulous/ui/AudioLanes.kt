@@ -73,6 +73,8 @@ import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
 import com.rm.acidulous.model.reframed
 import com.rm.acidulous.model.headRoom
+import com.rm.acidulous.model.stillAsAnalysed
+import com.rm.acidulous.model.heardPieces
 import com.rm.acidulous.model.stackLength
 import com.rm.acidulous.model.stack
 import com.rm.acidulous.model.takeCount
@@ -203,7 +205,11 @@ fun AudioLanes(
     val cuts = Phrasing.rememberCuts(root, if (drag == null) openTake else null)
     // The lane's gesture handler outlives a recomposition, so it reads these fresh.
     val cutsNow by rememberUpdatedState(cuts)
-    val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f) }
+    val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f = f) }
+    // An answer worked out off the main thread lands only if the lanes it
+    // was worked out from haven't changed since.
+    fun compAnswer(lane: Int, analysed: TakeRef, leadLane: Int, lead: TakeRef?, f: (TakeRef) -> TakeRef?) =
+        compEdit(scope, editor, trackIndex, sceneId, lane, { it.stillAsAnalysed(lane, analysed, leadLane, lead) }, f)
     // Pitch is judged in the track's tuning, and a double is timed by its lead.
     val tuning = editor.song.pitchSpecFor(editor.song.tracks.getOrNull(trackIndex))
     val scores = Scoring.rememberScores(
@@ -448,7 +454,7 @@ fun AudioLanes(
                             } else if (take.pieces.isNotEmpty() && take.frames > 0) {
                                 // A stack: each piece from its own take's file.
                                 val stack = take.stack()
-                                for (p in take.pieces) {
+                                for (p in take.heardPieces()) {
                                     val t = stack.getOrNull(p.take) ?: continue
                                     val whole = stackShapes[t.file] ?: continue
                                     if (whole.frames <= 0) continue
@@ -542,9 +548,10 @@ fun AudioLanes(
                     leads = clip.leadsFor(lane),
                     lined = stored.linedUp,
                     onSuggest = {
+                        val lead = clip.leadOf(lane)
                         if (cs != null) scope.launch {
-                            val sc = Scoring.scores(root, stored, cs, tuning, clip.leadOf(lane)) ?: return@launch
-                            compEdit(lane) { it.suggested(cs, sc) }
+                            val sc = Scoring.scores(root, stored, cs, tuning, lead) ?: return@launch
+                            compAnswer(lane, stored, stored.lead, lead) { it.suggested(cs, sc) }
                         }
                     },
                     onLineUp = { l ->
@@ -554,7 +561,7 @@ fun AudioLanes(
                                 val spec = stored.lineUpSpec(lead, cs, root)
                                 if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
                             } ?: return@launch
-                            compEdit(lane) { it.linedUpBy(words, l) }
+                            compAnswer(lane, stored, l, lead) { it.linedUpBy(words, l) }
                         }
                     },
                     onUnline = { compEdit(lane) { it.unshifted() } },
@@ -567,7 +574,7 @@ fun AudioLanes(
                                 val spec = stored.blendLineUpSpec(ref, cs, root)
                                 if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
                             } ?: return@launch
-                            compEdit(lane) { it.blendLinedUpBy(raw) }
+                            compAnswer(lane, stored, stored.lead, clip.leadOf(lane)) { it.blendLinedUpBy(raw) }
                         }
                     },
                     onSpread = { v -> compEdit(lane) { it.spreading(v) } },

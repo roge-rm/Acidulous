@@ -1897,19 +1897,19 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
         const std::string dest = cacheRoot + "/" + audio::ReelCache::nameFor(path);
         bool stereo = false;
         int64_t frames = 0;
-        struct stat st {};
-        if (::stat(dest.c_str(), &st) == 0 && st.st_size > 0) {
-            // Already converted. The name includes the source's size and
-            // mtime, so an edited file gets a new one.
+        // Already converted if a file of the right size is there. The name
+        // includes the source's size and mtime, so an edited file gets a new
+        // one. convert() renames a whole file into place, so one that's
+        // there is complete, and a wrong size is from before that and redone.
+        if (const int64_t have = audio::ReelCache::fileSize(dest); have > 0) {
             WavStream again;
             if (again.open(path, error)) {
                 stereo = again.channels() == 2;
-                frames = static_cast<int64_t>(static_cast<double>(again.frames()) *
-                                              kSampleRate / again.rate());
+                frames = audio::ReelCache::framesFor(again.frames(), again.rate());
             }
-        } else {
-            frames = audio::ReelCache::convert(path, dest, stereo, error);
+            if (audio::ReelCache::sizeFor(frames, stereo) != have) frames = 0;
         }
+        if (frames <= 0) frames = audio::ReelCache::convert(path, dest, stereo, error);
         auto map = std::make_shared<audio::Mapping>();
         if (frames > 0 && map->open(dest) &&
             made->point(map, static_cast<int32_t>(frames), stereo)) {

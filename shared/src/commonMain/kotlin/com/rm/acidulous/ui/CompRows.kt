@@ -46,10 +46,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.engine.EngineSync
+import com.rm.acidulous.model.Clip
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.TakeRef
 import com.rm.acidulous.model.TakeScores
 import com.rm.acidulous.model.findPhrases
+import com.rm.acidulous.model.heardPieces
 import com.rm.acidulous.model.lengthTicks
 import com.rm.acidulous.model.phraseAt
 import com.rm.acidulous.model.phraseLevels
@@ -137,7 +139,12 @@ object Phrasing {
  * the main thread, so the shape is never left from before the edit. [f]
  * returning null empties the lane.
  */
-fun compEdit(scope: CoroutineScope, editor: SongEditor, trackIndex: Int, sceneId: String, lane: Int, f: (TakeRef) -> TakeRef?) {
+fun compEdit(
+    scope: CoroutineScope, editor: SongEditor, trackIndex: Int, sceneId: String, lane: Int,
+    /** Checked on the clip as it is when the edit lands; false leaves it alone. */
+    still: (Clip) -> Boolean = { true },
+    f: (TakeRef) -> TakeRef?,
+) {
     val held = editor.song.tracks.getOrNull(trackIndex)?.clips?.get(sceneId)?.audio?.lane(lane) ?: return
     scope.launch {
         val files = held.stack().map { it.file }.distinct()
@@ -145,6 +152,7 @@ fun compEdit(scope: CoroutineScope, editor: SongEditor, trackIndex: Int, sceneId
             files.associateWith { TakePeaks.load(EngineSync.sampleRoot, it) }
         }
         editor.editClip(trackIndex, sceneId) { cl ->
+            if (!still(cl)) return@editClip cl
             val now = cl.audio?.lane(lane) ?: return@editClip cl
             val next = f(now) ?: return@editClip cl.withTake(lane, null)
             if (next == now) return@editClip cl
@@ -202,7 +210,8 @@ internal fun TakeRows(
                 val shape = TakePeaks.rememberShape(root, t.file)
                 // Blending, every take is heard all through.
                 val heard = if (take.blend) listOf(com.rm.acidulous.model.Piece(0, take.frames, k))
-                else take.pieces.ifEmpty { listOf(com.rm.acidulous.model.Piece(0, take.frames, 0)) }.filter { it.take == k }
+                else if (take.pieces.isEmpty()) listOf(com.rm.acidulous.model.Piece(0, take.frames, 0)).filter { it.take == k }
+                else take.heardPieces().filter { it.take == k }
                 var menu by remember { mutableStateOf(false) }
                 val lit = k == playing
                 val forPhrase = stringResource(Res.string.tape_take_phrase)

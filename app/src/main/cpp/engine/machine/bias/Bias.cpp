@@ -3,6 +3,7 @@
 #include <cmath>
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
+#include <engine/core/Settings.h>
 #include <engine/dsp/Math.h>
 
 namespace acidulous::machine {
@@ -125,6 +126,10 @@ int64_t Bias::heldBytes() const { return held::bytes(reel); }
 
 void *Bias::swapObject(int32_t slot, void *object) {
     if (slot == 1) {
+        // Listening plays instead of the song, so a listen still queued when
+        // an export or freeze starts is handed back to be deleted rather than
+        // heard in the file. Stopping one is always allowed.
+        if (object != nullptr && EngineSettings::get().offlineRender.load(std::memory_order_relaxed)) return object;
         auto *old = const_cast<audio::Listen *>(listen);
         listen = static_cast<const audio::Listen *>(object);
         listenAt = 0;
@@ -405,6 +410,9 @@ void Bias::renderListen(float *L, float *R, int32_t frames) {
         if (in == 0) listenHint = 0;
         const audio::Reel::Region &r = ls.passes[static_cast<size_t>(pass % passes)];
         const int64_t at = ls.from + in;
+        ++listenAt;
+        // A pass with nothing left in it (settle() emptied it) is silence.
+        if (at < 0 || at >= r.frames) continue;
         float l = 0.0f, rr = 0.0f;
         r.soundAt(at, listenHint, l, rr);
         float g = r.fadeAt(at) * level;
@@ -414,7 +422,6 @@ void Bias::renderListen(float *L, float *R, int32_t frames) {
         if (e < 1.0f) g *= e;
         L[i] += l * g;
         R[i] += rr * g;
-        ++listenAt;
     }
     listenFrames.store(listenAt, std::memory_order_relaxed);
 }

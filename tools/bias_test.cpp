@@ -20,9 +20,13 @@
 #include <engine/core/TakeScore.h>
 #include <engine/core/Mapping.h>
 #include <engine/core/ReelCache.h>
+#include <engine/core/Settings.h>
 #include <engine/format/WavReader.h>
 #include <engine/format/WavWriter.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <atomic>
+#include <thread>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/bias/Bias.h>
 
@@ -438,6 +442,40 @@ void aLongTakeIsMappedAndReadsTheSame() {
     ok("the cache name is stable for one file", first == ReelCache::nameFor(wav), first);
     ok("and is not the name of another file", first != ReelCache::nameFor(cache));
 
+    // Workers convert the same take at once while the mapped one is read:
+    // each writes its own file and renames it in, so the mapping never
+    // changes under the reader and every result is whole.
+    {
+        std::vector<std::thread> workers;
+        std::atomic<int> whole{0};
+        for (int k = 0; k < 4; ++k) {
+            workers.emplace_back([&] {
+                std::string e;
+                bool st2 = false;
+                if (ReelCache::convert(wav, cache, st2, e) == kFrames) ++whole;
+            });
+        }
+        int64_t sum = 0;
+        for (int pass = 0; pass < 20; ++pass) for (int32_t i = 0; i < kFrames; i += 97) sum += mapped.lp[i];
+        for (auto &w : workers) w.join();
+        ok("four conversions at once all finish", whole.load() == 4, std::to_string(whole.load()));
+        ok("the file is still whole", ReelCache::fileSize(cache) == ReelCache::sizeFor(frames, true),
+           std::to_string(ReelCache::fileSize(cache)));
+        auto again = std::make_shared<Mapping>();
+        Reel::Source remapped;
+        ok("and maps the same", again->open(cache) && remapped.point(again, static_cast<int32_t>(frames), true) &&
+                                    std::memcmp(remapped.lp, mapped.lp, static_cast<size_t>(frames) * 2 * sizeof(int16_t)) == 0);
+        bool parts = false;
+        if (DIR *d = opendir(dir.c_str())) {
+            while (dirent *e = readdir(d)) {
+                if (std::strncmp(e->d_name, "reelsrc.i16.", 12) == 0) parts = true;
+            }
+            closedir(d);
+        }
+        ok("and leaves nothing half written behind", !parts);
+        (void)sum;
+    }
+
     std::remove(cache.c_str());
     std::remove(wav.c_str());
 }
@@ -805,6 +843,77 @@ void listeningThroughPlaysEachTakeInTurn() {
     ok("stopping hands back what was listened to", rig.bias->swapObject(1, nullptr) == &listen);
     ok("and there's no position", rig.bias->listenPlayed() == -1);
     ok("the song plays as before", near(rig.probe(1, kBarTicks / 2), 500.0f / 32768.0f));
+}
+
+
+/** A pass that settle() left with nothing to play is silence, not take one whole. */
+void anEmptyPassListensToSilence() {
+    printf("- an empty pass while listening\n");
+    Rig rig;
+    Reel::Cell cell{1, {}};
+    cell.lanes[0] = region(flat(kBarFrames, 500), 0, kBarFrames, kBarTicks);
+    rig.reel.cells = {cell};
+    rig.mount();
+
+    auto one = flat(kBarFrames, 1000), two = flat(kBarFrames, 2000);
+    audio::Listen listen;
+    listen.lane = 0;
+    listen.from = 0;
+    listen.to = kBarFrames / 2;
+    Reel::Region empty = region(one, 0, kBarFrames, kBarTicks);
+    empty.takes = {{one, 0}, {two, 0}};
+    empty.pieces = {{0, 0, 0}};
+    empty.settle();
+    ok("settle empties the pass and keeps its source", empty.frames == 0 && empty.source != nullptr && !empty.comped());
+    Reel::Region full = region(one, 0, kBarFrames, kBarTicks);
+    full.takes = {{one, 0}, {two, 0}};
+    full.pieces = {{0, kBarFrames, 1}};
+    full.settle();
+    listen.passes = {empty, full};
+    rig.bias->swapObject(1, &listen);
+
+    const int32_t len = listen.length();
+    std::vector<float> out;
+    for (int64_t done = 0; done < static_cast<int64_t>(len) * 2; done += 256) {
+        rig.bias->onScene(1, 0, false, false);
+        rig.bias->render(rig.L, rig.R, 256);
+        out.insert(out.end(), rig.L, rig.L + 256);
+    }
+    float loud = 0.0f;
+    for (int32_t i = 0; i < len; ++i) loud = std::max(loud, std::fabs(out[static_cast<size_t>(i)]));
+    ok("the empty pass is silent", loud == 0.0f, std::to_string(loud * 32768.0f));
+    ok("the next pass plays its take", std::fabs(out[static_cast<size_t>(len + len / 2)] * 32768.0f - 2000.0f) < 0.5f,
+       std::to_string(out[static_cast<size_t>(len + len / 2)] * 32768.0f));
+    ok("the position still counts the empty pass", rig.bias->listenPlayed() == static_cast<int64_t>(out.size()));
+    rig.bias->swapObject(1, nullptr);
+
+    // A listen that lands during an export or freeze is handed back unheard.
+    EngineSettings::get().offlineRender.store(true);
+    ok("rendering to a file refuses a listen", rig.bias->swapObject(1, &listen) == &listen && rig.bias->listenPlayed() == -1);
+    ok("but can still stop one", rig.bias->swapObject(1, nullptr) == nullptr);
+    EngineSettings::get().offlineRender.store(false);
+}
+
+/**
+ * A blend with fewer than two takes, as a hand-written engine line can
+ * ask for, plays the region plain: no piece is left to name a take that
+ * isn't there.
+ */
+void aBlendOfOneIsPlain() {
+    printf("- a blend of one\n");
+    Rig rig;
+    const int32_t total = kBarFrames * 2;
+    auto file = ramped(total, 0, total);
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(file, 0, kBarFrames, kBarTicks);
+    r.blend = true;
+    r.pieces = {{0, kBarFrames / 2, 1}, {kBarFrames / 2, kBarFrames, 0}};
+    r.settle();
+    ok("settled, it's plain", !r.blend && r.takes.empty() && r.pieces.empty() && !r.comped());
+    rig.reel.cells = {cell};
+    rig.mount();
+    ok("and plays its file", near(rig.probe(1, kBarTicks / 4), expectRamp(kBarFrames / 4)));
+    ok("all through", near(rig.probe(1, kBarTicks * 3 / 4), expectRamp(kBarFrames * 3 / 4)));
 }
 
 
@@ -1480,6 +1589,8 @@ int main() {
     aJoinFindsAQuietSpot();
     oneTakeIsUnchanged();
     listeningThroughPlaysEachTakeInTurn();
+    anEmptyPassListensToSilence();
+    aBlendOfOneIsPlain();
     aShiftedPieceReadsLater();
     aBlendSitsAtOneTakesLevel();
     theScorersPickTheCleanTake();
