@@ -163,6 +163,23 @@ struct Reel {
             int32_t end = INT32_MAX / 2;
             /** Its level in a blend, set by settle(). */
             float gain = 1.0f;
+            /**
+             * Where it sits across the stereo field in a blend, set by
+             * settle() from [spread]: each side's gain, 1 and 1 in the middle.
+             */
+            float panL = 1.0f;
+            float panR = 1.0f;
+            /**
+             * A stretch of region frames [start, end) where a blend plays this
+             * take [shift] frames later: one word lined up. Sorted, apart, and
+             * shift 0 between them. A change of shift crossfades like a join.
+             */
+            struct Nudge {
+                int32_t start = 0;
+                int32_t end = 0;
+                int32_t shift = 0;
+            };
+            std::vector<Nudge> nudges;
         };
         std::vector<Take> takes;
 
@@ -173,6 +190,12 @@ struct Reel {
          * so it sits at the level of one take.
          */
         bool blend = false;
+        /**
+         * How far a blend's takes spread across the stereo field, 0 to 1.
+         * 0 is all in the middle; 1 puts the first and last at the edges,
+         * the rest evenly between.
+         */
+        float spread = 0.0f;
 
         /**
          * A stretch of the region, [start, end) in region frames, played from
@@ -198,6 +221,7 @@ struct Reel {
         /** Whether any take this region plays is stereo. */
         bool stereo() const {
             if (!comped()) return source != nullptr && source->stereo;
+            if (blend && spread > 0.0f) return true;
             for (const Take &t : takes) {
                 if (t.source != nullptr && t.source->stereo) return true;
             }
@@ -295,18 +319,83 @@ struct Reel {
                 if (t.source == nullptr) continue;
                 const float w = takeEdge(t, at);
                 if (w <= 0.0f) continue;
-                const int64_t s = t.offset + at;
-                if (s < 0 || s >= t.source->frames) continue;
+                float tl = 0.0f, tr = 0.0f;
+                if (t.nudges.empty()) {
+                    const int64_t s = t.offset + at;
+                    if (s < 0 || s >= t.source->frames) continue;
+                    tl = static_cast<float>(t.source->lp[static_cast<size_t>(s)]);
+                    tr = static_cast<float>(t.source->rp[static_cast<size_t>(s)]);
+                } else {
+                    nudgedAt(t, at, tl, tr);
+                }
                 power += w * w;
                 const float g = w * t.gain * (1.0f / 32768.0f);
-                l += static_cast<float>(t.source->lp[static_cast<size_t>(s)]) * g;
-                r += static_cast<float>(t.source->rp[static_cast<size_t>(s)]) * g;
+                l += tl * g * t.panL;
+                r += tr * g * t.panR;
             }
             if (power > 1.0f) {
                 const float k = 1.0f / std::sqrt(power);
                 l *= k;
                 r *= k;
             }
+        }
+
+        /** Take [t]'s shift at [at] region frames from its nudges. */
+        static int32_t shiftAt(const Take &t, int64_t at) {
+            const auto it = std::upper_bound(t.nudges.begin(), t.nudges.end(), at,
+                                             [](int64_t v, const Take::Nudge &n) { return v < n.start; });
+            if (it == t.nudges.begin()) return 0;
+            const Take::Nudge &n = *(it - 1);
+            return at < n.end ? n.shift : 0;
+        }
+
+        /** Take [t] read [shift] frames later, unscaled, 0 off its file. */
+        static void readTake(const Take &t, int64_t at, int32_t shift, float &l, float &r) {
+            const int64_t s = t.offset + at - shift;
+            if (s < 0 || s >= t.source->frames) {
+                l = r = 0.0f;
+                return;
+            }
+            l = static_cast<float>(t.source->lp[static_cast<size_t>(s)]);
+            r = static_cast<float>(t.source->rp[static_cast<size_t>(s)]);
+        }
+
+        /**
+         * Take [t] at [at] through its nudges, unscaled. Where the shift
+         * changes it crossfades over `kJoinFadeFrames` centred on the
+         * change, equal power like a join. Settled nudges and the gaps
+         * between them are at least a fade long, so one fade at a time.
+         * Audio thread: two searches, nothing allocated.
+         */
+        static void nudgedAt(const Take &t, int64_t at, float &l, float &r) {
+            constexpr int32_t kHalf = kJoinFadeFrames / 2;
+            // The edge within half a fade of [at], if any.
+            int64_t edge = -1;
+            auto it = std::upper_bound(t.nudges.begin(), t.nudges.end(), at + kHalf,
+                                       [](int64_t v, const Take::Nudge &n) { return v < n.start; });
+            if (it != t.nudges.begin()) {
+                const Take::Nudge &n = *(it - 1);
+                if (n.end > at - kHalf && n.end <= at + kHalf) edge = n.end;
+                else if (n.start > at - kHalf) edge = n.start;
+            }
+            if (edge < 0) {
+                readTake(t, at, shiftAt(t, at), l, r);
+                return;
+            }
+            const int32_t before = shiftAt(t, edge - 1);
+            const int32_t after = shiftAt(t, edge);
+            if (before == after) {
+                readTake(t, at, before, l, r);
+                return;
+            }
+            const float x = (static_cast<float>(at - edge) + static_cast<float>(kHalf)) * (1.0f / static_cast<float>(kJoinFadeFrames));
+            const float gIn = x <= 0.0f ? 0.0f : x >= 1.0f ? 1.0f : std::sin(x * 1.5707963f);
+            const float gOut = x <= 0.0f ? 1.0f : x >= 1.0f ? 0.0f : std::sin((1.0f - x) * 1.5707963f);
+            float al = 0.0f, ar = 0.0f, bl = 0.0f, br = 0.0f;
+            if (gOut > 0.0f) readTake(t, at, before, al, ar);
+            if (gIn > 0.0f) readTake(t, at, after, bl, br);
+            l = al * gOut + bl * gIn;
+            r = ar * gOut + br * gIn;
         }
 
         /**
@@ -395,6 +484,9 @@ struct Reel {
                     const int32_t hi = p.end - kJoinFadeFrames;
                     p.start = quietest(p.start, lo, hi, &p, nullptr);
                 }
+                // A join between words of one take lined up was put just
+                // before a word's hit on purpose, so it stays.
+                if (joined && pieces[static_cast<size_t>(k + 1)].take == p.take) continue;
                 if (p.end < frames) {
                     const int32_t lo = p.start + kJoinFadeFrames;
                     int32_t hi = frames - kJoinFadeFrames / 2;
@@ -444,12 +536,60 @@ struct Reel {
                 t.gain = static_cast<float>(rms);
                 if (rms > 0.0) levels.push_back(rms);
             }
+            settleSpread();
             if (levels.empty()) return;
             std::sort(levels.begin(), levels.end());
             const double middle = levels[levels.size() / 2];
             for (Take &t : takes) {
                 const double rms = t.gain;
                 t.gain = rms > 0.0 ? static_cast<float>(std::clamp(middle / rms, 0.25, 4.0)) : 1.0f;
+            }
+        }
+
+        /**
+         * Each take's place across the stereo field, and its nudges tidied:
+         * sorted, inside the region, overlaps cut, and anything shorter
+         * than a fade (a nudge, or a gap between two) folded into its
+         * neighbour so a fade never meets another.
+         *
+         * Equal power, scaled so the middle is 1 and 1: a take keeps its
+         * power wherever it sits, so the blend keeps its level.
+         */
+        void settleSpread() {
+            const float sp = spread < 0.0f ? 0.0f : (spread > 1.0f ? 1.0f : spread);
+            int32_t count = 0;
+            for (const Take &t : takes) count += t.source != nullptr ? 1 : 0;
+            int32_t i = 0;
+            for (Take &t : takes) {
+                t.panL = t.panR = 1.0f;
+                if (t.source != nullptr && sp > 0.0f && count > 1) {
+                    const float p = sp * (2.0f * static_cast<float>(i) / static_cast<float>(count - 1) - 1.0f);
+                    const float th = (p + 1.0f) * 0.78539816f;
+                    t.panL = 1.41421356f * std::cos(th);
+                    t.panR = 1.41421356f * std::sin(th);
+                }
+                if (t.source != nullptr) ++i;
+
+                std::vector<Take::Nudge> ns;
+                for (Take::Nudge n : t.nudges) {
+                    n.start = std::max(n.start, 0);
+                    n.end = std::min(n.end, frames);
+                    if (n.end > n.start) ns.push_back(n);
+                }
+                std::stable_sort(ns.begin(), ns.end(),
+                                 [](const Take::Nudge &a, const Take::Nudge &b) { return a.start < b.start; });
+                std::vector<Take::Nudge> out;
+                for (Take::Nudge n : ns) {
+                    if (!out.empty() && out.back().end > n.start) n.start = out.back().end;
+                    if (n.end - n.start < kJoinFadeFrames) continue;
+                    if (!out.empty() && n.start - out.back().end < kJoinFadeFrames) n.start = out.back().end;
+                    if (!out.empty() && out.back().end == n.start && out.back().shift == n.shift) {
+                        out.back().end = n.end;
+                        continue;
+                    }
+                    out.push_back(n);
+                }
+                t.nudges = std::move(out);
             }
         }
 

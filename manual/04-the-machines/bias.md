@@ -83,18 +83,29 @@ Enter keeps the take playing. **Esc** stops.
 Under the take rows are the comp tools.
 
 - **suggest** picks the best take in every phrase, as one undo step. Each take
-  is scored on how steady its pitch is, how close it hits the beat and the
-  other takes, clipping and background noise. The scores show faintly at the
+  is scored on how close its pitch sits to the notes of the track's tuning
+  (the song's, unless the track has its own), how close it hits the beat and
+  the other takes, clipping and background noise. On a lane lined up on
+  another, the other lane's hits are the beat. The scores show faintly at the
   end of each phrase on the rows, the best one lit. A take that's much quieter
   than the others in a phrase scores 0
-- **line up** moves this lane's phrases onto another lane's timing, each phrase
-  on its own and by at most 50 ms, for a double that's a little early or late.
-  With more than one other lane it asks which. It then reads **lined up**: tap
-  it to put the lane back where it was. A lane with one take shows this too,
-  when another lane has audio
+- **line up** moves this lane onto another lane's timing word by word, for a
+  double that's a little early or late. Each phrase is cut into words at its
+  hits and short gaps, and each word moves on its own, by at most 50 ms. Words
+  stay in order and never run into each other. With more than one other lane
+  it asks which. It then reads **lined up**: tap it to put the lane back
+  exactly where it was. A lane with one take shows this too, when another lane
+  has audio
 - **blend** plays every take on the lane together, each at about the same
   level, and the sum at the level of one take. It's a quick double or a small
   choir. Tap it again to go back to your choices, which it keeps
+- **line up takes**, with blend on, lines every take up word by word before
+  they play together: on the lane this one is lined up on, or else on the lane
+  as you'd hear it with blend off. Tap it again to put them back
+- **spread**, with blend on, places the takes across the stereo field, from all
+  in the middle to the first and last at the edges. The level stays the same
+
+In a blend, the lane draws every take faintly and their sum over them.
 
 ## The editor
 

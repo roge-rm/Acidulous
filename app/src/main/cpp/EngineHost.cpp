@@ -1952,10 +1952,14 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
  *   piece|sceneId|lane|start|end|take|shift
  *   span|sceneId|lane|take|start|end
  *   blend|sceneId|lane
+ *   nudge|sceneId|lane|take|start|end|shift
+ *   spread|sceneId|lane|amount
  *
  * A piece's shift is optional and plays its take that many frames later.
  * A span gives the region frames a take has audio for, and blend plays
- * every take at once instead of the pieces (see Reel::Region::blend).
+ * every take at once instead of the pieces (see Reel::Region::blend). In a
+ * blend, a nudge plays one stretch of a take later (a word lined up) and
+ * spread places the takes across the stereo field, 0 to 1.
  *
  * Each distinct file is decoded once however many lines use it, as int16
  * with mono kept mono (see engine/core/Reel.h). An empty spec clears the reel.
@@ -2100,6 +2104,37 @@ std::vector<int32_t> cutsOf(const std::string &list) {
     }
     return cuts;
 }
+
+/** A tuning from `refHz:period:cents,cents,...`; empty is twelve equal steps from A 440. */
+audio::takescore::Tuning tuningOf(const std::string &text) {
+    audio::takescore::Tuning t;
+    std::vector<std::string> f;
+    std::string part;
+    std::istringstream fields(text);
+    while (std::getline(fields, part, ':')) f.push_back(part);
+    if (f.size() < 3) return t;
+    const float ref = static_cast<float>(std::atof(f[0].c_str()));
+    const float period = static_cast<float>(std::atof(f[1].c_str()));
+    if (!(ref > 0.0f) || !(period > 0.0f)) return t;
+    t.refHz = ref;
+    t.period = period;
+    std::istringstream items(f[2]);
+    while (std::getline(items, part, ',')) {
+        if (part.empty()) continue;
+        const float c = static_cast<float>(std::atof(part.c_str()));
+        if (c >= 0.0f && c < period) t.degrees.push_back(c);
+    }
+    std::sort(t.degrees.begin(), t.degrees.end());
+    if (t.degrees.empty()) t.degrees.push_back(0.0f);
+    return t;
+}
+
+/** The comped or blended lane [r] settled, as the engine would play it. */
+audio::Reel::Region settled(const audio::Reel::Region &r) {
+    audio::Reel::Region out = r;
+    if (out.source) out.settle();
+    return out;
+}
 } // namespace
 
 std::vector<float> EngineHost::scoreTakes(const std::string &spec) {
@@ -2125,6 +2160,23 @@ std::vector<float> EngineHost::scoreTakes(const std::string &spec) {
         for (const auto &t : r.takes) stack.takes.push_back({t.source.get(), t.offset, t.start, t.end});
     }
     if (stack.cuts.size() < 2) return {};
+    if (f.size() > 4) stack.tuning = tuningOf(f[4]);
+    // A lead: cell 2, read as it plays, [delta] frames on from this lane.
+    const audio::Reel::Cell *leadCell = reel->find(2);
+    if (leadCell != nullptr && leadCell->has(0)) {
+        const audio::Reel::Region lead = settled(leadCell->lanes[0]);
+        const int32_t delta = f.size() > 5 ? std::atoi(f[5].c_str()) : 0;
+        const int32_t total = stack.cuts.back();
+        stack.lead.assign(static_cast<size_t>(std::max(0, total)), 0.0f);
+        int32_t hint = 0;
+        for (int32_t at = 0; at < total; ++at) {
+            const int64_t g = static_cast<int64_t>(at) + delta;
+            if (g < 0 || g >= lead.frames) continue;
+            float x = 0.0f, y = 0.0f;
+            lead.soundAt(g, hint, x, y);
+            stack.lead[static_cast<size_t>(at)] = 0.5f * (x + y);
+        }
+    }
     const auto scores = audio::takescore::scoreStack(stack);
     const auto takes = static_cast<int32_t>(stack.takes.size());
     const auto phrases = static_cast<int32_t>(stack.cuts.size() - 1);
@@ -2138,7 +2190,7 @@ std::vector<float> EngineHost::scoreTakes(const std::string &spec) {
 std::vector<float> EngineHost::lineUpTakes(const std::string &spec) {
     std::string rest;
     const auto f = headOf(spec, rest);
-    if (f.size() < 3 || f[0] != "lineup") return {};
+    if (f.size() < 3 || (f[0] != "lineup" && f[0] != "blendup")) return {};
     int64_t totalFrames = 0;
     int mapped = 0;
     size_t files = 0;
@@ -2146,8 +2198,24 @@ std::vector<float> EngineHost::lineUpTakes(const std::string &spec) {
     const audio::Reel::Cell *lead = reel->find(1);
     const audio::Reel::Cell *dbl = reel->find(2);
     if (lead == nullptr || dbl == nullptr || !lead->has(0) || !dbl->has(0)) return {};
-    return audio::takescore::lineUp(lead->lanes[0], dbl->lanes[0], cutsOf(f[2]), std::atoi(f[1].c_str()),
-                                    static_cast<float>(kSampleRate));
+    const int32_t maxShift = std::atoi(f[1].c_str());
+    const int32_t delta = f.size() > 3 ? std::atoi(f[3].c_str()) : 0;
+    const auto rate = static_cast<float>(kSampleRate);
+    std::vector<float> out;
+    if (f[0] == "lineup") {
+        for (const auto &w : audio::takescore::lineUpWords(lead->lanes[0], delta, dbl->lanes[0], cutsOf(f[2]), maxShift, rate)) {
+            out.insert(out.end(), {static_cast<float>(w.start), static_cast<float>(w.end), w.shift});
+        }
+        return out;
+    }
+    const auto &stack = dbl->lanes[0];
+    const auto words = audio::takescore::lineUpStack(lead->lanes[0], delta, stack, cutsOf(f[2]), maxShift, rate);
+    out.push_back(static_cast<float>(words.size()));
+    for (const auto &take : words) {
+        out.push_back(static_cast<float>(take.size()));
+        for (const auto &w : take) out.insert(out.end(), {static_cast<float>(w.start), static_cast<float>(w.end), w.shift});
+    }
+    return out;
 }
 
 void EngineHost::dropListening() {
@@ -2173,9 +2241,13 @@ std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int6
         std::string part;
         std::istringstream fields(line);
         while (std::getline(fields, part, '|')) f.push_back(part);
-        if (!f.empty() && (f[0] == "take" || f[0] == "piece" || f[0] == "span" || f[0] == "blend")) {
+        if (!f.empty() && (f[0] == "take" || f[0] == "piece" || f[0] == "span" || f[0] == "blend" ||
+                           f[0] == "nudge" || f[0] == "spread")) {
             const bool isTake = f[0] == "take";
-            const size_t need = isTake ? 5u : f[0] == "piece" ? 6u : f[0] == "span" ? 6u : 3u;
+            const size_t need = isTake ? 5u
+                                : f[0] == "piece" || f[0] == "span" ? 6u
+                                : f[0] == "nudge" ? 7u
+                                : f[0] == "spread" ? 4u : 3u;
             if (f.size() < need) {
                 LOGE("reel: short %s line: %s", f[0].c_str(), line.c_str());
                 continue;
@@ -2195,6 +2267,14 @@ std::unique_ptr<audio::Reel> EngineHost::parseReel(const std::string &spec, int6
             if (r->takes.empty()) r->takes.push_back({r->source, r->offset});
             if (f[0] == "blend") {
                 r->blend = true;
+            } else if (f[0] == "spread") {
+                r->spread = std::clamp(static_cast<float>(std::atof(f[3].c_str())), 0.0f, 1.0f);
+            } else if (f[0] == "nudge") {
+                const int32_t k = std::atoi(f[3].c_str());
+                if (k >= 0 && k < static_cast<int32_t>(r->takes.size())) {
+                    r->takes[static_cast<size_t>(k)].nudges.push_back(
+                        {std::atoi(f[4].c_str()), std::atoi(f[5].c_str()), std::atoi(f[6].c_str())});
+                }
             } else if (f[0] == "span") {
                 const int32_t k = std::atoi(f[3].c_str());
                 if (k >= 0 && k < static_cast<int32_t>(r->takes.size())) {

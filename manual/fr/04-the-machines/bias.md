@@ -92,19 +92,32 @@ garde. Pendant l’écoute, Entrée garde la prise qui joue. **Échap** arrête.
 Sous les rangées de prises se trouvent les outils de montage.
 
 - **suggérer** choisit la meilleure prise dans chaque phrase, en une seule
-  étape d’annulation. Chaque prise est notée sur la stabilité de sa hauteur, la
-  justesse de ses attaques par rapport au temps et aux autres prises, la
-  saturation et le bruit de fond. Les notes s’affichent en pâle au bout de
-  chaque phrase sur les rangées, la meilleure allumée. Une prise beaucoup plus
-  faible que les autres dans une phrase a 0
-- **aligner** déplace les phrases de ce couloir sur le jeu d’un autre couloir,
-  chaque phrase à part et d’au plus 50 ms, pour une doublure un peu en avance
-  ou en retard. S’il y a plus d’un autre couloir, il demande lequel. Il affiche
-  ensuite **aligné** : touchez-le pour remettre le couloir comme avant. Un
+  étape d’annulation. Chaque prise est notée sur la justesse de sa hauteur par
+  rapport aux notes de l’accordage de la piste (celui de la chanson, sauf si la
+  piste a le sien), la justesse de ses attaques par rapport au temps et aux
+  autres prises, la saturation et le bruit de fond. Sur un couloir aligné sur
+  un autre, les attaques de l’autre couloir donnent le temps. Les notes
+  s’affichent en pâle au bout de chaque phrase sur les rangées, la meilleure
+  allumée. Une prise beaucoup plus faible que les autres dans une phrase a 0
+- **aligner** déplace ce couloir sur le jeu d’un autre couloir mot par mot,
+  pour une doublure un peu en avance ou en retard. Chaque phrase est coupée en
+  mots à ses attaques et à ses courts silences, et chaque mot bouge à part,
+  d’au plus 50 ms. Les mots restent dans l’ordre et ne se chevauchent jamais.
+  S’il y a plus d’un autre couloir, il demande lequel. Il affiche ensuite
+  **aligné** : touchez-le pour remettre le couloir exactement comme avant. Un
   couloir d’une seule prise l’affiche aussi, quand un autre couloir a du son
 - **mêler** joue toutes les prises du couloir ensemble, chacune à peu près au
   même niveau, et la somme au niveau d’une prise. C’est une doublure rapide ou
   une petite chorale. Touchez-le encore pour revenir à vos choix, qu’il garde
+- **aligner les prises**, quand mêler est allumé, aligne chaque prise mot par
+  mot avant de les jouer ensemble : sur le couloir sur lequel celui-ci est
+  aligné, sinon sur le couloir tel que vous l’entendriez sans mêler.
+  Touchez-le encore pour les remettre
+- **étaler**, quand mêler est allumé, répartit les prises dans le champ
+  stéréo, de toutes au centre jusqu’à la première et la dernière aux bords. Le
+  niveau reste le même
+
+Quand il mêle, le couloir dessine chaque prise en pâle et leur somme par-dessus.
 
 ## L’éditeur
 

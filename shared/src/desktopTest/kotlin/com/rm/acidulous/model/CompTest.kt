@@ -73,42 +73,127 @@ class CompTest {
         assertNull(TakeScores.of(floatArrayOf(3f, 3f, 1f)))
     }
 
+    /** The engine's answer for one word per phrase: start, end and shift each. */
+    private fun perPhrase(vararg shifts: Float): FloatArray =
+        FloatArray(shifts.size * 3) { i -> if (i % 3 == 2) shifts[i / 3] else cuts[i / 3 + i % 3].toFloat() }
+
     @Test
-    fun liningUpMovesEachPhraseOnItsOwn() {
-        val out = lane().linedUpBy(cuts, floatArrayOf(-1440f, Float.NaN, 960.4f))
+    fun liningUpMovesEachWordOnItsOwn() {
+        val out = lane().linedUpBy(perPhrase(-1440f, Float.NaN, 960.4f), 1)
         assertTrue(out.linedUp)
+        assertEquals(1, out.lead)
         assertEquals(
             listOf(Piece(0, cuts[1], 0, -1440), Piece(cuts[1], cuts[2], 0), Piece(cuts[2], frames, 0, 960)),
             out.pieces,
         )
         // Never past the limit, whatever it's asked.
-        assertEquals(-LINE_UP_LIMIT, lane().linedUpBy(cuts, floatArrayOf(-9000f, 0f, 0f)).pieces.first().shift)
-        // A comp's pieces keep their takes, each phrase moving all of its pieces.
+        assertEquals(-LINE_UP_LIMIT, lane().linedUpBy(perPhrase(-9000f, 0f, 0f), 1).pieces.first().shift)
+        // A comp's pieces keep their takes, each word moving the part of a piece under it.
         val comp = lane().copy(pieces = listOf(Piece(0, ENGINE_RATE, 1), Piece(ENGINE_RATE, frames, 2)))
         assertEquals(
             listOf(Piece(0, ENGINE_RATE, 1, -100), Piece(ENGINE_RATE, cuts[1], 2, -100), Piece(cuts[1], frames, 2, -200)),
-            comp.linedUpBy(cuts, floatArrayOf(-100f, -200f, -200f)).pieces,
+            comp.linedUpBy(perPhrase(-100f, -200f, -200f), 1).pieces,
+        )
+        // Words inside a phrase: the piece is cut at each and each keeps its own shift.
+        val words = floatArrayOf(0f, 30000f, -480f, 30000f, 41000f, 720f, 41000f, 50000f, 0f, 50000f, frames.toFloat(), -240f)
+        assertEquals(
+            listOf(Piece(0, 30000, 0, -480), Piece(30000, 41000, 0, 720), Piece(41000, 50000, 0), Piece(50000, frames, 0, -240)),
+            lane().linedUpBy(words, 2).pieces,
+        )
+        // Where the engine sent no word, the take plays at its own time.
+        assertEquals(
+            listOf(Piece(0, 1000, 0), Piece(1000, 2000, 0, 50), Piece(2000, frames, 0)),
+            lane().linedUpBy(floatArrayOf(1000f, 2000f, 50f), 2).pieces,
         )
     }
 
     @Test
     fun puttingItBackIsTheLaneAsItWas() {
         val l = lane()
-        val moved = l.linedUpBy(cuts, floatArrayOf(-500f, -500f, 300f))
+        val words = floatArrayOf(0f, 30000f, -480f, 30000f, 41000f, 720f, 41000f, 50000f, 0f, 50000f, frames.toFloat(), -240f)
+        val moved = l.linedUpBy(words, 1)
         assertEquals(l, moved.unshifted())
         assertFalse(moved.unshifted().linedUp)
         // Lining up again starts from the takes' own time, not from the last shift.
-        assertEquals(moved, moved.linedUpBy(cuts, floatArrayOf(-500f, -500f, 300f)))
+        assertEquals(moved, moved.linedUpBy(words, 1))
+        // A comp comes back to its own pieces.
+        val comp = lane().copy(pieces = listOf(Piece(0, ENGINE_RATE, 1), Piece(ENGINE_RATE, frames, 2)))
+        assertEquals(comp, comp.linedUpBy(words, 1).unshifted())
     }
 
     @Test
     fun aOneTakeDoubleLinesUpAndComesBackPlain() {
         val plain = TakeRef(file = "samples/d.wav", offset = 100, frames = frames, bpm = 120f, ticks = 12 * PPQN)
-        val moved = plain.linedUpBy(cuts, floatArrayOf(-1000f, -1200f, -900f))
+        val moved = plain.linedUpBy(perPhrase(-1000f, -1200f, -900f), 0)
         assertEquals(1, moved.takeCount)
         assertEquals(3, moved.pieces.size)
         assertEquals(plain, moved.unshifted())
-        assertEquals(plain, plain.linedUpBy(cuts, floatArrayOf(0f, Float.NaN, 0f)))
+        assertEquals(plain, plain.linedUpBy(perPhrase(0f, Float.NaN, 0f), 0).unshifted())
+    }
+
+    @Test
+    fun aBlendLinesUpEveryTakeAndComesBack() {
+        val blend = lane().blending(true)
+        // Three takes: none, two words, one word that doesn't move.
+        val raw = floatArrayOf(3f, 0f, 2f, 0f, 1000f, -300f, 1000f, 9000f, 120.4f, 1f, 0f, frames.toFloat(), 0f)
+        val lined = blend.blendLinedUpBy(raw)
+        assertTrue(lined.blendLinedUp)
+        assertEquals(emptyList<Nudge>(), lined.takes[0].nudges)
+        assertEquals(listOf(Nudge(0, 1000, -300), Nudge(1000, 9000, 120)), lined.takes[1].nudges)
+        assertEquals(emptyList<Nudge>(), lined.takes[2].nudges)
+        assertEquals(blend, lined.blendUnlined())
+        // An answer for another stack changes nothing.
+        assertSame(blend, blend.blendLinedUpBy(floatArrayOf(2f, 0f, 0f)))
+        // A new pass on the stack hasn't been lined up, so the blend starts over.
+        val pass = TakeRef(file = "samples/e.wav", offset = 0, frames = frames, bpm = 120f, ticks = 12 * PPQN)
+        val more = lined.stacked(pass)
+        assertFalse(more.blendLinedUp)
+        assertTrue(more.takes.all { it.nudges.isEmpty() })
+        // A trim moves the nudges with the audio.
+        val trimmed = lined.copy(offset = 500, frames = frames - 500).reframed(lined)
+        assertEquals(listOf(Nudge(0, 500, -300), Nudge(500, 8500, 120)), trimmed.takes[1].nudges)
+    }
+
+    @Test
+    fun spreadStaysInRange() {
+        assertEquals(1f, lane().spreading(3f).spread)
+        assertEquals(0f, lane().spreading(-1f).spread)
+        assertEquals(0.4f, lane().spreading(0.4f).spread)
+    }
+
+    @Test
+    fun pitchIsJudgedInTheTracksTuning() {
+        assertEquals("", pitchSpec(null, 0))
+        assertEquals("", pitchSpec(Tunings.EQUAL, 3))
+        val nineteen = Tunings.builtIn.first { it.name == "19 equal" }
+        val spec = pitchSpec(nineteen, 0)
+        val (ref, period, steps) = spec.split(':')
+        assertEquals(261.6256, ref.toDouble(), 0.001)
+        assertEquals(1200.0, period.toDouble(), 0.01)
+        assertEquals(19, steps.split(',').size)
+        assertEquals("0.0", steps.split(',').first())
+        // In A, A keeps 440.
+        assertEquals(440.0, pitchSpec(nineteen, 9).split(':')[0].toDouble(), 0.001)
+        // A track's own tuning wins over the song's.
+        val song = Song(name = "s", tuning = nineteen, tracks = listOf(Track("a", "a", Machine(type = BIAS_MACHINE)), Track("b", "b", Machine(type = BIAS_MACHINE), tuning = Tunings.builtIn.first { it.name == "24 equal" })))
+        assertEquals(19, song.pitchSpecFor(song.tracks[0]).split(':')[2].split(',').size)
+        assertEquals(24, song.pitchSpecFor(song.tracks[1]).split(':')[2].split(',').size)
+    }
+
+    @Test
+    fun aLaneLinedUpOnAnotherIsItsDouble() {
+        val lead = TakeRef(file = "samples/d.wav", offset = 0, frames = frames, bpm = 120f, ticks = 12 * PPQN)
+        val clip = Clip().withTake(0, lead).withTake(1, lane().linedUpBy(perPhrase(-10f, -10f, -10f), 0))
+        assertEquals(lead, clip.leadOf(1))
+        assertNull(clip.leadOf(0))
+        // Its blend lines up on the lead; a lane that doubles nothing lines up on its own comp.
+        assertEquals(lead, clip.blendReference(1))
+        val own = Clip().withTake(1, lane().copy(pieces = listOf(Piece(0, frames, 2))).blending(true))
+        val ref = own.blendReference(1)!!
+        assertFalse(ref.blend)
+        assertEquals(listOf(Piece(0, frames, 2)), ref.pieces)
+        // Taking the line-up back means it doubles nothing.
+        assertNull(clip.withTake(1, clip.audio!!.lane(1)!!.unshifted()).leadOf(1))
     }
 
     @Test
@@ -116,7 +201,7 @@ class CompTest {
         val root = File(System.getProperty("java.io.tmpdir"), "comp-test-${System.nanoTime()}").apply { mkdirs() }
         try {
             for (n in listOf("a", "b", "c")) File(root, "samples").apply { mkdirs() }.let { File(it, "$n.wav").writeBytes(ByteArray(4)) }
-            val moved = lane().linedUpBy(cuts, floatArrayOf(-1440f, 0f, 0f))
+            val moved = lane().linedUpBy(perPhrase(-1440f, 0f, 0f), 1)
             val spec = buildString { appendRegion(1L, 0, moved, root) }
             assertTrue(spec, spec.contains("piece|1|0|0|${cuts[1]}|0|-1440\n"))
             assertTrue(spec, spec.contains("piece|1|0|${cuts[1]}|$frames|0\n"))
@@ -124,11 +209,24 @@ class CompTest {
             val blended = buildString { appendRegion(1L, 2, lane().blending(true), root) }
             assertTrue(blended, blended.contains("span|1|2|1|0|$frames\n") && blended.endsWith("blend|1|2\n"))
             val score = lane().scoreSpec(cuts, root)
-            assertTrue(score, score.startsWith("score|6000.0|-0.0|0,${cuts[1]},${cuts[2]},$frames\n") || score.startsWith("score|6000.0|0.0|"))
+            assertTrue(score, score.startsWith("score|6000.0|-0.0|0,${cuts[1]},${cuts[2]},$frames||0\n") || score.startsWith("score|6000.0|0.0|"))
             assertTrue(score.contains("span|1|0|2|0|$frames"))
+            assertFalse("no lead unless it has one", score.contains("\n2|0|"))
+            // With a tuning and a lead that starts a beat later.
+            val lead = TakeRef(file = "samples/c.wav", offset = 0, frames = frames, bpm = 120f, ticks = 12 * PPQN, startTick = PPQN)
+            val led = lane().scoreSpec(cuts, root, "261.6:1200.0:0.0,700.0", lead)
+            assertTrue(led, led.lines().first().endsWith("|261.6:1200.0:0.0,700.0|-${ENGINE_RATE / 2}"))
+            assertTrue(led, led.contains("\n2|0|"))
             val lineUp = moved.lineUpSpec(lane(), cuts, root)
-            assertTrue(lineUp, lineUp.startsWith("lineup|$LINE_UP_LIMIT|"))
+            assertTrue(lineUp, lineUp.startsWith("lineup|$LINE_UP_LIMIT|0,${cuts[1]},${cuts[2]},$frames|0\n"))
             assertFalse("the double is sent at its own time", lineUp.contains("|-1440"))
+            // A lined-up, spread blend sends its nudges and spread before it blends.
+            val lined = lane().blending(true).blendLinedUpBy(floatArrayOf(3f, 0f, 1f, 100f, 9000f, -300f, 0f)).spreading(0.5f)
+            val sent = buildString { appendRegion(1L, 0, lined, root) }
+            assertTrue(sent, sent.endsWith("nudge|1|0|1|100|9000|-300\nspread|1|0|0.5\nblend|1|0\n"))
+            assertFalse("nothing extra while the blend is off", buildString { appendRegion(1L, 0, lined.blending(false), root) }.contains("nudge|"))
+            val up = lane().blending(true).blendLineUpSpec(lane(), cuts, root)
+            assertTrue(up, up.startsWith("blendup|$LINE_UP_LIMIT|") && up.contains("\n2|0|") && up.contains("span|2|0|2|"))
         } finally {
             root.deleteRecursively()
         }
@@ -140,6 +238,15 @@ class CompTest {
         assertFalse(plain.blending(true).blend)
         assertTrue(lane().blending(true).blend)
         assertEquals(lane(), lane().blending(true).blending(false))
+    }
+
+    @Test
+    fun theNewSettingsSaveOnlyWhenSet() {
+        val json = kotlinx.serialization.json.Json
+        val plain = json.encodeToString(TakeRef.serializer(), lane())
+        assertFalse(plain, plain.contains("spread") || plain.contains("lead") || plain.contains("blendLinedUp") || plain.contains("nudges"))
+        val set = lane().blending(true).blendLinedUpBy(floatArrayOf(3f, 0f, 1f, 100f, 9000f, -300f, 0f)).spreading(0.5f).copy(lead = 2)
+        assertEquals(set, json.decodeFromString(TakeRef.serializer(), json.encodeToString(TakeRef.serializer(), set)))
     }
 
     @Test

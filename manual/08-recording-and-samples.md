@@ -74,7 +74,9 @@ If the scene loops while you record, each pass is kept as a take on that lane,
 and you hear the newest. Each cell keeps its own stack of takes. Tap the lane
 in the cell to see them, then pick the best take for each phrase, or drag along
 a take for an exact stretch. Listening through plays a phrase from each take in
-turn, and a tap keeps the one you want (see **Bias**).
+turn, and a tap keeps the one you want. A double can be lined up on its lead
+word by word, and a stack can play as a blend, lined up and spread across the
+stereo field (see **Bias**).
 
 Trimming, fades, crossfades, flattening lanes and tempo following are on
 **Bias**'s page. None of them change the file.

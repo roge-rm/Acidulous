@@ -60,17 +60,24 @@ class EngineHost {
      * Scores every take of a stack over each phrase (see
      * audio::takescore::scoreStack). The spec is
      *
-     *   score|gridStep|gridPhase|cut,cut,...
+     *   score|gridStep|gridPhase|cut,cut,...|tuning|leadDelta
      *
-     * then the lane as a reel spec, cell 1 lane 0. Returns takes, phrases,
+     * then the lane as a reel spec, cell 1 lane 0, and a lead it doubles
+     * as cell 2 lane 0 if it has one. The tuning is `refHz:period:cents,...`
+     * (empty for twelve equal steps from A 440). Returns takes, phrases,
      * then five numbers per take per phrase, take-major. Empty on error.
      */
     std::vector<float> scoreTakes(const std::string &spec);
     /**
-     * How far to shift each phrase of a double to sit on its lead. The spec
-     * is `lineup|maxShift|cut,cut,...`, the lead as cell 1 lane 0 and the
-     * double as cell 2 lane 0. One shift per phrase in frames, NaN where it
-     * can't tell. Empty on error.
+     * Lining up word by word (see audio::takescore::lineUpWords). The spec
+     * is `lineup|maxShift|cut,cut,...|delta`, the reference as cell 1 lane
+     * 0 and the double as cell 2 lane 0; frame [at] of the double meets
+     * frame `at + delta` of the reference. Returns start, end and shift per
+     * word in frames, the shift NaN where it can't tell.
+     *
+     * `blendup|...` has the same header with a stack as cell 2 and lines
+     * up each of its takes: the take count, then for each take its word
+     * count and the words. Empty on error.
      */
     std::vector<float> lineUpTakes(const std::string &spec);
     /**

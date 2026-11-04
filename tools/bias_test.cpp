@@ -907,6 +907,9 @@ struct Sung {
     float detune = 0.0f;   // cents, whole take
     bool bright = true;    // the timbre: a second singer is darker
     uint32_t seed = 7;
+    int32_t swing = 0;     // frames the off-beat eighths come late
+    float vibrato = 8.0f;  // cents
+    std::vector<float> notes; // cents from A 440 per note, instead of the line below
 };
 
 constexpr int32_t kEighth = 12000;      // at 120 bpm
@@ -925,14 +928,15 @@ std::vector<float> sungFloat(const Sung &o) {
     double phase = 0.0;
     for (int32_t p = 0; p < kPhrases; ++p) {
         for (int32_t n = 0; n < kPhraseNotes; ++n) {
-            const int32_t on = phraseStart(p) + n * kEighth + o.late;
-            const int32_t len = kEighth - 1920; // 40 ms between notes
+            const int32_t on = phraseStart(p) + n * kEighth + o.late + (n % 2 == 1 ? o.swing : 0);
+            const int32_t len = kEighth - 1920 - o.swing; // 40 ms between notes
             for (int32_t i = 0; i < len && on + i < kSungFrames; ++i) {
                 const float t = static_cast<float>(i) / kRate;
                 const float frac = static_cast<float>(i) / len;
                 const float cents = o.detune + (p % 2 == 0 ? 1.0f : -1.0f) * o.drift * frac +
-                                    8.0f * std::sin(6.2831853f * 5.5f * t);
-                const double hz = 440.0 * std::pow(2.0, (midi[n] - 69) / 12.0 + cents / 1200.0);
+                                    o.vibrato * std::sin(6.2831853f * 5.5f * t);
+                const double note = o.notes.empty() ? (midi[n] - 69) * 100.0 : o.notes[static_cast<size_t>(n) % o.notes.size()];
+                const double hz = 440.0 * std::pow(2.0, (note + cents) / 1200.0);
                 phase += 6.283185307 * hz / kRate;
                 float v = 0.0f;
                 for (int k = 1; k <= 8; ++k) {
@@ -1106,6 +1110,350 @@ void aLateDoubleLinesUp() {
     ok("a double 100 ms off is never moved past the limit", left);
 }
 
+
+// --- C6: word by word, a lined-up blend, the lead's time, tunings, spread ---
+
+// Spoken material: ten words, two of them run on from the word before with
+// no gap, each a tone of its own with a quick attack, on room tone with
+// rumble and hiss, one word clipped.
+constexpr int32_t kWords = 10;
+constexpr int32_t kWordLen = 9600;   // 200 ms
+const int32_t kGapMs[kWords] = {500, 100, 80, 0, 120, 60, 100, 0, 80, 100}; // before each word
+int32_t wordOnset(int32_t i) {
+    int32_t at = 0;
+    for (int32_t k = 0; k <= i; ++k) at += kGapMs[k] * 48 + (k > 0 ? kWordLen : 0);
+    return at;
+}
+const int32_t kSpokenFrames = wordOnset(kWords - 1) + kWordLen + 24000;
+
+std::vector<float> spokenFloat(const int32_t *lateMs, bool dark, uint32_t seed, float hiss = 0.003f) {
+    std::vector<float> out(static_cast<size_t>(kSpokenFrames), 0.0f);
+    for (int32_t w = 0; w < kWords; ++w) {
+        const int32_t on = wordOnset(w) + (lateMs != nullptr ? lateMs[w] * 48 : 0);
+        const bool runOn = w + 1 < kWords && kGapMs[w + 1] == 0;
+        const double hz = 180.0 * std::pow(2.0, (w * 5 % 12) / 12.0);
+        for (int32_t i = 0; i < kWordLen && on + i < kSpokenFrames; ++i) {
+            if (on + i < 0) continue;
+            const float attack = std::min(1.0f, i / 240.0f);
+            // A word that runs on dips to -20 dB, so the next is a hit with no gap.
+            const float tail = std::min(1.0f, (kWordLen - i) / 960.0f);
+            const float release = runOn ? 0.1f + 0.9f * tail : tail;
+            float v = 0.0f;
+            for (int k = 1; k <= 6; ++k) v += (dark ? 1.0f / (k * k) : 1.0f / k) * static_cast<float>(std::sin(6.283185307 * hz * k * i / kRate));
+            float x = 0.35f * v * std::min(attack, release);
+            if (w == 4) x = std::clamp(x * 3.0f, -0.6f, 0.6f); // clipped
+            out[static_cast<size_t>(on + i)] += x;
+        }
+    }
+    uint32_t x = seed;
+    for (int32_t i = 0; i < kSpokenFrames; ++i) {
+        x = x * 1664525u + 1013904223u;
+        const float u = static_cast<float>(x >> 8) / 16777216.0f * 2.0f - 1.0f;
+        out[static_cast<size_t>(i)] += 0.03f * std::sin(6.2831853f * 50.0f * i / kRate) + hiss * u;
+    }
+    return out;
+}
+
+std::shared_ptr<Reel::Source> sourceOf(const std::vector<float> &f) {
+    auto s = std::make_shared<Reel::Source>();
+    std::vector<int16_t> planes(f.size());
+    for (size_t i = 0; i < f.size(); ++i) planes[i] = toI16(f[i]);
+    s->hold(std::move(planes), static_cast<int32_t>(f.size()), false);
+    return s;
+}
+
+/** [r] as it plays, mono, over its whole length. */
+std::vector<float> monoPlayed(const Reel::Region &r) {
+    std::vector<float> out(static_cast<size_t>(r.frames));
+    int32_t hint = 0;
+    for (int32_t i = 0; i < r.frames; ++i) {
+        float a = 0.0f, b = 0.0f;
+        r.soundAt(i, hint, a, b);
+        out[static_cast<size_t>(i)] = 0.5f * (a + b);
+    }
+    return out;
+}
+
+/** The worst gap in frames between each word in [got] and the nearest in [want], and whether the counts match. */
+int32_t worstOnset(const std::vector<takescore::WordStart> &got, const std::vector<int32_t> &want, std::string &why) {
+    int32_t worst = 0;
+    for (const int32_t w : want) {
+        int32_t near = 1 << 30;
+        for (const auto &g : got) near = std::min(near, std::abs(g.onset - w));
+        worst = std::max(worst, near);
+        why += std::to_string(near) + " ";
+    }
+    why += "(" + std::to_string(got.size()) + " words)";
+    return got.size() == want.size() ? worst : 1 << 30;
+}
+
+void wordsAreCutAtHitsAndGaps() {
+    printf("- cutting words\n");
+    std::vector<int32_t> want;
+    for (int32_t w = 0; w < kWords; ++w) want.push_back(wordOnset(w));
+    const std::vector<float> f = spokenFloat(nullptr, false, 3);
+    std::string why;
+    const int32_t worst = worstOnset(takescore::wordsOf(f.data(), kSpokenFrames, kRate), want, why);
+    // A word's hit is the steepest point of its attack, a few ms in.
+    ok("every word is found within 5 ms, the run-on ones and the clipped one too", worst <= 240, why);
+    const auto words = takescore::wordsOf(f.data(), kSpokenFrames, kRate);
+    bool quiet = words.size() == static_cast<size_t>(kWords);
+    for (size_t i = 1; quiet && i < words.size(); ++i) {
+        const bool runOn = kGapMs[i] == 0;
+        if (runOn ? words[i].quietBefore != 0 : words[i].quietBefore < 1920) quiet = false;
+    }
+    ok("a run-on word has no quiet before it, the others their gap", quiet);
+    // Louder hiss and rumble don't make words of their own.
+    std::vector<float> dirty = f;
+    uint32_t x = 99;
+    for (float &v : dirty) {
+        x = x * 1664525u + 1013904223u;
+        v += 0.01f * (static_cast<float>(x >> 8) / 16777216.0f * 2.0f - 1.0f);
+    }
+    why.clear();
+    ok("hiss at -40 dB doesn't add words", worstOnset(takescore::wordsOf(dirty.data(), kSpokenFrames, kRate), want, why) <= 240, why);
+}
+
+void wordsLineUpOneByOne() {
+    printf("- lining up word by word\n");
+    const int32_t late[kWords] = {20, -10, 25, 25, -15, 20, 5, 5, -20, 0};
+    const auto lead = sourceOf(spokenFloat(nullptr, false, 3));
+    const auto dbl = sourceOf(spokenFloat(late, true, 17));
+    const Reel::Region l = region(lead, 0, kSpokenFrames, kBarTicks);
+    const Reel::Region d = region(dbl, 0, kSpokenFrames, kBarTicks);
+    const std::vector<int32_t> cuts = {0, kSpokenFrames};
+    const auto words = takescore::lineUpWords(l, 0, d, cuts, 2400, kRate);
+    bool all = true;
+    std::string why;
+    for (int32_t w = 0; w < kWords; ++w) {
+        const int32_t at = wordOnset(w) + late[w] * 48;
+        float s = NAN;
+        for (const auto &x : words) if (at >= x.start && at < x.end) s = x.shift;
+        why += std::to_string(std::isnan(s) ? 9999 : static_cast<int>(std::lround(s / 48.0f))) + " ";
+        if (std::isnan(s) || std::fabs(s + late[w] * 48.0f) > 144.0f) all = false;
+    }
+    ok("each word's shift is within 3 ms of where it was late", all, why);
+    bool tiled = !words.empty() && words.front().start == 0 && words.back().end == kSpokenFrames;
+    for (size_t i = 1; i < words.size(); ++i) tiled = tiled && words[i].start == words[i - 1].end;
+    ok("the words cover the phrase end to end, in order", tiled);
+
+    // Played as pieces, the double's words land on the lead's.
+    Reel::Region moved = d;
+    moved.takes = {{dbl, 0}};
+    for (const auto &w : words) moved.pieces.push_back({w.start, w.end, 0, std::isnan(w.shift) ? 0 : static_cast<int32_t>(std::lround(w.shift))});
+    moved.settle();
+    bool stayed = true;
+    for (size_t i = 0; i < words.size() && i < moved.pieces.size(); ++i) stayed = stayed && moved.pieces[i].start == words[i].start;
+    ok("joins between words of one take stay where they were put", stayed && moved.pieces.size() == words.size());
+    std::vector<int32_t> want;
+    const std::vector<float> leadPlayed = monoPlayed(l);
+    for (const auto &w : takescore::wordsOf(leadPlayed.data(), kSpokenFrames, kRate)) want.push_back(w.onset);
+    const std::vector<float> played = monoPlayed(moved);
+    why.clear();
+    ok("played, every word starts within 3 ms of the lead's", worstOnset(takescore::wordsOf(played.data(), kSpokenFrames, kRate), want, why) <= 144, why);
+    // No word heard twice: each lead word has one onset near it, checked
+    // above by the count. And the joins don't click.
+    float step = 0.0f;
+    for (size_t i = 1; i < played.size(); ++i) step = std::max(step, std::fabs(played[i] - played[i - 1]));
+    ok("no step bigger than the material's own", step < 0.2f, std::to_string(step));
+}
+
+void aLinedUpBlendAlignsALateTake() {
+    printf("- a lined-up blend\n");
+    const auto first = sourceOf(spokenFloat(nullptr, false, 3));
+    int32_t late[kWords];
+    for (int32_t &v : late) v = 30;
+    const auto second = sourceOf(spokenFloat(late, true, 29));
+    // And a third as late, with hiss 26 dB under the singing.
+    const auto third = sourceOf(spokenFloat(late, false, 41, 0.05f));
+    Reel::Region stack = region(first, 0, kSpokenFrames, kBarTicks);
+    stack.takes = {{first, 0}, {second, 0}, {third, 0}};
+    const Reel::Region ref = region(first, 0, kSpokenFrames, kBarTicks);
+    const auto words = takescore::lineUpStack(ref, 0, stack, {0, kSpokenFrames}, 2400, kRate);
+    bool ontoItself = words.size() == 3;
+    for (const auto &w : words[0]) ontoItself = ontoItself && (std::isnan(w.shift) || std::fabs(w.shift) <= 48.0f);
+    ok("take one lines up on itself, as it is", ontoItself);
+    bool back = !words[1].empty();
+    std::string why;
+    for (const auto &w : words[1]) {
+        why += std::to_string(std::isnan(w.shift) ? 9999 : static_cast<int>(std::lround(w.shift))) + " ";
+        if (w.end > wordOnset(0) && (std::isnan(w.shift) || std::fabs(w.shift + 1440.0f) > 144.0f)) back = false;
+    }
+    ok("each word of a take 30 ms late moves back within 3 ms", back, why);
+    bool noisy = !words[2].empty();
+    why.clear();
+    for (const auto &w : words[2]) {
+        why += std::to_string(std::isnan(w.shift) ? 9999 : static_cast<int>(std::lround(w.shift))) + " ";
+        if (w.end > wordOnset(0) && (std::isnan(w.shift) || std::fabs(w.shift + 1440.0f) > 144.0f)) noisy = false;
+    }
+    ok("a noisy one too: hiss doesn't make it read late", noisy, why);
+
+    for (size_t k = 0; k < 3; ++k) {
+        for (const auto &w : words[k]) {
+            if (!std::isnan(w.shift)) stack.takes[k].nudges.push_back({w.start, w.end, static_cast<int32_t>(std::lround(w.shift))});
+        }
+    }
+    stack.blend = true;
+    stack.settle();
+    // Take two through its nudges against take one: no lag left.
+    std::vector<float> a(static_cast<size_t>(kSpokenFrames)), b(static_cast<size_t>(kSpokenFrames));
+    for (int32_t i = 0; i < kSpokenFrames; ++i) {
+        float x = 0.0f, y = 0.0f;
+        Reel::Region::nudgedAt(stack.takes[1], i, x, y);
+        b[static_cast<size_t>(i)] = x / 32768.0f;
+        a[static_cast<size_t>(i)] = static_cast<float>(first->lp[static_cast<size_t>(i)]) / 32768.0f;
+    }
+    const float lag = takescore::lagOf(a.data(), b.data(), kSpokenFrames, 2400, kRate);
+    ok("blended, take two sits on take one", !std::isnan(lag) && std::fabs(lag) <= 96.0f, std::to_string(lag) + " frames");
+    // And the blend still plays at about one take's level.
+    Rig rig;
+    Reel::Cell cell{1, {}};
+    cell.lanes[0] = stack;
+    cell.lanes[0].ticks = kBarTicks;
+    rig.reel.cells = {cell};
+    rig.mount();
+    const std::vector<float> out = playCell(rig, kBarFrames);
+    rig.bias->reset();
+    ok("a nudged blend repeats after a reset", playCell(rig, kBarFrames) == out);
+}
+
+void theLeadIsTheTime() {
+    printf("- the lead's hits as the time\n");
+    // A swung lead, a take that follows it and one on the straight grid.
+    Sung sw;
+    sw.swing = 1920;
+    const auto lead = sung(sw);
+    Sung follows = sw;
+    follows.seed = 31;
+    follows.bright = false;
+    Sung straight;
+    straight.seed = 37;
+    straight.bright = false;
+    const auto a = sung(follows), b = sung(straight);
+    takescore::Stack st;
+    st.takes = {{a.get(), 0, 0, kSungFrames}, {b.get(), 0, 0, kSungFrames}};
+    st.cuts = sungCuts();
+    st.gridStep = kEighth / 2.0;
+    st.sampleRate = kRate;
+    const auto grid = takescore::scoreStack(st);
+    std::string why;
+    bool gridPrefersStraight = true;
+    for (int32_t p = 0; p < kPhrases; ++p) {
+        why += std::to_string(grid[static_cast<size_t>(p)].timingMs) + "/" + std::to_string(grid[static_cast<size_t>(kPhrases + p)].timingMs) + " ";
+        if (!(grid[static_cast<size_t>(kPhrases + p)].timingMs < grid[static_cast<size_t>(p)].timingMs)) gridPrefersStraight = false;
+    }
+    ok("on the grid, the straight take times better", gridPrefersStraight, why);
+    const std::vector<float> lf = sungFloat(sw);
+    st.lead.assign(lf.begin(), lf.end());
+    why.clear();
+    ok("against a swung lead, the take that swings with it wins every phrase", beatsEveryPhrase(takescore::scoreStack(st), why), why);
+}
+
+void pitchIsJudgedInTheSongsTuning() {
+    printf("- pitch in the song's tuning\n");
+    // 19 equal from C, and a just scale from C, against twelve equal.
+    takescore::Tuning nineteen;
+    nineteen.refHz = 261.6256f;
+    nineteen.period = 1200.0f;
+    for (int k = 0; k < 19; ++k) nineteen.degrees.push_back(k * 1200.0f / 19.0f);
+    takescore::Tuning just;
+    just.refHz = 261.6256f;
+    just.period = 1200.0f;
+    just.degrees = {0.0f, 111.73f, 203.91f, 315.64f, 386.31f, 498.04f, 582.51f, 701.96f, 813.69f, 884.36f, 968.83f, 1088.27f};
+    ok("a note of the tuning is 0 cents off", takescore::centsOff(261.6256f * std::pow(2.0f, 3.0f * 2.0f / 19.0f), nineteen) < 0.01f);
+    ok("twelve equal is unchanged", std::fabs(takescore::centsOff(440.0f * std::pow(2.0f, 0.1f / 12.0f), takescore::Tuning{}) - 10.0f) < 0.01f);
+
+    const auto run = [&](const std::vector<float> &in, const std::vector<float> &out, const takescore::Tuning &t, const char *what) {
+        Sung x;
+        x.vibrato = 3.0f;
+        x.notes = in;
+        Sung y = x;
+        y.notes = out;
+        const auto sa = sung(x), sb = sung(y);
+        takescore::Stack st;
+        st.takes = {{sa.get(), 0, 0, kSungFrames}, {sb.get(), 0, 0, kSungFrames}};
+        st.cuts = sungCuts();
+        st.gridStep = kEighth / 2.0;
+        st.sampleRate = kRate;
+        st.tuning = t;
+        std::string why;
+        ok(what, beatsEveryPhrase(takescore::scoreStack(st), why), why);
+    };
+    // From C as cents from A 440.
+    std::vector<float> in19, near12, inJust, equal;
+    for (int step : {0, 3, 6, 8, 11, 6}) {
+        const float c = step * 1200.0f / 19.0f;
+        in19.push_back(c - 900.0f);
+        near12.push_back(100.0f * std::round(c / 100.0f) - 900.0f);
+    }
+    for (float c : {0.0f, 203.91f, 386.31f, 498.04f, 701.96f, 386.31f}) {
+        inJust.push_back(c - 900.0f);
+        equal.push_back(100.0f * std::round(c / 100.0f) - 900.0f);
+    }
+    run(in19, near12, nineteen, "in 19 equal, a take in tune with it beats one in twelve equal");
+    run(inJust, equal, just, "with a just scale, a take in tune with it beats one in twelve equal");
+    run(equal, inJust, takescore::Tuning{}, "and in twelve equal the other way round");
+}
+
+void spreadKeepsTheLevel() {
+    printf("- spread\n");
+    const auto play = [](float spread, int takes) {
+        Rig rig;
+        Reel::Cell cell{1, {}};
+        Reel::Region &r = cell.lanes[0] = region(noise(kBarFrames, 0.1f, 1), 0, kBarFrames, kBarTicks);
+        r.takes.push_back({r.source, 0});
+        for (int k = 1; k < takes; ++k) r.takes.push_back({noise(kBarFrames, 0.1f, 2 + k), 0});
+        r.blend = true;
+        r.spread = spread;
+        r.settle();
+        rig.reel.cells = {cell};
+        rig.mount();
+        rig.bias->onBlock(0, 0, 120.0f);
+        rig.bias->params().jumpAll();
+        std::vector<float> l, rr;
+        for (int64_t done = 0; done < kBarFrames; done += 256) {
+            rig.bias->onScene(1, done / kFramesPerTick, true, false);
+            rig.bias->render(rig.L, rig.R, 256);
+            l.insert(l.end(), rig.L, rig.L + 256);
+            rr.insert(rr.end(), rig.R, rig.R + 256);
+        }
+        return std::make_pair(l, rr);
+    };
+    const auto power = [](const std::vector<float> &l, const std::vector<float> &r) {
+        double e = 0.0;
+        for (size_t i = 4800; i < l.size() - 4800; ++i) e += static_cast<double>(l[i]) * l[i] + static_cast<double>(r[i]) * r[i];
+        return 10.0 * std::log10(e);
+    };
+    const auto mono = [](const std::vector<float> &l, const std::vector<float> &r) {
+        double e = 0.0;
+        for (size_t i = 4800; i < l.size() - 4800; ++i) {
+            const double m = 0.5 * (l[i] + r[i]);
+            e += m * m;
+        }
+        return 10.0 * std::log10(e);
+    };
+    for (int takes : {2, 3, 5}) {
+        const auto centred = play(0.0f, takes);
+        const auto wide = play(1.0f, takes);
+        const auto half = play(0.5f, takes);
+        const double d = power(wide.first, wide.second) - power(centred.first, centred.second);
+        const double h = power(half.first, half.second) - power(centred.first, centred.second);
+        const double m = mono(wide.first, wide.second) - mono(centred.first, centred.second);
+        ok((std::to_string(takes) + " takes spread wide keep their level within 0.1 dB").c_str(), std::fabs(d) < 0.1 && std::fabs(h) < 0.1,
+           std::to_string(d) + " / " + std::to_string(h) + " dB");
+        ok((std::to_string(takes) + " takes summed to mono lose at most 3 dB and never cancel").c_str(), m > -3.02 && m <= 0.01,
+           std::to_string(m) + " dB");
+        ok("spread zero is the same both sides", centred.first == centred.second);
+    }
+    // Two takes spread fully: the first is all left, the second all right.
+    Reel::Region r = region(noise(kBarFrames, 0.1f, 1), 0, kBarFrames, kBarTicks);
+    r.takes = {{r.source, 0}, {noise(kBarFrames, 0.1f, 2), 0}};
+    r.blend = true;
+    r.spread = 1.0f;
+    r.settle();
+    ok("two takes spread fully sit at the edges", std::fabs(r.takes[0].panR) < 1e-6f && std::fabs(r.takes[1].panL) < 1e-6f &&
+                                                     std::fabs(r.takes[0].panL - 1.41421356f) < 1e-5f);
+}
 } // namespace
 
 int main() {
@@ -1136,6 +1484,12 @@ int main() {
     aBlendSitsAtOneTakesLevel();
     theScorersPickTheCleanTake();
     aLateDoubleLinesUp();
+    wordsAreCutAtHitsAndGaps();
+    wordsLineUpOneByOne();
+    aLinedUpBlendAlignsALateTake();
+    theLeadIsTheTime();
+    pitchIsJudgedInTheSongsTuning();
+    spreadKeepsTheLevel();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

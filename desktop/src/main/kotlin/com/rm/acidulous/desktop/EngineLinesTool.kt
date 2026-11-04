@@ -20,6 +20,7 @@ import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.TakeRef
 import com.rm.acidulous.model.StackTake
 import com.rm.acidulous.model.Piece
+import com.rm.acidulous.model.Nudge
 import com.rm.acidulous.model.withEffect
 import com.rm.acidulous.model.withEffectParam
 import com.rm.acidulous.model.Track
@@ -37,7 +38,8 @@ import kotlin.system.exitProcess
  *
  * Arguments: the song (squelch, the demo, sampled, a pad playing a user
  * sample, tape, that pad and an audio track playing a take, comped, the tape
- * with a stack of two takes played in pieces, or frozen, that
+ * with a stack of two takes played in pieces, blended, comped with lane 1
+ * a lined-up, spread blend and lane 3 a double lined up word by word, or frozen, that
  * pad and a bass line frozen here and zipped with its frozen audio), seconds to render (0 for all of it), tail seconds and bits (32 is
  * float). The folder is the engineLines.out property. It writes
  * <song>.zip, <song>.txt and <song>-app.wav. The zip is written as the app
@@ -59,6 +61,7 @@ fun main(args: Array<String>) {
         "sampled" -> EngineLinesTool.sampledSong(user)
         "tape" -> EngineLinesTool.tapeSong(user)
         "comped" -> EngineLinesTool.compedSong(user)
+        "blended" -> EngineLinesTool.blendedSong(user)
         "macros" -> EngineLinesTool.macroSong()
         "frozen" -> kotlinx.coroutines.runBlocking { EngineLinesTool.frozenSong(user) }
         "tailover" -> kotlinx.coroutines.runBlocking {
@@ -236,6 +239,31 @@ object EngineLinesTool {
         )
         val audio = ClipAudio(listOf(comped) + clip.audio!!.lanes.drop(1))
         return base.copy(name = "Comped", tracks = base.tracks.dropLast(1) + tape.copy(clips = mapOf(scene.id to clip.copy(audio = audio))))
+    }
+
+    /**
+     * [compedSong] with lane 1 blending its two takes, the second lined up
+     * word by word and the two spread, and lane 3 a double of lane 1 lined
+     * up on it.
+     */
+    fun blendedSong(user: File): Song {
+        val base = compedSong(user)
+        val scene = base.scenes.single()
+        val tape = base.tracks.last()
+        val clip = tape.clips.getValue(scene.id)
+        val lane = clip.audio!!.lanes[0]!!
+        val blended = lane.copy(
+            blend = true, blendLinedUp = true, spread = 0.6f,
+            takes = listOf(lane.takes[0], lane.takes[1].copy(nudges = listOf(Nudge(0, 24000, -480), Nudge(24000, 60000, 240)))),
+        )
+        val lanes = clip.audio!!.lanes.toMutableList()
+        lanes[0] = blended
+        val third = lanes.getOrNull(2)
+        if (third != null) {
+            lanes[2] = third.copy(takes = emptyList(), pieces = listOf(Piece(0, 12000, 0, -300), Piece(12000, third.frames, 0, 200)), lead = 0)
+        }
+        val audio = ClipAudio(lanes)
+        return base.copy(name = "Blended", tracks = base.tracks.dropLast(1) + tape.copy(clips = mapOf(scene.id to clip.copy(audio = audio))))
     }
 
     /** A decaying tone, [seconds] long, as a 16-bit mono WAV at 48 kHz. */

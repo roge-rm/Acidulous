@@ -86,6 +86,10 @@
     <string name="tape_comp_lined_up">lined up</string>
     <!-- Play every take at once. -->
     <string name="tape_comp_blend">blend</string>
+    <!-- In a blend: line every take up, word by word, before they play together. -->
+    <string name="tape_comp_blend_tight">line up takes</string>
+    <!-- In a blend: how far the takes spread across the stereo field. -->
+    <string name="tape_comp_spread">spread</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">on</string>

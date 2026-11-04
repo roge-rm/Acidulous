@@ -314,6 +314,22 @@ data class TakeRef(
      * kept for when it's turned off.
      */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val blend: Boolean = false,
+    /**
+     * The blend lines every take up word by word before summing them: each
+     * take's [StackTake.nudges]. Turning it off clears them.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val blendLinedUp: Boolean = false,
+    /**
+     * How far a blend spreads its takes across the stereo field, 0 (all in
+     * the middle) to 1 (first and last at the edges).
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val spread: Float = 0f,
+    /**
+     * The lane this one doubles, -1 for none. Set by lining it up on
+     * another lane: suggest then times it by that lane's hits, and a lined-up
+     * blend lines its takes up on that lane.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val lead: Int = -1,
 )
 
 /**
@@ -330,7 +346,16 @@ data class StackTake(
     val offset: Int,
     val start: Int,
     val end: Int,
+    /** In a lined-up blend, the stretches of this take played later or earlier, word by word. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val nudges: List<Nudge> = emptyList(),
 )
+
+/**
+ * One word of a take in a lined-up blend: region frames [start, end) play
+ * the take [shift] frames later (negative is earlier).
+ */
+@Serializable
+data class Nudge(val start: Int, val end: Int, val shift: Int)
 
 /**
  * A stretch of a region, [start, end) in region frames, played from take

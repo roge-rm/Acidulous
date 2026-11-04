@@ -39,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.input.key.KeyEventType
@@ -85,6 +87,13 @@ import com.rm.acidulous.model.lineUpSpec
 import com.rm.acidulous.model.suggested
 import com.rm.acidulous.model.unshifted
 import com.rm.acidulous.model.blending
+import com.rm.acidulous.model.blendLineUpSpec
+import com.rm.acidulous.model.blendLinedUpBy
+import com.rm.acidulous.model.blendReference
+import com.rm.acidulous.model.blendUnlined
+import com.rm.acidulous.model.leadOf
+import com.rm.acidulous.model.pitchSpecFor
+import com.rm.acidulous.model.spreading
 import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -195,7 +204,12 @@ fun AudioLanes(
     // The lane's gesture handler outlives a recomposition, so it reads these fresh.
     val cutsNow by rememberUpdatedState(cuts)
     val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f) }
-    val scores = Scoring.rememberScores(root, if (drag == null) openTake?.takeIf { it.takeCount > 1 } else null, cuts)
+    // Pitch is judged in the track's tuning, and a double is timed by its lead.
+    val tuning = editor.song.pitchSpecFor(editor.song.tracks.getOrNull(trackIndex))
+    val scores = Scoring.rememberScores(
+        root, if (drag == null) openTake?.takeIf { it.takeCount > 1 } else null, cuts, tuning,
+        if (open >= 0) clip.leadOf(open) else null,
+    )
 
     // Listening through the picked phrase (see Listening). It stops when it
     // no longer matches what's shown: another phrase or lane, an edit, a
@@ -428,7 +442,10 @@ fun AudioLanes(
                                 Size((to - from).coerceAtLeast(1f), size.height),
                             )
                             val survey = shape
-                            if (take.pieces.isNotEmpty() && take.frames > 0) {
+                            if (take.blend && take.takes.size > 1 && take.frames > 0) {
+                                // A blend: every take faintly, and the sum as it's heard over them.
+                                drawBlend(take, stackShapes, from, span, to, mid, half, colour)
+                            } else if (take.pieces.isNotEmpty() && take.frames > 0) {
                                 // A stack: each piece from its own take's file.
                                 val stack = take.stack()
                                 for (p in take.pieces) {
@@ -526,22 +543,34 @@ fun AudioLanes(
                     lined = stored.linedUp,
                     onSuggest = {
                         if (cs != null) scope.launch {
-                            val sc = Scoring.scores(root, stored, cs) ?: return@launch
+                            val sc = Scoring.scores(root, stored, cs, tuning, clip.leadOf(lane)) ?: return@launch
                             compEdit(lane) { it.suggested(cs, sc) }
                         }
                     },
                     onLineUp = { l ->
                         val lead = clip.audio?.lane(l)
                         if (cs != null && lead != null && root != null) scope.launch {
-                            val shifts = withContext(Dispatchers.Default) {
+                            val words = withContext(Dispatchers.Default) {
                                 val spec = stored.lineUpSpec(lead, cs, root)
                                 if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
                             } ?: return@launch
-                            compEdit(lane) { it.linedUpBy(cs, shifts) }
+                            compEdit(lane) { it.linedUpBy(words, l) }
                         }
                     },
                     onUnline = { compEdit(lane) { it.unshifted() } },
                     onBlend = { on -> compEdit(lane) { it.blending(on) } },
+                    onBlendLineUp = { on ->
+                        val ref = clip.blendReference(lane)
+                        if (!on) compEdit(lane) { it.blendUnlined() }
+                        else if (cs != null && ref != null && root != null) scope.launch {
+                            val raw = withContext(Dispatchers.Default) {
+                                val spec = stored.blendLineUpSpec(ref, cs, root)
+                                if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
+                            } ?: return@launch
+                            compEdit(lane) { it.blendLinedUpBy(raw) }
+                        }
+                    },
+                    onSpread = { v -> compEdit(lane) { it.spreading(v) } },
                 )
             }
         }
@@ -799,4 +828,58 @@ fun TakePicker(
         },
         onDismiss = onDone,
     )
+}
+
+/**
+ * A blended lane's overview: each take's shape faintly where it has audio,
+ * then their sum as it plays, every take sounding at its share of the level
+ * of one. Shifts of a few ms don't show at this size, so they're left out.
+ */
+private fun DrawScope.drawBlend(
+    take: TakeRef, shapes: Map<String, TakePeaks.Survey?>, from: Float, span: Float, to: Float,
+    mid: Float, half: Float, colour: Color,
+) {
+    val stack = take.stack()
+    val width = (to - from).coerceAtLeast(1f)
+    val columns = (width / 2f).toInt().coerceAtLeast(1)
+    val power = FloatArray(columns)
+    val count = FloatArray(columns)
+    for (t in stack) {
+        val whole = shapes[t.file] ?: continue
+        if (whole.frames <= 0) continue
+        val fileCols = whole.peaks.size / 2
+        if (fileCols <= 0) continue
+        val a = maxOf(0, t.start)
+        val b = minOf(take.frames, t.end)
+        if (b <= a) continue
+        // Faintly, as it is.
+        val x0 = from + span * a / take.frames
+        val x1 = (from + span * b / take.frames).coerceAtMost(to)
+        if (x1 > x0) {
+            val c0 = (fileCols.toLong() * (t.offset + a).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, fileCols - 1)
+            val c1 = (fileCols.toLong() * (t.offset + b) / whole.frames).toInt().coerceIn(c0 + 1, fileCols)
+            val shown = ((c1 - c0) * (x1 - x0) / (span * (b - a) / take.frames)).toInt()
+            drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour.copy(alpha = 0.22f))
+        }
+        // Its peak in each column of the sum.
+        for (j in 0 until columns) {
+            val fa = (take.frames.toLong() * j * width / span / columns).toInt()
+            val fb = (take.frames.toLong() * (j + 1) * width / span / columns).toInt()
+            val ra = maxOf(fa, a)
+            val rb = minOf(fb, b)
+            if (rb <= ra) continue
+            val ca = (fileCols.toLong() * (t.offset + ra).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, fileCols - 1)
+            val cb = (fileCols.toLong() * (t.offset + rb) / whole.frames).toInt().coerceIn(ca + 1, fileCols)
+            var p = 0f
+            for (c in ca until cb) p = maxOf(p, abs(whole.peaks[c * 2]), abs(whole.peaks[c * 2 + 1]))
+            power[j] += p * p
+            count[j] += 1f
+        }
+    }
+    val colW = width / columns
+    for (j in 0 until columns) {
+        if (count[j] <= 0f) continue
+        val p = kotlin.math.sqrt(power[j] / count[j]).coerceAtMost(1f)
+        drawRect(colour, Offset(from + j * colW, mid - p * half), Size(maxOf(1f, colW), maxOf(1f, 2f * p * half)))
+    }
 }

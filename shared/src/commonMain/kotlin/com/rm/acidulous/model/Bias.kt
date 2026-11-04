@@ -46,9 +46,12 @@ fun Track.hasAudio(): Boolean =
  *     take|sceneId|lane|absPath|offset
  *     piece|sceneId|lane|start|end|take[|shift]
  *
- * and a blended lane says where each take has audio, then that it blends:
+ * and a blended lane says where each take has audio, any words of a take
+ * lined up, how far it spreads, then that it blends:
  *
  *     span|sceneId|lane|take|start|end
+ *     nudge|sceneId|lane|take|start|end|shift
+ *     spread|sceneId|lane|amount
  *     blend|sceneId|lane
  *
  * Paths are absolute because the engine has no root, and scene ids are engine
@@ -100,7 +103,18 @@ internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef,
         if (p.shift != 0) append('|').append(p.shift)
         append('\n')
     }
-    if (take.blend && take.takes.size > 1) append("blend|").append(sceneId).append('|').append(lane).append('\n')
+    if (take.blend && take.takes.size > 1) {
+        if (take.blendLinedUp) {
+            for ((k, t) in take.takes.withIndex()) {
+                for (n in t.nudges) {
+                    append("nudge|").append(sceneId).append('|').append(lane).append('|').append(k).append('|')
+                    append(n.start).append('|').append(n.end).append('|').append(n.shift).append('\n')
+                }
+            }
+        }
+        if (take.spread > 0f) append("spread|").append(sceneId).append('|').append(lane).append('|').append(take.spread).append('\n')
+        append("blend|").append(sceneId).append('|').append(lane).append('\n')
+    }
 }
 
 /**
@@ -398,7 +412,8 @@ fun TakeRef.stacked(pass: TakeRef): TakeRef {
     val shift = kotlin.math.round((startTick - from) * perTick).toInt()
     val passAt = kotlin.math.round((pass.startTick - from) * perTick).toInt()
     val length = maxOf(shift + frames, passAt + pass.frames)
-    val old = stack().map { it.copy(offset = it.offset - shift, start = it.start + shift, end = it.end + shift) }
+    // A new take hasn't been lined up with the rest, so a lined-up blend starts over.
+    val old = stack().map { it.copy(offset = it.offset - shift, start = it.start + shift, end = it.end + shift, nudges = emptyList()) }
     val heard = pieces.ifEmpty { listOf(Piece(0, frames, 0)) }
         .map { it.copy(start = it.start + shift, end = it.end + shift) }
     val k = old.size
@@ -407,6 +422,7 @@ fun TakeRef.stacked(pass: TakeRef): TakeRef {
         file = old[0].file, offset = old[0].offset, frames = length, startTick = from,
         takes = old + added,
         pieces = heard.overlay(added.start, added.end, k),
+        blendLinedUp = false,
     )
 }
 
@@ -428,7 +444,14 @@ fun TakeRef.reframed(old: TakeRef): TakeRef {
     if (takes.isEmpty()) return this
     val d = offset - old.offset
     val moved = takes.map {
-        it.copy(offset = it.offset + d, start = (it.start - d).coerceIn(0, frames), end = (it.end - d).coerceIn(0, frames))
+        it.copy(
+            offset = it.offset + d, start = (it.start - d).coerceIn(0, frames), end = (it.end - d).coerceIn(0, frames),
+            nudges = it.nudges.mapNotNull { n ->
+                val s = (n.start - d).coerceIn(0, frames)
+                val e = (n.end - d).coerceIn(0, frames)
+                if (e > s) n.copy(start = s, end = e) else null
+            },
+        )
     }
     val cut = pieces.mapNotNull { p ->
         val s = (p.start - d).coerceIn(0, frames)

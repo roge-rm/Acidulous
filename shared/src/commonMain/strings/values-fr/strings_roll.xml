@@ -86,6 +86,8 @@
     <string name="tape_comp_lined_up">aligné</string>
     <!-- Play every take at once. -->
     <string name="tape_comp_blend">mêler</string>
+    <string name="tape_comp_blend_tight">aligner les prises</string>
+    <string name="tape_comp_spread">étaler</string>
 
     <!-- ui/StepEditor.kt: a step\'s gate, accent and slide, on small buttons. -->
     <string name="step_on">act</string>

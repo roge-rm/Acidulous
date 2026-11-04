@@ -184,4 +184,18 @@ class EngineLinesToolTest {
         val back = runBlocking { SongBundle.read(zip, other) }!!
         assertEquals(song.tracks[1].clips, back.tracks[1].clips)
     }
+
+    @Test
+    fun aSongZipCarriesALinedUpSpreadBlend() {
+        val song = EngineLinesTool.blendedSong(user)
+        val recording = EngineLinesTool.record(song, user)
+        val reel = recording.text.lines().single { it.startsWith("LoadReel 1 ") }
+        assertTrue(reel, "nudge|" in reel && "|1|0|24000|-480" in reel)
+        assertTrue(reel, "spread|" in reel && "|0.6" in reel && "blend|" in reel)
+        val zip = File(out, "blended.zip")
+        SongBundle.write(song, user, zip, recording.text)
+        val other = File(out, "other-blended").apply { deleteRecursively(); mkdirs() }
+        val back = runBlocking { SongBundle.read(zip, other) }!!
+        assertEquals(song.tracks[1].clips, back.tracks[1].clips)
+    }
 }

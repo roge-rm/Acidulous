@@ -103,6 +103,49 @@ class CompToolsTest {
         File(user, "samples/$name").apply { parentFile.mkdirs() }.writeBytes(data.array())
     }
 
+    /** Syllable [k]'s lateness in the wobbly double, in seconds: each word on its own. */
+    private fun wobble(k: Int) = listOf(0.03, 0.012, 0.04, 0.02, -0.01)[k % 5]
+
+    /**
+     * A darker double of the sung line where every syllable is late by its
+     * own amount ([wobble]), over the same rumble and hiss.
+     */
+    private fun writeWobbly(name: String) {
+        val r = kotlin.random.Random(name.hashCode())
+        val data = java.nio.ByteBuffer.allocate(44 + length * 2).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        data.put("RIFF".toByteArray()).putInt(36 + length * 2).put("WAVE".toByteArray())
+        data.put("fmt ".toByteArray()).putInt(16).putShort(1).putShort(1).putInt(rate).putInt(rate * 2).putShort(2).putShort(16)
+        data.put("data".toByteArray()).putInt(length * 2)
+        val notes = listOf(1.0, 1.122, 1.26, 1.335)
+        val v = DoubleArray(length)
+        var k = 0
+        for ((a, b) in lines) {
+            var j = 0
+            while (a + 0.5 * j < b) {
+                val start = a + 0.5 * j + wobble(k)
+                val end = minOf(a + 0.5 * j + 0.46, b) + wobble(k)
+                var phase = 0.0
+                var i = (start * rate).toInt()
+                while (i < (end * rate).toInt() && i < length) {
+                    val t = i.toDouble() / rate
+                    val edge = minOf(1.0, (t - start) / 0.008, (end - t) / 0.02)
+                    phase += 2 * PI * 221.0 * notes[j % notes.size] / rate
+                    var x = 0.0
+                    for (h in 1..6) x += 1.0 / (h * h) * sin(phase * h)
+                    if (i >= 0) v[i] += 0.25 * edge * x
+                    i++
+                }
+                j++
+                k++
+            }
+        }
+        for (i in 0 until length) {
+            val x = v[i] + 0.02 * sin(2 * PI * 45.0 * i / rate) + (r.nextDouble() * 2 - 1) * 0.003
+            data.putShort((x * 32000).toInt().coerceIn(-32768, 32767).toShort())
+        }
+        File(user, "samples/$name").apply { parentFile.mkdirs() }.writeBytes(data.array())
+    }
+
     private fun song(): Song {
         writeTake("clean.wav")
         writeTake("clipped.wav", drive = 4.0)
@@ -245,5 +288,105 @@ class CompToolsTest {
             }
         }
         if (audition.isDirectory) audition(original, "comp-c5-before.wav", 0, 1)
+    }
+
+    /**
+     * C6: lane 2 a double whose words are each late by their own amount,
+     * lined up word by word on lane 1; lane 1's stack blended with every
+     * take lined up, then spread. Pictures are c6-*, renders comp-c6-*.
+     */
+    @Test
+    fun wordsALinedUpBlendAndSpread() {
+        writeWobbly("wobbly.wav")
+        val base = song()
+        val clip0 = base.tracks[0].clips["s-one"]!!
+        val wobbly = TakeRef(file = "samples/wobbly.wav", offset = 0, frames = length, bpm = 120f, ticks = 16 * PPQN)
+        val stack = clip0.audio!!.lane(0)!!.copy(pieces = listOf(Piece(0, length, 2)))
+        val original = base.copy(tracks = listOf(base.tracks[0].copy(clips = mapOf("s-one" to clip0.copy(audio = ClipAudio(listOf(stack, wobbly)))))))
+        EngineSync.sync(original)
+        kotlinx.coroutines.runBlocking { EngineSync.loadsDone() }
+        for (mode in listOf(ThemeMode.Dark, ThemeMode.Light)) {
+            val tag = mode.name.lowercase()
+            var current by mutableStateOf(original)
+            val editor = SongEditor(current) { s, _ -> current = s }
+            val scene = ImageComposeScene(w, h, Density(d)) {
+                AcidulousTheme(mode) {
+                    AudioLanes(
+                        clip = current.tracks[0].clips["s-one"]!!, ticksPerBar = 4 * PPQN, cycleTicks = 16 * PPQN,
+                        playheadTick = { null }, trackIndex = 0, sceneId = "s-one", editor = editor,
+                        modifier = Modifier.fillMaxSize(),
+                    )
+                }
+            }
+            fun lane(i: Int) = current.tracks[0].clips["s-one"]!!.audio!!.lane(i)!!
+            try {
+                val it = scene
+                it.settle(20)
+                val lanes = h - px(16f) - px(84f) - px(18f)
+                // Lane 2: open it and line it up on lane 1, word by word.
+                it.tap(Offset(x(1.0), px(16f) + 3f * (h - px(16f)) / 8f))
+                it.settle(30)
+                val lanes2 = h - px(16f) - px(28f) - px(18f)
+                val bar2 = px(16f) + lanes2 / 2f + px(28f) + px(9f)
+                it.tap(Offset(gutter + px(24f), bar2))
+                assertTrue("the double moved", it.until(8000) { lane(1).pieces.isNotEmpty() })
+                assertEquals("it doubles lane 1", 0, lane(1).lead)
+                // Each syllable moved by its own lateness, to within 3 ms.
+                var k = 0
+                val misses = ArrayList<String>()
+                for ((a, b) in lines) {
+                    var j = 0
+                    while (a + 0.5 * j < b) {
+                        val onset = ((a + 0.5 * j + wobble(k)) * rate).toInt() + 480
+                        val p = lane(1).pieces.firstOrNull { p -> onset >= p.start && onset < p.end }
+                        val want = -(wobble(k) * rate).toInt()
+                        if (p == null || abs(p.shift - want) > 144) misses += "$k: ${p?.shift} not $want"
+                        j++
+                        k++
+                    }
+                }
+                assertTrue("every word on its own: $misses", misses.isEmpty())
+                assertTrue("more pieces than phrases", lane(1).pieces.size > lines.size)
+                it.settle(10)
+                it.shot("c6-$tag-1-words.png")
+                if (mode == ThemeMode.Dark) audition(current, "comp-c6-words.wav", 0, 1)
+                // Put back exactly.
+                it.tap(Offset(gutter + px(24f), bar2))
+                assertTrue("put back", it.until(3000) { lane(1).pieces.isEmpty() && lane(1).lead == -1 })
+
+                // Lane 1: open it, blend, line the takes up, spread.
+                it.tap(Offset(x(1.0), px(16f) + lanes2 / 8f))
+                it.settle(30)
+                val bar = px(16f) + lanes / 4f + px(84f) + px(9f)
+                it.tap(Offset(gutter + px(126f), bar))
+                assertTrue("blend is on", it.until(3000) { lane(0).blend })
+                it.settle(6)
+                it.shot("c6-$tag-2-blend.png")
+                it.tap(Offset(gutter + px(170f), bar))
+                assertTrue("the takes are lined up", it.until(8000) { lane(0).blendLinedUp })
+                val late = lane(0).takes[1].nudges
+                assertTrue("the late take moves back about 30 ms: $late", late.isNotEmpty() && late.all { n -> abs(n.shift + 1440) <= 144 })
+                assertTrue("the clipped one, on time, hardly moves", lane(0).takes[0].nudges.all { n -> abs(n.shift) <= 144 })
+                it.settle(6)
+                it.shot("c6-$tag-3-lined-blend.png")
+                if (mode == ThemeMode.Dark) audition(current, "comp-c6-blend-lined.wav", 0)
+                // Spread: the slider after the chips, dragged near its right end.
+                val sx = gutter + px(334f)
+                it.sendPointerEvent(PointerEventType.Press, Offset(sx - px(50f), bar))
+                it.render(System.nanoTime())
+                it.sendPointerEvent(PointerEventType.Move, Offset(sx, bar))
+                it.render(System.nanoTime())
+                it.sendPointerEvent(PointerEventType.Release, Offset(sx, bar))
+                assertTrue("spread is set", it.until(3000) { lane(0).spread > 0.5f })
+                it.settle(6)
+                it.shot("c6-$tag-4-spread.png")
+                if (mode == ThemeMode.Dark) audition(current, "comp-c6-spread.wav", 0)
+                // Line up takes again puts them back; blend off keeps the spread for next time.
+                it.tap(Offset(gutter + px(170f), bar))
+                assertTrue("unlined", it.until(3000) { !lane(0).blendLinedUp && lane(0).takes.all { t -> t.nudges.isEmpty() } })
+            } finally {
+                scene.close()
+            }
+        }
     }
 }

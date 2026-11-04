@@ -50,6 +50,20 @@ constexpr float kWorstClips = 2.0f;
 /** Signal over the floor: this much or more is clean, 25 dB less is as noisy as it gets. */
 constexpr float kCleanDb = 40.0f;
 
+/**
+ * The notes pitch is judged against: [degrees] in cents above a note at
+ * [refHz], repeating every [period] cents. Empty degrees are twelve equal
+ * steps from A 440.
+ */
+struct Tuning {
+    float refHz = 440.0f;
+    float period = 1200.0f;
+    std::vector<float> degrees; // sorted, in [0, period), 0 first
+};
+
+/** How many cents [hz] is from the nearest note of [t], 0 to half the widest step. */
+float centsOff(float hz, const Tuning &t);
+
 struct Stack {
     std::vector<TakeAudio> takes;
     std::vector<int32_t> cuts; // phrase i is [cuts[i], cuts[i + 1])
@@ -57,6 +71,13 @@ struct Stack {
     double gridStep = 0.0;
     double gridPhase = 0.0;
     float sampleRate = 48000.0f;
+    Tuning tuning;
+    /**
+     * The lead this lane doubles, as it sounds, mono, in this lane's region
+     * frames up to the last cut. Empty for none. With a lead, timing is
+     * measured from its hits instead of the grid and the other takes.
+     */
+    std::vector<float> lead;
 };
 
 /** Every take over every phrase, take-major: [take * phrases + phrase]. */
@@ -85,5 +106,53 @@ float lagOf(const float *lead, const float *dbl, int32_t frames, int32_t maxLag,
  */
 std::vector<float> lineUp(const Reel::Region &lead, const Reel::Region &dbl, const std::vector<int32_t> &cuts,
                           int32_t maxShift, float sampleRate);
+
+/**
+ * Where a word starts: [onset] in frames of the audio it came from, and how
+ * many quiet frames come just before it (0 for a word cut at a hit).
+ */
+struct WordStart {
+    int32_t onset = 0;
+    int32_t quietBefore = 0;
+};
+
+/**
+ * [x] cut into words: at the end of every short gap and at every hit,
+ * at least 80 ms apart. High-passed first, so rumble isn't a word and hiss
+ * isn't a gap.
+ */
+std::vector<WordStart> wordsOf(const float *x, int32_t frames, float sampleRate);
+
+/** A stretch of region frames [start, end) to play [shift] frames later. NaN shift is no change. */
+struct Word {
+    int32_t start = 0;
+    int32_t end = 0;
+    float shift = 0.0f;
+};
+
+/**
+ * For lining up word by word: [dbl] cut into words, each moved onto the
+ * nearest word of [ref] by at most [maxShift], in each phrase of [cuts].
+ * The words cover each phrase end to end, in order. A word never starts
+ * before the one ahead of it, never cuts into its sound, and a join falls
+ * just before a word starts so its attack isn't crossfaded. [refDelta] is
+ * where [ref]'s frame 0 sits in [dbl]'s frames.
+ */
+std::vector<Word> lineUpWords(const Reel::Region &ref, int32_t refDelta, const Reel::Region &dbl,
+                              const std::vector<int32_t> &cuts, int32_t maxShift, float sampleRate);
+
+/**
+ * The same over mono buffers of one stretch, words in frames of the
+ * buffers. [prior] is the stretch's overall shift, NaN if unknown.
+ */
+std::vector<Word> lineUpWordsIn(const float *ref, const float *dbl, int32_t frames, int32_t maxShift,
+                                float prior, float sampleRate);
+
+/**
+ * Every take of [stack] lined up word by word on [ref], for a blend. One
+ * list per take, words only where the take has audio.
+ */
+std::vector<std::vector<Word>> lineUpStack(const Reel::Region &ref, int32_t refDelta, const Reel::Region &stack,
+                                           const std::vector<int32_t> &cuts, int32_t maxShift, float sampleRate);
 
 } // namespace acidulous::audio::takescore
