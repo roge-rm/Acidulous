@@ -50,6 +50,22 @@ so play it legato. In poly mode each key has its own.
   the left. At 0 you hear the oscillators as they are.
 - **phaser** **depth**, **rate** and **feedback**.
 
+## Players
+
+Each register is a section of players. More players make a thicker sound,
+each a little off from the others.
+
+- **players** - how many in each section, 1 to 16. One player with no drift
+  or vibrato is the plain divided-down sound.
+- **drift** - how far each player's pitch wanders, slowly, in cents.
+- **vibrato** and **rate** - each player's vibrato, its depth in cents. Each
+  player's is a little faster or slower than the others'.
+- **scatter** - how late a player can come in, up to 80 ms. The order changes
+  each time you play from silence.
+
+The players sit across each section's width. The more drift, the later the
+sound: up to about 20 ms at full.
+
 ## Notes
 
 - **tune** (in cents), **octave**, **bend**, **velocity** and **volume**.

@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include <engine/dsp/DelayLine.h>
 #include <engine/dsp/Filter.h>
 #include <engine/machine/Machine.h>
@@ -35,6 +36,19 @@ namespace acidulous::machine {
  * pitch class, or that a finger bends, gets a divider chain of its own,
  * started from where the shared one was so it doesn't jump. The channel bend
  * moves the top oscillators, so every key bends together.
+ *
+ * Players: each register is a section of 1 to 16 players. A player is a tap
+ * on the registers' mix, its delay moved by a slow random walk (its pitch
+ * drifts by the delay's speed), a vibrato of its own phase and rate, and a
+ * seat delay that spreads the players' entries (scatter, re-dealt on a note
+ * from silence). Player n moves the same way in every section, so the
+ * registers stay locked to each other as the dividers made them and a patch
+ * keeps its level, but sits at its own place across each section's width:
+ * the mix is kept twice, as is and weighted by each section's width, and a
+ * player's place is how much of the second it adds on one side and takes
+ * off the other. One player with no drift or vibrato reads the newest
+ * sample, so it sounds as the machine did before players. The paraphonic
+ * envelope and the volume come after the players.
  */
 class Divisi final : public Machine {
   public:
@@ -43,6 +57,7 @@ class Divisi final : public Machine {
         Tone, Mode, Attack, Release,
         Ensemble, Speed, Phaser, Rate, Feedback,
         Tune, Octave, BendRange, VelocityAmount, Volume,
+        Players, Drift, Vibrato, Vibrate, Scatter,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -64,6 +79,7 @@ class Divisi final : public Machine {
 
     enum EnvelopeMode : int32_t { Paraphonic = 0, Poly, ModeCount };
     static constexpr int kKeys = 24;
+    static constexpr int kMaxPlayers = 16;
 
     Divisi();
 
@@ -166,6 +182,28 @@ class Divisi final : public Machine {
         int brassCountdown = 0;
     };
 
+    /** One player of a section: a tap on the section's line. */
+    struct Player {
+        /** Its random walk: its own generator, the target, two smoothing stages (-1 to 1) and the chunks to the next target. */
+        uint32_t rng = 1;
+        float target = 0.0f, y1 = 0.0f, y2 = 0.0f;
+        int32_t nextPick = 0;
+        /** The drift's delay excursion, seconds, either side of the middle of its reach. */
+        float x = 0.0f;
+        /** Its vibrato's phase, turns, and its rate against the knob. */
+        float vibPhase = 0.0f, vibRate = 1.0f;
+        /** Its place in the scatter (0 to 1, the first player 0) and in the seating order (0 to 1). */
+        float seat = 0.0f, order = 0.0f;
+        /** The scatter delay now, samples, which glides to its place; the whole delay at the end of the last chunk. */
+        float seatDelay = 0.0f, delay = 0.0f;
+        /** Its gains on the mix and on the width-weighted mix now, and its place across a section, -1 to 1. */
+        float mid = 0.0f, side = 0.0f, pos = 0.0f;
+    };
+    /** Deals every player's walk, vibrato and seat from fixed seeds. */
+    void seatPlayers();
+    /** Runs the players over [n] samples of the registers' mix [mid] and its width-weighted twin [wide], into [outL] and [outR]. */
+    void runPlayers(const float *mid, const float *wide, float *outL, float *outR, int32_t n);
+
     /** Param [p], smoothed, with the macros' routes to it added. */
     float paramOf(int32_t p) const { return val(p, false); }
     /** Param [p]'s target with the macros' targets added, for note-on seeds. */
@@ -214,8 +252,21 @@ class Divisi final : public Machine {
     static constexpr int kVowelRows = 17;
     float compCache[kVowelRows][128] = {};
     float compRef = 0.0f;
-    /** The ensemble: one line read at its middle and two places a side, and its two LFOs' phases, turns. */
-    dsp::DelayLine line;
+    /**
+     * The players: their state, their two lines (one buffer, the mix's
+     * power-of-two line then the wide one's, written together), the write
+     * place, the samples the lines have heard only silence, and this
+     * block's player settings.
+     */
+    Player players_[kMaxPlayers];
+    std::vector<float> playerLines;
+    int32_t lineSize = 0, lineMask = 0, lineWrite = 0, lineQuiet = 0;
+    uint32_t dealRng = 1;
+    bool snapPlayers = true;
+    int playerCount = 1, seatedFor = 0;
+    float driftRatio = 0.0f, vibRatio = 0.0f, vibHz = 5.0f, scatterSamples = 0.0f, playerNorm = 1.0f;
+    /** The ensemble: a line a side read at its middle and two places, and its two LFOs' phases, turns. */
+    dsp::DelayLine line, lineR;
     float slowPhase = 0.0f, fastPhase = 0.0f;
     /** The phaser: four all-pass stages a side, the fed-back sample, and its LFO's phase. */
     float apState[2][4] = {};

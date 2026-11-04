@@ -52,6 +52,24 @@ par la première touche : jouez legato. En mode poly, chaque touche a le sien.
   oscillateurs tels quels.
 - **prof.**, **vitesse** et **réinjection** du **phaser**.
 
+## Joueurs
+
+Chaque registre est un pupitre de joueurs. Plus il y a de joueurs, plus le
+son est épais, chacun un peu décalé des autres.
+
+- **joueurs** : combien par pupitre, de 1 à 16. Un seul joueur sans dérive ni
+  vibrato donne le son divisé tel quel.
+- **dérive** : jusqu’où la hauteur de chaque joueur se promène, lentement, en
+  cents.
+- **vibrato** et **vitesse** : le vibrato de chaque joueur, sa profondeur en
+  cents. Celui de chaque joueur est un peu plus rapide ou plus lent que celui
+  des autres.
+- **épars** : le retard possible d’un joueur à l’entrée, jusqu’à 80 ms.
+  L’ordre change chaque fois qu’on joue après un silence.
+
+Les joueurs sont répartis sur la largeur de chaque pupitre. Plus il y a de
+dérive, plus le son arrive tard : jusqu’à environ 20 ms au maximum.
+
 ## Notes
 
 - **accordage** (en cents), **octave**, **bend**, **vélocité** et **volume**.
