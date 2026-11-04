@@ -4849,8 +4849,11 @@ private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thum
 val TINE_MACRO_DESTS = listOf(
     "off", "mallet", "position", "decay", "bright", "damp", "tube", "motor", "depth",
     "bloom", "buzz", "rolls", "spread", "velocity", "volume", "pair",
-    "pitch",
+    "pitch", "melt",
 )
+
+/** What a melting Tine note does: once, or back and forth. */
+private val TINE_RETURNS = listOf("once", "back and forth")
 
 /** Tine: the macros, the bar and what strikes it, the instrument around it, and the player. */
 @Composable
@@ -4886,6 +4889,12 @@ private fun TinePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: So
                     PanelStepKnob(b, "model", TINE_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
                     PanelKnob(b, "pair", "pair")
+                }
+                Group("melt") {
+                    PanelStepKnob(b, "into", TINE_MODELS, "into", PanelAmber)
+                    PanelKnob(b, "melt", "melt")
+                    PanelKnob(b, "heat", "heat")
+                    PanelStepKnob(b, "return", TINE_RETURNS, "return")
                 }
                 Group("mallet") {
                     PanelKnob(b, "mallet", "mallet", PanelAmber)

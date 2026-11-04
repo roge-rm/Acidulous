@@ -464,6 +464,18 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "melt") {
+        // Tine's melts: a note held while it melts, a soft one and a hard one
+        // to hear heat hurry it, a chord held while it melts, and a short
+        // note let go, left to ring out.
+        struct Hit { float at; int step; int vel; float hold; };
+        static const Hit kHits[] = {
+            {0.0f, 0, 100, 5.0f}, {5.5f, 7, 60, 2.5f}, {8.5f, 7, 124, 2.5f},
+            {11.5f, -5, 96, 5.0f}, {11.53f, 0, 92, 5.0f}, {11.56f, 4, 92, 5.0f},
+            {17.0f, 12, 104, 0.4f},
+        };
+        for (const Hit &h : kHits) p.lastOff = hit(p, h.at, h.hold, note + h.step, h.vel);
+        p.frames = p.lastOff + secondsToFrames(6.0f);
     } else if (kind == "bell") {
         // A bell is mostly its tail, so this leaves room between strikes:
         // about a second and a half apart, one pair together to hear two
@@ -2538,7 +2550,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|scene|jaw|harmonics\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
         "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"

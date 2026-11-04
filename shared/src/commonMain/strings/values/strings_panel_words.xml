@@ -109,6 +109,7 @@
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
+    <string name="pw_back_and_forth">back and forth</string>
     <string name="pw_bag">bag</string>
     <string name="pw_baladi">baladi</string>
     <string name="pw_balance">balance</string>
@@ -618,6 +619,7 @@
     <string name="pw_head">head</string>
     <string name="pw_head_bump">head bump</string>
     <string name="pw_heard_from">heard from</string>
+    <string name="pw_heat">heat</string>
     <string name="pw_height">height</string>
     <string name="pw_hi">hi</string>
     <string name="pw_hi_tom">Hi Tom</string>
@@ -683,6 +685,7 @@
     <string name="pw_instrument">instrument</string>
     <string name="pw_interval">interval</string>
     <string name="pw_interval2">interval2</string>
+    <string name="pw_into">into</string>
     <string name="pw_inversion">inversion</string>
     <string name="pw_invert">invert</string>
     <string name="pw_isles">isles</string>
@@ -860,6 +863,7 @@
     <string name="pw_meend">meend</string>
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
+    <string name="pw_melt">melt</string>
     <string name="pw_membrane">membrane</string>
     <string name="pw_memory">memory</string>
     <string name="pw_metal">Metal</string>
@@ -1146,6 +1150,7 @@
     <string name="pw_resonator">Resonator</string>
     <string name="pw_response">response</string>
     <string name="pw_restart">restart</string>
+    <string name="pw_return">return</string>
     <string name="pw_rev">rev</string>
     <string name="pw_reverb">Reverb</string>
     <string name="pw_reverb_send">reverb send</string>

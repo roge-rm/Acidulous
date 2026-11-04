@@ -3,7 +3,8 @@
 > Lames, languettes et tambours d’acier modélisés : marimba, vibraphone,
 > xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan,
 > handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong,
-> bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.
+> bol chantant, tambour à fente, temple blocks, cloche à vache et triangle,
+> et des notes qui fondent de l’un en l’autre.
 
 Tine ne joue pas d’enregistrements. Chaque note est une poignée de
 résonances accordées comme l’objet frappé. Une lame de marimba est creusée
@@ -43,6 +44,30 @@ elles sonnent.
 - **amortir** : la barre d’étouffoirs : combien une note s’arrête quand vous
   la lâchez. La pédale de sustain la lève.
 
+## Fonte
+
+Une note qui sonne peut se changer en un autre modèle. Chaque harmonique
+glisse de là où le premier modèle la place vers là où l’autre la met, alors
+à mi-chemin la note est fausse par rapport aux deux, puis elle se pose. Les
+harmoniques qu’un seul des deux possède s’éteignent, ou naissent de la note
+pendant qu’elle sonne, sans nouvelle frappe.
+
+- **devient** : le modèle en lequel une note fond. S’il est le même que le
+  **modèle**, rien ne fond.
+- **fonte** : le temps que met une note frappée à fondre, d’un vingtième de
+  seconde à environ 20 secondes. À 0, les notes ne fondent pas.
+- **chaleur** : combien jouer fort et appuyer pressent la fonte. À 0, chaque
+  note prend le même temps; plus haut, une frappe forte fond en une fraction
+  de ce temps, une douce prend plus longtemps, et appuyer sur une note tenue
+  l’accélère encore.
+- **retour** : **une fois** fond et reste; **aller-retour** fond et revient
+  tant que la note sonne, alors une note tenue ou à l’archet respire entre
+  les deux.
+
+Une note frappée de nouveau, ou un roulé, est frappée là où en est la fonte à
+ce moment. **devient** est lu à la frappe d’une note; **fonte**, **chaleur**
+et la macro de fonte font bouger tout de suite les notes qui sonnent.
+
 ## Corps
 
 - **tube** : le tube sous chaque lame, qui sonne avec la note (et ses
@@ -78,12 +103,14 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace tout l’instrument, 24
-demi-tons à 1. Le modèle, l’accordage et les choix par pas ne sont pas
-accessibles. Un changement de mailloche, de position, de déclin, de brillant,
+demi-tons à 1. **fonte** fait avancer chaque note dans sa fonte, jusqu’au bout
+à 1, en plus de là où le temps de fonte l’a menée, alors une macro peut faire
+fondre les notes à la main avec **fonte** à 0. Le modèle, devient,
+l’accordage et les choix par pas ne sont pas accessibles. Un changement de mailloche, de position, de déclin, de brillant,
 d’écart ou de vélocité s’entend à la note suivante, ou au coup suivant d’un
 roulé; amortir à la prochaine note lâchée. Le tube, le moteur, la prof.,
-l’éclosion, le buzz, les roulés, le volume et la paire d’une note en paire
-bougent tout de suite. Touchez le nom d’une macro pour la renommer.
+l’éclosion, le buzz, les roulés, le volume, la fonte et la paire d’une note
+en paire bougent tout de suite. Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 
@@ -93,3 +120,7 @@ bougent tout de suite. Touchez le nom d’une macro pour la renommer.
   creuse la pulsation.
 - **Marimba Roll**, **Vibes Roll** et **Pan Roll** demandent des notes
   tenues.
+- Les patchs **melt** se jouent tenus. **Vibes Breathing**, **Handpan
+  Tide** et **Sinking Bowl** font l’aller-retour; sur **Hot Crotales** et
+  **Wood to Metal**, une frappe forte fond vite et une douce lentement. Leur
+  première macro, **Melt**, fait fondre à la main.
