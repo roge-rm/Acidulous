@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <vector>
 #include <engine/dsp/Filter.h>
+#include <engine/dsp/KeyEar.h>
 #include <engine/machine/Machine.h>
 #include <engine/machine/filament/Waveguide.h>
 
@@ -214,12 +215,10 @@ class Sympath final : public Machine {
      * over the listen time. [hearPeriod] is the tuning's steps to the octave,
      * 0 for a tuning without octaves, which keeps the scale.
      */
-    dsp::Svf hearBands[2 * kHearSteps];
-    float heard[2 * kHearSteps]{};
-    int hearCount = 0, hearPeriod = 12;
+    dsp::KeyEar<2 * kHearSteps> ear;
+    int hearPeriod = 12;
     bool hearBuilt = false;
-    float hearLp[2] = {0.0f, 0.0f}, hearSum = 0.0f;
-    int hearPhase = 0, hearUntil = 0, glideTick = 0;
+    int hearUntil = 0, glideTick = 0;
     /** The song's notes, as steps over the first band's key, its root, and all of it packed, 0 for none. */
     int songNotes[kSongNotes]{};
     int songCount = 0, songRoot = -1;

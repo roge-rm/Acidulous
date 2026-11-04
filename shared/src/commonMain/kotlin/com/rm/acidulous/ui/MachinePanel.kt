@@ -5168,7 +5168,7 @@ private val CHANTER_COUP_BEATS = listOf("every", "2 & 4")
 val CHANTER_MACRO_DESTS = listOf(
     "off", "drones", "bag", "reed", "grace", "drift", "air",
     "crank", "rosin", "dog", "threshold", "velocity", "volume",
-    "pitch",
+    "pitch", "follow", "wind", "sag",
 )
 
 /** Chanter: the macros, the pipes and the bag, the hurdy-gurdy's wheel, and the player. */
@@ -5208,7 +5208,20 @@ private fun ChanterPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("drones") {
                     PanelStepKnob(b, "key", KEY_NAMES, "tonic", PanelAmber)
                     PanelKnob(b, "drones", "drones")
+                }
+                Group("song") {
+                    // The track whose bass the drones follow: off, or the track.
+                    val songLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", songLabels, "from track", PanelPink)
+                    PanelKnob(b, "follow", "follow", PanelAmber)
+                    PanelKnob(b, "glide", "glide")
+                }
+                Group("bag") {
                     PanelKnob(b, "bag", "bag")
+                    PanelKnob(b, "wind", "wind", PanelAmber)
+                    PanelKnob(b, "sag", "sag")
                 }
                 Group("chanter") {
                     PanelKnob(b, "reed", "reed")

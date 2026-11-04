@@ -1,5 +1,6 @@
 #!/bin/bash
-# Chanter, bagpipes and hurdy-gurdy: tuning, the bag, grace notes, the dog.
+# Chanter, bagpipes and hurdy-gurdy: tuning, the bag, grace notes, the dog,
+# the drones following the song, a bag that runs out.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 CPP="$ROOT/app/src/main/cpp"

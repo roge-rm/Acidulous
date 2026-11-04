@@ -1889,7 +1889,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         m->allNotesOff();
         m->reset();
         // The patches leave the track to the song, so it's set here: track 1.
-        const bool song = bank.unit == "Sympath" && patch.family == "song";
+        const bool song = (bank.unit == "Sympath" || bank.unit == "Chanter") && patch.family == "song";
         for (int32_t i = 0; i < count && song; ++i) {
             if (std::strcmp(defs[i].name, "sidechain") == 0) r.norm[static_cast<size_t>(i)] = defs[i].unmap(1.0f);
         }
@@ -1923,7 +1923,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         };
         dress();
         loadInput(input, mat);
-        // Sympath's song patches listen to another track: the band the
+        // Sympath's and Chanter's song patches listen to another track: the band the
         // effects get, looped, and it's mixed into the take.
         if (song) {
             int64_t stop = 0;

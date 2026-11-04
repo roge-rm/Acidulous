@@ -2,6 +2,8 @@
 // the bag after the last note and stopping when it's empty, grace notes, a
 // closed chanter's gaps, the melody strings stopping with the key, and the
 // dog buzzing only when the wheel turns fast enough or is pushed on the beat.
+// The drones following a bass on the sidechain, and off to the bit; a finite
+// bag draining, filling, sagging and choking the drones, the wheel coasting.
 //
 //   chanter_test.sh
 #include <engine/core/Constants.h>
@@ -13,6 +15,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -67,14 +70,44 @@ struct Pipes {
         p.jump(i, p.def(i).unmap(value));
     }
     float bpm = 120.0f;
+    /** Another track on the sidechain: a bass note (MIDI, -1 for none) at each time, played as a bright tone. */
+    std::function<int(double)> bass;
+    double bassPhase = 0.0;
+    /** Per block: drone 0's note, the bass drone's, the bag's pressure and its air. */
+    std::vector<float> drone0, droneLow, wind, store;
     void play(double seconds) {
-        float L[kBlock], R[kBlock];
+        float L[kBlock], R[kBlock], key[kBlock];
         const int blocks = static_cast<int>(seconds * kRate / kBlock);
         for (int b = 0; b < blocks; ++b) {
+            if (bass) {
+                for (int i = 0; i < kBlock; ++i) {
+                    const double t = static_cast<double>(out.size() + i) / kRate;
+                    const int n = bass(t);
+                    double v = 0.0;
+                    if (n >= 0) {
+                        bassPhase += noteHzOf(n) / kRate;
+                        bassPhase -= std::floor(bassPhase);
+                        for (int h = 1; h <= 6; ++h) v += std::sin(6.283185307179586 * h * bassPhase) / h;
+                    }
+                    key[i] = static_cast<float>(0.25 * v);
+                }
+                f->setKey(key);
+            }
             f->onBlock(0, 0, bpm);
             f->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
+            drone0.push_back(f->droneNote(0));
+            droneLow.push_back(f->droneNote(2));
+            wind.push_back(f->wind());
+            store.push_back(f->bagStore());
         }
+        if (bass) f->setKey(nullptr);
+    }
+    static double noteHzOf(int n) { return 440.0 * std::pow(2.0, (n - 69.0) / 12.0); }
+    /** A per-block trace's value at [t] seconds. */
+    static float at(const std::vector<float> &v, double t) {
+        const auto i = static_cast<size_t>(t * kRate / kBlock);
+        return v.empty() ? 0.0f : v[std::min(i, v.size() - 1)];
     }
     /** As play(), with the song rolling from [tick] in a bar of [barTicks], ticks counted like the engine's clock. */
     void roll(double seconds, int64_t tick, int32_t barTicks) {
@@ -444,6 +477,297 @@ void lifecycle() {
     }
 }
 
+/** The same render, sample for sample. */
+bool same(const Pipes &a, const Pipes &b) { return a.out.size() == b.out.size() && std::equal(a.out.begin(), a.out.end(), b.out.begin()); }
+
+/** A phrase over a bass: eight notes a bar of the tune, for the off checks. */
+void phrase(Pipes &g) {
+    const uint8_t tune[] = {69, 71, 73, 74, 76, 74, 73, 71};
+    for (uint8_t n : tune) {
+        g.f->noteOn(n, 100);
+        g.play(0.25);
+        g.f->noteOff(n);
+    }
+    g.play(3.0);
+}
+
+void follow() {
+    std::printf("- the drones follow the song's bass\n");
+    // A held F under the pipes in A: the drones go to F3 and the bass drone F2.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.8f}, {"glide", 0.3f}, {"drift", 0.0f}, {"air", 0.0f}});
+        g.bass = [](double) { return 29; };
+        g.f->noteOn(69, 100);
+        g.play(3.0);
+        check(g.f->followRoot() >= 0 && (g.f->followRoot() - 29) % 12 == 0, "hears the bass as F", fmt("key %d", g.f->followRoot()));
+        check(std::fabs(g.f->droneNote(0) - 53.0f) < 0.01f && std::fabs(g.f->droneNote(2) - 41.0f) < 0.01f,
+              "the drones land on F3 and F2", fmt("%.2f and %.2f", g.f->droneNote(0), g.f->droneNote(2)));
+        const double onF = g.level(noteHz(41), 2.0, 3.0), onA = g.level(noteHz(45), 2.0, 3.0);
+        check(onF > onA + 20.0, "and sound there", fmt("F2 %+.1f dB, A2 %+.1f dB", onF, onA));
+    }
+    // The drones start on the bass note when the bag fills after it's heard.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.8f}, {"drift", 0.0f}});
+        g.bass = [](double) { return 31; };
+        g.play(1.0);
+        g.f->noteOn(69, 100);
+        g.play(0.1);
+        check(std::fabs(g.f->droneNote(0) - 55.0f) < 0.01f, "start on a bass heard before the first note", fmt("%.2f", g.f->droneNote(0)));
+    }
+    // A to D: the pipes glide, and a move shorter than the glide never jumps.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 1.0f}, {"glide", 0.6f}, {"drift", 0.0f}});
+        g.bass = [](double t) { return t < 2.0 ? 33 : 38; };
+        g.f->noteOn(69, 100);
+        g.play(4.0);
+        float biggest = 0.0f;
+        int between = 0;
+        for (size_t i = 1; i < g.drone0.size(); ++i) {
+            biggest = std::max(biggest, std::fabs(g.drone0[i] - g.drone0[i - 1]));
+            if (g.drone0[i] > 57.2f && g.drone0[i] < 61.8f) ++between;
+        }
+        check(std::fabs(Pipes::at(g.drone0, 3.9) - 62.0f) < 0.01f, "A to D: the drones go up a fourth to D4", fmt("%.2f", Pipes::at(g.drone0, 3.9)));
+        check(between > 20 && biggest < 0.3f, "and glide there", fmt("%d blocks between, the biggest step %.2f semitones", between, biggest));
+    }
+    // A hurdy-gurdy's drone strings move like a peg turned, evenly, in the glide time.
+    {
+        Pipes g({{"model", Gurdy}, {"sidechain", 1.0f}, {"follow", 1.0f}, {"glide", 1.0f}, {"drift", 0.0f}});
+        g.bass = [](double t) { return t < 1.5 ? 33 : 31; };
+        g.f->noteOn(69, 100);
+        g.play(4.0);
+        // The mouche, a fourth under A3, goes to D3 under G.
+        const float d0 = Pipes::at(g.drone0, 3.9);
+        size_t from = 0, to = 0;
+        for (size_t i = 1; i < g.drone0.size(); ++i) {
+            if (from == 0 && g.drone0[i] != g.drone0[i - 1]) from = i;
+            if (g.drone0[i] != g.drone0[i - 1]) to = i;
+        }
+        const double took = static_cast<double>(to - from) * kBlock / kRate;
+        check(std::fabs(d0 - 43.0f) < 0.01f && took > 0.8 && took < 1.1, "hurdy-gurdy: the drone strings turn to G over the glide",
+              fmt("%.2f after %.2f s", d0, took));
+    }
+    // Passing notes don't drag the drones: A with a quick C every second.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.5f}, {"drift", 0.0f}});
+        g.bass = [](double t) { return std::fmod(t, 1.0) > 0.8 ? 36 : 33; };
+        g.f->noteOn(69, 100);
+        g.play(5.0);
+        float lo = 1e9f, hi = -1e9f;
+        for (size_t i = g.drone0.size() / 4; i < g.drone0.size(); ++i) {
+            lo = std::min(lo, g.drone0[i]);
+            hi = std::max(hi, g.drone0[i]);
+        }
+        check(lo == 57.0f && hi == 57.0f, "passing notes don't move them", fmt("%.2f to %.2f", lo, hi));
+        // Held longer than the hold, the C takes them.
+        g.bass = [](double) { return 36; };
+        g.play(2.0);
+        check(std::fabs(g.drone0.back() - 60.0f) < 0.01f, "but a held one does", fmt("%.2f", g.drone0.back()));
+    }
+    // A bass line in eighths at 120 with a kick on every beat: A for a bar
+    // with passing notes, then F and G. The drones take A, F and G only.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.6f}, {"drift", 0.0f}});
+        static const int line[16] = {33, 33, 45, 33, 36, 33, 43, 33, 29, 29, 41, 29, 31, 31, 43, 38};
+        g.bass = [](double t) { return line[static_cast<int>(t / 0.25) % 16]; };
+        float L[kBlock], R[kBlock], key[kBlock];
+        double phase = 0.0;
+        std::vector<int> roots;
+        g.f->noteOn(69, 100);
+        for (int b = 0; b < kRate * 12 / kBlock; ++b) {
+            for (int i = 0; i < kBlock; ++i) {
+                const double t = static_cast<double>(b * kBlock + i) / kRate;
+                phase += noteHz(line[static_cast<int>(t / 0.25) % 16]) / kRate;
+                double v = 0.0;
+                for (int h = 1; h <= 6; ++h) v += std::sin(6.283185307179586 * h * phase) / h;
+                // The kick: a 150 to 50 Hz drop, every half second.
+                const double k = std::fmod(t, 0.5);
+                v += 3.0 * std::exp(-k / 0.08) * std::sin(6.283185307179586 * (50.0 * k + 100.0 * 0.03 * (1.0 - std::exp(-k / 0.03))));
+                key[i] = static_cast<float>(0.25 * v);
+            }
+            g.f->setKey(key);
+            g.f->onBlock(0, 0, 120.0f);
+            g.f->render(L, R, kBlock);
+            if (roots.empty() || roots.back() != g.f->followRoot()) roots.push_back(g.f->followRoot());
+        }
+        bool onlyRoots = true;
+        std::string seen;
+        for (int r : roots) {
+            seen += fmt("%d ", r);
+            if (r >= 0 && r % 12 != 9 && r % 12 != 5 && r % 12 != 7) onlyRoots = false;
+        }
+        check(onlyRoots && roots.size() >= 5, "a bass line over a kick: A, F and G, not the passing notes", seen);
+    }
+    // In a tuning: the bass is heard on the tuning's keys and the drones take them.
+    {
+        static float ratios[128];
+        for (int n = 0; n < 128; ++n) ratios[n] = std::pow(2.0f, (n % 2 == 0 ? 30.0f : -20.0f) / 1200.0f);
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.8f}, {"drift", 0.0f}});
+        g.f->setTuning(ratios);
+        // F1 in the tuning, 20 cents flat, played by hand.
+        double phase = 0.0;
+        const double hz = noteHz(29) * std::pow(2.0, -20.0 / 1200.0);
+        g.bass = nullptr;
+        float L[kBlock], R[kBlock], key[kBlock];
+        g.f->noteOn(69, 100);
+        for (int b = 0; b < kRate * 3 / kBlock; ++b) {
+            for (int i = 0; i < kBlock; ++i) {
+                phase += hz / kRate;
+                double v = 0.0;
+                for (int h = 1; h <= 6; ++h) v += std::sin(6.283185307179586 * h * phase) / h;
+                key[i] = static_cast<float>(0.25 * v);
+            }
+            g.f->setKey(key);
+            g.f->onBlock(0, 0, 120.0f);
+            g.f->render(L, R, kBlock);
+        }
+        check(g.f->followRoot() == 29 && std::fabs(g.f->droneNote(0) - 53.0f) < 0.01f, "in a tuning, on the tuning's F",
+              fmt("heard %d, drones on %.2f", g.f->followRoot(), g.f->droneNote(0)));
+    }
+    // Following and a finite bag, played again after a reset, repeat to the bit.
+    {
+        Pipes g({{"model", Highland}, {"sidechain", 1.0f}, {"follow", 0.7f}, {"wind", 0.35f}, {"sag", 0.8f}, {"bag", 0.5f}});
+        auto run = [&g]() {
+            g.bassPhase = 0.0;
+            g.bass = [](double t) { return t < 2.0 ? 33 : 29; };
+            g.f->noteOn(69, 100);
+            g.play(4.0);
+            g.f->noteOff(69);
+            g.play(3.0);
+        };
+        run();
+        const std::vector<float> first = g.out;
+        g.out.clear();
+        g.f->allNotesOff();
+        g.f->reset();
+        run();
+        check(first == g.out, "following and a finite bag repeat after a reset");
+    }
+    std::printf("- off, the drones stay as they were\n");
+    for (float kind : {static_cast<float>(Highland), static_cast<float>(Gurdy), static_cast<float>(Smallpipes)}) {
+        Pipes plain({{"model", kind}});
+        phrase(plain);
+        // A track to follow, but follow at 0; and follow up with no track.
+        Pipes keyed({{"model", kind}, {"sidechain", 1.0f}, {"follow", 0.0f}});
+        keyed.bass = [](double) { return 29; };
+        phrase(keyed);
+        Pipes untracked({{"model", kind}, {"follow", 1.0f}});
+        untracked.bass = [](double) { return 29; };
+        phrase(untracked);
+        check(same(plain, keyed) && same(plain, untracked), fmt("kind %d: follow 0 or no track renders as before, to the bit", static_cast<int>(kind)).c_str());
+    }
+}
+
+/** When the per-block trace first falls under [below] after [from] seconds, or -1. */
+double firstUnder(const std::vector<float> &v, float below, double from) {
+    for (size_t i = static_cast<size_t>(from * kRate / kBlock); i < v.size(); ++i)
+        if (v[i] < below) return static_cast<double>(i) * kBlock / kRate;
+    return -1.0;
+}
+
+void windBag() {
+    std::printf("- a finite bag\n");
+    // A long phrase on a weak wind drains it; the pressure holds, then sags.
+    {
+        Pipes g({{"model", Highland}, {"wind", 0.35f}, {"sag", 1.0f}, {"bag", 1.0f}, {"drift", 0.0f}, {"air", 0.0f}});
+        g.f->noteOn(69, 100);
+        g.play(12.0);
+        const float early = Pipes::at(g.store, 1.0), late = Pipes::at(g.store, 11.0);
+        check(early < 0.98f && late < early, "playing drains it", fmt("air %.2f after 1 s, %.2f after 11", early, late));
+        check(Pipes::at(g.wind, 1.0) > 0.99f && Pipes::at(g.wind, 11.0) < 0.9f, "the pressure holds, then sags",
+              fmt("%.2f, then %.2f", Pipes::at(g.wind, 1.0), Pipes::at(g.wind, 11.0)));
+        const double sharp = g.peak(430.0, 450.0, 0.5, 1.5), flat = g.peak(400.0, 450.0, 10.5, 11.5);
+        check(cents(flat, sharp) < -10.0, "and the chanter goes flat", fmt("%+.0f cents", cents(flat, sharp)));
+        // Rest with the piper still blowing: it fills again.
+        g.f->noteOff(69);
+        g.f->params().jump(g.f->params().indexOf("bag"), g.f->params().def(g.f->params().indexOf("bag")).unmap(8.0f));
+        const float before = g.store.back();
+        g.play(3.0);
+        check(g.store.back() > before + 0.2f, "a rest fills it again", fmt("%.2f to %.2f", before, g.store.back()));
+    }
+    // Ordinary playing on a fair wind never runs it dry.
+    {
+        Pipes g({{"model", Highland}, {"wind", 0.6f}, {"bag", 1.5f}});
+        for (int bar = 0; bar < 6; ++bar) {
+            g.f->noteOn(69, 100);
+            g.play(1.9);
+            g.f->noteOff(69);
+            g.play(0.1);
+        }
+        float least = 1.0f;
+        for (size_t i = static_cast<size_t>(0.5 * kRate / kBlock); i < g.wind.size(); ++i) least = std::min(least, g.wind[i]);
+        check(least > 0.99f, "a fair wind keeps up with a tune", fmt("pressure at least %.2f after the start", least));
+    }
+    std::printf("- the drones die\n");
+    // Endless bag, sag up: let go and the drones groan down and choke one by one.
+    {
+        Pipes g({{"model", Highland}, {"sag", 1.0f}, {"bag", 0.5f}, {"drift", 0.0f}, {"air", 0.0f}});
+        g.f->noteOn(69, 100);
+        g.play(2.0);
+        g.f->noteOff(69);
+        std::vector<float> open0, open2;
+        float L[kBlock], R[kBlock];
+        for (int b = 0; b < kRate * 4 / kBlock; ++b) {
+            g.f->onBlock(0, 0, 120.0f);
+            g.f->render(L, R, kBlock);
+            g.out.insert(g.out.end(), L, L + kBlock);
+            open0.push_back(g.f->droneOpen(0));
+            open2.push_back(g.f->droneOpen(2));
+        }
+        const double first = firstUnder(open0, 0.5f, 0.0), last = firstUnder(open2, 0.5f, 0.0);
+        check(first > 0.0 && last > first + 0.1, "the drones choke one by one", fmt("the first at %.2f s, the bass at %.2f s", first, last));
+        // The bass drone, A2, falls as it dies.
+        const double full = g.peak(100.0, 120.0, 1.0, 2.0);
+        const double dying = g.peak(90.0, 120.0, 2.0 + last - 0.25, 2.0 + last);
+        check(cents(dying, full) < -40.0, "and groan down as they go", fmt("the bass drone %+.0f cents", cents(dying, full)));
+        check(g.rms(5.5, 6.0) < -90.0, "and then they're gone", fmt("%.1f dB", g.rms(5.5, 6.0)));
+    }
+    // A finite bag empties after a long phrase let go.
+    {
+        Pipes g({{"model", Smallpipes}, {"wind", 0.4f}, {"sag", 0.5f}, {"bag", 0.5f}});
+        g.f->noteOn(69, 100);
+        g.play(6.0);
+        g.f->noteOff(69);
+        g.play(5.0);
+        check(g.store.back() == 0.0f && g.rms(10.5, 11.0) < -90.0, "let go, the bag empties and the drones stop",
+              fmt("air %.2f, %.1f dB", g.store.back(), g.rms(10.5, 11.0)));
+    }
+    // From an empty bag the piper strikes in: the next note speaks at once.
+    {
+        Pipes g({{"model", Highland}, {"wind", 0.4f}, {"bag", 0.2f}, {"drift", 0.0f}});
+        g.f->noteOn(69, 100);
+        g.play(4.0);
+        g.f->noteOff(69);
+        g.play(4.0);
+        g.f->noteOn(69, 100);
+        g.play(1.0);
+        check(g.store[static_cast<size_t>(7.9 * kRate / kBlock)] < 0.05f && g.level(noteHz(69), 8.2, 8.6) > g.level(noteHz(69), 2.0, 2.4) - 6.0,
+              "an empty bag strikes in for the next note", fmt("%.1f dB against %.1f", g.level(noteHz(69), 8.2, 8.6), g.level(noteHz(69), 2.0, 2.4)));
+    }
+    std::printf("- the wheel coasts\n");
+    {
+        Pipes g({{"model", Gurdy}, {"wind", 0.4f}, {"sag", 1.0f}, {"bag", 0.3f}, {"drift", 0.0f}, {"dog", 0.0f}});
+        g.f->noteOn(69, 100);
+        g.play(10.0);
+        check(Pipes::at(g.wind, 9.5) < 0.9f, "a long phrase on a tired arm slows the wheel", fmt("%.2f", Pipes::at(g.wind, 9.5)));
+        g.f->noteOff(69);
+        g.play(4.0);
+        const double half = firstUnder(g.wind, 0.5f * Pipes::at(g.wind, 10.3), 10.3);
+        check(half > 10.6, "let go, it coasts down rather than stops", fmt("half speed %.2f s after", half - 10.3));
+        const double full = g.peak(100.0, 120.0, 10.35, 10.55), slow = g.peak(90.0, 120.0, half - 0.1, half + 0.1);
+        check(cents(slow, full) < -10.0, "and the strings sag with it", fmt("%+.0f cents", cents(slow, full)));
+    }
+    std::printf("- launeddas breathe in\n");
+    {
+        Pipes g({{"model", 12.0f}, {"wind", 0.2f}});
+        g.f->noteOn(69, 100);
+        g.play(8.0);
+        int dips = 0;
+        for (size_t i = 1; i < g.wind.size(); ++i)
+            if (g.wind[i] < 0.9f && g.wind[i - 1] >= 0.9f) ++dips;
+        check(dips >= 2 && g.store.back() == 1.0f, "a breath through the nose every few seconds, no bag", fmt("%d dips", dips));
+    }
+}
+
 /** How deep the two melody strings beat on a held note, dB: the swing of a 50 ms RMS over eight seconds, drones and dog off. */
 double beating(int note) {
     Pipes g({{"model", Gurdy}, {"drones", 0.0f}, {"dog", 0.0f}, {"drift", 0.0f}});
@@ -477,6 +801,8 @@ int main() {
     dog();
     lifecycle();
     melodyBeat();
+    follow();
+    windBag();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

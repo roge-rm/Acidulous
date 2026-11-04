@@ -1,8 +1,9 @@
 # Chanter
 
 > Cornemuses et vielle à roue modélisées : des bourdons qui continuent entre
-> les notes, des notes d’agrément, et une roue dont le chevalet libre
-> grésille en rythme.
+> les notes et peuvent suivre la basse du morceau, une poche qui se vide,
+> des notes d’agrément, et une roue dont le chevalet libre grésille en
+> rythme.
 
 Chanter ne joue pas d’enregistrements. Une cornemuse, ici, c’est un
 chalumeau, un tuyau conique à anche double (le même modèle que celui de
@@ -34,15 +35,51 @@ grésiller en rythme.
 - **accordage** : en cents.
 - **tonique** : la tonalité sur laquelle sont accordés les bourdons.
 - **bourdons** : le volume des bourdons.
-- **poche** : combien de secondes les bourdons continuent après qu’on a
-  lâché la dernière touche. Sur la vielle, combien de temps la roue tourne
-  encore.
 - **anche** : une anche de chalumeau douce ou dure : plus sombre ou plus
   brillante.
 - **agrément** : une note aiguë et brève avant chaque note, en
   millisecondes. À 0, aucune.
 - **dérive** : combien la pression de la poche varie quand on la serre.
 - **air** : le souffle dans les anches.
+
+## Morceau
+
+Les bourdons peuvent suivre la basse d’une autre piste.
+
+- **de la piste** : la piste à écouter, ou **non**. Prenez la basse, ou un
+  groupe où elle se trouve. Charger un patch garde la piste.
+- **suivre** : la vitesse à laquelle les bourdons vont sur la note de basse
+  sur laquelle la piste s’appuie. À 0, ils restent sur la tonique. Bas, une
+  note doit tenir environ une seconde avant qu’ils y aillent, pour que les
+  notes de passage ne les entraînent pas ; en haut, ils suivent presque
+  chaque note. Ils gardent leurs intervalles (un bourdon basse reste une
+  octave plus bas) et restent près de l’octave de la tonique. Dans un
+  tempérament, ils prennent les notes du tempérament.
+- **porta.** : la durée d’un déplacement, en secondes. Les bourdons des
+  tuyaux glissent comme une anche qu’on tire, avec un petit creux en
+  chemin. Les bourdons et la trompette de la vielle se réaccordent
+  régulièrement, comme une cheville qu’on tourne. À 0, ils sautent.
+
+## Poche
+
+- **poche** : combien de secondes le sonneur continue de souffler après
+  qu’on a lâché la dernière touche, pour que les bourdons continuent. Sur
+  la vielle, combien de temps on tourne encore la manivelle.
+- **vent** : la part de ce que les tuyaux consomment que le souffle du
+  sonneur remet. À 1, la poche ne se vide jamais. À 0,5, elle suit tout
+  juste le jeu, les silences la remplissent, et en dessous un long air la
+  vide : la pression tient jusqu’à ce que la poche mollisse, puis baisse.
+  Lâchez, et le reste est pressé à travers les bourdons. Sur la vielle,
+  c’est le bras sur la manivelle : la roue ralentit pendant un long air et
+  continue sur son élan quand on la laisse. Les launeddas n’ont pas de
+  poche : le vent règle la fréquence à laquelle le joueur inspire par le
+  nez, avec un creux de pression à chaque fois.
+- **affaiss.** : de combien la hauteur baisse quand la pression tombe.
+  Quand la poche se vide, le chalumeau baisse et s’amincit et les bourdons
+  s’étouffent un par un, chacun descendant encore en mourant, le
+  gémissement des cornemuses. Avec le vent à 1, l’affaissement donne quand
+  même ce gémissement quand les bourdons s’éteignent après la dernière
+  note.
 
 ## Vielle à roue
 
@@ -64,7 +101,8 @@ grésiller en rythme.
 - **vélocité**, **octave**, **bend** et **volume**.
 
 La pression, ou la molette de modulation, serre la poche (un peu plus fort
-et plus haut) ou pousse la roue de la vielle : le chien grésille à la main.
+et plus haut, et une poche limitée se vide plus vite) ou pousse la roue de
+la vielle : le chien grésille à la main.
 
 ## Macros
 
@@ -77,8 +115,8 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace les notes jouées ensuite, 24
-demi-tons à 1. Le modèle, l’accordage, la tonique, le coup, les temps, l’octave
-et le bend ne sont pas accessibles. Un changement d’agrément ou de vélocité
+demi-tons à 1. Le modèle, l’accordage, la tonique, le coup, les temps, de la piste, le
+porta., l’octave et le bend ne sont pas accessibles. Un changement d’agrément ou de vélocité
 s’entend à la note suivante ; le reste bouge tout de suite. Touchez le nom
 d’une macro pour la renommer.
 
@@ -87,5 +125,8 @@ d’une macro pour la renommer.
 - Les deux jouent une note à la fois : la dernière touche tenue sonne.
 - Tenez une note sur une présélection **bourdons** puis lâchez : les
   bourdons continuent.
+- Les présélections **song** suivent la basse de la piste 1 ; réglez **de
+  la piste** sur votre piste de basse. Les présélections **bag** se vident
+  exprès : jouez un long air et lâchez à la fin.
 - Sur **Hurdy-Gurdy**, appuyez sur une touche ou poussez la molette pour
   faire grésiller le chien.
