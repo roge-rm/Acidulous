@@ -1938,7 +1938,14 @@ std::shared_ptr<const audio::Reel::Source> EngineHost::sourceFor(const std::stri
 /**
  * Loads an audio track's regions, one line per lane per cell:
  *
- *   sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop
+ *   sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop|fadeIn|fadeOut
+ *
+ * A comped lane follows its region line with more takes and the pieces to
+ * play. The region line's file is take 0, the take lines are 1, 2, ... in
+ * order, and piece start and end are frames into the region:
+ *
+ *   take|sceneId|lane|absPath|offset
+ *   piece|sceneId|lane|start|end|take
  *
  * Each distinct file is decoded once however many lines use it, as int16
  * with mono kept mono (see engine/core/Reel.h). An empty spec clears the reel.
@@ -1965,6 +1972,36 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         std::string part;
         std::istringstream fields(line);
         while (std::getline(fields, part, '|')) f.push_back(part);
+        if (!f.empty() && (f[0] == "take" || f[0] == "piece")) {
+            const bool isTake = f[0] == "take";
+            if (f.size() < (isTake ? 5u : 6u)) {
+                LOGE("reel: short %s line: %s", f[0].c_str(), line.c_str());
+                continue;
+            }
+            const int64_t sceneId = std::strtoll(f[1].c_str(), nullptr, 10);
+            const int32_t lane = std::atoi(f[2].c_str());
+            audio::Reel::Region *r = nullptr;
+            for (auto &c : reel->cells) {
+                if (c.sceneId == sceneId && lane >= 0 && lane < audio::kReelLanes && c.lanes[lane].source) {
+                    r = &c.lanes[lane];
+                }
+            }
+            if (r == nullptr) {
+                LOGE("reel: %s before its region: %s", f[0].c_str(), line.c_str());
+                continue;
+            }
+            if (r->takes.empty()) r->takes.push_back({r->source, r->offset});
+            if (isTake) {
+                auto &src = decoded[f[3]];
+                if (src == nullptr) src = sourceFor(f[3], totalFrames, mapped);
+                // A take that won't read stays in the stack as a gap, so the
+                // pieces' take numbers still line up. settle() drops its pieces.
+                r->takes.push_back({src, std::atoi(f[4].c_str())});
+            } else {
+                r->pieces.push_back({std::atoi(f[3].c_str()), std::atoi(f[4].c_str()), std::atoi(f[5].c_str())});
+            }
+            continue;
+        }
         if (f.size() < 9) {
             LOGE("reel: %zu fields, wanted 9: %s", f.size(), line.c_str());
             continue;
@@ -1989,6 +2026,8 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
             cell->sceneId = sceneId;
         }
         audio::Reel::Region &r = cell->lanes[lane];
+        r.takes.clear();
+        r.pieces.clear();
         r.source = src;
         r.offset = std::atoi(f[3].c_str());
         r.frames = std::atoi(f[4].c_str());
@@ -2001,12 +2040,22 @@ std::string EngineHost::loadReel(int rack, const std::string &spec) {
         r.fadeOut = f.size() > 10 ? std::atoi(f[10].c_str()) : 0;
     }
 
+    // Comped lanes: tidy the pieces and move the joins to quiet spots.
+    for (auto &cell : reel->cells) {
+        for (auto &r : cell.lanes) {
+            if (r.source) r.settle();
+        }
+    }
+
     // Prefetch the start of every region while still on the loader thread,
     // so the audio thread doesn't take a page fault on a mapped take's first
     // block. It's only a hint, so it costs nothing if the kernel ignores it.
     for (const auto &cell : reel->cells) {
         for (const auto &r : cell.lanes) {
             if (r.source) r.source->willNeed(r.offset, kSampleRate);
+            for (const auto &t : r.takes) {
+                if (t.source) t.source->willNeed(t.offset, kSampleRate);
+            }
         }
     }
 

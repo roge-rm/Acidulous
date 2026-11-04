@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <algorithm>
 #include <engine/core/Mapping.h>
 #include <memory>
 #include <vector>
@@ -35,6 +36,18 @@ constexpr int32_t kMaxReelSeconds = 1800;
 
 /** How many lanes Bias has, like a four-track. */
 constexpr int32_t kReelLanes = 4;
+
+/** How long a join between two pieces crossfades: 5 ms at 48 kHz, centred on the join. */
+constexpr int32_t kJoinFadeFrames = 240;
+
+/** How far either way a join may move to find a quiet spot: 40 ms at 48 kHz. */
+constexpr int32_t kJoinSearchFrames = 1920;
+
+/** What the loudness at a candidate join is measured over: the span its crossfade covers. */
+constexpr int32_t kJoinQuietFrames = kJoinFadeFrames;
+
+/** Candidate joins are tried this many frames apart. */
+constexpr int32_t kJoinStepFrames = 4;
 
 /**
  * Float to int16, clamped and rounded.
@@ -126,6 +139,218 @@ struct Reel {
         int32_t fadeIn = 0;
         int32_t fadeOut = 0;
 
+        /**
+         * The stack of takes for a comp. Each is a file and where this cell
+         * starts in it, all recorded against the same cycle, so frame [at]
+         * of the region is frame `offset + at` of every take. Empty for a
+         * lane with one take, which is `source` and `offset` above.
+         */
+        struct Take {
+            std::shared_ptr<const Source> source;
+            int32_t offset = 0;
+        };
+        std::vector<Take> takes;
+
+        /**
+         * A stretch of the region, [start, end) in region frames, played from
+         * one take. Pieces that meet crossfade over `kJoinFadeFrames` centred
+         * on the join. An edge next to a gap fades the same way into silence.
+         */
+        struct Piece {
+            int32_t start = 0;
+            int32_t end = 0;
+            int32_t take = 0;
+        };
+        /** Sorted and settled (see settle()). Empty plays `source` whole. */
+        std::vector<Piece> pieces;
+
+        bool comped() const { return !pieces.empty(); }
+
+        /** Whether any take this region plays is stereo. */
+        bool stereo() const {
+            if (pieces.empty()) return source != nullptr && source->stereo;
+            for (const Take &t : takes) {
+                if (t.source != nullptr && t.source->stereo) return true;
+            }
+            return false;
+        }
+
+        /** Where piece [k] starts sounding, its fade-in included. */
+        int32_t soundsFrom(size_t k) const {
+            const Piece &p = pieces[k];
+            return p.start > 0 ? p.start - kJoinFadeFrames / 2 : p.start;
+        }
+
+        /** Where piece [k] stops sounding, its fade-out included. */
+        int32_t soundsTo(size_t k) const {
+            const Piece &p = pieces[k];
+            return p.end < frames ? p.end + kJoinFadeFrames / 2 : p.end;
+        }
+
+        /** Piece [k]'s level at [at] region frames, equal power at its edges. */
+        float pieceGain(size_t k, int64_t at) const {
+            const Piece &p = pieces[k];
+            constexpr float kHalf = static_cast<float>(kJoinFadeFrames / 2);
+            constexpr float kPer = 1.0f / static_cast<float>(kJoinFadeFrames);
+            float g = 1.0f;
+            if (p.start > 0) g = (static_cast<float>(at - p.start) + kHalf) * kPer;
+            if (p.end < frames) {
+                const float k2 = (static_cast<float>(p.end - at) + kHalf) * kPer;
+                g = g < k2 ? g : k2;
+            }
+            if (g <= 0.0f) return 0.0f;
+            if (g >= 1.0f) return 1.0f;
+            return std::sin(g * 1.5707963f);
+        }
+
+        /**
+         * The comp at [at] region frames, scaled to +-1, before `fadeAt`.
+         *
+         * Audio thread. [hint] is the piece the last read used. Reads walk
+         * from it, so reading forward costs nothing and a jump costs the
+         * pieces crossed. The answer doesn't depend on the hint.
+         */
+        void compAt(int64_t at, int32_t &hint, float &l, float &r) const {
+            l = r = 0.0f;
+            const int32_t n = static_cast<int32_t>(pieces.size());
+            if (n == 0) return;
+            int32_t k = hint < 0 ? 0 : (hint >= n ? n - 1 : hint);
+            // The first piece still sounding at [at]. Pieces are at least a
+            // fade long, so no more than two sound at once.
+            while (k > 0 && soundsTo(static_cast<size_t>(k - 1)) > at) --k;
+            while (k < n - 1 && soundsTo(static_cast<size_t>(k)) <= at) ++k;
+            hint = k;
+            for (int32_t j = k; j < n && j <= k + 1; ++j) {
+                if (at < soundsFrom(static_cast<size_t>(j)) || at >= soundsTo(static_cast<size_t>(j))) continue;
+                const Take &t = takes[static_cast<size_t>(pieces[static_cast<size_t>(j)].take)];
+                const int64_t s = t.offset + at;
+                if (s < 0 || s >= t.source->frames) continue;
+                const float g = pieceGain(static_cast<size_t>(j), at) * (1.0f / 32768.0f);
+                l += static_cast<float>(t.source->lp[static_cast<size_t>(s)]) * g;
+                r += static_cast<float>(t.source->rp[static_cast<size_t>(s)]) * g;
+            }
+        }
+
+        /**
+         * Tidies the pieces and moves each join to a quiet spot. Run once
+         * when the reel is built, never on the audio thread.
+         *
+         * Pieces are clamped to the region and sorted, a later piece cuts
+         * short the one it overlaps, neighbours from the same take merge, and
+         * pieces shorter than a fade are dropped. One piece over the whole
+         * region becomes a plain region of its take, so it plays exactly as
+         * a lane with one take does. Each edge inside the region then moves
+         * up to `kJoinSearchFrames` either way, to where the takes either
+         * side of it are quietest.
+         */
+        void settle() {
+            if (pieces.empty()) return;
+            if (takes.empty()) takes.push_back({source, offset});
+            std::vector<Piece> kept;
+            for (Piece p : pieces) {
+                if (p.take < 0 || p.take >= static_cast<int32_t>(takes.size())) continue;
+                if (takes[static_cast<size_t>(p.take)].source == nullptr) continue;
+                p.start = std::max(p.start, 0);
+                p.end = std::min(p.end, frames);
+                if (p.end > p.start) kept.push_back(p);
+            }
+            std::stable_sort(kept.begin(), kept.end(),
+                             [](const Piece &a, const Piece &b) { return a.start < b.start; });
+            std::vector<Piece> out;
+            for (const Piece &p : kept) {
+                if (!out.empty() && out.back().end > p.start) out.back().end = p.start;
+                if (!out.empty() && out.back().end - out.back().start < kJoinFadeFrames) out.pop_back();
+                if (!out.empty() && out.back().take == p.take && out.back().end == p.start) {
+                    out.back().end = p.end;
+                    continue;
+                }
+                out.push_back(p);
+            }
+            if (!out.empty() && out.back().end - out.back().start < kJoinFadeFrames) out.pop_back();
+            pieces = std::move(out);
+
+            if (pieces.size() == 1 && pieces[0].start == 0 && pieces[0].end == frames) {
+                const Take &t = takes[static_cast<size_t>(pieces[0].take)];
+                source = t.source;
+                offset = t.offset;
+                pieces.clear();
+                takes.clear();
+                return;
+            }
+            if (pieces.empty()) {
+                // Nothing left to play, which is silence, not take one.
+                frames = 0;
+                takes.clear();
+                return;
+            }
+
+            const int32_t n = static_cast<int32_t>(pieces.size());
+            for (int32_t k = 0; k < n; ++k) {
+                Piece &p = pieces[static_cast<size_t>(k)];
+                const bool joined = k + 1 < n && pieces[static_cast<size_t>(k + 1)].start == p.end;
+                // The start, unless the piece before already moved it as its join.
+                const bool startJoined = k > 0 && pieces[static_cast<size_t>(k - 1)].end == p.start;
+                if (p.start > 0 && !startJoined) {
+                    const int32_t lo = k > 0 ? pieces[static_cast<size_t>(k - 1)].end + kJoinFadeFrames : kJoinFadeFrames / 2;
+                    const int32_t hi = p.end - kJoinFadeFrames;
+                    p.start = quietest(p.start, lo, hi, p.take, -1);
+                }
+                if (p.end < frames) {
+                    const int32_t lo = p.start + kJoinFadeFrames;
+                    int32_t hi = frames - kJoinFadeFrames / 2;
+                    int32_t other = -1;
+                    if (k + 1 < n) {
+                        const Piece &q = pieces[static_cast<size_t>(k + 1)];
+                        hi = joined ? q.end - kJoinFadeFrames : q.start - kJoinFadeFrames;
+                        if (joined) other = q.take;
+                    }
+                    p.end = quietest(p.end, lo, hi, p.take, other);
+                    if (joined) pieces[static_cast<size_t>(k + 1)].start = p.end;
+                }
+            }
+        }
+
+      private:
+        /** The energy of take [t] over the quiet window centred on [at]. */
+        double energyNear(int32_t t, int32_t at) const {
+            if (t < 0) return 0.0;
+            const Take &k = takes[static_cast<size_t>(t)];
+            double e = 0.0;
+            for (int32_t i = at - kJoinQuietFrames / 2; i < at + kJoinQuietFrames / 2; ++i) {
+                const int64_t s = static_cast<int64_t>(k.offset) + i;
+                if (s < 0 || s >= k.source->frames) continue;
+                const double l = k.source->lp[static_cast<size_t>(s)];
+                const double r = k.source->rp[static_cast<size_t>(s)];
+                e += l * l + r * r;
+            }
+            return e;
+        }
+
+        /**
+         * The quietest point for a join near [at], within [lo, hi], summed
+         * over takes [a] and [b] (-1 for none). The nearest wins a tie, so a
+         * join in silence stays where it was put.
+         */
+        int32_t quietest(int32_t at, int32_t lo, int32_t hi, int32_t a, int32_t b) const {
+            lo = std::max(lo, at - kJoinSearchFrames);
+            hi = std::min(hi, at + kJoinSearchFrames);
+            if (lo > hi) return at;
+            int32_t best = std::clamp(at, lo, hi);
+            double bestE = energyNear(a, best) + energyNear(b, best);
+            for (int32_t d = kJoinStepFrames; d <= kJoinSearchFrames; d += kJoinStepFrames) {
+                for (const int32_t c : {at - d, at + d}) {
+                    if (c < lo || c > hi) continue;
+                    const double e = energyNear(a, c) + energyNear(b, c);
+                    if (e < bestE) {
+                        bestE = e;
+                        best = c;
+                    }
+                }
+            }
+            return best;
+        }
+
+      public:
         /** The envelope at [at] frames into the region: 0..1. */
         float fadeAt(int64_t at) const {
             float g = 1.0f;

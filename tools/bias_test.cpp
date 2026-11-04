@@ -7,6 +7,7 @@
 // The reel is built from a ramp, so each sample holds its own frame index and
 // the output says exactly where it was read from. Everything outside a region
 // holds a sentinel value, so reading past the end shows up.
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -557,6 +558,185 @@ void fadesAreEqualPowerSoACrossfadeHolds() {
        plain.fadeAt(0) == 1.0f && plain.fadeAt(kLen / 2) == 1.0f && plain.fadeAt(kLen) == 1.0f);
 }
 
+
+// --- Comps ----------------------------------------------------------------------
+
+/** Renders [frames] of scene 1 from the top, in 64-frame blocks at 120 bpm, left channel. */
+std::vector<float> playCell(Rig &rig, int32_t frames, bool stretch = false) {
+    rig.bias->onBlock(0, 0, 120.0f);
+    rig.bias->params().set(machine::Bias::Stretch, stretch ? 1.0f : 0.0f);
+    rig.bias->params().jumpAll();
+    std::vector<float> out;
+    for (int32_t at = 0; at < frames; at += 64) {
+        rig.bias->onScene(1, at / kFramesPerTick, true, false);
+        rig.bias->render(rig.L, rig.R, 64);
+        out.insert(out.end(), rig.L, rig.L + 64);
+    }
+    return out;
+}
+
+/** A sine at [hz] and [level] of full scale, with silence over [quietFrom, quietTo). */
+std::shared_ptr<Reel::Source> sine(int32_t frames, float hz, float level, int32_t quietFrom = 0,
+                                   int32_t quietTo = 0) {
+    auto s = std::make_shared<Reel::Source>();
+    std::vector<int16_t> planes(static_cast<size_t>(frames));
+    for (int32_t i = 0; i < frames; ++i) {
+        const bool quiet = i >= quietFrom && i < quietTo;
+        planes[static_cast<size_t>(i)] =
+            quiet ? 0 : toI16(level * std::sin(6.2831853f * hz * static_cast<float>(i) / kRate));
+    }
+    s->hold(std::move(planes), frames, false);
+    return s;
+}
+
+/** Each piece plays its own take, at the frames the region says. */
+void piecesReadTheirOwnTake() {
+    printf("- pieces from a stack of takes\n");
+    Rig rig;
+    const int32_t total = kBarFrames * 4;
+    auto file = ramped(total, 0, total);
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(file, 0, kBarFrames, kBarTicks);
+    // Two takes: the head of the file and two bars into it.
+    r.takes = {{file, 0}, {file, kBarFrames * 2}};
+    r.pieces = {{0, kBarFrames / 2, 0}, {kBarFrames / 2, kBarFrames, 1}};
+    r.settle();
+    rig.reel.cells = {cell};
+    rig.mount();
+
+    const int64_t quarter = kBarTicks / 4, threeQuarters = kBarTicks * 3 / 4;
+    ok("the first piece reads take one", near(rig.probe(1, quarter), expectRamp(kBarFrames / 4)));
+    const float second = rig.probe(1, threeQuarters);
+    ok("the second reads take two, at the same place in the cell",
+       near(second, expectRamp(kBarFrames * 2 + kBarFrames * 3 / 4)),
+       "wanted frame " + std::to_string(kBarFrames * 2 + kBarFrames * 3 / 4));
+    ok("and never the poison past either", second > 0.0f);
+
+    // Stretch on at another tempo still reads the pieces, not take one whole.
+    Rig fast;
+    Reel::Cell flatCell{1, {}};
+    Reel::Region &f = flatCell.lanes[0] = region(flat(kBarFrames, 1000), 0, kBarFrames, kBarTicks);
+    f.takes = {{f.source, 0}, {flat(kBarFrames, 3000), 0}};
+    f.pieces = {{0, kBarFrames / 2, 0}, {kBarFrames / 2, kBarFrames, 1}};
+    f.settle();
+    fast.reel.cells = {flatCell};
+    fast.mount();
+    fast.bias->onBlock(0, 0, 100.0f);
+    fast.bias->params().set(machine::Bias::Stretch, 1.0f);
+    fast.bias->params().jumpAll();
+    float late = 0.0f;
+    const double perTick = kRate * 60.0 / (100.0 * kPPQN);
+    for (int32_t at = 0; at < kBarFrames; at += 64) {
+        fast.bias->onScene(1, static_cast<int64_t>(at / perTick), true, false);
+        fast.bias->render(fast.L, fast.R, 64);
+        if (at >= kBarFrames * 3 / 4 && at < kBarFrames * 3 / 4 + 64) late = fast.L[32];
+    }
+    ok("stretched, the second piece still comes from take two",
+       std::fabs(late - 3000.0f / 32768.0f) < 0.005f, std::to_string(late * 32768.0f));
+}
+
+/** Two pieces that meet crossfade, so there's no step where they join. */
+void aJoinCrossfades() {
+    printf("- a join crossfades\n");
+    Rig rig;
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(flat(kBarFrames, 1000), 0, kBarFrames, kBarTicks);
+    r.takes = {{r.source, 0}, {flat(kBarFrames, 3000), 0}};
+    const int32_t seam = kBarFrames / 2;
+    r.pieces = {{0, seam, 0}, {seam, kBarFrames, 1}};
+    r.settle();
+    ok("between two flat takes the join stays where it was put", r.pieces[0].end == seam,
+       std::to_string(r.pieces[0].end));
+    rig.reel.cells = {cell};
+    rig.mount();
+    const std::vector<float> out = playCell(rig, kBarFrames);
+
+    float step = 0.0f;
+    for (int32_t i = seam - 1000; i < seam + 1000; ++i) {
+        step = std::max(step, std::fabs(out[static_cast<size_t>(i + 1)] - out[static_cast<size_t>(i)]));
+    }
+    // A cut would step by 2000. Over a 240-frame fade the steepest step is
+    // about 2000 * pi/2 / 240.
+    ok("no step at the join", step * 32768.0f < 40.0f, std::to_string(step * 32768.0f) + " a sample");
+    ok("take one before it", near(out[static_cast<size_t>(seam - kJoinFadeFrames)], 1000.0f / 32768.0f));
+    ok("take two after it", near(out[static_cast<size_t>(seam + kJoinFadeFrames)], 3000.0f / 32768.0f));
+    ok("and both in the middle of it",
+       out[static_cast<size_t>(seam)] > 1500.0f / 32768.0f && out[static_cast<size_t>(seam)] < 2900.0f / 32768.0f,
+       std::to_string(out[static_cast<size_t>(seam)] * 32768.0f));
+}
+
+/** A join moves to a quiet spot nearby, like the breath between two phrases. */
+void aJoinFindsAQuietSpot() {
+    printf("- a join moves somewhere quiet\n");
+    Rig rig;
+    const int32_t seam = kBarFrames / 2;
+    // Both takes breathe 15-30 ms after where the join was asked for.
+    const int32_t from = seam + 720, to = seam + 1440;
+    Reel::Cell cell{1, {}};
+    Reel::Region &r = cell.lanes[0] = region(sine(kBarFrames, 220.0f, 0.5f, from, to), 0, kBarFrames, kBarTicks);
+    r.takes = {{r.source, 0}, {sine(kBarFrames, 330.0f, 0.5f, from, to), 0}};
+    r.pieces = {{0, seam, 0}, {seam, kBarFrames, 1}};
+    r.settle();
+    const int32_t moved = r.pieces[0].end;
+    ok("the join moved into the gap", moved - kJoinFadeFrames / 2 >= from && moved + kJoinFadeFrames / 2 <= to,
+       "at " + std::to_string(moved - seam) + " frames from where it was asked for");
+    ok("and the next piece starts there", r.pieces[1].start == moved);
+    rig.reel.cells = {cell};
+    rig.mount();
+    const std::vector<float> out = playCell(rig, kBarFrames);
+    float loudest = 0.0f;
+    for (int32_t i = moved - kJoinFadeFrames / 2; i < moved + kJoinFadeFrames / 2; ++i) {
+        loudest = std::max(loudest, std::fabs(out[static_cast<size_t>(i)]));
+    }
+    ok("so the crossfade is over silence", loudest == 0.0f, std::to_string(loudest));
+
+    // An edge into a gap between pieces moves the same way.
+    Reel::Region g = region(sine(kBarFrames, 220.0f, 0.5f, from, to), 0, kBarFrames, kBarTicks);
+    g.pieces = {{0, seam, 0}, {seam + 4800, kBarFrames, 0}};
+    g.takes = {{g.source, 0}, {g.source, 0}};
+    g.pieces[1].take = 1;
+    g.settle();
+    ok("an edge into a gap moves too", g.pieces[0].end - kJoinFadeFrames / 2 >= from &&
+                                           g.pieces[0].end + kJoinFadeFrames / 2 <= to,
+       std::to_string(g.pieces[0].end - seam));
+}
+
+/** A lane with one take, or one piece over all of it, plays exactly as before. */
+void oneTakeIsUnchanged() {
+    printf("- one take is a plain lane\n");
+    const int32_t total = kBarFrames * 2;
+    auto file = sine(total, 220.0f, 0.5f);
+    auto other = sine(total, 330.0f, 0.5f);
+    const auto play = [&](Reel::Region r) {
+        Rig rig;
+        Reel::Cell cell{1, {}};
+        cell.lanes[0] = std::move(r);
+        rig.reel.cells = {cell};
+        rig.mount();
+        return playCell(rig, kBarFrames);
+    };
+    const std::vector<float> plain = play(region(file, 1000, kBarFrames, kBarTicks));
+
+    Reel::Region whole = region(file, 1000, kBarFrames, kBarTicks);
+    whole.pieces = {{0, kBarFrames, 0}};
+    whole.settle();
+    ok("one piece over the whole region is a plain region", !whole.comped());
+    ok("and renders the same, bit for bit", play(whole) == plain);
+
+    Reel::Region same = region(file, 1000, kBarFrames, kBarTicks);
+    same.takes = {{file, 1000}, {other, 0}};
+    same.pieces = {{0, kBarFrames / 3, 0}, {kBarFrames / 3, kBarFrames, 0}};
+    same.settle();
+    ok("pieces of one take, end to end, merge into a plain region", !same.comped() && play(same) == plain);
+
+    Reel::Region second = region(file, 1000, kBarFrames, kBarTicks);
+    second.takes = {{file, 1000}, {other, 500}};
+    second.pieces = {{0, kBarFrames, 1}};
+    second.settle();
+    ok("one piece of take two plays take two plainly",
+       !second.comped() && play(second) == play(region(other, 500, kBarFrames, kBarTicks)));
+}
+
 } // namespace
 
 int main() {
@@ -578,6 +758,10 @@ int main() {
     aLongTakeIsMappedAndReadsTheSame();
     aTakeCanFollowTheSong();
     fadesAreEqualPowerSoACrossfadeHolds();
+    piecesReadTheirOwnTake();
+    aJoinCrossfades();
+    aJoinFindsAQuietSpot();
+    oneTakeIsUnchanged();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

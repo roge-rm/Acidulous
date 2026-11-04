@@ -18,6 +18,9 @@
 // With Stretch off, a take starts on the bar and plays at its own speed, so
 // at another tempo it drifts by at most one cycle. Past the end of its region
 // a lane goes silent, it doesn't loop.
+//
+// A lane can also be a comp: a stack of takes and the pieces of them to
+// play, joined by short crossfades (see `Reel::Region::pieces`).
 namespace acidulous::machine {
 
 class Bias final : public Machine {
@@ -104,6 +107,8 @@ class Bias final : public Machine {
     const audio::Reel *reel = nullptr;
     const audio::Reel::Cell *cell = nullptr;
     audio::FrameCursor cursors[audio::kReelLanes];
+    /** The piece each comped lane last read, so reading on finds the next without a search. */
+    int32_t pieceHint[audio::kReelLanes] = {};
     int64_t cycleTick = 0;
     float sampleRate = 48000.0f;
     bool playing = false;
