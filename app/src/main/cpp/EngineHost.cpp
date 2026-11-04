@@ -2627,6 +2627,9 @@ std::string EngineHost::compCell(int rack, int64_t sceneId, int32_t frames, floa
         }
     } offline{rendering};
     sAudio.stop();
+    // The tape pushed just before this call can still be queued; land it so
+    // the comp plays the cell it was asked about.
+    sEngine.landMounts();
     // Asked again now that nothing can swap it: it could have been replaced
     // just before the stop.
     Machine *m = sEngine.racks[rack].currentMachine();
@@ -2690,8 +2693,23 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
         ~Guard() { flag.store(false); }
     } guard{rendering};
 
-    // Read while the audio thread is still running, so the snapshot could be
-    // replaced by an edit mid-read (see Retirer::ReadGuard).
+    // Take the engine off the device and render at full quality, so the
+    // frozen track matches the others. Back on at every return.
+    const OfflineRender renderingAtFullQuality;
+    struct Offline {
+        bool on = true;
+        void restart() {
+            if (on && !sAudio.start()) LOGE("audio failed to restart after a freeze");
+            on = false;
+        }
+        ~Offline() { restart(); }
+    } offline;
+    sAudio.stop();
+    // A song or machine pushed just before this call can still be queued for
+    // the audio thread, so land it here, or the freeze would read the song
+    // before it.
+    sEngine.landMounts();
+
     int32_t sceneIdx = -1;
     int64_t ticks = 0;
     float bpm = 0.0f;
@@ -2714,10 +2732,6 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     if (clipFrames <= 0) return "that clip is too short to render";
     const int64_t tailFrames = static_cast<int64_t>(std::max(0.0f, tailSeconds) * kSampleRate);
 
-    // Take the engine off the device and render at full quality, so the
-    // frozen track matches the others.
-    const OfflineRender renderingAtFullQuality;
-    sAudio.stop();
     const bool loopSongBefore = sEngine.transport.loopSong();
     const bool loopSceneBefore = sEngine.transport.loopScene();
     // This drives the scheduler through one scene by hand, so clip mode is
@@ -2819,7 +2833,7 @@ std::string EngineHost::freezeClip(int rack, int64_t sceneId, const std::string 
     sEngine.transport.setLoopSong(loopSongBefore);
     sEngine.transport.setLoopScene(loopSceneBefore);
     sEngine.transport.setLauncher(launcherBefore);
-    if (!sAudio.start()) LOGE("audio failed to restart after a freeze");
+    offline.restart();
 
     // The tail is stored after the clip instead of mixed into its start. The
     // rack plays it with a second cursor, so the first pass has no tail, the

@@ -1330,6 +1330,15 @@ void Engine::applyMounts() {
     }
 }
 
+void Engine::landMounts() {
+    // Bounded by the queue's size, so pushes arriving meanwhile can't keep it here.
+    for (int32_t n = 0; n < kMountQueueSize; ++n) {
+        Mount m;
+        if (!mounts.pop(m)) return;
+        applyMount(m);
+    }
+}
+
 Effect *Engine::effectAt(int32_t rack, Unit unit) {
     const int u = static_cast<int>(unit);
     switch (unit) {

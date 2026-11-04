@@ -39,6 +39,12 @@ class Engine : public Rack::ModifiedNoteSink {
     // when no input is open. It's published on the input bus for the whole
     // block, monitored if asked, and captured if a recording is armed.
     void renderBlock(const float *inInterleaved, float *outInterleaved);
+    /**
+     * Applies every mount queued so far, without a block. For an offline
+     * render with the stream stopped, so it sees the song and machines it
+     * was asked about rather than whatever the last block left.
+     */
+    void landMounts();
 
     // --- Any thread ------------------------------------------------------------------
     bool mount(const Mount &m) { return mounts.push(m); }
@@ -405,7 +411,8 @@ class Engine : public Rack::ModifiedNoteSink {
     };
     PendingParam pendingParams[kRackCount];
 
-    SharedQueue<Mount, 64> mounts;
+    static constexpr int32_t kMountQueueSize = 64;
+    SharedQueue<Mount, kMountQueueSize> mounts;
     SharedQueue<MidiMessage, 256> midiIn;
     SharedQueue<ParamMessage, 512> paramsIn;
 
