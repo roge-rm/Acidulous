@@ -18,7 +18,7 @@
     - [Resonance](04-the-machines/resonance.md) : huit objets frappés qui résonnent les uns dans les autres.
     - [Hammer](04-the-machines/hammer.md) : des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.
     - [Manual](04-the-machines/manual.md) : l’orgue : deux claviers et un pédalier, quatre modèles et un baffle rotatif.
-    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle.
+    - [Tine](04-the-machines/tine.md) : lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle, et des notes qui fondent de l’un en l’autre.
     - [Filament](04-the-machines/filament.md) : des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.
     - [Fret](04-the-machines/fret.md) : guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.
     - [Sympath](04-the-machines/sympath.md) : sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.

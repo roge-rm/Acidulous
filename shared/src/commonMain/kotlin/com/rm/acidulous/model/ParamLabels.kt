@@ -3629,6 +3629,8 @@ private fun labels4(): Map<String, String> = mapOf(
     "Tine:damp" to "decay|damp",
     "Tine:decay" to "decay",
     "Tine:depth" to "tube|depth",
+    "Tine:heat" to "melt|heat",
+    "Tine:into" to "melt|into",
     "Tine:mac1" to "macros|macro 1",
     "Tine:mac1_a1" to "macro 1|by 1",
     "Tine:mac1_a2" to "macro 1|by 2",
@@ -3702,11 +3704,13 @@ private fun labels4(): Map<String, String> = mapOf(
     "Tine:mac8_d3" to "macro 8|to 3",
     "Tine:mac8_d4" to "macro 8|to 4",
     "Tine:mallet" to "mallet",
+    "Tine:melt" to "melt",
     "Tine:model" to "instrument|model",
     "Tine:motor" to "tube|motor",
     "Tine:octave" to "play|octave",
     "Tine:pair" to "instrument|pair",
     "Tine:position" to "mallet|position",
+    "Tine:return" to "melt|return",
     "Tine:roll" to "hands|rolls",
     "Tine:spread" to "hands|spread",
     "Tine:tube" to "tube",
@@ -4027,13 +4031,13 @@ private fun labels4(): Map<String, String> = mapOf(
     "Trinity:o3_wave" to "osc 3|wave",
     "Trinity:octave" to "tuning|octave",
     "Trinity:pan" to "out|pan",
+)
+
+private fun labels5(): Map<String, String> = mapOf(
     "Trinity:ring12" to "ring|1·2",
     "Trinity:ring23" to "ring|2·3",
     "Trinity:route" to "routing|route",
     "Trinity:transpose" to "tuning|transpose",
-)
-
-private fun labels5(): Map<String, String> = mapOf(
     "Trinity:unidetune" to "unison|detune",
     "Trinity:unison" to "unison|voices",
     "Trinity:unispread" to "unison|spread",
@@ -7602,6 +7606,8 @@ private fun short4(): Map<String, String> = mapOf(
     "Tine:buzz" to "buzz",
     "Tine:damp" to "damp",
     "Tine:depth" to "depth",
+    "Tine:heat" to "heat",
+    "Tine:into" to "into",
     "Tine:mac1" to "macro 1",
     "Tine:mac1_a1" to "by 1",
     "Tine:mac1_a2" to "by 2",
@@ -7679,6 +7685,7 @@ private fun short4(): Map<String, String> = mapOf(
     "Tine:octave" to "octave",
     "Tine:pair" to "pair",
     "Tine:position" to "position",
+    "Tine:return" to "return",
     "Tine:roll" to "rolls",
     "Tine:spread" to "spread",
     "Tine:tune" to "tune",
