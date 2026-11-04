@@ -169,20 +169,30 @@ class MacroNamesTest {
     @Test
     fun sympathBankHasItsFamiliesInOrder() {
         val bank = FactoryBanks.of("Sympath")
-        assertEquals(96, bank.size)
+        assertEquals(102, bank.size)
         assertEquals("Init", bank.first().name)
         val families = bank.map { it.family }.distinct()
-        assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge"), families)
+        assertEquals(listOf("sitar", "sarod", "veena", "drone", "east", "bowed", "fiddle", "bridge", "song"), families)
+    }
+
+    @Test
+    fun aMachinePatchKeepsTheTrackItListensToUnlessItNamesOne() {
+        val current = mapOf(SIDECHAIN_PARAM to 0.25f, "ring" to 0.9f)
+        assertEquals(mapOf("ring" to 0.3f, SIDECHAIN_PARAM to 0.25f), MachineUi.patchParams("Sympath", mapOf("ring" to 0.3f), current))
+        assertEquals(0.5f, MachineUi.patchParams("Tongue", mapOf(SIDECHAIN_PARAM to 0.5f), current)[SIDECHAIN_PARAM])
+        // The song patches leave it to the track.
+        assertTrue(FactoryBanks.of("Sympath").none { SIDECHAIN_PARAM in it.params })
+        assertTrue(FactoryBanks.of("Chanter").none { SIDECHAIN_PARAM in it.params })
     }
 
     @Test
     fun chanterBankHasItsFamiliesInOrder() {
         val bank = FactoryBanks.of("Chanter")
-        assertEquals(80, bank.size)
+        assertEquals(92, bank.size)
         assertEquals("Init", bank.first().name)
         val families = bank.map { it.family }.distinct()
-        assertEquals(listOf("isles", "west", "east", "double", "gurdy", "drones", "odd"), families)
-        assertEquals(listOf(15, 12, 12, 11, 12, 9, 9), families.map { f -> bank.count { it.family == f } })
+        assertEquals(listOf("isles", "west", "east", "double", "gurdy", "drones", "odd", "song", "bag"), families)
+        assertEquals(listOf(15, 12, 12, 11, 12, 9, 9, 6, 6), families.map { f -> bank.count { it.family == f } })
     }
 
     @Test

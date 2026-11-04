@@ -194,7 +194,7 @@ bool callLoadTake(Reader &in, Replay &r) {
 
 bool callLoadReel(Reader &in, Replay &r) {
     const jint rack = r.rack(in.i32());
-    const jstring spec = in.spec({2});
+    const jstring spec = in.spec({2, 3});
     if (!in.finish()) return false;
     r.said("LoadReel", Java_com_rm_acidulous_engine_EngineNative_nativeLoadReel(r.env, nullptr, rack, spec));
     return true;

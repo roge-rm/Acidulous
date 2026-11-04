@@ -89,6 +89,32 @@ class PatchChainTest {
     }
 
     @Test
+    fun `a modifier preset replaces the slot's values but keeps its latch`() {
+        val t = Track(id = "t", name = "t", machine = Machine("Reflux"))
+            .withModifier(0, "Arp").withModifierParam(0, "latch", 1f).withModifierParam(0, "gate", 0.9f)
+        val loaded = t.withModifierPatch(0, mapOf("rate" to 0.7f, "latch" to 0f)).modifierAt(0)
+        assertEquals(mapOf("rate" to 0.7f, "latch" to 1f), loaded.params)
+        assertEquals("Arp", loaded.type)
+    }
+
+    @Test
+    fun `a chord preset keeps the learned chords and which one plays`() {
+        val t = Track(id = "t", name = "t", machine = Machine("Reflux"))
+            .withModifier(0, "Chord").withModifierParam(0, "memory", 0.25f)
+            .withModifierParam(0, "m2_3", 0.6f).withModifierParam(0, "strum", 0.4f)
+            .withModifierParam(0, "key", 0.3f).withModifierParam(0, "scale", 0.2f)
+        val loaded = t.withModifierPatch(0, mapOf(
+            "strum" to 0.1f, "memory" to 0f, "m2_3" to 0f, "m1_1" to 0.5f, "key" to 0.9f, "scale" to 0.9f,
+        )).modifierAt(0)
+        assertEquals(mapOf("strum" to 0.1f, "memory" to 0.25f, "m2_3" to 0.6f, "key" to 0.3f, "scale" to 0.2f), loaded.params)
+        assertTrue(PatchStore.modifierKeeps("m8_6"))
+        assertFalse(PatchStore.modifierKeeps("mode"))
+        // Only the arp and chord have presets.
+        assertEquals("mod.Chord", PatchStore.modifierKeyOrNull("Chord"))
+        assertNull(PatchStore.modifierKeyOrNull("Scale"))
+    }
+
+    @Test
     fun `sends are set only by a patch that has them, the missing one to zero`() {
         val t = track().copy(mixer = Mixer(sendReverb = 0.4f, sendDelay = 0.6f))
         assertEquals(t.mixer, PatchChain.apply(t, patch(), known, defaults).track.mixer)

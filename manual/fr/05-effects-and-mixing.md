@@ -48,8 +48,8 @@ Chaque effet a sa propre page ci-dessous.
   n’importe quelle piste, ouvert par chaque note ou par un motif sur le temps.
 - [**Mouth**](05-effects-and-mixing/mouth.md) : des voyelles, déplacées par un
   LFO, le niveau de la piste ou une autre piste.
-- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille
-  ou robotise les fréquences de la piste.
+- [**Spectral**](05-effects-and-mixing/spectral.md) : fige, étire, brouille,
+  robotise ou fait bégayer les fréquences de la piste.
 
 ## Saturation
 
@@ -76,11 +76,14 @@ Chaque effet a sa propre page ci-dessous.
 - [**Swell**](05-effects-and-mixing/swell.md) : une compression vers le haut,
   sur une bande ou trois. Les passages doux montent rejoindre les forts.
 - [**Smash**](05-effects-and-mixing/smash.md) : trois bandes écrasées des deux
-  côtés. Les passages forts descendent, les doux montent.
+  côtés. Les passages forts descendent, les doux montent. Chaque bande peut
+  baisser sur le temps ou sous une autre piste.
 - [**Transient**](05-effects-and-mixing/transient.md) : le début de chaque
-  coup et la résonance après, plus fort ou plus doux.
+  coup et la résonance après, plus fort ou plus doux. Peut façonner chaque
+  coup selon son pas dans la mesure.
 - [**Deesser**](05-effects-and-mixing/deesser.md) : baisse une bande quand
-  elle devient trop forte : un s, une cymbale.
+  elle devient trop forte : un s, une cymbale. Peut renvoyer ce qu’elle
+  coupe dans un écho.
 
 ## Mouvement
 

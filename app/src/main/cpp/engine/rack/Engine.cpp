@@ -51,6 +51,7 @@ void Engine::runInputChain() {
         inputFx[s]->setTransport(inputMod);
         if (inputFx[s]->modActive()) inputFx[s]->setModKey(modKeyFor(inputFx[s]->modKeyTrack(), true), 240u + s, inputMod);
         inputFx[s]->block(clock.blockStart(), clock.blockEnd(), clock.bpm());
+        inputFx[s]->setTuning(songTuning());
         stereo = inputFx[s]->run(L, R, kBlockFrames, stereo);
     }
     for (int32_t i = 0; i < kBlockFrames; ++i) {
@@ -220,6 +221,7 @@ void Engine::renderBlock(const float *in, float *out) {
     }
     // Counting in. The clock is advanced by hand here because the
     // scheduler, which normally drives it, isn't running yet.
+    countInAtStart = countInFrames;
     if (countInFrames > 0.0) {
         countInFrames -= static_cast<double>(kBlockFrames);
         if (countInFrames <= 0.0) {
@@ -288,6 +290,8 @@ void Engine::renderBlock(const float *in, float *out) {
         const int64_t barFrom = launching ? clock.blockStart() : scheduler.currentTickInIteration();
         const int64_t tickInBar = ((barFrom % ticksPerBar) + ticksPerBar) % ticksPerBar;
         const int64_t pair = swingPair.load(std::memory_order_relaxed);
+        modTransport.rolling = rolling;
+        modTransport.swingPair = pair;
         // Per rack, because in clip mode racks can be on different scenes
         // and frozen audio is stored per track and scene.
         for (int32_t r = 0; r < kRackCount; ++r) {
@@ -295,7 +299,11 @@ void Engine::renderBlock(const float *in, float *out) {
             // And tell the machine, for machines that play the arrangement
             // rather than notes.
             racks[r].updateScene(scheduler.rackSceneId(r), scheduler.rackCycleTick(r), playing, rolling,
-                                  clock.blockStart(), tickInBar, ticksPerBar, pair);
+                                  clock.blockStart(), tickInBar, ticksPerBar, pair,
+                                  countInAtStart > 0.0 && countInPerTick > 0.0 ? countInAtStart / countInPerTick : 0.0);
+            // Both from before the scheduler moves on: the offset is still the
+            // one the last block ended on, as the cycle tick is.
+            clipStartTick[r] = clock.blockStart() + modTransport.songOffset - scheduler.rackCycleTick(r);
         }
     }
 
@@ -515,6 +523,7 @@ void Engine::renderBlock(const float *in, float *out) {
     master.perform.setTransport(
         playing, static_cast<double>(clock.blockEnd()) -
                      clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames) / clock.samplesPerTickNow());
+    master.setTuning(songTuning());
     master.process(racks, kRackCount, out, kBlockFrames, clock.bpm(), fade, clock.blockStart(), clock.blockEnd());
 
     const auto tMaster = std::chrono::steady_clock::now();
@@ -546,13 +555,19 @@ void Engine::renderBlock(const float *in, float *out) {
         //
         // Not while counting in or stopped. The scheduler's tick stands still
         // during a count-in, so a mark there would put the count-in's silence
-        // at the top of the take.
+        // at the top of the take. A stop while recording writes an end mark
+        // instead, so the take ends where the song did.
         const int32_t armed = armedRack.load(std::memory_order_relaxed);
-        if (playing && !counting && armed >= 0 && armed < kRackCount) {
-            if (capture.overflowed()) marks.poison();
-            marks.observe(framesBefore, scheduler.rackSceneId(armed),
-                          scheduler.rackCycleTick(armed), scheduler.rackCycleTicks(armed),
-                          clock.bpm());
+        if (armed >= 0 && armed < kRackCount) {
+            if (playing && !counting) {
+                if (capture.overflowed()) marks.poison();
+                marks.observe(framesBefore, scheduler.rackSceneId(armed),
+                              scheduler.rackCycleTick(armed), scheduler.rackCycleTicks(armed),
+                              clock.bpm(), clock.frameOffsetOfTick(clock.blockEnd(), kBlockFrames),
+                              clock.samplesPerTickNow());
+            } else {
+                marks.halt(framesBefore);
+            }
         }
     }
     // After the capture, like the monitor, so auditioning a file doesn't
@@ -644,11 +659,15 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
     rack.playQueued();
     // Give each detector its key for this block (see keyFor), or silence for
     // an empty rack.
+    // A track's inserts also get its swing, counted from its clip's start.
+    ModTransport trackTransport = modTransport;
+    trackTransport.swing = rack.channelTarget(Rack::Swing);
+    trackTransport.swingFrom = clipStartTick[r];
     for (int32_t s = 0; s < kEffectSlots; ++s) {
         if (Effect *e = rack.currentEffect(s)) {
             e->setKey(keyFor(e->sidechainRack(), r));
-            e->setTransport(modTransport);
-            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, modTransport);
+            e->setTransport(trackTransport);
+            if (e->modActive()) e->setModKey(modKeyFor(e->modKeyTrack()), 1u + r * kEffectSlots + s, trackTransport);
         }
     }
     // A machine can listen too: Diction mouthing another track's sound.
@@ -1305,6 +1324,15 @@ void Engine::applyMounts() {
     // and a retire push, so a burst (a song loading its machines and effects)
     // lands in one block, ahead of the parameters queued after it.
     for (int32_t n = 0; n < kMaxMountsPerBlock; ++n) {
+        Mount m;
+        if (!mounts.pop(m)) return;
+        applyMount(m);
+    }
+}
+
+void Engine::landMounts() {
+    // Bounded by the queue's size, so pushes arriving meanwhile can't keep it here.
+    for (int32_t n = 0; n < kMountQueueSize; ++n) {
         Mount m;
         if (!mounts.pop(m)) return;
         applyMount(m);

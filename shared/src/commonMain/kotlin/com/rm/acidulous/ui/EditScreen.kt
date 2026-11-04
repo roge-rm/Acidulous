@@ -296,7 +296,7 @@ fun EditScreen(
     // not saved in the song.
     var noteProp by remember(trackIndex) { mutableStateOf(NoteProp.Velocity) }
     // A singer's notes have words; the note tapped in the words row, while its window is open.
-    val sings = com.rm.acidulous.model.MachineUi.takesWords(track.machine.type)
+    val sings = com.rm.acidulous.model.MachineUi.takesWords(track)
     if (!sings && noteProp == NoteProp.Words) noteProp = NoteProp.Velocity
     var wordsFrom by remember(trackIndex, sceneId) { mutableStateOf<Int?>(null) }
     // Which pitch the note lane shows, or every pitch. Keyed on the track so

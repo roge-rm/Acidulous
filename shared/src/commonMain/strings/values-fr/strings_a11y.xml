@@ -204,6 +204,9 @@
     <!-- The four-track's lanes -->
     <string name="a11y_lane_mute">Muet, couloir %d</string>
     <string name="a11y_lane_arm">Enregistrer, couloir %d</string>
+    <string name="a11y_take_row">Prise %d</string>
+    <string name="a11y_listen_through">Écouter chaque prise</string>
+    <string name="a11y_listen_stop">Arrêter l’écoute</string>
     <!-- A sample's trim, as a share of the whole sound. -->
     <string name="a11y_trim_start">Début de la coupe</string>
     <string name="a11y_trim_end">Fin de la coupe</string>

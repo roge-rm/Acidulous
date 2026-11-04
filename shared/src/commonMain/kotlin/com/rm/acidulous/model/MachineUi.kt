@@ -90,6 +90,16 @@ object MachineUi {
     /** Machines that take a clip's words: Diction sings them, Tongue says them with the mouth. */
     fun takesWords(type: String): Boolean = type == "Diction" || type == "Tongue" || type == "Draw"
 
+    /** Tracks that show the words lane: a machine that takes words, or a Mouth insert with its words knob up. */
+    fun takesWords(track: Track): Boolean =
+        takesWords(track.machine.type) || track.effects.any { it.type == "Mouth" && (it.params["words"] ?: 0f) > 0f }
+
+    /**
+     * Tracks whose words are sent to the engine: any with a Mouth insert, as
+     * well as the lane's, so a words knob moved up by a lane or a mod hears them.
+     */
+    fun sendsWords(track: Track): Boolean = takesWords(track.machine.type) || track.effects.any { it.type == "Mouth" }
+
     /** The accent a track's words are said in. Only Diction has one; Tongue's `accent` is a rhythm's. */
     fun wordsAccent(type: String, params: Map<String, Float>): Float = if (type == "Diction") params["accent"] ?: 0f else 0f
 
@@ -176,6 +186,16 @@ object MachineUi {
     fun patchKeeps(type: String): Set<String> =
         if (type != "Bias") emptySet()
         else (1..4).flatMap { listOf("lane$it", "mute$it") }.toSet()
+
+    /**
+     * What a machine holds after loading [patch] over [current]: the patch,
+     * plus what [patchKeeps] keeps, plus the track it listens to unless the
+     * patch names one, as an effect preset keeps its slot's sidechain.
+     */
+    fun patchParams(type: String, patch: Map<String, Float>, current: Map<String, Float>): Map<String, Float> {
+        val keep = patchKeeps(type)
+        return patch + current.filterKeys { it in keep || (it == SIDECHAIN_PARAM && it !in patch) }
+    }
 
     /** Machines that play a whole multisample map rather than one-shot pads. */
     fun acceptsSampleMap(type: String): Boolean = type == "Mosaic"
@@ -296,7 +316,9 @@ fun Song.samplesInUse(): Set<String> = buildSet {
         for (clip in t.clips.values) {
             val audio = clip.audio ?: continue
             for (take in audio.lanes) {
-                if (take != null && take.file.isNotEmpty()) add(take.file)
+                if (take == null) continue
+                if (take.file.isNotEmpty()) add(take.file)
+                for (t in take.takes) if (t.file.isNotEmpty()) add(t.file)
             }
         }
     }

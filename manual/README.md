@@ -19,12 +19,12 @@
     - [Resonance](04-the-machines/resonance.md) - eight struck objects that ring into each other.
     - [Hammer](04-the-machines/hammer.md) - modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.
     - [Manual](04-the-machines/manual.md) - the organ: two manuals and pedals, four models and a rotary cabinet.
-    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle.
+    - [Tine](04-the-machines/tine.md) - modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle, and notes that melt from one into another.
     - [Filament](04-the-machines/filament.md) - modelled strings: plucked, picked, struck, bowed or blown.
     - [Fret](04-the-machines/fret.md) - modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.
     - [Sympath](04-the-machines/sympath.md) - modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.
     - [Brazen](04-the-machines/brazen.md) - modelled brass, from trumpet to tuba, or a whole section.
-    - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes, grace notes, and a wheel whose loose bridge buzzes in time.
+    - [Chanter](04-the-machines/chanter.md) - modelled bagpipes and hurdy-gurdy: drones that go on between notes and can follow the song's bass, a bag that runs out, grace notes, and a wheel whose loose bridge buzzes in time.
     - [Draw](04-the-machines/draw.md) - modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.
     - [Timber](04-the-machines/timber.md) - modelled woodwinds: reeds and flutes.
     - [Tongue](04-the-machines/tongue.md) - a modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.

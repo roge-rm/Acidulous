@@ -231,6 +231,34 @@ class PresetFileTest {
     }
 
     @Test
+    fun arpPresetsLandInTheModifiersFolderWithoutEngineLines() = phone { mine ->
+        val patches = listOf(Patch("mod.Arp", "Mine", mapOf("rate" to 0.7f, "gate" to 0.2f)))
+        val written = runBlocking {
+            PresetFile.write("mod.Arp", patches, mine.root, File(mine.cache, "arp.acpreset")) { p ->
+                PresetEngine.Recording("acidulous-engine 1\n# ${p.name}\n", emptyList())
+            }
+        }
+        assertFalse(written.engineLines)
+        phone { theirs ->
+            val got = read(theirs, written.file)!!
+            assertEquals("modifier", got.kind)
+            assertEquals("Arp", got.unit)
+            assertEquals(listOf("Mine"), PatchStore.userList(PatchStore.modifierKey("Arp")))
+            assertEquals(0.7f, PatchStore.loadUser("mod.Arp", "Mine")!!.params["rate"])
+            assertTrue(File(theirs.root, "patches/mod/Arp/Mine.json").isFile)
+        }
+    }
+
+    @Test
+    fun aScalePresetIsRefused() = phone { mine ->
+        val written = write(mine, "mod.Scale", listOf(Patch("mod.Scale", "Mine", mapOf("key" to 0.5f))))
+        phone { theirs ->
+            assertNull(read(theirs, written.file))
+            assertEquals(emptyList<String>(), PatchStore.userList(PatchStore.modifierKey("Scale")))
+        }
+    }
+
+    @Test
     fun engineLinesGoInPerPatch() = phone { mine ->
         val patches = listOf(Patch("Reflux", "A", params), Patch("Reflux", "B", params))
         val written = runBlocking {

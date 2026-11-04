@@ -40,6 +40,20 @@ fun Track.hasAudio(): Boolean =
  *
  *     sceneId|lane|absPath|offset|frames|startTick|ticks|bpm|loop|fadeIn|fadeOut
  *
+ * A lane with a stack of takes follows its region line with a line per take
+ * after the first and a line per piece:
+ *
+ *     take|sceneId|lane|absPath|offset
+ *     piece|sceneId|lane|start|end|take[|shift]
+ *
+ * and a blended lane says where each take has audio, any words of a take
+ * lined up, how far it spreads, then that it blends:
+ *
+ *     span|sceneId|lane|take|start|end
+ *     nudge|sceneId|lane|take|start|end|shift
+ *     spread|sceneId|lane|amount
+ *     blend|sceneId|lane
+ *
  * Paths are absolute because the engine has no root, and scene ids are engine
  * ids because that's what the scheduler hands back. Missing files are skipped
  * here rather than in the engine, so a file that turns up later gets loaded on
@@ -50,16 +64,56 @@ fun reelSpec(song: Song, track: Track, root: File): String = buildString {
         val audio = track.audioLanes(scene.id) ?: continue
         for (lane in 0 until BIAS_LANES) {
             val take = audio.lane(lane) ?: continue
-            val file = File(root, take.file)
-            if (!file.isFile) continue
-            append(scene.engineId).append('|').append(lane).append('|')
-            append(file.absolutePath).append('|')
-            append(take.offset).append('|').append(take.frames).append('|')
-            append(take.startTick).append('|').append(take.ticks).append('|')
-            append(take.bpm).append('|').append(if (take.loop) '1' else '0')
-            append('|').append(take.fadeIn).append('|').append(take.fadeOut)
-            append('\n')
+            appendRegion(scene.engineId, lane, take, root)
         }
+    }
+}
+
+/**
+ * [take]'s lines in a reel spec as lane [lane] of cell [sceneId]. Nothing if
+ * its file is missing. [spans] says where each take of a stack has audio,
+ * which a blend and the take scorer need.
+ */
+internal fun StringBuilder.appendRegion(sceneId: Long, lane: Int, take: TakeRef, root: File, spans: Boolean = take.blend) {
+    val file = File(root, take.file)
+    if (!file.isFile) return
+    append(sceneId).append('|').append(lane).append('|')
+    append(file.absolutePath).append('|')
+    append(take.offset).append('|').append(take.frames).append('|')
+    append(take.startTick).append('|').append(take.ticks).append('|')
+    append(take.bpm).append('|').append(if (take.loop) '1' else '0')
+    append('|').append(take.fadeIn).append('|').append(take.fadeOut)
+    append('\n')
+    // A stack: the region line was take 0, then the rest in order and
+    // the pieces. A take whose file is missing is still sent, so the
+    // pieces' take numbers line up, and the engine plays it as a gap.
+    for (t in take.takes.drop(1)) {
+        append("take|").append(sceneId).append('|').append(lane).append('|')
+        append(File(root, t.file).absolutePath).append('|').append(t.offset).append('\n')
+    }
+    if (spans && take.takes.isNotEmpty()) {
+        for ((k, t) in take.takes.withIndex()) {
+            append("span|").append(sceneId).append('|').append(lane).append('|')
+            append(k).append('|').append(t.start).append('|').append(t.end).append('\n')
+        }
+    }
+    for (p in take.pieces) {
+        append("piece|").append(sceneId).append('|').append(lane).append('|')
+        append(p.start).append('|').append(p.end).append('|').append(p.take)
+        if (p.shift != 0) append('|').append(p.shift)
+        append('\n')
+    }
+    if (take.blend && take.takes.size > 1) {
+        if (take.blendLinedUp) {
+            for ((k, t) in take.takes.withIndex()) {
+                for (n in t.nudges) {
+                    append("nudge|").append(sceneId).append('|').append(lane).append('|').append(k).append('|')
+                    append(n.start).append('|').append(n.end).append('|').append(n.shift).append('\n')
+                }
+            }
+        }
+        if (take.spread > 0f) append("spread|").append(sceneId).append('|').append(lane).append('|').append(take.spread).append('\n')
+        append("blend|").append(sceneId).append('|').append(lane).append('\n')
     }
 }
 
@@ -176,7 +230,10 @@ fun TakeRef.lengthTicks(): Int =
  */
 data class Mark(
     val frame: Long, val sceneId: Long, val tick: Int, val cycleTicks: Int, val bpm: Float,
-)
+) {
+    /** The song stopped here while recording: no cell, just the end of the one before. */
+    val isEnd: Boolean get() = cycleTicks <= 0
+}
 
 /** Turns the engine's flat array of longs, five per mark, into marks. */
 fun marksFrom(raw: LongArray, count: Int): List<Mark> = (0 until count).map { i ->
@@ -198,10 +255,14 @@ fun marksFrom(raw: LongArray, count: Int): List<Mark> = (0 until count).map { i 
 const val MIN_TAKE_FRAMES = ENGINE_RATE / 4
 
 /**
- * Pairs consecutive marks into segments, one per cell.
+ * Pairs consecutive marks into segments, one per pass through a cell, in the
+ * order they were recorded.
  *
  * No audio is copied: one file, several cells, each a window into it. The last
- * segment runs to [totalFrames], where the recording stopped.
+ * segment runs to an end mark, where the song stopped, or else to
+ * [totalFrames], where the recording stopped. A scene that
+ * loops gives a segment per pass, and each one goes on that cell's stack (see
+ * [Clip.withRecorded]).
  *
  * [sceneIdOf] maps the engine's hashed scene id back to the song's string id.
  * Marks for a scene that's since been deleted are dropped.
@@ -211,22 +272,204 @@ fun splitTake(
     totalFrames: Long,
     file: String,
     sceneIdOf: (Long) -> String?,
-): Map<String, TakeRef> {
-    val out = LinkedHashMap<String, TakeRef>()
-    for ((i, m) in marks.withIndex()) {
-        val end = if (i + 1 < marks.size) marks[i + 1].frame else totalFrames
+): List<Pair<String, TakeRef>> {
+    // Only this file's marks: a frame going backwards means the ones before
+    // it were left from an earlier recording, and a mark past the end of the
+    // file can't belong to it.
+    val from = (1 until marks.size).lastOrNull { marks[it].frame < marks[it - 1].frame } ?: 0
+    val inFile = marks.drop(from).filter { it.frame in 0 until totalFrames }
+    val out = ArrayList<Pair<String, TakeRef>>()
+    for ((i, m) in inFile.withIndex()) {
+        // An end mark is where the song stopped: it only ends the one before.
+        if (m.isEnd) continue
+        val end = if (i + 1 < inFile.size) inFile[i + 1].frame else totalFrames
         val frames = (end - m.frame).toInt()
         if (frames < MIN_TAKE_FRAMES) continue
         val sceneId = sceneIdOf(m.sceneId) ?: continue
-        // Last one wins: if a scene is crossed twice in one recording, the
-        // second pass is the one to keep.
-        out[sceneId] = TakeRef(
+        out += sceneId to TakeRef(
             file = file, offset = m.frame.toInt(), frames = frames,
             bpm = m.bpm, ticks = m.cycleTicks, startTick = m.tick,
         )
     }
     return out
 }
+
+/**
+ * The split take in passes, one undo step each. A pass ends when a cell comes
+ * round again, so a loop recorded four times is four passes, newest undone
+ * first, and one run through the song is one.
+ */
+fun recordingPasses(takes: List<Pair<String, TakeRef>>): List<List<Pair<String, TakeRef>>> {
+    val out = ArrayList<List<Pair<String, TakeRef>>>()
+    var pass = ArrayList<Pair<String, TakeRef>>()
+    for (t in takes) {
+        if (pass.any { it.first == t.first }) {
+            out += pass
+            pass = ArrayList()
+        }
+        pass += t
+    }
+    if (pass.isNotEmpty()) out += pass
+    return out
+}
+
+/**
+ * The track after each pass of a recording onto [lane], in order: one undo
+ * step each. [drawn] gives a pass its waveform, and [comp] a stacked lane the
+ * shape of what it plays (null leaves it as it is).
+ */
+fun Song.recordedSteps(
+    track: Int,
+    lane: Int,
+    takes: List<Pair<String, TakeRef>>,
+    drawn: (TakeRef) -> TakeRef = { it },
+    comp: (TakeRef) -> List<Float>? = { null },
+): List<Track> {
+    var next = this
+    val steps = ArrayList<Track>()
+    for (pass in recordingPasses(takes)) {
+        for ((sceneId, take) in pass) {
+            next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { it.withRecorded(lane, drawn(take)) }
+        }
+        for (sceneId in pass.map { it.first }.distinct()) {
+            val held = next.tracks.getOrNull(track)?.clips?.get(sceneId)?.audio?.lane(lane) ?: continue
+            if (held.takes.isEmpty()) continue
+            val peaks = comp(held) ?: continue
+            next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { it.withTake(lane, held.copy(peaks = peaks)) }
+        }
+        next.tracks.getOrNull(track)?.let { steps += it }
+    }
+    return steps
+}
+
+// --- Take stacks -------------------------------------------------------------
+
+/**
+ * The lane's takes, take 0 first. A one-take lane is a stack of one covering
+ * the whole region.
+ */
+fun TakeRef.stack(): List<StackTake> = takes.ifEmpty { listOf(StackTake(file, offset, 0, frames)) }
+
+/** How many takes the lane holds. */
+val TakeRef.takeCount: Int get() = takes.size.coerceAtLeast(1)
+
+/** The take heard over the most of the lane: 0 for a one-take lane. */
+fun TakeRef.heardTake(): Int {
+    if (pieces.isEmpty()) return 0
+    return heardPieces().groupBy { it.take }
+        .maxByOrNull { (_, ps) -> ps.sumOf { (it.end - it.start).toLong() } }?.key ?: 0
+}
+
+/**
+ * The file the lane plays, for its name on the card, or null when its pieces
+ * come from more than one file.
+ */
+fun TakeRef.heardFile(): String? {
+    if (takes.isEmpty()) return file
+    val heard = if (blend) takes.indices.toList()
+                else if (pieces.isEmpty()) listOf(0) else heardPieces().map { it.take }
+    return heard.mapNotNull { takes.getOrNull(it)?.file }.distinct().singleOrNull()
+        ?: if (heard.isEmpty()) file else null
+}
+
+/** Take [k] heard over the whole lane, as far as it has audio. */
+fun TakeRef.hearing(k: Int): TakeRef {
+    if (takes.isEmpty()) return this
+    val t = takes.getOrNull(k) ?: return this
+    return copy(pieces = listOf(Piece(t.start, t.end, k)))
+}
+
+/** These pieces with take [take] laid over [start, end), cutting what was under it. */
+fun List<Piece>.overlay(start: Int, end: Int, take: Int): List<Piece> {
+    val out = ArrayList<Piece>()
+    for (p in this) {
+        if (p.end <= start || p.start >= end) { out += p; continue }
+        if (p.start < start) out += p.copy(end = start)
+        if (p.end > end) out += p.copy(start = end)
+    }
+    if (end > start) out += Piece(start, end, take)
+    return out.sortedBy { it.start }
+}
+
+/**
+ * Whether [pass] can go on this lane's stack: recorded against the same
+ * cycle at the same tempo, and neither is a loop dropped in from a file.
+ */
+fun TakeRef.canStack(pass: TakeRef): Boolean =
+    !loop && !pass.loop && ticks == pass.ticks && kotlin.math.abs(bpm - pass.bpm) <= 0.05f
+
+/**
+ * [pass] added to the top of this lane's stack and heard over the stretch it
+ * covers. The rest of the lane keeps playing what it did, so a pass stopped
+ * half way replaces only the half it has.
+ *
+ * The region grows to cover both if the pass starts earlier or runs later,
+ * and every take and piece moves with it so nothing shifts in time.
+ */
+fun TakeRef.stacked(pass: TakeRef): TakeRef {
+    val perTick = ENGINE_RATE * 60.0 / (bpm.toDouble() * PPQN)
+    val from = minOf(startTick, pass.startTick)
+    val shift = kotlin.math.round((startTick - from) * perTick).toInt()
+    val passAt = kotlin.math.round((pass.startTick - from) * perTick).toInt()
+    val length = maxOf(shift + frames, passAt + pass.frames)
+    // A new take hasn't been lined up with the rest, so a lined-up blend starts over.
+    val old = stack().map { it.copy(offset = it.offset - shift, start = it.start + shift, end = it.end + shift, nudges = emptyList()) }
+    val heard = pieces.ifEmpty { listOf(Piece(0, frames, 0)) }
+        .map { it.copy(start = it.start + shift, end = it.end + shift) }
+    val k = old.size
+    val added = StackTake(pass.file, pass.offset - passAt, passAt, passAt + pass.frames)
+    return copy(
+        file = old[0].file, offset = old[0].offset, frames = length, startTick = from,
+        takes = old + added,
+        pieces = heard.overlay(added.start, added.end, k),
+        blendLinedUp = false,
+    )
+}
+
+/**
+ * A pass recorded onto [lane]: on top of what's there if it can stack,
+ * otherwise in its place as before.
+ */
+fun Clip.withRecorded(lane: Int, pass: TakeRef): Clip {
+    val held = audio?.lane(lane)
+    return withTake(lane, if (held != null && held.canStack(pass)) held.stacked(pass) else pass)
+}
+
+/**
+ * This lane after a trim, given what it was. A one-take lane needs nothing.
+ * A stack keeps every take, piece and nudge on the same audio: the region's
+ * start moved by the same frames in each take.
+ *
+ * Nothing is cut to the new region. Takes, pieces and nudges past its ends
+ * stay as they were, so dragging an end back out brings them back, as a
+ * one-take lane's file does. The engine only plays what's inside.
+ */
+fun TakeRef.reframed(old: TakeRef): TakeRef {
+    if (takes.isEmpty()) return this
+    val d = offset - old.offset
+    if (d == 0) return this
+    val moved = takes.map {
+        it.copy(
+            offset = it.offset + d, start = it.start - d, end = it.end - d,
+            nudges = it.nudges.map { n -> n.copy(start = n.start - d, end = n.end - d) },
+        )
+    }
+    return copy(takes = moved, pieces = pieces.map { it.copy(start = it.start - d, end = it.end - d) })
+}
+
+/** How far back a stacked lane's head can be dragged: to the earliest audio in it. */
+fun TakeRef.headRoom(): Int = if (takes.isEmpty()) offset else (-takes.minOf { it.start }).coerceAtLeast(0)
+
+/** How long a stacked lane can be: to the latest audio in it. Null for a one-take lane. */
+fun TakeRef.stackLength(): Int? = if (takes.isEmpty()) null else takes.maxOf { it.end }
+
+/** The pieces as far as they're inside the region, which is what plays. */
+fun TakeRef.heardPieces(): List<Piece> =
+    pieces.mapNotNull { p ->
+        val s = maxOf(p.start, 0)
+        val e = minOf(p.end, frames)
+        if (e > s) p.copy(start = s, end = e) else null
+    }
 
 /**
  * Whether this track's takes follow the song's tempo.

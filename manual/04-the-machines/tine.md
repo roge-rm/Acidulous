@@ -3,7 +3,7 @@
 > Modelled bars, tines and pans: marimba, vibraphone, xylophone,
 > glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum,
 > chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks,
-> cowbell and triangle.
+> cowbell and triangle, and notes that melt from one into another.
 
 Tine doesn't play recordings. Each note is a handful of resonances tuned the
 way the thing struck is tuned. A marimba bar is carved away underneath so its
@@ -38,6 +38,28 @@ overtones start, so they ring out.
 - **damp** - the damper bar: how much a note stops when you let it go. The
   sustain pedal lifts it.
 
+## Melt
+
+A ringing note can turn into another model. Each overtone slides from where
+the first model has it to where the other one does, so halfway through the
+note is out of tune with both, then it settles. Overtones only one of them
+has fade away, or grow out of the note as it rings, without a new strike.
+
+- **into** - the model a note melts into. When it's the same as **model**
+  nothing melts.
+- **melt** - how long a struck note takes to melt, from a twentieth of a
+  second to about 20 seconds. At 0 notes don't melt.
+- **heat** - how much playing hard and pressing hurry the melt. At 0 every
+  note takes the same time; turned up, a hard hit melts in a fraction of it,
+  a soft one takes longer, and pressing a held note speeds it up again.
+- **return** - **once** melts and stays; **back and forth** melts there and
+  back again for as long as the note rings, so a held or bowed note breathes
+  between the two.
+
+A note struck again, or a roll, is struck as the melt is at that moment. The
+**into** is read when a note is struck; **melt**, **heat** and the melt macro
+move ringing notes at once.
+
 ## Body
 
 - **tube** - the tube under each bar, ringing along with the note (and its
@@ -70,11 +92,13 @@ the patch as it was made.
 The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
-range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model,
-tune and the stepped choices can't be reached. A change to the mallet,
+range at 1. Pitch moves the whole instrument, 24 semitones at 1. **melt**
+moves every note along its melt, all the way at 1, on top of where the melt
+time has got it, so a macro can melt notes by hand with **melt** at 0. The
+model, into, tune and the stepped choices can't be reached. A change to the mallet,
 position, decay, bright, spread or velocity is heard from the next note, or
 the next stroke of a roll; damp from the next note let go. The tube, motor,
-depth, bloom, buzz, rolls, volume and a paired note's pair move at once. Tap
+depth, bloom, buzz, rolls, volume, melt and a paired note's pair move at once. Tap
 a macro's name to rename it.
 
 ## Tips
@@ -84,3 +108,7 @@ a macro's name to rename it.
 - **Vibes Motor** and **Slow Motor** turn the discs; the mod wheel deepens
   the pulse.
 - **Marimba Roll**, **Vibes Roll** and **Pan Roll** need held notes.
+- The **melt** patches are best held. **Vibes Breathing**, **Handpan Tide**
+  and **Sinking Bowl** go back and forth; on **Hot Crotales** and **Wood to
+  Metal** a hard hit melts fast and a soft one slowly. Their first macro,
+  **Melt**, melts by hand.

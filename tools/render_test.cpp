@@ -1222,6 +1222,62 @@ void aSelfPlayingPatchFollowsTheTransport() {
     ok("and the render repeats", firstDifference(out, renderSelfPlaying(777, 1500, 500)) == out.size());
 }
 
+/**
+ * A Palm cycle in a song: a held note playing a varied pattern on the song's
+ * swung sixteenths renders the same twice, and the same after other playing.
+ */
+void aPalmCycleRepeats() {
+    printf("- a Palm cycle, varied and swung\n");
+    const auto take = [](bool playFirst) {
+        Fixture f;
+        Machine *m = MachineRegistry::create("Palm");
+        delete f.engine.racks[1].swapMachine(m);
+        m->prepare(kSampleRate);
+        m->reset();
+        m->params().jumpAll();
+        ParamSet &p = m->params();
+        const auto put = [&](const char *name, float v) { p.jump(p.indexOf(name), p.def(p.indexOf(name)).unmap(v)); };
+        put("model", 6.0f);
+        put("cycle", 1.0f);
+        put("bars", 1.0f);
+        put("feel", 0.8f);
+        f.engine.racks[1].setParam(Unit::Channel, Rack::Swing, (62.0f - 50.0f) / 25.0f);
+        // One note held across both bars of each scene.
+        for (int32_t sc = 0; sc < 2; ++sc) {
+            auto c = std::make_shared<Clip>();
+            c->rev = 900 + sc;
+            c->bars = 2;
+            c->ticksPerBar = kBar;
+            ClipNote n{};
+            n.tick = 0;
+            n.length = 2 * kBar - 1;
+            n.pitch = 57;
+            n.velocity = 100;
+            c->notes.push_back(n);
+            f.keep.push_back(c);
+            f.snap->setClip(1, sc, c);
+        }
+        float scratch[kBlockFrames * 2];
+        if (playFirst) {
+            f.engine.transport.requestPlay(0);
+            for (int i = 0; i < 2345; ++i) f.engine.renderBlock(nullptr, scratch);
+        }
+        f.engine.panicFlag.store(true, std::memory_order_release);
+        f.engine.renderBlock(nullptr, scratch);
+        f.engine.transport.requestPlay(0);
+        // Four bars at 120 bpm.
+        std::vector<float> out(static_cast<size_t>(6000) * kBlockFrames * 2);
+        for (int32_t b = 0; b < 6000; ++b) f.engine.renderBlock(nullptr, out.data() + static_cast<size_t>(b) * kBlockFrames * 2);
+        return out;
+    };
+    const auto first = take(false), second = take(false), after = take(true);
+    ok("it plays", peakOf(first) > 0.01f, std::to_string(peakOf(first)));
+    size_t at = firstDifference(first, second);
+    ok("and renders the same twice", at == first.size(), at == first.size() ? "" : "differ at sample " + std::to_string(at));
+    at = firstDifference(first, after);
+    ok("and the same after other playing", at == first.size(), at == first.size() ? "" : "differ at sample " + std::to_string(at));
+}
+
 int main() {
     printf("\nrendering a song, off a phone\n\n");
     aRenderRepeats();
@@ -1242,6 +1298,7 @@ int main() {
     thePedalsHoldWhatTheyShould();
     theOrganCanBeTuned();
     aSelfPlayingPatchFollowsTheTransport();
+    aPalmCycleRepeats();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

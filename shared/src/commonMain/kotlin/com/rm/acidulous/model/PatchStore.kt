@@ -73,11 +73,17 @@ object PatchStore {
      */
     const val FX = "fx."
 
+    /** The same for an input modifier's patches, like the arp's. */
+    const val MOD = "mod."
+
     fun directory(machine: String): File =
         File(EngineAssets.userRoot(), path(machine)).apply { mkdirs() }
 
-    private fun path(machine: String): String =
-        if (machine.startsWith(FX)) "patches/fx/${machine.removePrefix(FX)}" else "patches/$machine"
+    private fun path(machine: String): String = when {
+        machine.startsWith(FX) -> "patches/fx/${machine.removePrefix(FX)}"
+        machine.startsWith(MOD) -> "patches/mod/${machine.removePrefix(MOD)}"
+        else -> "patches/$machine"
+    }
 
     fun save(patch: Patch): File =
         File(directory(patch.machine), "${safe(patch.name)}.json").also {
@@ -164,6 +170,26 @@ object PatchStore {
 
     /** An effect type as a patch key: "Delay" becomes "fx.Delay". */
     fun effectKey(type: String): String = FX + type
+
+    /** A modifier type as a patch key: "Arp" becomes "mod.Arp". */
+    fun modifierKey(type: String): String = MOD + type
+
+    /** The modifiers that have presets. Scale is two settings, so it has none. */
+    val MODIFIERS_WITH_PRESETS = setOf("Arp", "Chord")
+
+    /** [modifierKey] for a modifier that has presets, or null. */
+    fun modifierKeyOrNull(type: String): String? = if (type in MODIFIERS_WITH_PRESETS) modifierKey(type) else null
+
+    /**
+     * Parameters a modifier preset leaves alone. Latch is a playing switch, so
+     * loading a preset mustn't let go of held notes or latch them. The chord's
+     * key and scale follow the song, and its memory (which slot plays, and
+     * the learned chords m1_1..m8_6) is the player's own, kept with the song.
+     */
+    fun modifierKeeps(name: String): Boolean =
+        name == "latch" || name == "key" || name == "scale" || name == "memory" || CHORD_MEMORY_NOTE.matches(name)
+
+    private val CHORD_MEMORY_NOTE = Regex("m[1-8]_[1-6]")
 
     private fun safe(name: String) = name.trim().replace(Regex("[^A-Za-z0-9 _-]"), "_").ifEmpty { "patch" }
 }

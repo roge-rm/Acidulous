@@ -1,6 +1,7 @@
 // Tine, struck and plucked bars, tines and pans: in tune, each kind's
 // overtones where its shape puts them, the tube under the bar, the motor, the
-// damper and its pedal, a pan's octave growing, rolls, the bow and the rattle.
+// damper and its pedal, a pan's octave growing, rolls, the bow and the rattle,
+// and a ringing note melting into another model.
 //
 //   tine_test.sh
 #include <engine/machine/MachineRegistry.h>
@@ -70,6 +71,15 @@ struct Bars {
         for (int b = 0; b < blocks; ++b) {
             f->render(L, R, kBlock);
             out.insert(out.end(), L, L + kBlock);
+        }
+    }
+    /** As play(), in blocks of [block] samples, the last one short. */
+    void playIn(double seconds, int block) {
+        std::vector<float> L(static_cast<size_t>(block)), R(static_cast<size_t>(block));
+        for (auto left = static_cast<int>(seconds * kRate); left > 0; left -= block) {
+            const int n = std::min(left, block);
+            f->render(L.data(), R.data(), n);
+            out.insert(out.end(), L.begin(), L.begin() + n);
         }
     }
     double level(double hz, double from, double to) const {
@@ -341,6 +351,280 @@ void restrikeDoesNotClick() {
     }
 }
 
+
+/**
+ * The worst click over [from, to) seconds: the sharpest corner in a 32-sample
+ * slice against the middle of the slices around it. A click stands out of
+ * its neighbours; a bright sound is sharp everywhere and reads near 1.
+ */
+double corner(const std::vector<float> &out, double from, double to) {
+    const auto a = static_cast<size_t>(from * kRate), b = std::min(out.size(), static_cast<size_t>(to * kRate));
+    std::vector<double> peaks;
+    for (size_t s = a + 2; s + 32 <= b; s += 32) {
+        double p = 0.0;
+        for (size_t i = s; i < s + 32; ++i) p = std::max(p, std::fabs(double(out[i]) - 2.0 * out[i - 1] + out[i - 2]));
+        peaks.push_back(p);
+    }
+    double worst = 0.0;
+    for (size_t i = 8; i + 8 < peaks.size(); ++i) {
+        std::vector<double> around(peaks.begin() + static_cast<long>(i) - 8, peaks.begin() + static_cast<long>(i) + 9);
+        std::nth_element(around.begin(), around.begin() + 8, around.end());
+        worst = std::max(worst, peaks[i] / (around[8] + 1e-12));
+    }
+    return worst;
+}
+
+enum { Gong = 13, SingingBowl = 14 };
+constexpr float kMeltDest = static_cast<float>(Tine::McMelt);
+
+/** The melt knob for [seconds]: 0.05 s at the bottom to 20 s at the top, on a log scale. */
+float meltFor(double seconds) { return static_cast<float>(std::log(seconds / 0.05) / std::log(400.0)); }
+
+void melt() {
+    std::printf("- melt\n");
+    const double hz = noteHz(60);
+    {
+        // Vibes into glockenspiel: the second mode goes from 4 to 2.756, through the
+        // middle of the two on a log scale, and lands there.
+        Bars g({{"model", Vibraphone}, {"into", Glockenspiel}, {"melt", meltFor(1.0)}});
+        g.f->noteOn(60, 100);
+        g.play(0.5);
+        const double mid = g.f->modeRatio(1);
+        g.play(0.6);
+        const double end = g.f->modeRatio(1);
+        check(std::fabs(mid - std::sqrt(4.0 * 2.756)) < 0.15, "halfway, a mode sits between the two on a log scale", fmt("%.3f, want %.3f", mid, std::sqrt(4.0 * 2.756)));
+        check(std::fabs(end - 2.756) < 1e-3 && g.f->meltOf() > 0.999f, "and reaches the other model's ratio", fmt("%.4f, melt %.3f", end, g.f->meltOf()));
+        g.play(0.4);
+        Bars plain({{"model", Vibraphone}});
+        plain.f->noteOn(60, 100);
+        plain.play(1.5);
+        const double at = g.level(hz * 2.756, 1.1, 1.5) - plain.level(hz * 2.756, 1.1, 1.5);
+        const double was = g.level(hz * 4.0, 1.1, 1.5) - plain.level(hz * 4.0, 1.1, 1.5);
+        check(at > 30.0 && was < -20.0, "the note sounds the other model's overtone in place of its own", fmt("2.756: %+.1f dB, 4.0: %+.1f dB", at, was));
+    }
+    {
+        // No corners: the sharpest edge while a fast melt runs is no sharper than either model's own.
+        auto edge = [&](int model, int into, float knob) {
+            Bars g({{"model", static_cast<float>(model)}, {"into", static_cast<float>(into)}, {"melt", knob}});
+            g.f->noteOn(60, 110);
+            g.play(0.8);
+            return corner(g.out, 0.06, 0.8);
+        };
+        const int pairs[][2] = {{Marimba, SingingBowl}, {Gong, Marimba}, {Glockenspiel, Gong}, {SteelPan, Vibraphone}, {Kalimba, Glockenspiel}};
+        for (const auto &pr : pairs) {
+            const double a = edge(pr[0], pr[0], 0.0f), b = edge(pr[1], pr[1], 0.0f);
+            const double fast = edge(pr[0], pr[1], 0.0f + 1e-6f), slow = edge(pr[0], pr[1], meltFor(0.3));
+            check(fast <= std::max(a, b) * 1.3 && slow <= std::max(a, b) * 1.3, fmt("model %d into %d melts without a click", pr[0], pr[1]).c_str(),
+                  fmt("edge %.2f, %.2f vs %.2f, %.2f", fast, slow, a, b));
+        }
+    }
+    {
+        // Marimba into gong: the gong's fifth and sixth modes aren't on the marimba.
+        // They grow out of the note without a strike, and the note goes on at about its level.
+        Bars g({{"model", Marimba}, {"into", Gong}, {"melt", meltFor(0.5)}});
+        g.f->noteOn(60, 100);
+        g.play(1.2);
+        Bars plain({{"model", Marimba}});
+        plain.f->noteOn(60, 100);
+        plain.play(1.2);
+        const double grown = g.level(hz * 3.72, 0.8, 1.2) - plain.level(hz * 3.72, 0.8, 1.2);
+        check(grown > 25.0, "a mode only the other model has grows out of the note", fmt("%+.1f dB at the gong's 3.72", grown));
+        // Against the note, about where a struck gong has it against its own.
+        Bars gong({{"model", static_cast<float>(Gong)}});
+        gong.f->noteOn(60, 100);
+        gong.play(1.2);
+        const double note = g.level(hz * 3.72, 0.8, 1.2) - g.level(hz, 0.8, 1.2);
+        const double struck = gong.level(hz * 3.72, 0.8, 1.2) - gong.level(hz, 0.8, 1.2);
+        check(std::fabs(note - struck) < 10.0, "as loud against the note as a struck gong has it", fmt("%.1f dB under the note, struck %.1f", -note, -struck));
+        // The level before and through the melt: no jump either way.
+        const double before = g.rms(0.05, 0.1), through = g.rms(0.3, 0.35);
+        const double pBefore = plain.rms(0.05, 0.1), pThrough = plain.rms(0.3, 0.35);
+        check(std::fabs((through - before) - (pThrough - pBefore)) < 6.0, "the note's level carries through the melt",
+              fmt("falls %.1f dB melting, %.1f plain", before - through, pBefore - pThrough));
+    }
+    {
+        // Gong into marimba: the gong's extra modes fade out.
+        Bars g({{"model", Gong}, {"into", Marimba}, {"melt", meltFor(0.3)}});
+        g.f->noteOn(60, 100);
+        g.play(1.0);
+        Bars plain({{"model", Gong}});
+        plain.f->noteOn(60, 100);
+        plain.play(1.0);
+        const double gone = g.level(hz * 3.72, 0.6, 1.0) - plain.level(hz * 3.72, 0.6, 1.0);
+        check(gone < -40.0, "a mode only the note's model has fades out", fmt("%+.1f dB at the gong's 3.72", gone));
+    }
+    {
+        // Off: into set but melt at 0, or melt on into the same model, is the note as before to the bit.
+        auto render = [&](float into, float knob) {
+            Bars g({{"model", SteelPan}, {"into", into}, {"melt", knob}, {"pair", 7.0f}, {"roll", 6.0f}, {"bloom", 0.8f}});
+            g.f->noteOn(60, 100);
+            g.f->noteOn(64, 80);
+            g.play(0.6);
+            g.f->noteOff(64);
+            g.play(0.4);
+            return g.out;
+        };
+        const auto base = render(SteelPan, 0.0f);
+        check(render(Gong, 0.0f) == base, "melt at 0 leaves the note as it was, to the bit");
+        check(render(SteelPan, 0.5f) == base, "melting into its own model leaves it as it was, to the bit");
+    }
+    {
+        // Heat: a hard hit melts faster than a soft one, pressure faster still.
+        auto at = [&](uint8_t vel, int press) {
+            Bars g({{"model", Marimba}, {"into", SingingBowl}, {"melt", meltFor(2.0)}, {"heat", 1.0f}});
+            g.f->noteOn(60, vel);
+            if (press >= 0) g.f->notePressure(60, static_cast<uint8_t>(press));
+            g.play(0.5);
+            return g.f->meltOf();
+        };
+        const float soft = at(40, -1), hard = at(127, -1), pressed = at(40, 127);
+        check(hard > soft * 2.0f, "with heat a hard hit melts faster", fmt("%.3f vs %.3f at 0.5 s", hard, soft));
+        check(pressed > soft * 2.0f, "and so does a pressed note", fmt("%.3f vs %.3f", pressed, soft));
+    }
+    {
+        // Back and forth: the melt turns round and comes back.
+        Bars g({{"model", Vibraphone}, {"into", Gong}, {"melt", meltFor(0.5)}, {"return", 1.0f}});
+        g.f->noteOn(60, 100);
+        g.play(0.5);
+        const float there = g.f->meltOf();
+        g.play(0.5);
+        const float back = g.f->meltOf();
+        check(there > 0.95f && back < 0.05f, "back and forth goes there and comes back", fmt("%.3f then %.3f", there, back));
+    }
+    {
+        // The macro moves a ringing note at once, melt time or not.
+        Bars g({{"model", Marimba}, {"into", SingingBowl}, {"mac1_d1", kMeltDest}, {"mac1_a1", 1.0f}});
+        g.f->noteOn(60, 100);
+        g.play(0.2);
+        const float before = g.f->meltOf();
+        g.f->params().set(g.f->params().indexOf("mac1"), 1.0f);
+        g.play(0.1);
+        check(before < 0.0f && g.f->meltOf() > 0.99f, "the melt macro moves a ringing note", fmt("%.3f then %.3f", before, g.f->meltOf()));
+        const double c = corner(g.out, 0.15, 0.3);
+        Bars plain({{"model", Marimba}});
+        plain.f->noteOn(60, 100);
+        plain.play(0.3);
+        Bars bowl({{"model", SingingBowl}});
+        bowl.f->noteOn(60, 100);
+        bowl.play(0.3);
+        check(c <= std::max(corner(plain.out, 0.15, 0.3), corner(bowl.out, 0.15, 0.3)) * 1.3, "and doesn't click doing it", fmt("edge %.2f", c));
+    }
+    {
+        // A note struck again while melting is struck where the melt is.
+        Bars g({{"model", Vibraphone}, {"into", Glockenspiel}, {"melt", meltFor(1.0)}});
+        g.f->noteOn(60, 100);
+        g.play(0.5);
+        const float mid = g.f->meltOf();
+        g.f->noteOn(60, 100);
+        g.play(0.02);
+        check(std::fabs(g.f->meltOf() - mid) < 0.05f && g.f->modeRatio(1) < 3.9f, "a re-strike lands on the melt where it is",
+              fmt("%.3f then %.3f, mode 2 at %.3f", mid, g.f->meltOf(), g.f->modeRatio(1)));
+    }
+    {
+        // Play, reset, play again: the same to the bit, with a pair turned on mid-ring and mid-melt.
+        auto run = [&](Bars &g) {
+            g.set("pair", 0.0f);
+            g.f->noteOn(36, 110);
+            g.f->noteOn(55, 90);
+            g.play(0.3);
+            g.set("pair", 9.0f);
+            g.f->noteOn(36, 100);
+            g.play(0.4);
+            g.f->noteOff(55);
+            g.play(0.2);
+            std::vector<float> o(g.out);
+            g.out.clear();
+            return o;
+        };
+        Bars g({{"model", Marimba}, {"into", Gong}, {"melt", meltFor(0.6)}, {"return", 1.0f}, {"damp", 0.5f}});
+        const auto first = run(g);
+        g.f->reset();
+        check(run(g) == first, "a melting, paired note renders the same after a reset", "");
+        // The pair joins where the note is, whatever the voice played before: no louder than
+        // the same re-strike with no pair.
+        auto low = [&](bool pairAgain) {
+            Bars v({{"model", Marimba}, {"into", Gong}, {"melt", meltFor(0.6)}, {"voices", 1.0f}, {"pair", 20.0f}});
+            v.f->noteOn(24, 110);
+            v.play(0.3);
+            v.set("pair", 0.0f);
+            v.f->noteOn(36, 110);
+            v.play(0.3);
+            if (pairAgain) v.set("pair", 9.0f);
+            v.f->noteOn(36, 100);
+            v.play(0.4);
+            double p = 0.0;
+            for (size_t i = 0.6 * kRate; i < v.out.size(); ++i) p = std::max(p, double(std::fabs(v.out[i])));
+            return p;
+        };
+        const double paired = low(true), unpaired = low(false);
+        check(paired < unpaired * 1.1, "a pair turned on mid-melt starts from the note", fmt("peak %.3f, unpaired %.3f", paired, unpaired));
+    }
+    {
+        // The melt's timing doesn't hang on the block size.
+        auto at = [&](int block, double &loud) {
+            Bars g({{"model", Vibraphone}, {"into", Glockenspiel}, {"melt", meltFor(1.0)}});
+            g.f->noteOn(60, 100);
+            g.playIn(0.5, block);
+            loud = g.rms(0.4, 0.5);
+            return g.f->meltOf();
+        };
+        double l64 = 0.0, l256 = 0.0, l1000 = 0.0;
+        const float m64 = at(64, l64), m256 = at(256, l256), m1000 = at(1000, l1000);
+        check(std::fabs(m64 - 0.5f) < 0.005f && std::fabs(m256 - 0.5f) < 0.005f && std::fabs(m1000 - 0.5f) < 0.005f,
+              "a melt takes its time whatever the block size", fmt("%.4f, %.4f, %.4f at 0.5 s of 1 s", m64, m256, m1000));
+        check(std::fabs(l64 - l256) < 0.3 && std::fabs(l64 - l1000) < 0.3, "and sounds the same along the way",
+              fmt("%.2f, %.2f, %.2f dB", l64, l256, l1000));
+    }
+    {
+        // Return switched to once on the way back carries on from where the melt is.
+        Bars g({{"model", Vibraphone}, {"into", Gong}, {"melt", meltFor(0.5)}, {"return", 1.0f}});
+        g.f->noteOn(60, 100);
+        g.play(0.75);
+        const float back = g.f->meltOf();
+        g.set("return", 0.0f);
+        g.play(0.01);
+        const float once = g.f->meltOf();
+        g.play(0.6);
+        check(back > 0.3f && back < 0.7f && std::fabs(once - back) < 0.05f && g.f->meltOf() > 0.999f,
+              "switched to once mid-way back, it carries on from there", fmt("%.3f, then %.3f, then %.3f", back, once, g.f->meltOf()));
+    }
+    {
+        // A melted note struck again once into is set back to the model: the modes the model
+        // doesn't have ring out, and nothing clicks.
+        auto run = [&](bool back, float melt = meltFor(0.3)) {
+            Bars g({{"model", Marimba}, {"into", Gong}, {"melt", melt}});
+            g.f->noteOn(48, 100);
+            g.play(0.5);
+            if (back) g.set("into", Marimba);
+            g.f->noteOn(48, 100);
+            g.play(0.3);
+            return g;
+        };
+        // Against a marimba struck twice, never melted.
+        Bars back = run(true), still = run(false, 0.0f);
+        const double h = noteHz(48) * 3.72;
+        const double before = back.level(h, 0.4, 0.5), after = back.level(h, 0.52, 0.62);
+        check(after > before - 12.0, "a mode the model doesn't have rings out", fmt("%+.1f dB at the gong's 3.72", after - before));
+        double worst = 0.0, ref = 0.0;
+        for (size_t i = 0.5 * kRate + 2; i < 0.52 * kRate; ++i) {
+            worst = std::max(worst, std::fabs(double(back.out[i]) - 2.0 * back.out[i - 1] + back.out[i - 2]));
+            ref = std::max(ref, std::fabs(double(still.out[i]) - 2.0 * still.out[i - 1] + still.out[i - 2]));
+        }
+        check(worst <= ref * 1.5 + 1e-4, "and the re-strike is no sharper than a plain one", fmt("edge %.4f vs %.4f", worst, ref));
+    }
+    {
+        // Sixteen melting voices, every knob up, stay bounded.
+        Bars g({{"model", Gong}, {"into", 18.0f}, {"melt", meltFor(0.2)}, {"return", 1.0f}, {"heat", 1.0f}, {"pair", 30.0f},
+                {"bloom", 1.0f}, {"roll", 12.0f}, {"buzz", 1.0f}, {"tube", 1.0f}, {"voices", 16.0f}});
+        for (int n = 0; n < 16; ++n) g.f->noteOn(static_cast<uint8_t>(36 + n * 3), 127);
+        g.f->channelPressure(127);
+        g.play(3.0);
+        bool finite = true;
+        for (float v : g.out) finite = finite && std::isfinite(v);
+        check(finite && g.peakAbs() < 12.0, "sixteen melting voices stay bounded", fmt("peak %.2f", g.peakAbs()));
+    }
+}
+
 int main() {
     tuning();
     partials();
@@ -351,6 +635,7 @@ int main() {
     hands();
     lifecycle();
     restrikeDoesNotClick();
+    melt();
     std::printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

@@ -50,6 +50,39 @@ there to damp it.
 
 With MPE, sliding a finger up lays it on the head and damps it as it rings.
 
+## Cycles
+
+Pick a **cycle** on the hands page and a held note plays a pattern in time
+with the song and its swing. Each pattern is a bar long and goes round for a
+few bars, with a fill on the last one. While the song is stopped, the first
+note you hold starts the bar; a count-in plays the bar before the song's
+first, and stopping with a key down carries on in time. In bars of other
+lengths the pattern keeps its start and its end, and an extra beat is
+played softly.
+
+- **cycle** - **off**, **tumbao** (heel and toe, a slap on two, open tones
+  on four), **kuku** (a djembe part, the slaps in pairs), **baladi** and
+  **maqsum** (darbuka rhythms of bass and rim strokes), **theka** (eight
+  tabla strokes with a pressed bass stroke), **6/8** (twelve to the bar in
+  threes), **groove** (bass on one and three, slaps on two and four) or
+  **talking** (open and pressed strokes, the head stopped between).
+- **bars** - how many bars make a cycle, the last one a fill. At 1 there's
+  no fill.
+- **feel** - how much each bar changes: soft strokes added or left out,
+  tones and slaps swapped, the loudness and timing moving a little. At 0
+  every bar plays as written. The changes follow the bar number, so a song
+  plays the same every time.
+- **press** - how many semitones the second hand presses the head up on a
+  pressed stroke.
+
+Hold two notes and they share the pattern: the bass strokes and low tones go
+to the lower drum, the rest to the higher. With one note the low tones are
+played a fourth under it. In a kit, hold two pads, like the tabla and bayan
+in **Tabla Theka**.
+
+Rolls and flams are off while a cycle plays. Let go and it stops, and the
+last stroke rings out.
+
 ## Kit
 
 Turn on **kit** and the keys from C2 up are sixteen pads, each its own drum, so one track can play a whole hand-drum kit. The sequencer shows the drum grid, one lane per pad, named after its drum and stroke.
@@ -72,7 +105,7 @@ knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves every drum, 24 semitones at 1. The model, tune,
 stroke, the stepped choices and a kit's pads can't be reached; in a kit the
 routes move the knobs every pad shares. A change to the position, hand,
-decay, damp, pitch drop, body, spread, velocity or flam is heard from the
+decay, damp, pitch drop, body, spread, velocity, flam, feel or press is heard from the
 next hit, or the next stroke of a roll. Squeeze, rattle, rolls and volume
 move at once. Tap a macro's name to rename it.
 
@@ -82,3 +115,5 @@ move at once. Tap a macro's name to rename it.
   muted, harder for open, hardest for a slap.
 - **Bayan Swoop** and **Talking Squeeze** are for pressing: play a note, then
   lean on the key or push the mod wheel.
+- The **cycles** presets play a pattern from one held note. **Conga Pair**
+  and **Tabla Theka** want two.

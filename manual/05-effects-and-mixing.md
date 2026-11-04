@@ -43,8 +43,8 @@ Each effect has its own page below.
   track, opened by each note or by a pattern on the beat.
 - [**Mouth**](05-effects-and-mixing/mouth.md) - vowels, moved by an LFO, the
   track's level or another track.
-- [**Spectral**](05-effects-and-mixing/spectral.md) - freeze, blur, smear
-  or robotise the track's frequencies.
+- [**Spectral**](05-effects-and-mixing/spectral.md) - freeze, blur, smear,
+  robotise or stutter the track's frequencies.
 
 ## Drive
 
@@ -69,11 +69,12 @@ Each effect has its own page below.
 - [**Swell**](05-effects-and-mixing/swell.md) - upward compression, in one band
   or three: the quiet parts come up to meet the loud ones.
 - [**Smash**](05-effects-and-mixing/smash.md) - three bands squashed from both
-  sides: loud parts down, quiet parts up.
+  sides: loud parts down, quiet parts up. Each band can duck on the beat or
+  under another track.
 - [**Transient**](05-effects-and-mixing/transient.md) - the start of each hit
-  and the ring after it, up or down.
+  and the ring after it, up or down. Can shape each hit by its step in the bar.
 - [**Deesser**](05-effects-and-mixing/deesser.md) - turns down a band when it
-  gets too loud: an s, a cymbal.
+  gets too loud: an s, a cymbal. Can throw what it cuts into an echo.
 
 ## Movement
 

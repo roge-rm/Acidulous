@@ -83,6 +83,10 @@ import com.rm.acidulous.model.bpmOf
 import com.rm.acidulous.model.followsTempo
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.hearing
+import com.rm.acidulous.model.heardFile
+import com.rm.acidulous.model.heardTake
+import com.rm.acidulous.model.takeCount
 import com.rm.acidulous.model.withSetting
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
@@ -177,9 +181,7 @@ fun MachinePanel(
             onLoadPatch(name)?.let { patch ->
                 // What this machine keeps across a patch change, see
                 // MachineUi.patchKeeps. Empty for everything but Bias.
-                val keep = MachineUi.patchKeeps(type)
-                val params = if (keep.isEmpty()) patch.params
-                             else patch.params + track.machine.params.filterKeys { it in keep }
+                val params = MachineUi.patchParams(type, patch.params, track.machine.params)
                 // Inserts that found no free slot, to say so once the edit is made.
                 var skipped = emptyList<String>()
                 var unknown = emptyList<String>()
@@ -661,7 +663,7 @@ internal fun PatchPicker(
     vertical: Boolean = false,
     /** Only the vertical form uses this, the row sizes itself. */
     modifier: Modifier = Modifier,
-    /** The patch store's key: [title] for a machine, PatchStore.effectKey for an effect. */
+    /** The patch store's key: [title] for a machine, PatchStore.effectKey or modifierKey for a slot. */
     key: String = title,
     /** A machine's save, which can take the track's effects along. Replaces [onSave] when set. */
     onSaveWithEffects: ((String, Boolean) -> Unit)? = null,
@@ -860,8 +862,8 @@ internal fun stackedKnobW(): Dp = StackedKnobW - 52.dp + LocalKnobDial.current
 
 @Composable
 internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
-    val info = b.infoOf(name) ?: return
-    val idx = info.map(b.value(name)).toInt().coerceIn(0, labels.size - 1)
+    b.infoOf(name) ?: return
+    val idx = switchIndex(b.value(name), labels.size)
     if (labels.size == 2) {
         PanelPair(b, name, labels, label, idx)
         return
@@ -871,6 +873,14 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
 }
+
+/**
+ * Which of [n] switch cells a normalised value lights: its position in the
+ * range, the inverse of the tap's i / (n - 1). Not the mapped value, which is
+ * only an index for a range that starts at 0 (the arp's octaves run 1..4).
+ */
+internal fun switchIndex(v01: Float, n: Int): Int =
+    if (n > 1) (v01 * (n - 1)).roundToInt().coerceIn(0, n - 1) else 0
 
 /** A two-way parameter as one knob-sized square split in two; see [PairSquare]. */
 @Composable
@@ -4218,7 +4228,9 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
             Group("lane ${lane + 1}") {
                 Column(Modifier.widthIn(min = 116.dp, max = 200.dp)) {
                     Text(
-                        take?.file?.substringAfterLast('/') ?: "empty",
+                        // The heard take's name, or "comp" when its pieces mix files.
+                        if (take == null) "empty"
+                        else take.heardFile()?.substringAfterLast('/') ?: stringResource(Res.string.bias_heard_comp),
                         color = if (take == null) c.textDim else c.textHi,
                         fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
@@ -4232,6 +4244,19 @@ private fun BiasPanel(b: ParamBinding, track: Track, trackIndex: Int, sceneId: S
                             stringResource(Res.string.bias_take_bpm, take.bpm), color = c.accent,
                             fontSize = 9.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
                         )
+                    }
+                    // A stack: tap to hear the next take over the whole lane.
+                    if (take != null && take.takeCount > 1) {
+                        TextButton(onClick = {
+                            compEdit(scope, editor, trackIndex, sceneId, lane) { held ->
+                                held.hearing((held.heardTake() + 1) % held.takeCount)
+                            }
+                        }) {
+                            Text(
+                                stringResource(Res.string.bias_take_of, take.heardTake() + 1, take.takeCount),
+                                color = c.textMid, fontSize = 11.sp,
+                            )
+                        }
                     }
                     Row {
                         TextButton(onClick = { picking = lane }) {
@@ -4844,8 +4869,11 @@ private val TINE_MODELS = listOf("marimba", "vibes", "xylophone", "glock", "thum
 val TINE_MACRO_DESTS = listOf(
     "off", "mallet", "position", "decay", "bright", "damp", "tube", "motor", "depth",
     "bloom", "buzz", "rolls", "spread", "velocity", "volume", "pair",
-    "pitch",
+    "pitch", "melt",
 )
+
+/** What a melting Tine note does: once, or back and forth. */
+private val TINE_RETURNS = listOf("once", "back and forth")
 
 /** Tine: the macros, the bar and what strikes it, the instrument around it, and the player. */
 @Composable
@@ -4881,6 +4909,12 @@ private fun TinePanel(b: ParamBinding, track: Track, trackIndex: Int, editor: So
                     PanelStepKnob(b, "model", TINE_MODELS, "model", PanelAmber)
                     PanelKnob(b, "tune", "tune")
                     PanelKnob(b, "pair", "pair")
+                }
+                Group("melt") {
+                    PanelStepKnob(b, "into", TINE_MODELS, "into", PanelAmber)
+                    PanelKnob(b, "melt", "melt")
+                    PanelKnob(b, "heat", "heat")
+                    PanelStepKnob(b, "return", TINE_RETURNS, "return")
                 }
                 Group("mallet") {
                     PanelKnob(b, "mallet", "mallet", PanelAmber)
@@ -4996,6 +5030,16 @@ private fun SympathPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("sympathy") {
                     PanelKnob(b, "tarbs", "tarbs", PanelAmber)
                     PanelKnob(b, "chikari", "chikari")
+                    PanelKnob(b, "bloom", "bloom")
+                }
+                Group("song") {
+                    // The track whose sound rings the strings: off, or the track.
+                    val songLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", songLabels, "from track", PanelPink)
+                    PanelKnob(b, "ring", "ring~strings")
+                    PanelKnob(b, "listen", "listen")
                 }
                 Group("tanpura") {
                     PanelStepKnob(b, "first", SYMPATH_FIRSTS, "first")
@@ -5031,12 +5075,14 @@ private fun SympathPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
 
 private val PALM_MODELS = listOf("tabla", "bayan", "djembe", "cajon", "frame drum", "talking", "conga", "bongo", "darbuka", "riq", "tar", "bendir", "kanjira", "bata", "mridangam", "dholak", "ashiko", "udu", "cuica")
 private val PALM_STROKES = listOf("open", "slap", "muted", "bass", "rim", "velocity")
+private val PALM_CYCLES = listOf("off", "tumbao", "kuku", "baladi", "maqsum", "theka", "6/8", "groove", "talking")
+private val PALM_BARS = listOf("1", "2", "4", "8")
 
 /** Where a Palm macro route goes, in the engine's MacroDest order. */
 val PALM_MACRO_DESTS = listOf(
     "off", "position", "hand", "decay", "damp", "pitch drop", "squeeze", "rattle", "body",
     "rolls", "spread", "velocity", "volume", "flam",
-    "pitch",
+    "pitch", "feel", "press",
 )
 
 /** Palm: the macros, the drum and the hand, its body, the player and the kit. */
@@ -5110,6 +5156,12 @@ private fun PalmPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int, 
                 }
             }
             else -> {
+                Group("cycle") {
+                    PanelStepKnob(b, "cycle", PALM_CYCLES, "cycle", PanelAmber)
+                    PanelSwitch(b, "bars", PALM_BARS, "bars")
+                    PanelKnob(b, "feel", "feel")
+                    PanelKnob(b, "press", "press")
+                }
                 Group("hands") {
                     PanelKnob(b, "roll", "rolls", PanelAmber)
                     PanelKnob(b, "flam", "flam")
@@ -5145,7 +5197,7 @@ private val CHANTER_COUP_BEATS = listOf("every", "2 & 4")
 val CHANTER_MACRO_DESTS = listOf(
     "off", "drones", "bag", "reed", "grace", "drift", "air",
     "crank", "rosin", "dog", "threshold", "velocity", "volume",
-    "pitch",
+    "pitch", "follow", "wind", "sag",
 )
 
 /** Chanter: the macros, the pipes and the bag, the hurdy-gurdy's wheel, and the player. */
@@ -5185,7 +5237,20 @@ private fun ChanterPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 Group("drones") {
                     PanelStepKnob(b, "key", KEY_NAMES, "tonic", PanelAmber)
                     PanelKnob(b, "drones", "drones")
+                }
+                Group("song") {
+                    // The track whose bass the drones follow: off, or the track.
+                    val songLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", songLabels, "from track", PanelPink)
+                    PanelKnob(b, "follow", "follow", PanelAmber)
+                    PanelKnob(b, "glide", "glide")
+                }
+                Group("bag") {
                     PanelKnob(b, "bag", "bag")
+                    PanelKnob(b, "wind", "wind", PanelAmber)
+                    PanelKnob(b, "sag", "sag")
                 }
                 Group("chanter") {
                     PanelKnob(b, "reed", "reed")
@@ -5338,10 +5403,12 @@ private val FATHOM_MODELS = listOf("bubbles", "drips", "rain", "stream", "surf",
 private val FATHOM_SURFACES = listOf("water", "leaves", "tin", "window")
 
 /** Where a Fathom macro route goes, in the engine's MacroDest order. */
+private val FATHOM_KEY_SOURCES = listOf("chord", "scale")
+
 val FATHOM_MACRO_DESTS = listOf(
     "off", "density", "size", "rise", "decay", "gust", "whistle", "tone",
     "waves", "spread", "fade", "velocity", "volume",
-    "pitch",
+    "pitch", "snap",
 )
 
 /** Fathom: the macros, the water, the weather, the player and the kit. */
@@ -5402,6 +5469,12 @@ private fun FathomPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int
                 }
                 Group("rain") {
                     PanelStepKnob(b, "surface", FATHOM_SURFACES, "surface")
+                }
+                Group("key~music") {
+                    PanelKnob(b, "snap", "snap", PanelAmber)
+                    PanelStepKnob(b, "snap_to", FATHOM_KEY_SOURCES, "onto")
+                    PanelStepKnob(b, "scale", POLLEN_SCALES, "scale")
+                    PanelStepKnob(b, "key", POLLEN_KEYS, "key~music")
                 }
             }
             2 -> {

@@ -73,7 +73,9 @@
     <string name="pw_aux">aux</string>
     <string name="pw_a_b">A→B</string>
     <string name="pw_b">b</string>
+    <string name="pw_back_and_forth">aller-retour</string>
     <string name="pw_bag">poche</string>
+    <string name="pw_baladi">baladi</string>
     <string name="pw_balance">balance</string>
     <string name="pw_ballad">ballade</string>
     <string name="pw_bamboo">bambou</string>
@@ -87,10 +89,12 @@
     <string name="pw_bars">mesures</string>
     <string name="pw_bars_organ">tirettes</string>
     <string name="pw_basic">simple</string>
+    <string name="pw_basics">bases</string>
     <string name="pw_bass">basse</string>
     <string name="pw_bata">batá</string>
     <string name="pw_bayan">bayan</string>
     <string name="pw_beak">bec</string>
+    <string name="pw_beat">rythme</string>
     <string name="pw_beats">temps</string>
     <string name="pw_bell">Cloche</string>
     <string name="pw_bell_brass">pavillon</string>
@@ -289,6 +293,7 @@
     <string name="pw_division">division</string>
     <string name="pw_djembe">djembé</string>
     <string name="pw_dog">chien</string>
+    <string name="pw_dotted">pointé</string>
     <string name="pw_double">double</string>
     <string name="pw_down">bas</string>
     <string name="pw_down_up">bas-haut</string>
@@ -464,6 +469,7 @@
     <string name="pw_glue">colle</string>
     <string name="pw_gong">gong</string>
     <string name="pw_grace">agrément</string>
+    <string name="pw_groove">groove</string>
     <string name="pw_gurdy">vielle</string>
     <string name="pw_grain">Grain</string>
     <string name="pw_grain_ee4ddd">grain</string>
@@ -505,12 +511,15 @@
     <string name="pw_head_bump">bosse tête</string>
     <string name="pw_head">peau</string>
     <string name="pw_heard_from">écouté de</string>
+    <string name="pw_heat">chaleur</string>
     <string name="pw_height">hauteur</string>
     <string name="pw_hi">aigu</string>
     <string name="pw_hi_tom">Tom aigu</string>
     <string name="pw_high">aigu</string>
     <string name="pw_high_cut">coupe-haut</string>
     <string name="pw_high_pass">passe-haut</string>
+    <string name="pw_highdepth">prof. aigu</string>
+    <string name="pw_highduck">att. aigu</string>
     <string name="pw_highfreq">fréq. aigu</string>
     <string name="pw_highgain">gain aigu</string>
     <string name="pw_highland">highland</string>
@@ -560,6 +569,7 @@
     <string name="pw_instrument">instrument</string>
     <string name="pw_interval">intervalle</string>
     <string name="pw_interval2">intervalle2</string>
+    <string name="pw_into">devient</string>
     <string name="pw_inversion">renversement</string>
     <string name="pw_invert">renv.</string>
     <string name="pw_isles">îles</string>
@@ -594,6 +604,7 @@
     <string name="pw_kit">kit</string>
     <string name="pw_knock">coup</string>
     <string name="pw_kouxian">kouxian</string>
+    <string name="pw_kuku">kuku</string>
     <string name="pw_l">L</string>
     <string name="pw_l_07c342">l</string>
     <string name="pw_l1rate">l1vit</string>
@@ -655,6 +666,8 @@
     <string name="pw_low_cut">coupe-bas</string>
     <string name="pw_low_pass">passe-bas</string>
     <string name="pw_low_tom">Tom grave</string>
+    <string name="pw_lowdepth">prof. grave</string>
+    <string name="pw_lowduck">att. grave</string>
     <string name="pw_lower">inférieur</string>
     <string name="pw_lower_a">inférieur A</string>
     <string name="pw_lower_b">inférieur B</string>
@@ -687,6 +700,7 @@
     <string name="pw_makeup">compens.</string>
     <string name="pw_manuals">claviers</string>
     <string name="pw_map">carte</string>
+    <string name="pw_maqsum">maqsoum</string>
     <string name="pw_marimba">marimba</string>
     <string name="pw_marwa">marwa</string>
     <string name="pw_master">général</string>
@@ -696,6 +710,7 @@
     <string name="pw_meend">meend</string>
     <string name="pw_mega">mega</string>
     <string name="pw_melodica">melodica</string>
+    <string name="pw_melt">fonte</string>
     <string name="pw_membrane">membrane</string>
     <string name="pw_memory">mémoire</string>
     <string name="pw_metal">Métal</string>
@@ -704,6 +719,8 @@
     <string name="pw_mid">médium</string>
     <string name="pw_mid_centre">centre</string>
     <string name="pw_mid_tom">Tom médium</string>
+    <string name="pw_middepth">prof. méd.</string>
+    <string name="pw_midduck">att. méd.</string>
     <string name="pw_midfreq">fréq. méd.</string>
     <string name="pw_midgain">gain méd.</string>
     <string name="pw_midq">Q méd.</string>
@@ -922,6 +939,7 @@
     <string name="pw_rattle">grésil</string>
     <string name="pw_rchance">proba rép.</string>
     <string name="pw_read_from">lit depuis</string>
+    <string name="pw_recover">retour</string>
     <string name="pw_rect">redr.</string>
     <string name="pw_reed">Anche</string>
     <string name="pw_reeds">anches</string>
@@ -943,6 +961,7 @@
     <string name="pw_resonator">Resonator</string>
     <string name="pw_response">réponse</string>
     <string name="pw_restart">redémarrer</string>
+    <string name="pw_return">retour</string>
     <string name="pw_rev">arrière</string>
     <string name="pw_reverb">Reverb</string>
     <string name="pw_reverb_send">envoi Reverb</string>
@@ -1068,12 +1087,14 @@
     <string name="pw_slices">tranches</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">glissé</string>
+    <string name="pw_slides">glissés</string>
     <string name="pw_slit_drum">tambour à fente</string>
     <string name="pw_slope">pente</string>
     <string name="pw_slot">emplac.</string>
     <string name="pw_slow">lent</string>
     <string name="pw_smallpipes">smallpipes</string>
     <string name="pw_smash">Smash</string>
+    <string name="pw_smash_31fe82">écrasé</string>
     <string name="pw_smear">flou</string>
     <string name="pw_smooth">lisse</string>
     <string name="pw_snap">aimant</string>
@@ -1093,6 +1114,7 @@
     <string name="pw_space">espace</string>
     <string name="pw_spacing">écart</string>
     <string name="pw_span">étendue</string>
+    <string name="pw_special">spécial</string>
     <string name="pw_spectral">Spectral</string>
     <string name="pw_speed">vitesse</string>
     <string name="pw_splash">éclabousse</string>
@@ -1197,6 +1219,7 @@
     <string name="pw_the_odds">les chances</string>
     <string name="pw_the_room">la salle</string>
     <string name="pw_the_same_roll">même tirage</string>
+    <string name="pw_theka">theka</string>
     <string name="pw_thick">épais</string>
     <string name="pw_thin">thin</string>
     <string name="pw_thirds">tierces</string>
@@ -1249,6 +1272,7 @@
     <string name="pw_tube">tube</string>
     <string name="pw_tukey">tukey</string>
     <string name="pw_tulum">tulum</string>
+    <string name="pw_tumbao">tumbao</string>
     <string name="pw_tune">accordage</string>
     <string name="pw_tuned">accordé</string>
     <string name="pw_tuning">accordage</string>
@@ -1499,6 +1523,7 @@
     <string name="pw_bar_glide">porta. tirettes</string>
     <string name="pw_church">église</string>
     <string name="pw_click_off">clic relâché</string>
+    <string name="pw_climbs">montées</string>
     <string name="pw_combo_atk">attaque combo</string>
     <string name="pw_contacts">contacts</string>
     <string name="pw_drum_fast">tambour rapide</string>
@@ -1620,4 +1645,29 @@
     <string name="pw_skin">peau</string>
     <string name="pw_stone">pierre</string>
     <string name="pw_vessel">Vessel</string>
+    <string name="pw_1_lap">1 tour</string>
+    <string name="pw_2_laps">2 tours</string>
+    <string name="pw_4_laps">4 tours</string>
+    <string name="pw_8_laps">8 tours</string>
+    <string name="pw_bounce">aller-retour</string>
+    <string name="pw_never">jamais</string>
+    <string name="pw_renew">refaire</string>
+    <string name="pw_spectrum">spectre</string>
+    <string name="pw_throw">renvoi</string>
+    <string name="pw_a01">a01</string>
+    <string name="pw_a02">a02</string>
+    <string name="pw_a03">a03</string>
+    <string name="pw_a04">a04</string>
+    <string name="pw_a05">a05</string>
+    <string name="pw_a06">a06</string>
+    <string name="pw_a07">a07</string>
+    <string name="pw_a08">a08</string>
+    <string name="pw_a09">a09</string>
+    <string name="pw_a10">a10</string>
+    <string name="pw_a11">a11</string>
+    <string name="pw_a12">a12</string>
+    <string name="pw_a13">a13</string>
+    <string name="pw_a14">a14</string>
+    <string name="pw_a15">a15</string>
+    <string name="pw_a16">a16</string>
 </resources>

@@ -14,6 +14,7 @@
 // automatically.
 
 #include <engine/core/InputBus.h>
+#include <engine/core/Reel.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -55,6 +56,62 @@ const std::vector<float> &voiceInput() {
 
 /** The machine being checked reads the input bus. */
 bool g_feedInput = false;
+
+/** The machine being checked plays what's on the reel, so it's told where the song is (Bias). */
+bool g_inScene = false;
+
+/** Tells a machine that follows the arrangement where it is, every block. */
+void followScene(Machine *m, int64_t tick) {
+    if (g_inScene) m->onScene(1, tick, true, false);
+}
+
+/**
+ * A comped Bias lane: two takes, three pieces (one shifted), joins in
+ * sound and in silence, so a reset has piece positions and crossfades to
+ * forget, and a lane blending two takes, nudged and spread. Bias owns and
+ * deletes it.
+ */
+audio::Reel *compedReel() {
+    constexpr int32_t kFrames = 240000;
+    const auto take = [](float hz, int32_t quietFrom) {
+        auto s = std::make_shared<audio::Reel::Source>();
+        std::vector<int16_t> planes(static_cast<size_t>(kFrames));
+        for (int32_t i = 0; i < kFrames; ++i) {
+            const bool quiet = i >= quietFrom && i < quietFrom + 2000;
+            planes[static_cast<size_t>(i)] =
+                quiet ? 0 : audio::toI16(0.4f * std::sin(6.2831853f * hz * static_cast<float>(i) / kRate));
+        }
+        s->hold(std::move(planes), kFrames, false);
+        return s;
+    };
+    auto *reel = new audio::Reel;
+    reel->cells.emplace_back();
+    audio::Reel::Cell &c = reel->cells.back();
+    c.sceneId = 1;
+    audio::Reel::Region &r = c.lanes[0];
+    r.source = take(220.0f, 30000);
+    r.frames = kFrames;
+    r.ticks = 2400;
+    r.loop = true;
+    r.takes = {{r.source, 0}, {take(331.0f, 30000), 0}};
+    // The middle piece lined up 700 frames earlier.
+    r.pieces = {{0, 30500, 0}, {30500, 90000, 1, -700}, {90000, kFrames, 0}};
+    r.settle();
+    // And a second lane blending two takes, one starting late.
+    audio::Reel::Region &b = c.lanes[1];
+    b.source = take(147.0f, 50000);
+    b.frames = kFrames;
+    b.ticks = 2400;
+    b.loop = true;
+    b.takes = {{b.source, 0}, {take(196.0f, 60000), 300}};
+    b.takes[1].start = 20000;
+    // Its second take lined up word by word, and the two spread apart.
+    b.takes[1].nudges = {{30000, 70000, -480}, {70000, 120000, 300}};
+    b.spread = 0.7f;
+    b.blend = true;
+    b.settle();
+    return reel;
+}
 
 /**
  * Publishes one block of the voice, read from [frame]. Both passes of the
@@ -109,6 +166,7 @@ void performance(Machine *m, std::vector<float> &out) {
 
         feedInput(static_cast<int64_t>(b) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
+        followScene(m, tick);
         m->onBlock(tick, tick + 4, 120.0f);
 
         std::memset(L, 0, sizeof(L));
@@ -155,6 +213,8 @@ void prelude(Machine *m) {
         // goes into the panic busy.
         feedInput(static_cast<int64_t>(b + 977) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
+        // Somewhere else in the cell than the performance plays.
+        followScene(m, tick + 333);
         m->onBlock(tick, tick + 4, 120.0f);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
@@ -200,6 +260,9 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
     Dressing d;
     // Cipher hears the voice on the input bus.
     g_feedInput = std::strcmp(name, "Cipher") == 0;
+    // Bias plays a comped lane, following the song through the cell.
+    g_inScene = std::strcmp(name, "Bias") == 0;
+    if (g_inScene) delete static_cast<audio::Reel *>(m->swapObject(0, compedReel()));
     // Molt sings an analysed take of the same voice. The analysis is slow, so
     // it's done once and copied. Molt owns and deletes its copy.
     if (std::strcmp(name, "Molt") == 0) {
@@ -277,6 +340,7 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     delete m2;
     InputBus::get().publish(nullptr, 0);
     g_feedInput = false;
+    g_inScene = false;
     r.reproducible = (fresh == a);
 
     if (a.size() != b.size()) return r;

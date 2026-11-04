@@ -52,6 +52,13 @@ class Machine {
      */
     virtual void onBar(int64_t /*tickInBar*/, int32_t /*ticksPerBar*/, float /*swing*/, int64_t /*swingPair*/) {}
     /**
+     * Once per block with onBar(): ticks of a count-in left at the start of
+     * the block, or 0 when not counting in. The count-in ends on the song's
+     * first downbeat. For a machine that plays in time while stopped (Palm's
+     * cycles).
+     */
+    virtual void onCountIn(double /*ticksLeft*/) {}
+    /**
      * The track's tuning: each MIDI note's ratio to equal temperament, or
      * null for equal temperament. The rack sets it before every block, and
      * machines read it through [noteHz].

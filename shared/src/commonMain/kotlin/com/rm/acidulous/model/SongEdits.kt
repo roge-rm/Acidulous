@@ -295,10 +295,14 @@ fun Track.withEffectBypass(slot: Int, bypass: Boolean): Track = withEffectSlot(s
  *
  * Like [withPatch] for a machine: anything the preset doesn't mention goes to
  * the effect's default, and the panel pushes those defaults itself. The
- * slot's mod stays as it was; an effect preset doesn't carry one.
+ * slot's mod stays as it was; an effect preset doesn't carry one. The
+ * slot's sidechain track stays too, unless the preset names one.
  */
 fun Track.withEffectPatch(slot: Int, params: Map<String, Float>): Track =
-    withEffectSlot(slot) { it.copy(params = InsertMod.withoutMod(params) + InsertMod.modOf(it.params), fromPatch = false) }
+    withEffectSlot(slot) {
+        val keep = if (SIDECHAIN_PARAM in params) emptyMap() else it.params.filterKeys { k -> k == SIDECHAIN_PARAM }
+        it.copy(params = InsertMod.withoutMod(params) + keep + InsertMod.modOf(it.params), fromPatch = false)
+    }
 
 /** The unit name the engine uses for a slot: "effect1".."effect4". */
 fun effectUnit(slot: Int): String = "effect${slot + 1}"
@@ -543,6 +547,17 @@ fun Track.withModifier(slot: Int, type: String): Track =
 fun Track.withModifierParam(slot: Int, name: String, v01: Float): Track =
     withModifierSlot(slot) { it.copy(params = it.params + (name to v01.coerceIn(0f, 1f))) }
 fun Track.withModifierBypass(slot: Int, bypass: Boolean): Track = withModifierSlot(slot) { it.copy(bypass = bypass) }
+
+/**
+ * Puts a whole preset on a modifier slot, like [withEffectPatch]: anything
+ * the preset doesn't mention goes to its default. What [PatchStore.modifierKeeps]
+ * names stays as it was.
+ */
+fun Track.withModifierPatch(slot: Int, params: Map<String, Float>): Track =
+    withModifierSlot(slot) {
+        it.copy(params = params.filterKeys { k -> !PatchStore.modifierKeeps(k) } +
+            it.params.filterKeys { k -> PatchStore.modifierKeeps(k) })
+    }
 
 fun modifierUnit(slot: Int): String = "mod${slot + 1}"
 fun modifierSlotOf(unit: String): Int? = when (unit) { "mod1" -> 0; "mod2" -> 1; "mod3" -> 2; else -> null }

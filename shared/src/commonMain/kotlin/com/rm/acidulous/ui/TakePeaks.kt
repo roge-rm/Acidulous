@@ -12,6 +12,9 @@ import com.rm.acidulous.engine.NativeEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import com.rm.acidulous.model.TAKE_PEAK_COLUMNS
+import com.rm.acidulous.model.Envelope
+import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.stack
 
 /**
  * The shape of a take, stored in the document instead of read from disk.
@@ -86,19 +89,81 @@ object TakePeaks {
         return out
     }
 
+    /**
+     * A stacked lane's coarse shape: each column from the take its pieces
+     * play there, silence between them. Null if [shapeOf] lacks a file the
+     * pieces use, or the lane has no pieces.
+     */
+    fun comp(take: TakeRef, columns: Int = TAKE_PEAK_COLUMNS, shapeOf: (String) -> Survey?): List<Float>? {
+        if (take.pieces.isEmpty() || take.frames <= 0) return null
+        val stack = take.stack()
+        val out = ArrayList<Float>(columns * 2)
+        for (i in 0 until columns) {
+            val from = (take.frames.toLong() * i / columns).toInt()
+            val to = (take.frames.toLong() * (i + 1) / columns).toInt()
+            val mid = (from + to) / 2
+            val p = take.pieces.firstOrNull { mid >= it.start && mid < it.end }
+            val t = p?.let { stack.getOrNull(it.take) }
+            if (t == null) { out.add(0f); out.add(0f); continue }
+            val whole = shapeOf(t.file) ?: return null
+            val col = slice(whole, t.offset + from - p.shift, (to - from).coerceAtLeast(1), 1)
+            if (col.size == 2) out.addAll(col) else { out.add(0f); out.add(0f) }
+        }
+        return out
+    }
+
     /** The cached shape, or null if it hasn't been read yet. Never reads. */
     fun cached(relative: String): Survey? = com.rm.acidulous.util.locked(this) { cache[relative] }
 
-    /** Reads and caches. Blocking: call it on a worker, never the main thread. */
+    /**
+     * Reads and caches. Blocking: call it on a worker, never the main thread.
+     * One decode gives both the editor's shape and the phrase finder's finer
+     * [envelope].
+     */
     suspend fun load(root: File?, relative: String): Survey? {
         cached(relative)?.let { return it }
-        val out = FloatArray(EDIT_COLUMNS * 2)
-        val info = NativeEngine.fileSurvey(File(root, relative).absolutePath, out)
+        val fine = FloatArray(FINE_COLUMNS * 2)
+        val info = NativeEngine.fileSurvey(File(root, relative).absolutePath, fine)
         val frames = info.split('|').getOrNull(1)?.toIntOrNull() ?: return null
         if (frames <= 0) return null
-        val survey = Survey(frames, out.toList())
-        com.rm.acidulous.util.locked(this) { cache[relative] = survey }
+        // The engine splits a file into columns at frames * c / columns, so
+        // each editor column is exactly FINE_COLUMNS / EDIT_COLUMNS fine ones.
+        val per = FINE_COLUMNS / EDIT_COLUMNS
+        val out = ArrayList<Float>(EDIT_COLUMNS * 2)
+        for (c in 0 until EDIT_COLUMNS) {
+            var lo = 0f
+            var hi = 0f
+            for (f in c * per until (c + 1) * per) {
+                lo = minOf(lo, fine[f * 2])
+                hi = maxOf(hi, fine[f * 2 + 1])
+            }
+            out.add(lo)
+            out.add(hi)
+        }
+        val survey = Survey(frames, out)
+        com.rm.acidulous.util.locked(this) {
+            cache[relative] = survey
+            envelopes[relative] = Envelope(frames, fine)
+        }
         return survey
+    }
+
+    /**
+     * Columns in a file's fine envelope: about 10 ms each on a five minute
+     * file, finer on a shorter one. 256 KB a file.
+     */
+    const val FINE_COLUMNS = 32768
+
+    private val envelopes = com.rm.acidulous.util.LruMap<String, Envelope>(KEEP)
+
+    /** A file's fine envelope for the phrase finder, read if need be. Blocking: call it on a worker. */
+    suspend fun envelope(root: File?, relative: String): Envelope? {
+        com.rm.acidulous.util.locked(this) { envelopes[relative] }?.let { return it }
+        // The editor's shape may be cached without the envelope, if the
+        // envelope has since been pushed out, so read again.
+        com.rm.acidulous.util.locked(this) { cache.remove(relative) }
+        load(root, relative)
+        return com.rm.acidulous.util.locked(this) { envelopes[relative] }
     }
 
     /**

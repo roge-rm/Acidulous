@@ -15,6 +15,12 @@ Sous les cordes jouées se trouvent des cordes sympathiques qu’on ne touche
 jamais. Elles sont accordées sur la gamme du morceau : toute note qui tombe
 sur l’une d’elles la fait sonner, et elle sonne encore après la note.
 
+Le reste du morceau peut aussi les faire sonner. Choisissez une autre piste
+et son son secoue les cordes sympathiques et de bourdon : elles sonnent sous
+tout ce que joue cette piste, même sans rien jouer sur Sympath. Montez
+**écouter** et elles se réaccordent d’elles-mêmes sur les notes de cette
+piste.
+
 ## Cordes
 
 - **modèle** : **sitar** (onze cordes sympathiques et deux cordes de
@@ -46,11 +52,31 @@ sur l’une d’elles la fait sonner, et elle sonne encore après la note.
 
 - **tarabs** : le volume des cordes sympathiques.
 - **chikari** : frappe les cordes de bourdon à chaque nouvelle note.
+- **éclosion** : combien de temps sonnent les cordes sympathiques et de
+  bourdon, de quatre fois moins à quatre fois plus. Elles sonnent à peu près
+  aussi fort dans les deux cas.
 - **première** : la première corde du tanpura : **pa**, **ma**, **ni** ou
   **sa** une octave plus bas. Les trois autres sont Sa, Sa et Sa une octave
   plus bas.
 - **cycle** : en combien de temps le tanpura pince ses quatre cordes avant
   de recommencer : **2**, **4**, **6** ou **8** temps. Il suit le tempo.
+
+## Morceau
+
+- **de la piste** : la piste dont le son fait sonner les cordes sympathiques
+  et de bourdon, ou **non**. Seuls les modèles qui ont des cordes
+  sympathiques ou de bourdon sonnent ainsi : sitar, shamisen, sarod, les
+  veenas, e-sitar et les instruments frottés.
+- **résonance** : la force avec laquelle cette piste les secoue.
+- **écouter** : à 0, les cordes restent sur **sa** et **gamme**. Montez-le et
+  elles se réaccordent sur les notes que joue la piste, en glissant vers
+  chaque nouvel ensemble. Un peu apprend la tonalité du morceau sur
+  plusieurs mesures ; à fond, elles suivent chaque accord. Les cordes de
+  bourdon se posent sur la note sur laquelle la piste s’appuie le plus.
+
+Les cordes suivent l’accordage de la piste. Dans un accordage de plus de
+douze notes par octave, **gamme** prend les degrés les plus proches de
+l’accordage, et **écouter** entend les degrés de l’accordage lui-même.
 
 ## Mains
 
@@ -75,7 +101,7 @@ destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace les notes jouées ensuite, 24
 demi-tons à 1. Le modèle, l’accordage, le sa, la gamme, la première corde, le
-cycle, les voix, l’octave et le bend ne sont pas accessibles. Un changement de
+cycle, les voix, l’octave, le bend et la piste ne sont pas accessibles. Un changement de
 pincement, de position, de chikari ou de vélocité s’entend à la note suivante ;
 le reste bouge tout de suite, comme le pincement sur un instrument frotté.
 Touchez le nom d’une macro pour la renommer.
@@ -84,6 +110,10 @@ Touchez le nom d’une macro pour la renommer.
 
 - Réglez **sa** sur la tonalité du morceau et **gamme** sur sa gamme : les
   cordes sympathiques sonnent avec la mélodie.
+- Mettez Sympath sur une piste sans clips, pointez **de la piste** vers la
+  batterie ou le groupe et montez **écouter** : le morceau reçoit un halo de
+  cordes dans sa propre tonalité. Charger un patch garde la piste choisie :
+  choisissez-la vous-même après avoir chargé un patch **morceau**.
 - Le tanpura ne pince que tant qu’une note est tenue : tenez Sa aussi
   longtemps que le bourdon doit durer.
 - **Sitar** n’a qu’une voix : jouez lié pour le meend, et appuyez plus fort

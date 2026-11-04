@@ -21,6 +21,10 @@ class BiasSplitTest {
     private val names = mapOf(11L to "s-intro", 22L to "s-verse", 33L to "s-chorus")
     private val nameOf: (Long) -> String? = { names[it] }
 
+    private val List<Pair<String, TakeRef>>.keys get() = map { it.first }
+    private val List<Pair<String, TakeRef>>.values get() = map { it.second }
+    private operator fun List<Pair<String, TakeRef>>.get(scene: String): TakeRef? = lastOrNull { it.first == scene }?.second
+
     @Test
     fun consecutiveMarksPairIntoWindows() {
         val marks = listOf(
@@ -28,7 +32,7 @@ class BiasSplitTest {
         )
         val out = splitTake(marks, 24L * barFrames, "samples/take.wav", nameOf)
 
-        assertEquals(listOf("s-intro", "s-verse", "s-chorus"), out.keys.toList())
+        assertEquals(listOf("s-intro", "s-verse", "s-chorus"), out.keys)
         assertEquals(0, out["s-intro"]!!.offset)
         assertEquals(8 * barFrames, out["s-intro"]!!.frames)
         assertEquals(8 * barFrames, out["s-verse"]!!.offset)
@@ -63,7 +67,7 @@ class BiasSplitTest {
             listOf(mark(0, 11), mark(4 * barFrames, 22)),
             4L * barFrames + 500, "samples/take.wav", nameOf,
         )
-        assertEquals(listOf("s-intro"), out.keys.toList())
+        assertEquals(listOf("s-intro"), out.keys)
         assertNull(out["s-verse"])
     }
 
@@ -74,17 +78,18 @@ class BiasSplitTest {
             listOf(mark(0, 11), mark(4 * barFrames, 99)),
             8L * barFrames, "samples/take.wav", nameOf,
         )
-        assertEquals(listOf("s-intro"), out.keys.toList())
+        assertEquals(listOf("s-intro"), out.keys)
     }
 
-    /** Go round the song twice and the second pass is the one kept. */
+    /** Go round the song twice and both passes are kept, in order. */
     @Test
-    fun goingRoundAgainReplacesTheFirstPass() {
+    fun goingRoundAgainKeepsBothPasses() {
         val out = splitTake(
             listOf(mark(0, 11), mark(4 * barFrames, 22), mark(8 * barFrames, 11)),
             12L * barFrames, "samples/take.wav", nameOf,
         )
-        assertEquals(8 * barFrames, out["s-intro"]!!.offset)
+        assertEquals(listOf("s-intro", "s-verse", "s-intro"), out.keys)
+        assertEquals(listOf(0, 8 * barFrames), out.filter { it.first == "s-intro" }.map { it.second.offset })
     }
 
     @Test
@@ -96,5 +101,47 @@ class BiasSplitTest {
         assertEquals(480, marks[0].tick)
         assertEquals(90.5f, marks[0].bpm, 0.001f)
         assertEquals(3840, marks[1].cycleTicks)
+    }
+
+    /**
+     * Marks left from an earlier recording, ahead of this one's. The engine
+     * now clears them when a capture starts; the split ignores them anyway.
+     */
+    @Test
+    fun marksFromAnEarlierRecordingAreIgnored() {
+        val cell = 2 * barFrames
+        val stale = listOf(mark(0, 11), mark(cell, 11), mark(2 * cell, 11), mark(5 * cell, 11))
+        val fresh = listOf(mark(0, 11), mark(cell, 11))
+        val out = splitTake(stale + fresh, cell + cell / 2L, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertEquals(listOf(cell, cell / 2), out.values.map { it.frames })
+    }
+
+    @Test
+    fun aMarkPastTheEndOfTheFileMakesNoTake() {
+        val cell = 2 * barFrames
+        val out = splitTake(listOf(mark(0, 11), mark(cell, 11), mark(3 * cell, 11)), cell * 2L, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertTrue(out.values.all { it.offset + it.frames <= cell * 2 })
+    }
+
+    /** The song stopped while still armed: the take ends there, not at disarm. */
+    @Test
+    fun aStopEndsTheLastPass() {
+        val cell = 2 * barFrames
+        val stop = Mark(cell + cell / 2L, 0, 0, 0, 0f)
+        val out = splitTake(listOf(mark(0, 11), mark(cell, 11), stop), 11L * cell, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell), out.values.map { it.offset })
+        assertEquals(listOf(cell, cell / 2), out.values.map { it.frames })
+    }
+
+    /** Playing again after a stop, still armed, starts a new pass after the gap. */
+    @Test
+    fun playingAgainAfterAStopStartsANewPass() {
+        val cell = 2 * barFrames
+        val stop = Mark(cell.toLong(), 0, 0, 0, 0f)
+        val out = splitTake(listOf(mark(0, 11), stop, mark(cell + cell / 2, 11)), 3L * cell, "samples/take.wav", nameOf)
+        assertEquals(listOf(0, cell + cell / 2), out.values.map { it.offset })
+        assertEquals(listOf(cell, 3 * cell - (cell + cell / 2)), out.values.map { it.frames })
     }
 }

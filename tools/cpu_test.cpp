@@ -339,6 +339,31 @@ Result timeInserts(const std::string &machine, const std::string &fx, int32_t pe
 }
 
 /**
+ * `--key`: a song for a machine with a sidechain (Sympath) to hear, A minor
+ * chord tones plucked every eighth over noise on the beat, handed over as the
+ * key every block. Empty without the flag.
+ */
+std::vector<float> gKeySong;
+void buildKeySong() {
+    const int32_t n = kSr * 4;
+    gKeySong.assign(static_cast<size_t>(n), 0.0f);
+    const double notes[] = {220.0, 261.63, 329.63, 392.0};
+    uint32_t seed = 1;
+    for (int32_t i = 0; i < n; ++i) {
+        const int32_t eighth = kSr / 4, at = i % eighth;
+        const double t = static_cast<double>(at) / kSr, hz = notes[(i / eighth) % 4];
+        double v = 0.3 * std::exp(-t / 0.2) * std::sin(6.283185307179586 * hz * t);
+        seed = seed * 1664525u + 1013904223u;
+        if ((i / eighth) % 2 == 0) v += 0.2 * std::exp(-t / 0.05) * (static_cast<double>(seed >> 8) / 8388608.0 - 1.0);
+        gKeySong[static_cast<size_t>(i)] = static_cast<float>(v);
+    }
+}
+void keyFor(Machine *m, int32_t block) {
+    if (gKeySong.empty()) return;
+    m->setKey(gKeySong.data() + (static_cast<size_t>(block) * kBlock) % (gKeySong.size() - kBlock));
+}
+
+/**
  * What a machine costs with nothing to play, like a track that isn't used in
  * the current scene. Most tracks are idle most of the time, so if idle isn't
  * nearly free a song pays for every track all the time.
@@ -356,6 +381,7 @@ Result timeIdle(const std::string &name) {
     std::vector<float> L(kBlock), R(kBlock);
     // No Player: not one note, ever.
     for (int32_t b = 0; b < kBlocks; ++b) {
+        keyFor(m, b);
         std::fill(L.begin(), L.end(), 0.0f);
         std::fill(R.begin(), R.end(), 0.0f);
         const double t0 = nowUs();
@@ -513,6 +539,7 @@ Result timeMachine(const std::string &name) {
     Player player;
     for (int32_t b = 0; b < kBlocks; ++b) {
         player.tick(m, b);
+        keyFor(m, b);
         std::fill(L.begin(), L.end(), 0.0f);
         std::fill(R.begin(), R.end(), 0.0f);
         const double t0 = nowUs();
@@ -636,6 +663,12 @@ Result timeEffect(const std::string &name) {
             L[i] = v;
             R[i] = v * 0.97f;
         }
+        // The transport at 120 bpm, for effects that follow the beat.
+        const double ticksPerFrame = 240.0 * 120.0 / 60.0 / kSr;
+        ModTransport playing;
+        playing.rolling = true;
+        fx->setTransport(playing);
+        fx->onBlock(static_cast<int64_t>(b * kBlock * ticksPerFrame), static_cast<int64_t>((b + 1) * kBlock * ticksPerFrame), 120.0f);
         const double t0 = nowUs();
         fx->run(L.data(), R.data(), kBlock, true);
         const double us = nowUs() - t0;
@@ -828,6 +861,10 @@ int main(int argc, char **argv) {
     std::vector<std::string> args;
     for (int i = 0; i < argc; ++i) {
         const std::string a = argv[i];
+        if (a == "--key") {
+            buildKeySong();
+            continue;
+        }
         if (a == "--rate" && i + 1 < argc) {
             gNotesPerSecond = std::max(0.1, atof(argv[++i]));
             continue;
@@ -1006,6 +1043,14 @@ int main(int argc, char **argv) {
         report(rows);
         return 0;
     }
+    // `cpu_test.sh fx.Spectral stutter=1` times one unit with knobs set, normalised.
+    for (int i = 2; i < argc; ++i) {
+        const std::string kv = argv[i];
+        const size_t eq = kv.find('=');
+        if (eq == std::string::npos) continue;
+        forced.emplace_back(kv.substr(0, eq), std::stof(kv.substr(eq + 1)));
+        printf("forcing %s to %s\n", kv.substr(0, eq).c_str(), kv.substr(eq + 1).c_str());
+    }
     for (int32_t i = 0; i < MachineRegistry::count(); ++i) {
         const std::string name = MachineRegistry::name(i);
         if (!only.empty() && only != name) continue;
@@ -1015,6 +1060,34 @@ int main(int argc, char **argv) {
         const std::string name = EffectRegistry::name(i);
         if (!only.empty() && only != name && only != "fx." + name) continue;
         rows.push_back(timeEffect(name));
+        // The Deesser's throw runs an echo the default leaves asleep.
+        if (name == "Deesser" && forced.empty()) {
+            forced.emplace_back("throw", 1.0f);
+            Result r = timeEffect(name);
+            r.name += " throw";
+            rows.push_back(r);
+            forced.clear();
+        }
+        // Smash's beat: every band ducking, two on rhythms and one keyed, adds work the default skips.
+        if (name == "Smash" && forced.empty()) {
+            forced.emplace_back("lowduck", 2.0f);
+            forced.emplace_back("midduck", 5.0f);
+            forced.emplace_back("highduck", 3.0f);
+            Result r = timeEffect(name);
+            r.name += " beat";
+            rows.push_back(r);
+            forced.clear();
+        }
+        // The Transient's accent grid adds a detector the default skips.
+        if (name == "Transient" && forced.empty()) {
+            forced.emplace_back("grid", 1.0f);
+            forced.emplace_back("a01", 2.0f);
+            forced.emplace_back("a03", 0.0f);
+            Result r = timeEffect(name);
+            r.name += " grid";
+            rows.push_back(r);
+            forced.clear();
+        }
     }
     report(rows);
     printf("\n%zu units timed\n", rows.size());

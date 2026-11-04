@@ -297,6 +297,77 @@ data class TakeRef(
     @EncodeDefault(EncodeDefault.Mode.NEVER) val fadeOut: Int = 0,
     /** A rough shape for the grid to draw, so a cell doesn't need the disk. */
     @EncodeDefault(EncodeDefault.Mode.NEVER) val peaks: List<Float> = emptyList(),
+    /**
+     * Every take in this lane's stack, take 0 first, when there's more than
+     * one. Take 0 is always [file] and [offset]. Empty for a lane with one
+     * take, which is what every older song has.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val takes: List<StackTake> = emptyList(),
+    /**
+     * Which take plays where, in frames of this region. Empty plays [file]
+     * from [offset] as a one-take lane does. See `model/Bias.kt`.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val pieces: List<Piece> = emptyList(),
+    /**
+     * Every take in the stack plays at once instead of the pieces, as a
+     * double or a choir, at about the level of one take. The pieces are
+     * kept for when it's turned off.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val blend: Boolean = false,
+    /**
+     * The blend lines every take up word by word before summing them: each
+     * take's [StackTake.nudges]. Turning it off clears them.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val blendLinedUp: Boolean = false,
+    /**
+     * How far a blend spreads its takes across the stereo field, 0 (all in
+     * the middle) to 1 (first and last at the edges).
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val spread: Float = 0f,
+    /**
+     * The lane this one doubles, -1 for none. Set by lining it up on
+     * another lane: suggest then times it by that lane's hits, and a lined-up
+     * blend lines its takes up on that lane.
+     */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val lead: Int = -1,
+)
+
+/**
+ * One take in a lane's stack. All of a stack's takes were recorded against
+ * the same cycle, so region frame `at` is frame `offset + at` of every take.
+ * [offset] can be negative when a take began after the region did.
+ *
+ * [start] and [end] are the region frames it has audio for: a pass you
+ * punched into or stopped part way through covers less than the region.
+ */
+@Serializable
+data class StackTake(
+    val file: String,
+    val offset: Int,
+    val start: Int,
+    val end: Int,
+    /** In a lined-up blend, the stretches of this take played later or earlier, word by word. */
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val nudges: List<Nudge> = emptyList(),
+)
+
+/**
+ * One word of a take in a lined-up blend: region frames [start, end) play
+ * the take [shift] frames later (negative is earlier).
+ */
+@Serializable
+data class Nudge(val start: Int, val end: Int, val shift: Int)
+
+/**
+ * A stretch of a region, [start, end) in region frames, played from take
+ * [take]. [shift] plays the take that many frames later (negative is
+ * earlier): lining up a double sets it per phrase.
+ */
+@Serializable
+data class Piece(
+    val start: Int,
+    val end: Int,
+    val take: Int,
+    @EncodeDefault(EncodeDefault.Mode.NEVER) val shift: Int = 0,
 )
 
 /**

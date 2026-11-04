@@ -11,7 +11,7 @@ en-tête, puis la scène suivante commence.
 - Touchez l’en-tête d’une scène pour commencer là. Avec **⟳**, cette scène se
   répète, et avec **⇥ fin**, le morceau joue à partir d’elle jusqu’à la fin et
   s’arrête.
-- Maintenez l’en-tête d’une scène pour son menu : réglages, insérer, dupliquer,
+- Maintenez l’en-tête d’une scène pour son menu : réglages, renommer, insérer, dupliquer,
   supprimer et déplacer à gauche ou à droite.
 - Touchez le bouton de boucle à gauche de la barre du bas pour boucler tout le
   morceau ou seulement la scène en cours. Maintenez-le pour choisir **⟳** pour

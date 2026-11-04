@@ -4,7 +4,9 @@ import com.rm.acidulous.io.*
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.drag
@@ -21,6 +23,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.runtime.key
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,7 +39,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,10 +64,39 @@ import com.rm.acidulous.model.BIAS_LANES
 import com.rm.acidulous.model.SongEditor
 import com.rm.acidulous.model.BIAS_MACHINE
 import com.rm.acidulous.model.TakeRef
+import com.rm.acidulous.model.heardIn
+import com.rm.acidulous.model.keeping
+import com.rm.acidulous.model.listenPlan
 import com.rm.acidulous.model.samplesInUse
 import com.rm.acidulous.model.takeForFile
 import com.rm.acidulous.model.takeForWholeFile
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.reframed
+import com.rm.acidulous.model.headRoom
+import com.rm.acidulous.model.stillAsAnalysed
+import com.rm.acidulous.model.heardPieces
+import com.rm.acidulous.model.stackLength
+import com.rm.acidulous.model.stack
+import com.rm.acidulous.model.takeCount
+import com.rm.acidulous.model.phraseAt
+import com.rm.acidulous.model.choosing
+import com.rm.acidulous.model.hearing
+import com.rm.acidulous.model.withoutTake
+import com.rm.acidulous.model.leadsFor
+import com.rm.acidulous.model.linedUp
+import com.rm.acidulous.model.linedUpBy
+import com.rm.acidulous.model.lineUpSpec
+import com.rm.acidulous.model.suggested
+import com.rm.acidulous.model.unshifted
+import com.rm.acidulous.model.blending
+import com.rm.acidulous.model.blendLineUpSpec
+import com.rm.acidulous.model.blendLinedUpBy
+import com.rm.acidulous.model.blendReference
+import com.rm.acidulous.model.blendUnlined
+import com.rm.acidulous.model.leadOf
+import com.rm.acidulous.model.pitchSpecFor
+import com.rm.acidulous.model.spreading
+import androidx.compose.ui.layout.onSizeChanged
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -84,7 +127,7 @@ import org.jetbrains.compose.resources.StringResource
  * string built from these numbers, so writing every frame of a drag would
  * decode the take every frame, which is far too slow for a long take.
  */
-private val GutterW = 34.dp
+internal val GutterW = 34.dp
 private val RulerH = 16.dp
 private val HandleGrab = 22.dp
 
@@ -152,12 +195,138 @@ fun AudioLanes(
     val commit: (Int, TakeRef?) -> Unit = { lane, take ->
         editor.editClip(trackIndex, sceneId) { c2 -> c2.withTake(lane, take) }
     }
+    // Comping: one stacked lane at a time shows its takes under it, and one
+    // of its phrases can be picked.
+    var open by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    var phrase by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    // A lane with one take opens too when there's another lane to line it up on.
+    val openTake = clip.audio?.lane(open)?.takeIf { it.takeCount > 1 || clip.leadsFor(open).isNotEmpty() }
+    if (open >= 0 && openTake == null && drag == null) { open = -1; phrase = -1 }
+    val cuts = Phrasing.rememberCuts(root, if (drag == null) openTake else null)
+    // The lane's gesture handler outlives a recomposition, so it reads these fresh.
+    val cutsNow by rememberUpdatedState(cuts)
+    val compEdit: (Int, (TakeRef) -> TakeRef?) -> Unit = { lane, f -> compEdit(scope, editor, trackIndex, sceneId, lane, f = f) }
+    // An answer worked out off the main thread lands only if the lanes it
+    // was worked out from haven't changed since.
+    fun compAnswer(lane: Int, analysed: TakeRef, leadLane: Int, lead: TakeRef?, f: (TakeRef) -> TakeRef?) =
+        compEdit(scope, editor, trackIndex, sceneId, lane, { it.stillAsAnalysed(lane, analysed, leadLane, lead) }, f)
+    // Pitch is judged in the track's tuning, and a double is timed by its lead.
+    val tuning = editor.song.pitchSpecFor(editor.song.tracks.getOrNull(trackIndex))
+    val scores = Scoring.rememberScores(
+        root, if (drag == null) openTake?.takeIf { it.takeCount > 1 } else null, cuts, tuning,
+        if (open >= 0) clip.leadOf(open) else null,
+    )
 
-    Column(modifier.background(c.bgDeep)) {
+    // Listening through the picked phrase (see Listening). It stops when it
+    // no longer matches what's shown: another phrase or lane, an edit, a
+    // drag, or leaving the editor.
+    val listen = Listening.session?.takeIf { it.on(trackIndex, sceneId) }
+    // A blend plays every take at once, so there's nothing to listen through.
+    val plan = if (openTake != null && !openTake.blend && cuts != null && phrase in 0 until cuts.size - 1) {
+        openTake.listenPlan(open, cuts[phrase], cuts[phrase + 1])
+    } else {
+        null
+    }
+    SideEffect {
+        if (listen != null) {
+            val now = clip.audio?.lane(listen.plan.lane)?.copy(peaks = emptyList())
+            if (listen.plan.lane != open || listen.phrase != phrase || drag != null ||
+                now != listen.take.copy(peaks = emptyList())) Listening.stop()
+        }
+    }
+    DisposableEffect(trackIndex, sceneId) {
+        onDispose { if (Listening.session?.on(trackIndex, sceneId) == true) Listening.stop() }
+    }
+    var played by remember { mutableStateOf(-1L) }
+    LaunchedEffect(listen) {
+        played = -1L
+        if (listen == null) return@LaunchedEffect
+        var started = false
+        while (true) {
+            withFrameNanos { }
+            val now = Listening.played(trackIndex)
+            // The engine stops listening by itself for a render or a freeze.
+            if (now >= 0) started = true else if (started) { Listening.stop(); break }
+            played = now
+        }
+    }
+    val playingTake by remember(listen) { derivedStateOf { listen?.plan?.takeAt(played) ?: -1 } }
+    /** Where listening is, as a tick of the cycle on lane [lane], or null on any other lane. */
+    fun listenTick(lane: Int): Int? {
+        val l = listen ?: return null
+        if (l.plan.lane != lane || played < 0) return null
+        val t = l.take
+        if (t.frames <= 0) return null
+        return t.startTick + (l.plan.frameAt(played).toLong() * t.lengthTicks() / t.frames).toInt()
+    }
+    val keep: (Listening.Session, Int) -> Unit = { l, k ->
+        Listening.stop()
+        compEdit(l.plan.lane) { it.keeping(l.plan, k) }
+    }
+
+    // The keyboard: Enter on a stacked lane starts comping it. Left and right
+    // pick the phrase, up and down the take, Enter keeps it (or, while
+    // listening, the take playing). Esc stops.
+    var keyLane by remember(trackIndex, sceneId) { mutableStateOf(-1) }
+    var keyTake by remember(trackIndex, sceneId) { mutableStateOf(0) }
+    val clipNow by rememberUpdatedState(clip)
+    val listenNow by rememberUpdatedState(listen)
+    fun compKey(lane: Int, code: Int): Boolean {
+        val st = clipNow.audio?.lane(lane)?.takeIf { it.takeCount > 1 } ?: return false
+        val enter = code == KeyCodes.KEYCODE_ENTER || code == KeyCodes.KEYCODE_NUMPAD_ENTER ||
+            code == KeyCodes.KEYCODE_DPAD_CENTER
+        val cs = (if (open == lane) cutsNow else null) ?: listOf(0, st.frames)
+        val count = cs.size - 1
+        if (keyLane != lane) {
+            if (!enter) return false
+            keyLane = lane
+            if (open != lane) { open = lane; phrase = 0 } else if (phrase !in 0 until count) phrase = 0
+            keyTake = st.heardIn(cs[phrase.coerceIn(0, count - 1)], cs[phrase.coerceIn(0, count - 1) + 1])
+            return true
+        }
+        val l = listenNow?.takeIf { it.plan.lane == lane }
+        when (code) {
+            KeyCodes.KEYCODE_ESCAPE -> { keyLane = -1; if (l != null) Listening.stop() }
+            KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT -> {
+                val d = if (code == KeyCodes.KEYCODE_DPAD_LEFT) -1 else 1
+                phrase = (phrase + d).coerceIn(0, count - 1)
+                keyTake = st.heardIn(cs[phrase], cs[phrase + 1])
+            }
+            KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN -> {
+                val d = if (code == KeyCodes.KEYCODE_DPAD_UP) -1 else 1
+                if (l == null) keyTake = (keyTake + d).coerceIn(0, st.takeCount - 1)
+            }
+            else -> {
+                if (!enter) return false
+                if (l != null) {
+                    val k = l.plan.takeAt(Listening.played(trackIndex))
+                    if (k >= 0) keep(l, k)
+                } else if (phrase in 0 until count) {
+                    val k = keyTake
+                    val a = cs[phrase]
+                    val b = cs[phrase + 1]
+                    compEdit(lane) { it.choosing(k, a, b) }
+                }
+            }
+        }
+        return true
+    }
+
+    // The take rows get at most this much of the editor's height and scroll past it.
+    var heightPx by remember { mutableStateOf(0) }
+    val rowsMax = with(androidx.compose.ui.platform.LocalDensity.current) { (heightPx * 0.45f).toDp() }
+    Column(modifier.background(c.bgDeep).onSizeChanged { heightPx = it.height }) {
         // The ruler: bar numbers along the cycle, so a repeat shows as a
         // second pass rather than a longer bar.
         Row(Modifier.fillMaxWidth().height(RulerH)) {
-            Box(Modifier.width(GutterW))
+            if (listen != null || (plan != null && openTake != null)) {
+                ListenButton(listening = listen != null) {
+                    if (listen != null) Listening.stop()
+                    else if (plan != null && openTake != null) Listening.start(trackIndex, sceneId, phrase, openTake, plan)
+                }
+            } else {
+                Box(Modifier.width(GutterW))
+            }
             Box(Modifier.weight(1f).fillMaxHeight()) {
                 Canvas(Modifier.fillMaxSize()) {
                     val bars = (total + ticksPerBar - 1) / ticksPerBar
@@ -175,6 +344,10 @@ fun AudioLanes(
             // been written to the song yet.
             val take = if (drag?.lane == lane) drag?.take else stored
             val shape = TakePeaks.rememberShape(root, take?.file.orEmpty())
+            // A stack's other files, by name. Takes from one recording share a file.
+            val stackShapes = take?.takes?.map { it.file }?.distinct().orEmpty().associateWith { f ->
+                key(f) { TakePeaks.rememberShape(root, f) }
+            }
             val isMuted = (b.value("mute${lane + 1}") ?: 0f) >= 0.5f
             Row(
                 Modifier.fillMaxWidth().weight(1f).padding(bottom = 1.dp),
@@ -212,10 +385,22 @@ fun AudioLanes(
                         )
                     }
                 }
+                var keyFocused by remember { mutableStateOf(false) }
                 Box(
                     Modifier.weight(1f).fillMaxHeight()
                         .clip(RoundedCornerShape(3.dp))
                         .background(c.card)
+                        .then(
+                            if (stored != null && stored.takeCount > 1) {
+                                Modifier
+                                    .then(if (keyFocused) Modifier.border(1.dp, if (keyLane == lane) c.accent else c.teal, RoundedCornerShape(3.dp)) else Modifier)
+                                    .onFocusChanged { keyFocused = it.isFocused; if (!it.isFocused && keyLane == lane) keyLane = -1 }
+                                    .focusable()
+                                    .onKeyEvent { ev -> ev.type == KeyEventType.KeyDown && compKey(lane, ev.press.keyCode) }
+                            } else {
+                                Modifier
+                            },
+                        )
                         .then(
                             if (take == null) {
                                 Modifier.clickable { picking = lane }
@@ -227,6 +412,18 @@ fun AudioLanes(
                                         handleGrabPx = HandleGrab.toPx(),
                                         onDrag = { drag = it },
                                         onCommit = { d -> drag = null; commit(lane, d) },
+                                        onTap = { x ->
+                                            if (stored.takeCount > 1 || clipNow.leadsFor(lane).isNotEmpty()) {
+                                                val at = frameAt(stored, total, size.width.toFloat(), x)
+                                                val i = phraseAt(if (open == lane) cutsNow ?: listOf(0, stored.frames) else listOf(0, stored.frames), at)
+                                                // Tapping the picked phrase again puts the takes away.
+                                                when {
+                                                    open != lane -> { open = lane; phrase = -1 }
+                                                    phrase == i -> { open = -1; phrase = -1 }
+                                                    else -> phrase = i
+                                                }
+                                            }
+                                        },
                                     )
                                 }
                             },
@@ -251,7 +448,27 @@ fun AudioLanes(
                                 Size((to - from).coerceAtLeast(1f), size.height),
                             )
                             val survey = shape
-                            if (survey != null && survey.frames > 0) {
+                            if (take.blend && take.takes.size > 1 && take.frames > 0) {
+                                // A blend: every take faintly, and the sum as it's heard over them.
+                                drawBlend(take, stackShapes, from, span, to, mid, half, colour)
+                            } else if (take.pieces.isNotEmpty() && take.frames > 0) {
+                                // A stack: each piece from its own take's file.
+                                val stack = take.stack()
+                                for (p in take.heardPieces()) {
+                                    val t = stack.getOrNull(p.take) ?: continue
+                                    val whole = stackShapes[t.file] ?: continue
+                                    if (whole.frames <= 0) continue
+                                    val x0 = from + span * p.start / take.frames
+                                    val x1 = (from + span * p.end / take.frames).coerceAtMost(to)
+                                    if (x1 <= x0) continue
+                                    val columns = whole.peaks.size / 2
+                                    val c0 = (columns.toLong() * (t.offset + p.start - p.shift).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, columns - 1)
+                                    val c1 = (columns.toLong() * (t.offset + p.end - p.shift) / whole.frames).toInt().coerceIn(c0 + 1, columns)
+                                    val wanted = (x1 - x0) / (span * (p.end - p.start) / take.frames)
+                                    val shown = ((c1 - c0) * wanted).toInt()
+                                    drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour)
+                                }
+                            } else if (survey != null && survey.frames > 0) {
                                 // Which columns of the file this region covers.
                                 // The cache holds the whole file, so trimming
                                 // just changes these two numbers.
@@ -291,6 +508,7 @@ fun AudioLanes(
                                 val x = to - take.fadeOut * perFrame
                                 drawLine(c.teal, Offset(x, 0f), Offset(to, size.height), 1.5f)
                             }
+                            if (open == lane && drag == null) drawPhrases(take, cuts, phrase, from, span, to, c.textMid, c.accent)
                         }
                     }
                     if (take == null) {
@@ -300,11 +518,67 @@ fun AudioLanes(
                         )
                     }
                     Canvas(Modifier.fillMaxSize()) {
-                        val head = playheadTick() ?: return@Canvas
+                        val head = (if (listen != null) listenTick(lane) else playheadTick()) ?: return@Canvas
                         val x = size.width * head.coerceIn(0, total) / total
                         drawLine(c.accent, Offset(x, 0f), Offset(x, size.height), 1.5f)
                     }
                 }
+            }
+            if (open == lane && stored != null && openTake != null) {
+                TakeRows(
+                    take = stored, total = total, cuts = cuts ?: listOf(0, stored.frames), phrase = phrase,
+                    maxHeight = rowsMax, root = root,
+                    playheadTick = { if (listen != null) listenTick(lane) else playheadTick() },
+                    onChoose = { k, from, to, at ->
+                        if (at >= 0) phrase = at
+                        compEdit(lane) { it.choosing(k, from, to) }
+                    },
+                    onEverywhere = { k -> compEdit(lane) { it.hearing(k) } },
+                    onDelete = { k -> compEdit(lane) { it.withoutTake(k) } },
+                    playing = if (listen?.plan?.lane == lane) playingTake else -1,
+                    cursor = if (keyLane == lane && listen == null) keyTake else -1,
+                    onKeep = listen?.takeIf { it.plan.lane == lane }?.let { l -> { k: Int -> keep(l, k) } },
+                    scores = scores,
+                )
+            }
+            if (open == lane && stored != null && openTake != null) {
+                val cs = cuts
+                CompBar(
+                    take = stored,
+                    leads = clip.leadsFor(lane),
+                    lined = stored.linedUp,
+                    onSuggest = {
+                        val lead = clip.leadOf(lane)
+                        if (cs != null) scope.launch {
+                            val sc = Scoring.scores(root, stored, cs, tuning, lead) ?: return@launch
+                            compAnswer(lane, stored, stored.lead, lead) { it.suggested(cs, sc) }
+                        }
+                    },
+                    onLineUp = { l ->
+                        val lead = clip.audio?.lane(l)
+                        if (cs != null && lead != null && root != null) scope.launch {
+                            val words = withContext(Dispatchers.Default) {
+                                val spec = stored.lineUpSpec(lead, cs, root)
+                                if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
+                            } ?: return@launch
+                            compAnswer(lane, stored, l, lead) { it.linedUpBy(words, l) }
+                        }
+                    },
+                    onUnline = { compEdit(lane) { it.unshifted() } },
+                    onBlend = { on -> compEdit(lane) { it.blending(on) } },
+                    onBlendLineUp = { on ->
+                        val ref = clip.blendReference(lane)
+                        if (!on) compEdit(lane) { it.blendUnlined() }
+                        else if (cs != null && ref != null && root != null) scope.launch {
+                            val raw = withContext(Dispatchers.Default) {
+                                val spec = stored.blendLineUpSpec(ref, cs, root)
+                                if (spec.isEmpty()) null else runCatching { NativeEngine.lineUp(spec) }.getOrNull()
+                            } ?: return@launch
+                            compAnswer(lane, stored, stored.lead, clip.leadOf(lane)) { it.blendLinedUpBy(raw) }
+                        }
+                    },
+                    onSpread = { v -> compEdit(lane) { it.spreading(v) } },
+                )
             }
         }
     }
@@ -339,6 +613,7 @@ fun CompButton(
         enabled = lanes > 0,
         onClick = {
             val theClip = clip ?: return@TextButton
+            Listening.stop()
             val scene = song.scenes.firstOrNull { it.id == sceneId } ?: return@TextButton
             val bpm = song.bpmOf(sceneId)
             val ticks = song.cycleTicks(sceneId, theClip)
@@ -394,6 +669,8 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
     handleGrabPx: Float,
     onDrag: (LaneDrag?) -> Unit,
     onCommit: (TakeRef) -> Unit,
+    /** A tap that didn't move, at this x. */
+    onTap: (Float) -> Unit,
 ) {
     awaitEachGesture {
         val down = awaitFirstDown()
@@ -428,18 +705,22 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.laneGest
         // so it moves by the drag.
         val head = stored.startTick
         val tail = stored.startTick + stored.lengthTicks()
+        var moved = false
         drag(down.id) { change ->
             change.consume()
+            if (abs(change.position.x - down.position.x) > viewConfiguration.touchSlop) moved = true
             val atTick = (change.position.x / w * total).roundToInt()
             val dTicks = when (part) {
                 LaneDrag.Part.Head, LaneDrag.Part.FadeIn -> atTick - head
                 LaneDrag.Part.Tail, LaneDrag.Part.FadeOut -> atTick - tail
                 LaneDrag.Part.Body -> ((change.position.x - down.position.x) / w * total).roundToInt()
             }
-            latest = apply(stored, part, dTicks, total, grid, fileFrames())
+            // A stack moves its takes and pieces with the region.
+            latest = apply(stored, part, dTicks, total, grid, fileFrames()).reframed(stored)
             onDrag(LaneDrag(lane, part, latest))
         }
-        onCommit(latest)
+        // A tap writes nothing, so it isn't an undo step.
+        if (moved) onCommit(latest) else { onDrag(null); onTap(down.position.x) }
     }
 }
 
@@ -474,7 +755,7 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
         // the recording and the rest stays in place, like trimming the lead-in
         // before a vocal. Offset and start move together.
         LaneDrag.Part.Head -> {
-            val d = frames(dTicks).coerceIn(-take.offset, take.frames - frames(PPQN / 8))
+            val d = frames(dTicks).coerceAtMost(take.frames - frames(PPQN / 8)).coerceAtLeast(-take.headRoom())
             take.copy(
                 offset = take.offset + d,
                 frames = take.frames - d,
@@ -484,7 +765,7 @@ private fun apply(take: TakeRef, part: LaneDrag.Part, dTicks: Int, total: Int, g
         // The tail is the end of the recording and can't go past the end of
         // the file.
         LaneDrag.Part.Tail -> {
-            val room = (fileFrames - take.offset).coerceAtLeast(1)
+            val room = (take.stackLength() ?: (fileFrames - take.offset)).coerceAtLeast(1)
             take.copy(frames = (take.frames + frames(dTicks)).coerceIn(frames(PPQN / 8), room))
                 .withFadesInside()
         }
@@ -554,4 +835,58 @@ fun TakePicker(
         },
         onDismiss = onDone,
     )
+}
+
+/**
+ * A blended lane's overview: each take's shape faintly where it has audio,
+ * then their sum as it plays, every take sounding at its share of the level
+ * of one. Shifts of a few ms don't show at this size, so they're left out.
+ */
+private fun DrawScope.drawBlend(
+    take: TakeRef, shapes: Map<String, TakePeaks.Survey?>, from: Float, span: Float, to: Float,
+    mid: Float, half: Float, colour: Color,
+) {
+    val stack = take.stack()
+    val width = (to - from).coerceAtLeast(1f)
+    val columns = (width / 2f).toInt().coerceAtLeast(1)
+    val power = FloatArray(columns)
+    val count = FloatArray(columns)
+    for (t in stack) {
+        val whole = shapes[t.file] ?: continue
+        if (whole.frames <= 0) continue
+        val fileCols = whole.peaks.size / 2
+        if (fileCols <= 0) continue
+        val a = maxOf(0, t.start)
+        val b = minOf(take.frames, t.end)
+        if (b <= a) continue
+        // Faintly, as it is.
+        val x0 = from + span * a / take.frames
+        val x1 = (from + span * b / take.frames).coerceAtMost(to)
+        if (x1 > x0) {
+            val c0 = (fileCols.toLong() * (t.offset + a).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, fileCols - 1)
+            val c1 = (fileCols.toLong() * (t.offset + b) / whole.frames).toInt().coerceIn(c0 + 1, fileCols)
+            val shown = ((c1 - c0) * (x1 - x0) / (span * (b - a) / take.frames)).toInt()
+            drawShape(whole.peaks, c0, (c0 + shown).coerceIn(c0 + 1, c1), x0, x1, mid, half, colour.copy(alpha = 0.22f))
+        }
+        // Its peak in each column of the sum.
+        for (j in 0 until columns) {
+            val fa = (take.frames.toLong() * j * width / span / columns).toInt()
+            val fb = (take.frames.toLong() * (j + 1) * width / span / columns).toInt()
+            val ra = maxOf(fa, a)
+            val rb = minOf(fb, b)
+            if (rb <= ra) continue
+            val ca = (fileCols.toLong() * (t.offset + ra).coerceAtLeast(0) / whole.frames).toInt().coerceIn(0, fileCols - 1)
+            val cb = (fileCols.toLong() * (t.offset + rb) / whole.frames).toInt().coerceIn(ca + 1, fileCols)
+            var p = 0f
+            for (c in ca until cb) p = maxOf(p, abs(whole.peaks[c * 2]), abs(whole.peaks[c * 2 + 1]))
+            power[j] += p * p
+            count[j] += 1f
+        }
+    }
+    val colW = width / columns
+    for (j in 0 until columns) {
+        if (count[j] <= 0f) continue
+        val p = kotlin.math.sqrt(power[j] / count[j]).coerceAtMost(1f)
+        drawRect(colour, Offset(from + j * colW, mid - p * half), Size(maxOf(1f, colW), maxOf(1f, 2f * p * half)))
+    }
 }

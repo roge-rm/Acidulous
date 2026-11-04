@@ -26,10 +26,10 @@ These copy how the real instrument works, so they play like one.
 - [**Tongue**](04-the-machines/tongue.md) - jaw harps, ten kinds, with the mouth on the mod wheel.
 - [**Draw**](04-the-machines/draw.md) - free reeds: harmonicas, accordions, melodica and more.
 - [**Fret**](04-the-machines/fret.md) - electric guitars and basses, their pickups, a player's hands and an amp that feeds back.
-- [**Tine**](04-the-machines/tine.md) - marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box and the steel pans, struck with mallets you can soften or harden.
-- [**Sympath**](04-the-machines/sympath.md) - sitar, tanpura, veena and shamisen: strings over a buzzing bridge, sympathetic strings tuned to a scale, and a tanpura that plays itself in time.
+- [**Tine**](04-the-machines/tine.md) - marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box and the steel pans, struck with mallets you can soften or harden, and notes that melt from one into another as they ring.
+- [**Sympath**](04-the-machines/sympath.md) - sitar, tanpura, veena and shamisen: strings over a buzzing bridge, sympathetic strings tuned to a scale or rung by the rest of the song, and a tanpura that plays itself in time.
 - [**Palm**](04-the-machines/palm.md) - hand drums: tabla and bayan, djembe, cajón, frame drum and talking drum, with open, slap, muted, bass and rim strokes.
-- [**Chanter**](04-the-machines/chanter.md) - bagpipes and hurdy-gurdy: drones that carry on between notes, grace notes, and a wheel whose dog buzzes in time.
+- [**Chanter**](04-the-machines/chanter.md) - bagpipes and hurdy-gurdy: drones that carry on between notes and can follow the bass, a bag that runs out, grace notes, and a wheel whose dog buzzes in time.
 - [**Aviary**](04-the-machines/aviary.md) - birdsong: whistles, chirps, trills, warbles and calls in time with the song, from one bird or a flock.
 - [**Fathom**](04-the-machines/fathom.md) - water and weather: bubbles, drips, rain, streams, surf, wind and fire, played from the keys.
 

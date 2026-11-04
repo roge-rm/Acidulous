@@ -59,6 +59,22 @@ class FactoryBanksTest {
         }
     }
 
+    @Test
+    fun `the arp bank is six families of eight and never sets latch`() {
+        val bank = PatchStore.factory(PatchStore.modifierKey("Arp"))
+        assertEquals(48, bank.size)
+        assertEquals("Init", bank.first().name)
+        assertTrue(bank.first().params.isEmpty())
+        assertEquals(bank.size, bank.map { it.name }.toSet().size)
+        assertEquals(listOf("basics", "pulses", "rolls", "climbs", "broken", "special"), bank.map { it.family }.distinct())
+        for ((family, patches) in bank.groupBy { it.family }) assertEquals(family, 8, patches.size)
+        for (p in bank) {
+            assertEquals("mod.Arp", p.machine)
+            assertTrue("${p.name} sets latch", "latch" !in p.params)
+            for ((name, v) in p.params) assertTrue("Arp/${p.name}: $name is $v", v.isFinite() && v in 0f..1f)
+        }
+    }
+
     /**
      * The generated file is only as current as the last run of the script, and
      * forgetting to run it is silent. Counting `patch` lines is crude but

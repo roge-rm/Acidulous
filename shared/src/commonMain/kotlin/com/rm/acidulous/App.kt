@@ -64,10 +64,13 @@ import com.rm.acidulous.model.emptyClipFor
 import com.rm.acidulous.model.marksFrom
 import com.rm.acidulous.model.passSeconds
 import com.rm.acidulous.model.splitTake
+import com.rm.acidulous.model.recordedSteps
 import com.rm.acidulous.model.updateClip
 import com.rm.acidulous.model.withParam
 import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.model.withTake
+import com.rm.acidulous.model.withRecorded
+import com.rm.acidulous.model.stack
 import com.rm.acidulous.model.writeTextSafely
 import com.rm.acidulous.res.*
 import com.rm.acidulous.ui.BiasArm
@@ -723,6 +726,9 @@ fun App(modifier: Modifier = Modifier) {
             // A normalised export measures first: the same render into no
             // file, then a gain to reach the target, but never past a true
             // peak of -1 dBTP, which lossy encoders need as headroom.
+            // Listening through a phrase would be all the render heard. The
+            // engine drops it too, this keeps the editor in step.
+            withContext(Dispatchers.Main) { com.rm.acidulous.ui.Listening.stop() }
             var gainDb = 0f
             if (options.normalise && options.format.audio) {
                 // A render starts from the song (see pushForRender). Runs on
@@ -1327,7 +1333,7 @@ fun App(modifier: Modifier = Modifier) {
     fun sharePreset(key: String, name: String?, factory: Boolean) {
         scope.launch {
             val root = EngineAssets.userRoot()
-            val unit = key.removePrefix(PatchStore.FX)
+            val unit = key.removePrefix(PatchStore.FX).removePrefix(PatchStore.MOD)
             val written = withContext(Dispatchers.IO) {
                 runCatching {
                     val patches = when {
@@ -1442,17 +1448,20 @@ fun App(modifier: Modifier = Modifier) {
         }
         scope.launch {
             val whole = withContext(Dispatchers.Default) { TakePeaks.load(EngineSync.sampleRoot, rel) }
-            var next = editor.song
-            for ((sceneId, take) in takes) {
-                val drawn = if (whole == null) take
-                            else take.copy(peaks = TakePeaks.slice(whole, take.offset, take.frames))
-                next = next.updateClip(track, sceneId, { next.emptyClipFor(sceneId) }) { c ->
-                    c.withTake(lane, drawn)
-                }
-            }
-            // One song edit for the whole take, so undoing a recording is one
-            // press rather than one per scene it crossed.
-            editor.edit(track, push = true) { next.tracks[track] }
+            // Every file the touched lanes' stacks will play, for their shapes.
+            val files = takes.map { it.first }.distinct().flatMap { sceneId ->
+                editor.song.tracks.getOrNull(track)?.clips?.get(sceneId)?.audio?.lane(lane)?.stack()?.map { it.file }.orEmpty()
+            }.toSet() - rel
+            val shapes = files.associateWith { f -> withContext(Dispatchers.Default) { TakePeaks.load(EngineSync.sampleRoot, f) } } + (rel to whole)
+            // Each pass is its own undo step, so undo takes back the newest
+            // pass. A run through the song is one pass however many scenes it
+            // crossed.
+            val steps = editor.song.recordedSteps(
+                track, lane, takes,
+                drawn = { take -> if (whole == null) take else take.copy(peaks = TakePeaks.slice(whole, take.offset, take.frames)) },
+                comp = { held -> TakePeaks.comp(held) { shapes[it] } },
+            )
+            for ((i, step) in steps.withIndex()) editor.edit(track, push = i == steps.lastIndex) { step }
             EngineSync.sync(editor.song)
         }
     }
@@ -1779,7 +1788,7 @@ fun App(modifier: Modifier = Modifier) {
 
     // The singer's dictionary, the first time a song has a singer. Its words
     // were said from their spelling until now, so the song goes again.
-    val hasSinger = song.tracks.any { com.rm.acidulous.model.MachineUi.takesWords(it.machine.type) }
+    val hasSinger = song.tracks.any { com.rm.acidulous.model.MachineUi.sendsWords(it) }
     LaunchedEffect(hasSinger) {
         if (!hasSinger || com.rm.acidulous.model.lyrics.Lexicon.dictionary != null) return@LaunchedEffect
         val loaded = runCatching {

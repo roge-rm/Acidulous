@@ -52,6 +52,7 @@ import com.rm.acidulous.model.SIDECHAIN_STEPS
 import com.rm.acidulous.model.Patch
 import com.rm.acidulous.model.PatchStore
 import com.rm.acidulous.model.withEffectPatch
+import com.rm.acidulous.model.withModifierPatch
 import com.rm.acidulous.model.slotOf
 import com.rm.acidulous.model.withSlotSetting
 import com.rm.acidulous.model.withModifierParam
@@ -80,17 +81,65 @@ enum class SlotKind(
     val unit: (Int) -> String, val at: (Track, Int) -> UnitSlot,
     val withType: (Track, Int, String) -> Track, val withParam: (Track, Int, String, Float) -> Track, val withBypass: (Track, Int, Boolean) -> Track,
     /**
-     * How a unit of this kind is keyed in the patch store, or null when it has
-     * no presets. Modifiers don't have presets yet, but this is where they'd go.
+     * How a unit of this kind is keyed in the patch store. Null, or a null
+     * key for one type, when it has no presets.
      */
-    val patchKey: ((String) -> String)? = null,
+    val patchKey: ((String) -> String?)? = null,
     val loadPatch: ((Track, Int, Map<String, Float>) -> Track)? = null,
+    /** Parameters a preset neither saves nor loads: an insert's mod, a modifier's latch, the chord's key, scale and memory. */
+    val presetKeeps: (String) -> Boolean = { false },
 ) {
     Effects("FX", Res.string.slot_fx, EFFECT_SLOTS, { NativeEngine.effectTypes }, { NativeEngine.effectParamInfo(it) }, ::effectUnit, { t, s -> t.effectAt(s) },
         { t, s, ty -> t.withEffect(s, ty) }, { t, s, n, v -> t.withEffectParam(s, n, v) }, { t, s, b -> t.withEffectBypass(s, b) },
-        patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }),
+        patchKey = PatchStore::effectKey, loadPatch = { t, s, p -> t.withEffectPatch(s, p) }, presetKeeps = InsertMod::isModParam),
     Modifiers("MOD", Res.string.slot_mod, MODIFIER_SLOTS, { NativeEngine.inputModTypes }, { NativeEngine.inputModParamInfo(it) }, ::modifierUnit, { t, s -> t.modifierAt(s) },
-        { t, s, ty -> t.withModifier(s, ty) }, { t, s, n, v -> t.withModifierParam(s, n, v) }, { t, s, b -> t.withModifierBypass(s, b) }),
+        { t, s, ty -> t.withModifier(s, ty) }, { t, s, n, v -> t.withModifierParam(s, n, v) }, { t, s, b -> t.withModifierBypass(s, b) },
+        patchKey = PatchStore::modifierKeyOrNull, loadPatch = { t, s, p -> t.withModifierPatch(s, p) }, presetKeeps = PatchStore::modifierKeeps),
+}
+
+/**
+ * A slot's patch picker: the same one a machine panel has, over the same
+ * store, with a key that can't collide with a machine's. [apply] puts a whole
+ * preset's values on the slot's controls and in the engine; [current] reads
+ * one, for what a preset leaves alone ([SlotKind.presetKeeps]).
+ */
+@Composable
+private fun SlotPatchPicker(
+    kind: SlotKind, type: String, trackIndex: Int, slot: Int, editor: SongEditor,
+    info: List<ParamInfo>, current: (String) -> Float, apply: (Map<String, Float>) -> Unit,
+) {
+    val key = kind.patchKey?.invoke(type) ?: return
+    val load = kind.loadPatch ?: return
+    val unit = kind.unit(slot)
+    PatchPicker(
+        title = type,
+        patchNames = { PatchStore.list(key) },
+        onSave = { name ->
+            val at = kind.at(editor.song.tracks[trackIndex], slot)
+            PatchStore.save(Patch(key, name, at.params.filterKeys { !kind.presetKeeps(it) }, settings = at.settings))
+        },
+        onLoad = { name ->
+            PatchStore.load(key, name)?.let { patch ->
+                editor.edit(trackIndex) { t -> load(t, slot, patch.params) }
+                // A Formula's formula comes with its preset.
+                if (type == "Formula" && kind == SlotKind.Effects) {
+                    editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", patch.settings["formula"]) }
+                }
+                // So does a Venue's impulse.
+                if (type == VenueRooms.TYPE && kind == SlotKind.Effects) {
+                    editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, patch.settings[VenueRooms.SETTING]) }
+                }
+                // The slot's mod, or what a modifier preset leaves alone, stays as it is.
+                apply(patch.params.filterKeys { !kind.presetKeeps(it) } +
+                    info.filter { kind.presetKeeps(it.name) }.associate { it.name to current(it.name) })
+            }
+        },
+        factoryPatches = { PatchStore.factory(key) },
+        userNames = { PatchStore.userList(key) },
+        onDelete = { name -> PatchStore.delete(key, name) },
+        key = key,
+        owner = "$key:$slot",
+    )
 }
 
 /**
@@ -162,7 +211,26 @@ fun SlotDialog(
     // and the cards get its height.
     val header: @Composable () -> Unit = {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true)
+            // A chip's window has room for the patch picker here, which saves
+            // the cards a line. It isn't given the face's binding, so it sends
+            // a preset to the engine itself and the knobs follow on their poll.
+            val type = fixedType ?: kind.at(track, slot).type
+            val withPicker = fixedType != null && !kind.at(track, slot).isEmpty && kind.patchKey?.invoke(type) != null && kind.loadPatch != null
+            val picker: @Composable () -> Unit = {
+                val info = remember(kind, type) { kind.paramInfo(type) }
+                val unit = kind.unit(slot)
+                SlotPatchPicker(
+                    kind, type, trackIndex, slot, editor, info,
+                    current = { name ->
+                        editor.song.tracks.getOrNull(trackIndex)?.let { kind.at(it, slot).params[name] }
+                            ?: info.firstOrNull { it.name == name }?.defaultNormalized ?: 0f
+                    },
+                    apply = { params ->
+                        for (p in info) NativeEngine.setParam(trackIndex, unit, p.name, params[p.name] ?: p.defaultNormalized, record = false)
+                    },
+                )
+            }
+            SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap = true, extra = if (withPicker) picker else null)
         }
     }
     // Upright or on a square phone, a unit with too much for one page gets
@@ -255,10 +323,14 @@ private fun SlotRow(
         val face = !fx.isEmpty && !minimized
         val hasPatches = kind.patchKey?.invoke(fx.type) != null && kind.loadPatch != null
         val headerHere = !wrap && pickerInHeader && face && hasPatches
+        // A chip's window (arp, chord) puts the picker on its centred header
+        // line beside the bypass, so it costs the cards no height. Turned, that
+        // line is the window's own header; see [SlotDialog].
+        val windowHeader = wrap && fixedType != null && !LocalDialogHeaderRow.current && face && hasPatches
         // A side column is too narrow for the bypass on the first line, so it
         // starts the second, with the patch picker after it when there's a face.
         val side = !wrap && LocalPanelStacked.current
-        if (!(wrap && LocalDialogHeaderRow.current) && !headerHere) Row(
+        if (!(wrap && LocalDialogHeaderRow.current) && !headerHere && !windowHeader) Row(
             if (wrap || side) Modifier.fillMaxWidth() else Modifier,
             verticalAlignment = Alignment.CenterVertically,
             // Centred in a window. Packed left in a panel so it lines up with the
@@ -277,13 +349,23 @@ private fun SlotRow(
                 Row(Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized, { minimized = !minimized }, picker)
                 }
+            } else if (windowHeader) { picker ->
+                Row(
+                    Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterHorizontally),
+                ) {
+                    SlotHeader(kind, track, trackIndex, slot, types, editor, fixedType, wrap, minimized, { minimized = !minimized }, picker)
+                }
             } else if (side) { picker ->
                 Row(Modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                     SlotBypass(kind, fx, trackIndex, slot, editor)
                     picker()
                 }
             } else null
-            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header) { b ->
+            // A chip's window turned has the picker in its own header row.
+            val pickerElsewhere = wrap && fixedType != null && LocalDialogHeaderRow.current
+            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header, pickerElsewhere = pickerElsewhere) { b ->
                 onRevert?.invoke {
                     b.resetAll()
                     if (fx.bypass != openedBypass) {
@@ -308,6 +390,8 @@ private fun SlotFace(
     page: Int = -1,
     /** The slot's header line, given the patch picker to draw on it; null to draw the picker on a line of its own. */
     header: (@Composable (@Composable () -> Unit) -> Unit)? = null,
+    /** The window's header has the patch picker; see [SlotDialog]. */
+    pickerElsewhere: Boolean = false,
     /** Called with the binding once it exists, so a window can undo everything. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
@@ -329,38 +413,9 @@ private fun SlotFace(
     Column {
         // The same patch picker a machine panel has, over the same store, with
         // a key that can't collide with a machine's.
-        val key = kind.patchKey?.invoke(type)
-        val load = kind.loadPatch
-        if (key != null && load != null) {
+        if (kind.patchKey?.invoke(type) != null && kind.loadPatch != null && !pickerElsewhere) {
             val picker: @Composable () -> Unit = {
-                PatchPicker(
-                    title = type,
-                    patchNames = { PatchStore.list(key) },
-                    onSave = { name ->
-                        val at = kind.at(editor.song.tracks[trackIndex], slot)
-                        PatchStore.save(Patch(key, name, InsertMod.withoutMod(at.params), settings = at.settings))
-                    },
-                    onLoad = { name ->
-                        PatchStore.load(key, name)?.let { patch ->
-                            editor.edit(trackIndex) { t -> load(t, slot, patch.params) }
-                            // A Formula's formula comes with its preset.
-                            if (type == "Formula" && kind == SlotKind.Effects) {
-                                editor.editSong { song -> song.withSlotSetting(trackIndex, unit, "formula", patch.settings["formula"]) }
-                            }
-                            // So does a Venue's impulse.
-                            if (type == VenueRooms.TYPE && kind == SlotKind.Effects) {
-                                editor.editSong { song -> song.withSlotSetting(trackIndex, unit, VenueRooms.SETTING, patch.settings[VenueRooms.SETTING]) }
-                            }
-                            // The slot's mod stays as it is.
-                            b.applyAll(InsertMod.withoutMod(patch.params) + modInfo.associate { it.name to b.value(it.name) })
-                        }
-                    },
-                    factoryPatches = { PatchStore.factory(key) },
-                    userNames = { PatchStore.userList(key) },
-                    onDelete = { name -> PatchStore.delete(key, name) },
-                    key = key,
-                    owner = "$key:$slot",
-                )
+                SlotPatchPicker(kind, type, trackIndex, slot, editor, info, b::value, b::applyAll)
             }
             if (header != null) header(picker) else Row(verticalAlignment = Alignment.CenterVertically) { picker() }
         }
@@ -415,11 +470,15 @@ private fun SlotFace(
         val shown = info.filterNot {
             InsertMod.isModParam(it.name) ||
                 type == "Arp" && it.name.length == 3 && it.name[0] == 's' && it.name[1].isDigit() ||
+                // So do the Transient's sixteen accent steps.
+                type == "Transient" && it.name.length == 3 && it.name[0] == 'a' && it.name[1].isDigit() ||
                 // The chord's memory slots are learned, not turned.
                 type == "Chord" && CHORD_MEMORY_NOTE.matches(it.name) ||
                 model != null && !reverbShows(model, it.name, trackInsert = kind == SlotKind.Effects) ||
                 // Vessel's `follow` tunes to the track's notes, so only a track's insert has it.
-                type == "Vessel" && it.name == "follow" && kind != SlotKind.Effects
+                type == "Vessel" && it.name == "follow" && kind != SlotKind.Effects ||
+                // Acid's `from` picks the track's notes, so off a track it's always the scale.
+                type == "Acid" && it.name == "from" && kind != SlotKind.Effects
         }
         if (wrap) {
             // A card per group, stacked down the window, each wrapping its own
@@ -443,8 +502,12 @@ private fun SlotFace(
                 if (type == "Arp" && wide) {
                     Group("steps", background = Acid.colors.cardAlt) { ArpStepGrid(b) }
                 }
+                if (type == "Transient" && wide) {
+                    Group("steps", background = Acid.colors.cardAlt) { AccentStepGrid(b) }
+                }
             }
             if (type == "Arp" && !wide && (page < 0 || "pattern" in PAGES[type].orEmpty().getOrNull(page).orEmpty())) ArpSteps(b)
+            if (type == "Transient" && !wide) AccentSteps(b)
         } else {
             // A panel's knobs are in titled cards like a machine's, as tall as
             // the mod card beside them. The reverb's model first, then its own
@@ -485,6 +548,7 @@ private fun SlotFace(
                 ) { cards() }
             } }
             if (type == "Arp") ArpSteps(b)
+            if (type == "Transient") AccentSteps(b)
         }
     }
 }
@@ -557,6 +621,16 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
     "Transient" to listOf(
         "shape" to listOf("attack", "sustain", "time"),
         "extra" to listOf("split"),
+        // The accent grid's own knobs; its steps are a row of their own.
+        "grid" to listOf("grid", "depth", "rate", "length"),
+        "out" to listOf("gain"),
+    ),
+    "Smash" to listOf(
+        "smash" to listOf("depth", "time", "threshold", "down", "up"),
+        "bands" to listOf("low", "mid", "high", "in"),
+        // Each band's duck: a rhythm from the song, or under the sidechain's track.
+        "beat" to listOf("lowduck", "midduck", "highduck", "sidechain"),
+        "duck" to listOf("lowdepth", "middepth", "highdepth", "recover"),
         "out" to listOf("gain"),
     ),
     "Midside" to listOf(
@@ -585,9 +659,22 @@ private val PANEL_GROUPS: Map<String, List<Pair<String, List<String>>>> = mapOf(
         "touch" to listOf("strike", "pickup", "drive"),
         "out" to listOf("mix", "gain"),
     ),
+    "Acid" to listOf(
+        "filter" to listOf("cutoff", "resonance", "mode", "drive"),
+        "sweep" to listOf("env", "decay", "accent", "pattern"),
+        "key" to listOf("follow", "from", "key", "scale", "octave"),
+        "slide" to listOf("glide", "slides"),
+        "out" to listOf("mix", "gain"),
+    ),
+    "Spectral" to listOf(
+        "spectrum" to listOf("freeze", "blur", "smear", "robot", "peaks", "tilt"),
+        "stutter" to listOf("stutter", "grid", "length", "order", "fade", "renew"),
+        "out" to listOf("mix", "gain"),
+    ),
     "Deesser" to listOf(
         "band" to listOf("freq", "threshold", "range"),
         "how" to listOf("mode", "listen", "relative"),
+        "throw" to listOf("throw", "time", "feedback"),
         "out" to listOf("gain"),
     ),
 )
@@ -764,6 +851,63 @@ private fun ArpStepGrid(b: ParamBinding) {
     }
 }
 
+/** A Transient accent step: 0 down, 1 flat, 2 up. */
+private fun accentOf(b: ParamBinding, name: String): Int = (b.value(name) * 2f).roundToInt().coerceIn(0, 2)
+
+/** A tap moves a step on: flat, up, down, flat. */
+private fun nextAccent(b: ParamBinding, name: String) {
+    val next = when (accentOf(b, name)) { 1 -> 2; 2 -> 0; else -> 1 }
+    b.set(name, next / 2f)
+}
+
+/** One accent step's cell: green up, red down, the ones past `length` dimmed. */
+@Composable
+private fun AccentCell(b: ParamBinding, i: Int, length: Int, modifier: Modifier, fontSize: androidx.compose.ui.unit.TextUnit) {
+    val name = "a%02d".format(i)
+    val accent = accentOf(b, name)
+    val inRange = i <= length
+    val fill = when {
+        accent == 2 && inRange -> Acid.colors.green
+        accent == 2 -> Acid.colors.greenDim
+        accent == 0 && inRange -> Acid.colors.red
+        accent == 0 -> Acid.colors.accentDim
+        else -> Acid.colors.control
+    }
+    Box(
+        modifier.clip(RoundedCornerShape(3.dp)).background(fill).clickable { nextAccent(b, name) },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            when (accent) { 2 -> "↑"; 0 -> "↓"; else -> "$i" },
+            color = if (!inRange) Acid.colors.textFaint else if (accent != 1) Color.White else Acid.colors.text,
+            fontSize = fontSize,
+        )
+    }
+}
+
+/** The Transient's accent grid: sixteen steps in one row, each down, flat or up. */
+@Composable
+private fun AccentSteps(b: ParamBinding) {
+    val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(Res.string.slot_steps), color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
+        for (i in 1..16) AccentCell(b, i, length, Modifier.weight(1f).height(22.dp), 8.sp)
+    }
+}
+
+/** The same steps as [AccentSteps], as two lines of eight for a card. */
+@Composable
+private fun AccentStepGrid(b: ParamBinding) {
+    val length = b.infoOf("length")?.map(b.value("length"))?.toInt() ?: 16
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        for (row in 0 until 2) {
+            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+                for (i in row * 8 + 1..row * 8 + 8) AccentCell(b, i, length, Modifier.width(28.dp).height(30.dp), 9.sp)
+            }
+        }
+    }
+}
+
 /** The "extra something" controls, drawn in the accent colour so they stand out from the classic set. */
 private val EXTRA = mapOf(
     "Delay" to setOf("duck", "wobble"),
@@ -783,20 +927,20 @@ private val EXTRA = mapOf(
     "Rotary" to setOf("tempo"), // the horn turning on the beat
     "Grain" to setOf("freeze", "feedback"),
     "Resonator" to setOf("metal"), // stiff strings, toward a bell
-    "Smash" to setOf("up"), // the lift, which a compressor doesn't have
-    "Acid" to setOf("pattern", "accent"),
-    "Mouth" to setOf("move"),
+    "Smash" to setOf("up", "lowduck", "midduck", "highduck"), // the lift, which a compressor doesn't have; the bands on the beat
+    "Acid" to setOf("pattern", "accent", "follow", "slides"),
+    "Mouth" to setOf("move", "words"),
     "Tape" to setOf("stop", "stoptime"),
     "Slicer" to setOf("seed", "pitch"),
     "Magneto" to setOf("dubs"),
     "Horn" to setOf("breath", "snap"),
-    "Spectral" to setOf("freeze", "peaks"),
+    "Spectral" to setOf("freeze", "peaks", "stutter"),
     "Formula" to setOf("rate", "smooth"),
     "Venue" to setOf("stretch"), // a bigger or smaller room of the same shape
     "Vessel" to setOf("follow"), // the body tuned to the track's notes
-    "Transient" to setOf("split"), // only the highs shaped
+    "Transient" to setOf("split", "grid", "depth"), // only the highs shaped; each hit shaped by its step
     "Midside" to setOf("breathe"), // the side opens in the gaps
-    "Deesser" to setOf("relative"), // measured against the whole sound
+    "Deesser" to setOf("relative", "throw"), // measured against the whole sound; what it cuts, echoed
     "Filter" to setOf("lforate", "lfodepth", "envdepth"),
     "Bitcrusher" to setOf("jitter", "tone"),
     "Phaser" to setOf("spread"),
@@ -855,18 +999,22 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "rate" && type == "Arp" -> ARP_RATES
     name == "transpose" || name == "shift" -> (-12..12).map { if (it > 0) "+$it" else "$it" }
     name == "octave" && type == "Scale" -> (-2..2).map { if (it > 0) "+$it" else "$it" }
+    name == "octave" && type == "Acid" -> (-2..3).map { if (it > 0) "+$it" else "$it" }
     name == "octaves" || name == "ratchet" -> listOf("1", "2", "3", "4")
     name == "cycles" -> (1..8).map { "$it" }
     name == "length" -> (1..16).map { "$it" }
     // Two-step switches with words of their own, before the plain off/on.
     name == "mode" && type == "Acid" -> listOf("LP", "BP")
+    name == "from" && type == "Acid" -> listOf("scale", "notes")
     name == "stop" && type == "Tape" -> listOf("run", "stop")
     name == "snap" && type == "Horn" -> listOf("free", "semi")
     name == "freeze" && type == "Spectral" -> listOf("run", "hold")
+    name == "stutter" && type == "Spectral" -> listOf("run", "loop")
     name == "mode" && type == "Deesser" -> listOf("split", "wide")
     steps == 2 -> listOf("off", "on")
     name == "mode" && type == "Delay" -> listOf("normal", "ping-pong", "multi-tap", "reverse")
     name == "taps" && type == "Delay" -> listOf("2", "3", "4")
+    name == "time" && type == "Deesser" -> listOf("1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2")
     name == "time" && type == "Delay" -> listOf("1/32", "1/16", "1/8", "1/8.", "1/4", "1/4.", "1/2", "1")
     name == "mode" && type == "Distortion" -> listOf("soft", "hard", "fold", "tube")
     name == "model" && type == "Reverb" -> REVERB_MODELS
@@ -879,6 +1027,11 @@ private fun switchLabels(type: String, name: String, steps: Int): List<String>? 
     name == "pattern" && type == "Acid" -> listOf("track", "8ths", "16ths", "offbeat", "push", "busy", "halves", "synco", "rolling")
     name == "move" && type == "Mouth" -> listOf("lfo", "level", "key")
     name == "rate" && type == "Slicer" -> listOf("1/4", "1/8", "1/16", "1/32")
+    name == "rate" && type == "Transient" -> listOf("1/16T", "1/16", "1/8")
+    name.endsWith("duck") && type == "Smash" -> SMASH_DUCKS
+    name == "grid" && type == "Spectral" -> listOf("1/4", "1/4T", "1/8", "1/8T", "1/16", "1/16T", "1/32")
+    name == "order" && type == "Spectral" -> listOf("forward", "reverse", "bounce", "random")
+    name == "renew" && type == "Spectral" -> listOf("never", "1 lap", "2 laps", "4 laps", "8 laps")
     name == "seed" && type == "Slicer" -> (1..16).map { "$it" }
     name == "mode" && type == "Magneto" -> listOf("SP", "LP2", "LP4", "HQ", "XLP")
     name == "dubs" && type == "Magneto" -> (1..4).map { "$it" }
@@ -1052,8 +1205,11 @@ private fun shortLabelOf(type: String, name: String): String = SHORT_LABELS[name
     else -> name
 }
 
+/** Smash's duck for each band: off, under the sidechain's track, then the rhythms in the engine's order. */
+private val SMASH_DUCKS = listOf("off", "sidechain", "beats", "offbeat", "8ths", "16ths", "2 & 4", "halves", "3-3-2", "dotted")
+
 /** The slots whose `key` is a musical key, not a filter's tracking. */
-private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel")
+private val MUSICAL_KEYS = setOf("chord", "scale", "harmonizer", "vessel", "acid")
 
 /** Formulas to start a Formula effect from, all original. x is the track, 0 to 255. */
 internal val FORMULA_FX_EXAMPLES = listOf(

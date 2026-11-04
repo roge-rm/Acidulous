@@ -16,10 +16,14 @@
 #include <engine/effect/Effect.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/effect/Magneto.h>
+#include <engine/effect/Mouth.h>
 #include <engine/effect/Reverb.h>
 #include <engine/effect/Spectral.h>
 #include <engine/effect/Vessel.h>
+#include <engine/machine/diction/Phones.h>
 #include <engine/machine/formulate/Expr.h>
+#include <engine/machine/MachineRegistry.h>
+#include <engine/rack/Rack.h>
 #include "venue_impulse.h"
 
 using namespace acidulous;
@@ -139,6 +143,121 @@ void staysBounded(const char *type) {
 
 // --- Smash ----------------------------------------------------------------------
 
+/** Runs a mono signal through at 120 with the song rolling, [key] as the sidechain if given. */
+Stereo runRolling(Effect &fx, const std::vector<float> &in, const std::vector<float> *key = nullptr,
+                  const ModTransport *transport = nullptr) {
+    ModTransport t;
+    t.rolling = true;
+    fx.setTransport(transport != nullptr ? *transport : t);
+    Stereo s{in, in};
+    const double ticksPerSample = kTicksPerBeat * 120.0 / 60.0 / kRate;
+    for (size_t at = 0; at < in.size(); at += kBlock) {
+        const int32_t n = static_cast<int32_t>(std::min<size_t>(kBlock, in.size() - at));
+        fx.setKey(key != nullptr ? key->data() + at : nullptr);
+        fx.onBlock(static_cast<int64_t>(at * ticksPerSample), static_cast<int64_t>((at + n) * ticksPerSample), 120.0f);
+        fx.run(s.l.data() + at, s.r.data() + at, n, false);
+    }
+    return s;
+}
+
+/** The beat: each band ducking on a rhythm or under another track. */
+void smashBeat() {
+    // A beat at 120 is 24000 frames; a sixteenth 6000.
+    const auto bass = tone(80.0f, 0.2f, 96000);
+    const auto music = noise(0.3f, 96000);
+    {
+        // Every new knob turned but each band's duck off: as without them, bit for bit.
+        auto plain = make("Smash");
+        auto off = make("Smash", {{"lowdepth", 20.0f}, {"middepth", 3.0f}, {"recover", 600.0f}, {"sidechain", 3.0f}});
+        const auto key = noise(0.5f, 96000, 7);
+        ok("beat: every duck off plays as before, to the bit",
+           worst(runRolling(*plain, music).l, runRolling(*off, music, &key).l) == 0.0);
+    }
+    // Only the beat: no squash, no lift and depth 0, so what moves is the duck.
+    auto beat = [&](std::initializer_list<std::pair<const char *, float>> extra) {
+        auto fx = make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}, {"lowdepth", 12.0f}, {"recover", 100.0f}});
+        for (const auto &[name, value] : extra) set(*fx, name, value);
+        return fx;
+    };
+    {
+        // Low on the beats: down at each beat, back up before the next, at depth 0.
+        auto fx = beat({{"lowduck", 2.0f}});
+        const auto out = runRolling(*fx, bass).l;
+        const double at = dB(rms(out, 24000, 24480) / rms(bass, 24000, 24480));
+        const double before = dB(rms(out, 46000, 47520) / rms(bass, 46000, 47520));
+        ok("beat: the lows duck on the beat, at depth 0", at < -7.0 && before > -1.0,
+           num(at) + " dB on the beat, " + num(before) + " dB before the next");
+        // Down by the time the beat lands: the 5 ms before it already going.
+        const double lead = dB(rms(out, 23880, 24000) / rms(bass, 23880, 24000));
+        ok("beat: the duck starts just before the beat", lead < -1.0 && lead > -12.0, num(lead) + " dB");
+        double step = 0.0, stepIn = 0.0;
+        for (size_t i = 1; i < out.size(); ++i) {
+            step = std::max(step, double(std::fabs(out[i] - out[i - 1])));
+            stepIn = std::max(stepIn, double(std::fabs(bass[i] - bass[i - 1])));
+        }
+        ok("beat: no step bigger than the tone's own", step <= stepIn * 1.05, num(step) + " vs " + num(stepIn));
+    }
+    {
+        // Offbeats on the highs leave a bass alone.
+        auto fx = beat({{"highduck", 3.0f}, {"highdepth", 12.0f}});
+        const auto out = runRolling(*fx, bass).l;
+        const double d = dB(rms(out, 30000, 30480) / rms(bass, 30000, 30480));
+        ok("beat: the highs' offbeats leave a bass alone", std::fabs(d) < 0.3, num(d) + " dB on an offbeat");
+    }
+    {
+        // Stopped, the rhythms don't play.
+        auto fx = beat({{"lowduck", 2.0f}});
+        ok("beat: stopped, nothing ducks", worst(run(*fx, bass).l, run(*make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}}), bass).l) < 1e-6);
+    }
+    {
+        // Swung all the way, the second sixteenth lands at tick 90, not 60.
+        auto swung = beat({{"lowduck", 5.0f}, {"recover", 20.0f}});
+        ModTransport sw;
+        sw.rolling = true;
+        sw.swing = 75.0f;
+        const auto out = runRolling(*swung, bass, nullptr, &sw).l;
+        size_t low = 0;
+        double lowest = 1e9;
+        for (size_t w = 3000; w + 480 < 12000; w += 120) {
+            const double r = rms(out, w, w + 480) / rms(bass, w, w + 480);
+            if (r < lowest) { lowest = r; low = w + 240; }
+        }
+        ok("beat: swing moves the second sixteenth with the track", low > 8400 && low < 9600, "deepest at frame " + std::to_string(low));
+    }
+    {
+        // Keyed: a burst on the key every beat ducks the lows under it; sidechain own, nothing.
+        std::vector<float> key(96000, 0.0f);
+        for (size_t b = 12000; b < key.size(); b += 24000)
+            for (size_t i = 0; i < 2400; ++i) key[b + i] = 0.8f * std::sin(2.0f * float(M_PI) * 60.0f * i / kRate);
+        auto fx = beat({{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"threshold", -24.0f}});
+        const auto out = runRolling(*fx, bass, &key).l;
+        const double under = dB(rms(out, 13000, 14000) / rms(bass, 13000, 14000));
+        const double clear = dB(rms(out, 34000, 35000) / rms(bass, 34000, 35000));
+        // The low band holds most of an 80 Hz tone but not all, so 12 dB on it is about 9 on the tone.
+        ok("keyed: the lows duck under the key's hits", under < -7.0 && clear > -1.0,
+           num(under) + " dB under a hit, " + num(clear) + " dB between");
+        auto own = beat({{"lowduck", 1.0f}});
+        ok("keyed: with no track keyed, nothing ducks",
+           worst(runRolling(*own, bass).l, run(*make("Smash", {{"depth", 0.0f}, {"up", 0.0f}, {"down", 0.0f}}), bass).l) < 1e-6);
+        // One NaN in the key must not latch the duck.
+        {
+            std::vector<float> bad = key;
+            bad[20000] = std::nanf("");
+            auto nf = beat({{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"threshold", -24.0f}});
+            const auto o = runRolling(*nf, bass, &bad);
+            bool fin = true;
+            for (size_t i = 0; i < o.l.size(); ++i) fin = fin && std::isfinite(o.l[i]) && std::isfinite(o.r[i]);
+            const double after = dB(rms(o.l, 34000, 35000) / rms(bass, 34000, 35000));
+            ok("keyed: a NaN in the key doesn't latch the duck", fin && after > -1.0, num(after) + " dB after");
+        }
+        // Reset puts it all back: the same twice.
+        auto twice = make("Smash", {{"lowduck", 1.0f}, {"sidechain", 1.0f}, {"midduck", 4.0f}, {"highduck", 9.0f}});
+        const auto a = runRolling(*twice, music, &key).l;
+        twice->reset();
+        ok("beat: after a reset it plays the same again", worst(a, runRolling(*twice, music, &key).l) == 0.0);
+    }
+}
+
 void smash() {
     printf("- smash\n");
     const auto music = noise(0.3f, 48000);
@@ -177,6 +296,7 @@ void smash() {
         const double a = rms(run(*flat, bass).l, 48000, 96000), b = rms(run(*lifted, bass).l, 48000, 96000);
         ok("the low band's gain moves a bass note", dB(b / a) > 4.0 && dB(b / a) < 7.0, num(dB(b / a)) + " dB");
     }
+    smashBeat();
     staysBounded("Smash");
 }
 
@@ -200,6 +320,37 @@ double brightness(const std::vector<float> &x, size_t from, size_t to) {
     for (int h = 19; h <= 40; ++h) high += power(h);
     for (int h = 1; h <= 4; ++h) low += power(h);
     return 10.0 * std::log10((high + 1e-30) / (low + 1e-30));
+}
+
+/** Clicks every kClickGap samples: each one's ring is the filter's response as it's set then. */
+constexpr size_t kClickGap = 4096;
+std::vector<float> clicks(size_t n) {
+    std::vector<float> x(n, 0.0f);
+    for (size_t i = 0; i < n; i += kClickGap) x[i] = 0.1f;
+    return x;
+}
+
+/**
+ * Where the response to the clicks in [from, to) peaks between [lo] and
+ * [hi] Hz, searched in 2-cent steps. [from] is on a click.
+ */
+double peakHz(const std::vector<float> &x, size_t from, size_t to, double lo, double hi) {
+    const size_t n = kClickGap;
+    double best = lo, bestPower = -1.0;
+    for (double f = lo; f <= hi; f *= std::exp2(2.0 / 1200.0)) {
+        double power = 0.0;
+        for (size_t at = from; at + n <= to; at += n) {
+            double re = 0.0, im = 0.0;
+            for (size_t i = 0; i < n; ++i) {
+                const double ph = 2.0 * M_PI * f * i / kRate;
+                re += x[at + i] * std::cos(ph);
+                im += x[at + i] * std::sin(ph);
+            }
+            power += re * re + im * im;
+        }
+        if (power > bestPower) { bestPower = power; best = f; }
+    }
+    return best;
 }
 
 void acid() {
@@ -229,6 +380,83 @@ void acid() {
         const auto out = run(*fx, hits).l;
         const double open = brightness(out, 60000 + 100, 60000 + 1300), shut = brightness(out, 60000 + 7600, 60000 + 8800);
         ok("with no pattern, a hit sweeps it open", open > shut + 6.0, num(shut) + " -> " + num(open) + " dB");
+    }
+    {
+        // Follow at 0 is the filter as it was, whatever the key knobs and the notes say.
+        auto plain = make("Acid", {{"pattern", 7.0f}, {"resonance", 0.9f}});
+        auto keyed = make("Acid", {{"pattern", 7.0f}, {"resonance", 0.9f}, {"from", 1.0f}, {"slides", 1.0f},
+                                   {"glide", 300.0f}, {"octave", 3.0f}, {"key", 2.0f}, {"scale", 10.0f}});
+        keyed->setHearsNotes(true);
+        keyed->onNote(45, 110.0f);
+        keyed->onNote(52, 164.8f);
+        const auto a = run(*plain, buzz).l, b = run(*keyed, buzz).l;
+        ok("follow 0 is bit for bit the filter without a key", worst(a, b) == 0.0, num(worst(a, b)));
+    }
+    // A screaming filter rung by clicks: where its peak is, in cents from [want].
+    const auto hiss = clicks(96000);
+    auto cents = [](double hz, double want) { return 1200.0 * std::log2(hz / want); };
+    const std::initializer_list<std::pair<const char *, float>> scream = {
+        {"resonance", 0.98f}, {"env", 0.0f}, {"drive", 0.0f}, {"follow", 1.0f}, {"cutoff", 2000.0f}};
+    {
+        // Halves: step 0 is the key's root and step 8 four steps up, a fifth
+        // in A minor, an octave up from A3.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 6.0f);
+        set(*fx, "slides", 0.0f);
+        const auto out = run(*fx, hiss).l;
+        const double a = peakHz(out, 4096, 45056, 300.0, 1000.0), e = peakHz(out, 49152, 94208, 300.0, 1000.0);
+        ok("follow 1 sings the key's root", std::fabs(cents(a, 440.0)) < 20.0, num(a) + " Hz");
+        ok("and the step's note, a fifth up", std::fabs(cents(e, 659.255)) < 20.0, num(e) + " Hz");
+    }
+    {
+        // From the track's notes, with the track's hits: the note played, up an octave.
+        auto fx = make("Acid", scream);
+        set(*fx, "from", 1.0f);
+        fx->setHearsNotes(true);
+        fx->onNote(50, 146.83f);
+        const auto out = run(*fx, hiss).l;
+        const double d = peakHz(out, 4096, 94208, 150.0, 600.0);
+        ok("from the notes, it sings the note played", std::fabs(cents(d, 293.66)) < 20.0, num(d) + " Hz");
+        // Off a track no notes come, so it keeps to the scale: A4 on the first step of halves.
+        auto off = make("Acid", scream);
+        set(*off, "from", 1.0f);
+        set(*off, "pattern", 6.0f);
+        const auto o = run(*off, hiss).l;
+        const double s = peakHz(o, 4096, 45056, 300.0, 1000.0);
+        ok("off a track, from notes keeps to the scale", std::fabs(cents(s, 440.0)) < 20.0, num(s) + " Hz");
+    }
+    {
+        // Halfway between follow 0 and 1 it sits halfway in octaves between the knob and the note.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 6.0f);
+        set(*fx, "follow", 0.5f);
+        set(*fx, "cutoff", 1760.0f);
+        const auto out = run(*fx, hiss).l;
+        const double h = peakHz(out, 4096, 45056, 500.0, 1400.0);
+        ok("follow 0.5 sits halfway between knob and note", std::fabs(cents(h, 880.0)) < 20.0, num(h) + " Hz");
+    }
+    {
+        // A slide step glides: 24 to 110 ms after step 8 it's still on its way up.
+        auto jump = make("Acid", scream), glide = make("Acid", scream);
+        for (auto *fx : {jump.get(), glide.get()}) set(*fx, "pattern", 6.0f);
+        set(*jump, "slides", 0.0f);
+        set(*glide, "slides", 1.0f);
+        set(*glide, "glide", 600.0f);
+        const auto j = run(*jump, hiss).l, g = run(*glide, hiss).l;
+        const double jHz = peakHz(j, 49152, 53248, 300.0, 1000.0);
+        const double gHz = peakHz(g, 49152, 53248, 300.0, 1000.0);
+        ok("a step without a slide jumps to its note", std::fabs(cents(jHz, 659.255)) < 20.0, num(jHz) + " Hz");
+        ok("a slide step is still gliding up to it", gHz > 450.0 && gHz < 620.0, num(gHz) + " Hz");
+    }
+    {
+        // Reset and play again: the same, key and glide included.
+        auto fx = make("Acid", scream);
+        set(*fx, "pattern", 3.0f);
+        set(*fx, "slides", 0.6f);
+        const auto a = run(*fx, buzz).l;
+        fx->reset();
+        const auto b = run(*fx, buzz).l;
+        ok("with a key, a reset plays the same again", worst(a, b) == 0.0, num(worst(a, b)));
     }
     staysBounded("Acid");
 }
@@ -270,6 +498,123 @@ void mouth() {
     ok("moved by level, loud opens it further", upperFormants(loud, 9600) > upperFormants(soft, 9600) + 6.0,
        num(upperFormants(soft, 9600)) + " -> " + num(upperFormants(loud, 9600)) + " dB");
     staysBounded("Mouth");
+}
+
+void mouthWords() {
+    printf("- mouth words\n");
+    const auto voice = saw(110.0f, 0.4f, 48000);
+    uint8_t ee[8], sh[8];
+    const int32_t eeCount = machine::diction::parsePhones("IY", ee, 8);
+    const int32_t shCount = machine::diction::parsePhones("S IY", sh, 8);
+    // Through a rack: its words and notes reach the insert.
+    {
+        Rack rack;
+        auto fx = make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}, {"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        rack.swapEffect(0, fx.get());
+        rack.lyric(ee, eeCount);
+        rack.playSequenced(0x90, 60, 100);
+        ok("a rack's words reach its insert", m->saying() && m->wordFormant(1) > 2000.0f, num(m->wordFormant(1)) + " Hz");
+        rack.playSequenced(0x80, 60, 0);
+        rack.playSequenced(0x90, 62, 100);
+        ok("a note without words goes back to the move", !m->saying());
+        rack.swapEffect(0, nullptr);
+    }
+    // With a machine and the sustain down, the insert hears the off when the machine does.
+    {
+        Rack rack;
+        std::unique_ptr<Machine> synth(MachineRegistry::create("Trinity"));
+        synth->prepare(static_cast<int32_t>(kRate));
+        synth->reset();
+        rack.swapMachine(synth.get());
+        auto fx = make("Mouth", {{"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        rack.swapEffect(0, fx.get());
+        rack.setParam(Unit::Performance, kPerfSustain, 1.0f, false);
+        rack.lyric(sh, shCount);
+        rack.playSequenced(0x90, 60, 100);
+        rack.playSequenced(0x80, 60, 0);
+        ok("a pedal holds the word", m->saying() && !m->released());
+        rack.setParam(Unit::Performance, kPerfSustain, 0.0f, false);
+        ok("and the pedal coming up lets it go", m->released());
+        rack.swapEffect(0, nullptr);
+        rack.swapMachine(nullptr);
+    }
+    // A key played twice without an off is one key: its off lets it go.
+    {
+        auto fx = make("Mouth", {{"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        fx->onLyric(ee, eeCount);
+        fx->onNote(60, 261.6f);
+        fx->onNote(60, 261.6f);
+        fx->onNoteOff(60);
+        fx->onNote(62, 293.7f);
+        ok("a retriggered key is let go by one off", !m->saying());
+    }
+    // A word ending on a stop: once it's said, the mouth opens back to the move.
+    {
+        uint8_t at[8];
+        const int32_t atCount = machine::diction::parsePhones("AA T", at, 8);
+        auto fx = make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}, {"words", 1.0f}});
+        auto *m = static_cast<effect::Mouth *>(fx.get());
+        fx->onLyric(at, atCount);
+        fx->onNote(45, 110.0f);
+        run(*fx, saw(110.0f, 0.4f, 14400));
+        fx->onNoteOff(45);
+        const auto after = run(*fx, saw(110.0f, 0.4f, 24000)).l;
+        const auto plain = run(*make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}}), saw(110.0f, 0.4f, 48000)).l;
+        ok("after a word's last sound it's over", !m->saying());
+        ok("and the mouth is open again", rms(after, 14400, 24000) > rms(plain, 24000, 48000) * 0.8,
+           num(dB(rms(after, 14400, 24000))) + " vs " + num(dB(rms(plain, 24000, 48000))) + " dB");
+    }
+    // Words on an oo: the note's ee takes it, as far as the knob says.
+    const auto said = [&](float words, const uint8_t *phones, int32_t count) {
+        auto fx = make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}, {"words", words}});
+        fx->onLyric(phones, count);
+        fx->onNote(45, 110.0f);
+        return run(*fx, voice).l;
+    };
+    const auto plain = run(*make("Mouth", {{"vowel", 0.0f}, {"depth", 0.0f}}), voice).l;
+    const auto off = said(0.0f, ee, eeCount), full = said(1.0f, ee, eeCount), half = said(0.5f, ee, eeCount);
+    bool same = true;
+    for (size_t i = 0; i < plain.size(); ++i) same = same && plain[i] == off[i];
+    ok("with words at 0 the words change nothing", same);
+    ok("words say ee on an oo", upperFormants(full, 9600) > upperFormants(plain, 9600) + 10.0,
+       num(upperFormants(plain, 9600)) + " -> " + num(upperFormants(full, 9600)) + " dB");
+    ok("half the words is in between", upperFormants(half, 9600) > upperFormants(plain, 9600) + 2.0 &&
+       upperFormants(half, 9600) < upperFormants(full, 9600) - 2.0, num(upperFormants(half, 9600)) + " dB");
+    // An s first: the mouth nearly shut and hissing, then the vowel.
+    const auto hissed = said(1.0f, sh, shCount);
+    const double sRms = rms(hissed, 2400, 4800), vRms = rms(hissed, 24000, 48000);
+    // How much of it is in the top, from the size of the steps between samples.
+    const auto edge = [&](size_t from, size_t to) {
+        double d = 0.0;
+        for (size_t i = from; i < to; ++i) d += double(hissed[i] - hissed[i - 1]) * (hissed[i] - hissed[i - 1]);
+        return std::sqrt(d / double(to - from)) / (rms(hissed, from, to) + 1e-20);
+    };
+    ok("an s is quieter than its vowel", sRms < vRms * 0.7, num(dB(sRms)) + " vs " + num(dB(vRms)) + " dB");
+    ok("and it hisses", edge(2400, 4800) > edge(24000, 48000) * 1.5, num(edge(2400, 4800)) + " vs " + num(edge(24000, 48000)));
+    // Word after word, each starting on a hiss or a stop: none kicks.
+    {
+        auto fx = make("Mouth", {{"vowel", 0.3f}, {"depth", 0.0f}, {"words", 1.0f}});
+        const char *lines[] = {"T W IH NG", "K AH L", "S T AA R", "P AA"};
+        std::vector<float> out;
+        int pitch = 45;
+        for (const char *line : lines) {
+            uint8_t ph[16];
+            const int32_t n = machine::diction::parsePhones(line, ph, 16);
+            fx->onLyric(ph, n);
+            fx->onNote(pitch, 110.0f);
+            const auto part = run(*fx, saw(110.0f, 0.4f, 24000)).l;
+            fx->onNoteOff(pitch);
+            const auto gap = run(*fx, saw(110.0f, 0.4f, 9600)).l;
+            out.insert(out.end(), part.begin(), part.end());
+            out.insert(out.end(), gap.begin(), gap.end());
+        }
+        // The loudest held vowel: the last note's ah.
+        const double vowelPeak = peak(std::vector<float>(out.end() - 21600, out.end() - 9600));
+        ok("word after word, none kicks", peak(out) < vowelPeak * 1.25, num(peak(out)) + " against " + num(vowelPeak));
+    }
 }
 
 // --- Tape --------------------------------------------------------------------------
@@ -593,6 +938,122 @@ void horn() {
 
 // --- Spectral -------------------------------------------------------------------
 
+/** The stutter: off leaves Spectral as it was, the loop repeats, reset replays it, and letting go returns to the track. */
+void spectralStutter() {
+    // At 117.1875 bpm a sixteenth is 6144 frames, twelve hops of 512, so steps
+    // land on hops and every lap is played the same way.
+    const float bpm = 117.1875f;
+    const size_t step = 6144, lap = 4 * step, n = 6 * lap;
+    const auto l = music(n, 7);
+    {
+        auto plain = make("Spectral", {{"blur", 0.3f}});
+        auto off = make("Spectral", {{"blur", 0.3f}, {"grid", 0.0f}, {"length", 9.0f}, {"order", 3.0f}, {"fade", 0.7f}});
+        const auto a = run(*plain, l, bpm).l, b = run(*off, l, bpm).l;
+        ok("stutter off: its other knobs change nothing", worst(a, b) == 0.0, num(worst(a, b)));
+    }
+    const auto plain = run(*make("Spectral"), l, bpm).l;
+    {
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"grid", 4.0f}, {"length", 4.0f}});
+        const auto out = run(*fx, l, bpm).l;
+        const std::vector<float> a(out.begin() + 2 * lap, out.begin() + 3 * lap), b(out.begin() + 3 * lap, out.begin() + 4 * lap),
+            c(out.begin() + 5 * lap, out.end()), live(plain.begin() + 3 * lap, plain.begin() + 4 * lap);
+        ok("the loop repeats exactly", worst(a, b) < 1e-6 && worst(a, c) < 1e-6 && rms(a, 0, lap) > 0.05,
+           num(worst(a, b)) + " / " + num(worst(a, c)) + ", rms " + num(rms(a, 0, lap)));
+        ok("...and isn't the track", worst(b, live) > 0.1, num(worst(b, live)));
+    }
+    {
+        // Reversed: from the second lap, each step is one of the forward lap's,
+        // the order running the other way.
+        auto fwd = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}});
+        auto rev = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"order", 1.0f}});
+        const auto f = run(*fwd, l, bpm).l, r = run(*rev, l, bpm).l;
+        // The middle of a step on the way out, clear of the frames that overlap its neighbours.
+        auto differ = [&](size_t rj, size_t fj) {
+            double w = 0.0;
+            for (size_t i = 0; i < 2048; ++i) w = std::max(w, double(std::fabs(r[3 * lap + rj * step + 7 * 512 + i] - f[3 * lap + fj * step + 7 * 512 + i])));
+            return w;
+        };
+        double w = 0.0;
+        int matched[4];
+        for (size_t j = 0; j < 4; ++j) {
+            double best = 1e9;
+            for (size_t k = 0; k < 4; ++k) {
+                const double d = differ(j, k);
+                if (d < best) { best = d; matched[j] = static_cast<int>(k); }
+            }
+            w = std::max(w, best);
+        }
+        bool backwards = true;
+        for (int j = 1; j < 4; ++j) backwards = backwards && (matched[j] - matched[j - 1] + 4) % 4 == 3;
+        w = backwards ? w : 1.0;
+        ok("reverse plays the steps backwards", w < 1e-6, num(w));
+    }
+    {
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"grid", 5.0f}, {"length", 7.0f}, {"order", 3.0f}, {"fade", 0.5f}, {"smear", 0.3f}});
+        const auto a = run(*fx, l, 128.0f).l;
+        fx->reset();
+        const auto b = run(*fx, l, 128.0f).l;
+        ok("reset replays a random stutter the same", worst(a, b) == 0.0, num(worst(a, b)));
+        auto fwd = make("Spectral", {{"stutter", 1.0f}, {"grid", 5.0f}, {"length", 7.0f}, {"fade", 0.5f}, {"smear", 0.3f}});
+        const auto f = run(*fwd, l, 128.0f).l;
+        ok("...and random isn't forward", worst(a, f) > 0.05, num(worst(a, f)));
+    }
+    {
+        // Renewed every lap: a lap taken, a lap looped, a lap taken again. The
+        // first step is the one it started in, a step before the song's first.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"renew", 1.0f}});
+        const auto out = run(*fx, l, bpm).l;
+        auto lapAt = [&](size_t firstStep) { return std::vector<float>(out.begin() + firstStep * step + 4096, out.begin() + (firstStep + 4) * step + 1536); };
+        const auto taken = lapAt(7), looped = lapAt(11), earlier = lapAt(3);
+        ok("renew: the lap taken again loops", worst(taken, looped) < 1e-6, num(worst(taken, looped)));
+        ok("...and is new", worst(earlier, looped) > 0.1, num(worst(earlier, looped)));
+    }
+    {
+        // A mono track that turns stereo part way through a loop: both sides loop.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}});
+        Stereo s{l, l};
+        const double ticksPerSample = kTicksPerBeat * bpm / 60.0 / kRate;
+        for (size_t at = 0; at < n; at += kBlock) {
+            fx->onBlock(static_cast<int64_t>(at * ticksPerSample), static_cast<int64_t>((at + kBlock) * ticksPerSample), bpm);
+            fx->run(s.l.data() + at, s.r.data() + at, kBlock, at >= 2 * lap + 3000);
+        }
+        const std::vector<float> L(s.l.begin() + 3 * lap, s.l.end()), R(s.r.begin() + 3 * lap, s.r.end());
+        ok("mono turned stereo mid-loop: the right loops as the left", worst(L, R) == 0.0 && rms(R, 0, R.size()) > 0.05, num(worst(L, R)));
+    }
+    {
+        // Frozen on one note, stuttered over another and let go: back to the freeze.
+        auto fx = make("Spectral");
+        const auto a440 = tone(440.0f, 0.3f, 40000), b660 = tone(660.0f, 0.3f, 192000);
+        run(*fx, a440, 120.0f);
+        set(*fx, "freeze", 1.0f);
+        const std::vector<float> lead(b660.begin(), b660.begin() + 24000), first(b660.begin() + 24000, b660.begin() + 96000),
+            rest(b660.begin() + 96000, b660.end());
+        run(*fx, lead, 120.0f, 40000);
+        set(*fx, "stutter", 1.0f);
+        const auto looping = run(*fx, first, 120.0f, 64000).l;
+        set(*fx, "stutter", 0.0f);
+        const auto back = run(*fx, rest, 120.0f, 136000).l;
+        const double during = pitchHz(looping, 40000, 44000), after = pitchHz(back, 48000, 52000);
+        ok("stutter over a freeze, let go: the freeze again", std::fabs(during - 660.0) < 10.0 && std::fabs(after - 440.0) < 10.0,
+           num(during) + " Hz looping, " + num(after) + " Hz after");
+    }
+    {
+        // Held for two laps and let go: it fades back into the track.
+        auto fx = make("Spectral", {{"stutter", 1.0f}, {"length", 4.0f}, {"fade", 0.3f}});
+        const size_t cut = 2 * lap + 1000;
+        const auto held = run(*fx, std::vector<float>(l.begin(), l.begin() + cut), bpm).l;
+        set(*fx, "stutter", 0.0f);
+        const auto after = run(*fx, std::vector<float>(l.begin() + cut, l.end()), bpm, cut).l;
+        const std::vector<float> back(after.begin() + 24000, after.begin() + 48000), live(plain.begin() + cut + 24000, plain.begin() + cut + 48000);
+        ok("let go, it's the track again within half a second", worst(back, live) < 1e-4, num(worst(back, live)));
+        double jump = 0.0, usual = 0.0;
+        for (size_t i = 1; i < 12000; ++i) jump = std::max(jump, double(std::fabs(after[i] - after[i - 1])));
+        for (size_t i = 1; i < held.size(); ++i) usual = std::max(usual, double(std::fabs(held[i] - held[i - 1])));
+        for (size_t i = cut; i < cut + 12000; ++i) usual = std::max(usual, double(std::fabs(plain[i] - plain[i - 1])));
+        ok("...with no jump as it lets go", jump <= usual * 1.2, num(jump) + " against " + num(usual) + " held or live");
+    }
+}
+
 void spectral() {
     printf("- spectral\n");
     auto latencyOf = [](Effect &fx) { return dynamic_cast<effect::Spectral &>(fx).latency(); };
@@ -668,6 +1129,7 @@ void spectral() {
         const auto out = run(*fx, music(n, 2)).l;
         ok("robot makes a sound of its own", rms(out, 48000, n) > 0.01 && finite(Stereo{out, out}), num(rms(out, 48000, n)));
     }
+    spectralStutter();
     staysBounded("Spectral");
 }
 
@@ -1056,6 +1518,367 @@ void transient() {
     staysBounded("Transient");
 }
 
+/** The accent grid: each hit shaped by the step it lands on. */
+void transientGrid() {
+    printf("- transient grid\n");
+    // A hit every eighth note at 120 bpm: every other sixteenth step.
+    const auto in = hits(96000);
+    const char *steps[16] = {"a01", "a02", "a03", "a04", "a05", "a06", "a07", "a08",
+                             "a09", "a10", "a11", "a12", "a13", "a14", "a15", "a16"};
+    {
+        // Grid off, with everything else of the grid's turned, is the plain shaper to the bit.
+        auto plain = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}});
+        auto off = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}, {"depth", 12.0f}, {"rate", 2.0f}, {"length", 5.0f}});
+        for (int k = 0; k < 16; ++k) set(*off, steps[k], k % 2 ? 2.0f : 0.0f);
+        const auto a = run(*plain, in).l, b = run(*off, in).l;
+        ok("grid off is the plain shaper, bit for bit", worst(a, b) == 0.0);
+        auto flat = make("Transient", {{"attack", 0.5f}, {"sustain", -0.3f}, {"grid", 1.0f}, {"depth", 12.0f}});
+        ok("grid on with every step flat is too", worst(a, run(*flat, in).l) == 0.0);
+    }
+    // The song playing, as the engine says it on every insert.
+    ModTransport rolling;
+    rolling.rolling = true;
+    // Hits on steps 1, 5, 9, 13 up, on 3, 7, 11, 15 down.
+    auto grid = [&](std::initializer_list<std::pair<const char *, float>> extra = {}) {
+        auto fx = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}});
+        fx->setTransport(rolling);
+        for (int k = 0; k < 16; k += 4) set(*fx, steps[k], 2.0f);
+        for (int k = 2; k < 16; k += 4) set(*fx, steps[k], 0.0f);
+        for (const auto &[name, value] : extra) set(*fx, name, value);
+        return fx;
+    };
+    // Each hit's onset (its first 5 ms, RMS) against the same hit with the grid off, in dB, for the
+    // hits on even (up) and odd (down) eighths. The first hit starts from silence
+    // and is left out.
+    auto byHit = [&](const std::vector<float> &out, const std::vector<float> &ref, bool odd) {
+        double s = 0.0;
+        int n = 0;
+        for (size_t h = 12000, k = 1; h + 240 < out.size(); h += 12000, ++k) {
+            if ((k % 2 == 1) != odd) continue;
+            s += dB(rms(out, h, h + 240) / rms(ref, h, h + 240));
+            ++n;
+        }
+        return s / std::max(1, n);
+    };
+    const auto ref = run(*make("Transient"), in).l;
+    {
+        auto fx = grid();
+        const auto out = run(*fx, in).l;
+        const double up = byHit(out, ref, false), down = byHit(out, ref, true);
+        ok("an up step raises the hit's onset", up > 3.0, num(up) + " dB");
+        ok("a down step lowers it", down < -3.0, num(down) + " dB");
+        // The ring after the onset is left alone.
+        double worstTail = 0.0;
+        for (size_t h = 12000; h + 12000 <= out.size(); h += 12000)
+            worstTail = std::max(worstTail, std::fabs(dB(rms(out, h + 6000, h + 11000) / rms(ref, h + 6000, h + 11000))));
+        ok("the tail of each hit is as it was", worstTail < 0.5, num(worstTail) + " dB at most");
+    }
+    {
+        // Started a sixteenth in, every hit lands two steps later: the up and down swap.
+        auto fx = grid();
+        const auto out = run(*fx, in, 120.0f, 12000).l;
+        const double even = byHit(out, ref, false), odd = byHit(out, ref, true);
+        ok("the pattern follows the song's position", even < -3.0 && odd > 3.0,
+           "even hits " + num(even) + " dB, odd " + num(odd) + " dB");
+    }
+    {
+        // At 1/8 over 4 steps the hits go step 1 (up), 2, 3 (down), 4.
+        auto fx = grid({{"rate", 2.0f}, {"length", 4.0f}});
+        const auto out = run(*fx, in).l;
+        double upHit = 0.0, downHit = 0.0, flatHit = 0.0;
+        for (size_t h = 12000, k = 1; h + 240 < out.size(); h += 12000, ++k) {
+            const double d = dB(rms(out, h, h + 240) / rms(ref, h, h + 240));
+            if (k % 4 == 0) upHit = std::max(upHit, d);
+            else if (k % 4 == 2) downHit = std::min(downHit, d);
+            else flatHit = std::max(flatHit, std::fabs(d));
+        }
+        ok("rate and length: 1/8 steps over a 4-step loop", upHit > 3.0 && downHit < -3.0 && flatHit < 0.5,
+           num(upHit) + " dB on step 1, " + num(downHit) + " on 3, " + num(flatHit) + " on 2 and 4");
+    }
+    {
+        // A note on step 1's second half swung to where step 2 starts (75%,
+        // sixteenths: tick 40 sounds at 60). With the swing known it counts as step 1.
+        std::vector<float> one(24000, 0.0f);
+        const auto hit = hits(12000);
+        for (size_t i = 0; i < 6000; ++i) one[6000 + i] = hit[i];
+        const auto plainOne = run(*make("Transient"), one).l;
+        auto swung = grid({{"a02", 0.0f}});
+        ModTransport sw = rolling;
+        sw.swing = 75.0f;
+        swung->setTransport(sw);
+        auto straight = grid({{"a02", 0.0f}});
+        const double s = dB(rms(run(*swung, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
+        const double t = dB(rms(run(*straight, one).l, 6000, 6240) / rms(plainOne, 6000, 6240));
+        ok("swing: a swung note is accented as the step it was written on", s > 3.0 && t < -3.0,
+           num(s) + " dB swung, " + num(t) + " dB as if straight");
+    }
+    {
+        // Stopped, the grid leaves the hits alone, though the clock's ticks
+        // still move, as they do in the engine.
+        auto fx = grid();
+        fx->setTransport(ModTransport{});
+        ok("stopped, the grid does nothing", worst(run(*fx, in).l, ref) == 0.0);
+    }
+    {
+        auto fx = grid({{"attack", 0.3f}});
+        const auto a = run(*fx, in).l;
+        fx->reset();
+        const auto b = run(*fx, in).l;
+        ok("reset: played again it's the same to the bit", worst(a, b) == 0.0);
+    }
+    // A kick and a ringing tone, every step up: the accent holds through
+    // each hit, with no steps in the gain at the wave's rate (noise hid this).
+    auto kick = [](float hz, float tau) {
+        std::vector<float> x(96000, 0.0f);
+        for (size_t h = 0; h < x.size(); h += 24000)
+            for (size_t i = 0; i < 24000; ++i)
+                x[h + i] = 0.8f * static_cast<float>(std::exp(-double(i) / kRate / tau) * std::sin(2.0 * M_PI * hz * i / kRate));
+        return x;
+    };
+    // The gain applied, in dB, where the input is big enough to say; and the
+    // biggest step from one such sample to the next, hits' starts and all.
+    auto worstStep = [](const std::vector<float> &out, const std::vector<float> &x, size_t skip = 0) {
+        double w = 0.0, peak = 0.0;
+        for (float v : x) peak = std::max(peak, double(std::fabs(v)));
+        for (size_t i = 1; i < x.size(); ++i) {
+            if (i % 24000 < skip) continue;
+            if (std::fabs(x[i]) < 0.05 * peak || std::fabs(x[i - 1]) < 0.05 * peak) continue;
+            const double a = dB(std::fabs(out[i] / x[i])), b = dB(std::fabs(out[i - 1] / x[i - 1]));
+            w = std::max(w, std::fabs(a - b));
+        }
+        return w;
+    };
+    // The gain at [ms] into the second hit, from the output's level against the input's over 1 ms.
+    auto gainAt = [](const std::vector<float> &out, const std::vector<float> &x, double ms) {
+        const auto at = static_cast<size_t>(24000 + ms * 48.0);
+        return dB(rms(out, at, at + 48) / rms(x, at, at + 48));
+    };
+    for (const auto &[name, hz, tau] : {std::tuple<const char *, float, float>{"a 50 Hz kick", 50.0f, 0.15f},
+                                        std::tuple<const char *, float, float>{"a 3 kHz ring", 3000.0f, 0.03f}}) {
+        const auto x = kick(hz, tau);
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], 2.0f);
+        auto off = make("Transient", {{"attack", 0.5f}});
+        const auto yOn = run(*on, x).l, yOff = run(*off, x).l;
+        // Each starts at full slope from nothing, a click of its own: the first
+        // 3 ms may take the quick slew, the rest must be as smooth as grid off.
+        const double sOn = worstStep(yOn, x, 144), sOff = worstStep(yOff, x, 144);
+        const double cOn = worstStep(yOn, x), cOff = worstStep(yOff, x);
+        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.06 + sOff && cOn < 0.8 + cOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off, " + num(cOn) + " in the click");
+        // Up at the start, then easing off with the onset, never dropping and
+        // coming back as a second start would.
+        double first = 0.0, top = -1e9, dip = 1e9, again = 0.0;
+        for (double ms = 2.0; ms <= 30.0; ms += 1.0) {
+            const double d = gainAt(yOn, x, ms) - gainAt(yOff, x, ms);
+            if (ms == 2.0) first = d;
+            if (d >= top && dip > 1e8) top = d;
+            else { dip = std::min(dip, d); again = std::max(again, d - dip); }
+        }
+        ok(std::string(name) + ": the accent holds through the hit's start", first > 3.0 && top > 6.0 && again < 0.5,
+           num(first) + " dB at 2 ms, " + num(top) + " at the top, back up " + num(again) + " after");
+        // Only the hit's own step is up: a second start inside the hit would land on a down one.
+        auto one = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        one->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*one, steps[k], k % 4 ? 0.0f : 2.0f);
+        double low = 1e9;
+        const auto yOne = run(*one, x).l;
+        for (double ms = 2.0; ms <= 60.0; ms += 1.0) low = std::min(low, gainAt(yOne, x, ms) - gainAt(yOff, x, ms));
+        ok(std::string(name) + ": it starts once a hit", low > -0.5, num(low) + " dB at the lowest");
+    }
+    {
+        // A 30 Hz sub, long enough that the second hit starts over the first's tail.
+        const auto x = kick(30.0f, 0.3f);
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 12.0f}, {"attack", 0.5f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], 2.0f);
+        auto off = make("Transient", {{"attack", 0.5f}});
+        const double sOn = worstStep(run(*on, x).l, x), sOff = worstStep(run(*off, x).l, x);
+        ok("a 30 Hz sub: no step in the gain sample to sample", sOn < 0.06 + sOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off");
+        // The same, swelling up out of the first with no kink to hear it start by.
+        std::vector<float> swell(96000);
+        for (size_t i = 0; i < swell.size(); ++i) {
+            const double t = double(i % 24000) / kRate, tail = std::exp(-(t + 0.5) / 0.3);
+            const double rise = std::min(1.0, t / 0.004), a = tail + (std::exp(-t / 0.3) - tail) * rise;
+            swell[i] = 0.8f * static_cast<float>(a * std::sin(2.0 * M_PI * 30.0 * i / kRate));
+        }
+        on->reset();
+        const double wOn = worstStep(run(*on, swell).l, swell), wOff = worstStep(run(*off, swell).l, swell);
+        ok("a 30 Hz sub swelling in: no step either", wOn < 0.06 + wOff,
+           num(wOn) + " dB against " + num(wOff) + " grid off");
+    }
+    // Hits at [at] (frames) at [bpm] through a grid of alternating up and down
+    // steps [rate] long. Each hit's onset (5 ms, or 15 where it has no click to
+    // let the accent in quickly) against grid off should go its
+    // own step's way, the first left out as it starts from silence. The gain
+    // mustn't step from one sample to the next more than with the grid off,
+    // except, where the material starts [clicky] with a click of its own, in
+    // each hit's first 3 ms, by the quick slew at most. Unless [accented], hits
+    // may go unaccented, and only the steps are checked.
+    auto ownSteps = [&](const char *name, const std::vector<float> &x, const std::vector<size_t> &at, float bpm, float rate,
+                        bool clicky = true, double downMost = -2.0, bool accented = true) {
+        auto on = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}, {"attack", 0.3f}, {"rate", rate}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+        auto off = make("Transient", {{"attack", 0.3f}});
+        const auto yOn = run(*on, x, bpm).l, yOff = run(*off, x, bpm).l;
+        const int64_t step = rate < 0.5f ? 40 : rate < 1.5f ? 60 : 120;
+        double up = 1e9, down = -1e9;
+        for (size_t k = 1; k < at.size(); ++k) {
+            const auto tick = static_cast<int64_t>(double(at[k]) * kTicksPerBeat * bpm / 60.0 / kRate);
+            const bool isUp = ((tick + step / 4) / step) % 2 == 0;
+            const size_t span = clicky ? 240 : 720;
+            const double d = dB(rms(yOn, at[k], at[k] + span) / rms(yOff, at[k], at[k] + span));
+            if (isUp) up = std::min(up, d); else down = std::max(down, d);
+        }
+        if (accented)
+            ok(std::string(name) + ": each hit gets its own step", up > 2.0 && down < downMost,
+               num(up) + " dB the least up, " + num(down) + " the least down");
+        // The worst step outside the clicks and in them.
+        auto steps2 = [&](const std::vector<float> &out, double &inClick) {
+            double w = 0.0, pk = 0.0;
+            inClick = 0.0;
+            for (float v : x) pk = std::max(pk, double(std::fabs(v)));
+            size_t next = 1;
+            for (size_t i = at[0] + 144; i < x.size(); ++i) {
+                while (next < at.size() && at[next] + 144 <= i) ++next;
+                const bool click = clicky && next < at.size() && i >= at[next];
+                if (std::fabs(x[i]) < 0.05 * pk || std::fabs(x[i - 1]) < 0.05 * pk) continue;
+                const double d = std::fabs(dB(std::fabs(out[i] / x[i])) - dB(std::fabs(out[i - 1] / x[i - 1])));
+                (click ? inClick : w) = std::max(click ? inClick : w, d);
+            }
+            return w;
+        };
+        double cOn = 0.0, cOff = 0.0;
+        const double sOn = steps2(yOn, cOn), sOff = steps2(yOff, cOff);
+        ok(std::string(name) + ": no step in the gain sample to sample", sOn < 0.06 + sOff && cOn < 0.8 + cOff,
+           num(sOn) + " dB against " + num(sOff) + " grid off" + (clicky ? ", " + num(cOn) + " in the clicks" : ""));
+    };
+    // A noise hit [amp] high falling with time constant [tau] seconds, added in at [from].
+    auto addHit = [](std::vector<float> &x, size_t from, float amp, double tau, uint32_t seed) {
+        const auto n = noise(amp, std::min<size_t>(x.size() - from, size_t(tau * 10.0 * kRate)), seed);
+        for (size_t i = 0; i < n.size(); ++i) x[from + i] += n[i] * static_cast<float>(std::exp(-double(i) / kRate / tau));
+    };
+    {
+        // A 32nd snare roll at 180 bpm: a hit every 2000 frames, each down 26 dB by 100 ms.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 2000 < x.size(); h += 2000) { addHit(x, h, 0.5f, 0.1 / 3.0, 11 + h); at.push_back(h); }
+        ownSteps("a 32nd roll at 180 bpm", x, at, 180.0f, 1.0f);
+    }
+    for (double tau : {0.06, 0.1}) {
+        // The same roll of snares that ring: each hit falls with time constant tau.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 2000 < x.size(); h += 2000) { addHit(x, h, 0.5f, tau, 13 + h); at.push_back(h); }
+        // At 100 ms a hit is too little over the ring before it to tell from
+        // a saw's clicks, so some go unaccented.
+        const bool slow = tau > 0.08;
+        ownSteps((std::string("a ringing roll, ") + (slow ? "100" : "60") + " ms").c_str(), x, at, 180.0f, 1.0f, true, -2.0,
+                 !slow);
+    }
+    {
+        // Flams at 180 bpm on 1/16 triplets: a quiet grace note 20 ms before each main hit.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 8000; h + 4000 < x.size(); h += 8000) {
+            addHit(x, h - 960, 0.25f, 0.03, 3 + h);
+            addHit(x, h, 0.6f, 0.04, 5 + h);
+            at.push_back(h - 960);
+            at.push_back(h);
+        }
+        ownSteps("a 20 ms flam", x, at, 180.0f, 0.0f, true, -1.9);
+    }
+    {
+        // 16th hats at 180 bpm: short and high.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 4000 < x.size(); h += 4000) {
+            std::vector<float> one(4000, 0.0f);
+            addHit(one, 0, 0.4f, 0.01, 17 + h);
+            float lp = 0.0f;
+            for (size_t i = 0; i < one.size(); ++i) { lp += (one[i] - lp) * 0.5f; x[h + i] += one[i] - lp; }
+            at.push_back(h);
+        }
+        ownSteps("16th hats at 180 bpm", x, at, 180.0f, 1.0f);
+    }
+    {
+        // Kicks with a click on top, an eighth apart at 120 bpm.
+        std::vector<float> x(96000, 0.0f);
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 12000 <= x.size(); h += 12000) {
+            for (size_t i = 0; i < 12000; ++i)
+                x[h + i] = 0.7f * static_cast<float>(std::exp(-double(i) / kRate / 0.12) * std::sin(2.0 * M_PI * 50.0 * i / kRate));
+            addHit(x, h, 0.4f, 0.0015, 23 + h);
+            at.push_back(h);
+        }
+        ownSteps("a kick with a click", x, at, 120.0f, 2.0f);
+    }
+    {
+        // Snare hits a sixteenth apart over a held 55 Hz saw bass.
+        auto x = saw(55.0f, 0.3f, 96000);
+        std::vector<size_t> at;
+        for (size_t h = 3000; h + 6000 <= x.size(); h += 6000) { addHit(x, h, 0.5f, 0.03, 29 + h); at.push_back(h); }
+        ownSteps("snares over a bass", x, at, 120.0f, 1.0f);
+    }
+    {
+        // A pure 50 Hz kick on each eighth, faded in over 2 ms, under a held organ of
+        // four saws: the organ is bright, but the kick has no click to cover a quick change.
+        std::vector<float> x(96000, 0.0f);
+        for (float hz : {220.0f, 330.0f, 440.0f, 660.0f}) {
+            const auto s = saw(hz, 0.08f, x.size());
+            for (size_t i = 0; i < x.size(); ++i) x[i] += s[i];
+        }
+        std::vector<size_t> at;
+        for (size_t h = 0; h + 12000 <= x.size(); h += 12000) {
+            for (size_t i = 0; i < 12000; ++i)
+                x[h + i] += 0.7f * static_cast<float>(std::exp(-double(i) / kRate / 0.12) * std::sin(2.0 * M_PI * 50.0 * i / kRate) *
+                                                      (i < 96 ? 0.5 - 0.5 * std::cos(M_PI * i / 96.0) : 1.0));
+            at.push_back(h);
+        }
+        ownSteps("a clean kick under an organ", x, at, 120.0f, 2.0f, false);
+    }
+    {
+        // Turned on mid-song between hits: nothing happens until the next hit, which gets its own step.
+        auto x = saw(55.0f, 0.3f, 96000);
+        for (size_t h = 3000; h + 6000 <= x.size(); h += 6000) addHit(x, h, 0.5f, 0.03, 31 + h);
+        auto on = make("Transient", {{"depth", 9.0f}, {"attack", 0.3f}});
+        on->setTransport(rolling);
+        for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+        auto off = make("Transient", {{"attack", 0.3f}});
+        const std::vector<float> head(x.begin(), x.begin() + 46500), rest(x.begin() + 46500, x.end());
+        const auto yOff = run(*off, x).l;
+        auto yOn = run(*on, head).l;
+        set(*on, "grid", 1.0f);
+        const auto tail = run(*on, rest, 120.0f, head.size()).l;
+        yOn.insert(yOn.end(), tail.begin(), tail.end());
+        double before = 0.0;
+        for (size_t i = 46500; i + 48 <= 51000; i += 48) before = std::max(before, std::fabs(dB(rms(yOn, i, i + 48) / rms(yOff, i, i + 48))));
+        // The hit at 51000 is on step 9, up.
+        const double hit = dB(rms(yOn, 51000, 51240) / rms(yOff, 51000, 51240));
+        ok("turned on mid-song: no hit until the next one, and that on its own step", before < 0.1 && hit > 3.0,
+           num(before) + " dB before it, " + num(hit) + " on it");
+    }
+    {
+        // A held saw bass from E1 up, whose every cycle starts with a click, isn't a run of hits:
+        // with every other step up, it comes out as with the grid off.
+        double w = 0.0;
+        for (float hz : {41.2f, 55.0f, 110.0f}) {
+            auto x = saw(hz, 0.5f, 96000);
+            auto on = make("Transient", {{"grid", 1.0f}, {"depth", 9.0f}, {"attack", 0.3f}});
+            on->setTransport(rolling);
+            for (int k = 0; k < 16; ++k) set(*on, steps[k], k % 2 ? 0.0f : 2.0f);
+            auto off = make("Transient", {{"attack", 0.3f}});
+            const auto yOn = run(*on, x).l, yOff = run(*off, x).l;
+            for (size_t i = 4800; i + 480 <= x.size(); i += 480) w = std::max(w, std::fabs(dB(rms(yOn, i, i + 480) / rms(yOff, i, i + 480))));
+        }
+        ok("a held saw bass: the grid leaves it alone", w < 0.2, num(w) + " dB at most");
+    }
+}
+
+
 // --- Midside ----------------------------------------------------------------------
 
 void midSide() {
@@ -1119,6 +1942,12 @@ void midSide() {
 
 // --- Deesser ----------------------------------------------------------------------
 
+std::vector<float> both_of(const std::vector<float> &a, const std::vector<float> &b) {
+    std::vector<float> x(std::min(a.size(), b.size()));
+    for (size_t i = 0; i < x.size(); ++i) x[i] = a[i] + b[i];
+    return x;
+}
+
 void deEsser() {
     printf("- de-esser\n");
     const auto ess = tone(6000.0f, 0.3f, 48000);
@@ -1174,6 +2003,107 @@ void deEsser() {
         const double dv = dB(rms(run(*fx, vowel).l, 24000, 48000) / rms(vowel, 24000, 48000));
         const double de = dB(rms(run(*fx2, ess).l, 24000, 48000) / rms(ess, 24000, 48000));
         ok("relative from defaults: a vowel is left alone, an ess is cut", std::fabs(dv) < 0.3 && de < -3.0, num(dv) + " / " + num(de) + " dB");
+    }
+    // Throw: an ess 50 ms long at 0.1 s, then silence.
+    const size_t essAt = 4800, essLen = 2400;
+    std::vector<float> burst(96000, 0.0f);
+    for (size_t i = 0; i < essLen; ++i) burst[essAt + i] = ess[i];
+    {
+        // At throw 0 the time and feedback change nothing and it stays mono.
+        auto a = make("Deesser");
+        auto b = make("Deesser", {{"time", 5.0f}, {"feedback", 0.9f}});
+        const auto oa = run(*a, both_of(ess, low)), ob = run(*b, both_of(ess, low));
+        bool mono = true;
+        {
+            auto c = make("Deesser");
+            std::vector<float> l(ess.begin(), ess.begin() + kBlock), r(kBlock, 0.0f);
+            mono = !c->run(l.data(), r.data(), kBlock, false);
+        }
+        ok("throw 0: time and feedback change nothing, the output stays mono", worst(oa.l, ob.l) == 0.0 && mono,
+           num(worst(oa.l, ob.l)));
+    }
+    for (const float bpm : {120.0f, 90.0f}) {
+        // 1/8 at the tempo: the cut comes back on the left an eighth later,
+        // then on the right an eighth after that.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 1.0f}, {"feedback", 0.5f}});
+        const auto out = run(*fx, burst, bpm);
+        const auto d = static_cast<size_t>(0.5f * 60.0f / bpm * kRate);
+        const double gap = rms(out.l, essAt + essLen + 600, essAt + d - 300);
+        const double echoL = rms(out.l, essAt + d, essAt + d + essLen);
+        const double echoR = rms(out.r, essAt + 2 * d, essAt + 2 * d + essLen);
+        const double earlyR = rms(out.r, essAt + essLen + 600, essAt + 2 * d - 300);
+        ok("throw at " + num(bpm) + " bpm: the ess echoes left at 1/8, right at 1/4",
+           dB(echoL) > -40.0 && dB(echoL / (gap + 1e-12)) > 40.0 && dB(echoR / (earlyR + 1e-12)) > 30.0,
+           num(dB(echoL)) + " dB, gap " + num(dB(gap)) + ", right " + num(dB(echoR)) + " / " + num(dB(earlyR)));
+    }
+    {
+        // Feedback rings on after the input stops, then sleeps; asleep it
+        // plays exactly what a de-esser without a throw would.
+        const std::vector<float> head(burst.begin(), burst.begin() + 9600);
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"time", 0.0f}, {"feedback", 0.6f}});
+        run(*fx, head);
+        set(*fx, "throw", 0.0f);
+        const auto still = run(*fx, std::vector<float>(24000, 0.0f), 120.0f, head.size());
+        run(*fx, std::vector<float>(48000 * 4, 0.0f), 120.0f, head.size() + 24000);
+        auto plain = make("Deesser");
+        run(*plain, head);
+        run(*plain, std::vector<float>(24000 + 48000 * 4, 0.0f));
+        const auto a = run(*fx, ess), b = run(*plain, ess);
+        ok("throw: the tail rings after the input and throw stop, then it sleeps",
+           dB(rms(still.l, 0, 12000) + rms(still.r, 0, 12000)) > -60.0 && worst(a.l, b.l) == 0.0 && worst(a.r, b.r) == 0.0,
+           num(dB(rms(still.l, 0, 12000) + rms(still.r, 0, 12000))) + " dB, " + num(worst(a.l, b.l)));
+    }
+    {
+        // Reset clears the echo: silence after it is silence, and the same input plays the same.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"feedback", 0.8f}});
+        const auto first = run(*fx, burst);
+        fx->reset();
+        const auto quiet = run(*fx, std::vector<float>(48000, 0.0f));
+        fx->reset();
+        const auto again = run(*fx, burst);
+        ok("throw: reset clears the echo and the same input plays the same",
+           peak(quiet.l) == 0.0 && peak(quiet.r) == 0.0 && worst(first.l, again.l) == 0.0 && worst(first.r, again.r) == 0.0,
+           num(peak(quiet.l)) + " / " + num(worst(first.l, again.l)));
+    }
+    {
+        // Listen plays only the band; the throw is silent.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"listen", 1.0f}});
+        const auto out = run(*fx, burst);
+        const double after = rms(out.l, essAt + essLen + 2400, out.l.size()) + rms(out.r, essAt + essLen + 2400, out.r.size());
+        ok("throw: listen keeps the echo silent", dB(after) < -100.0, num(dB(after)) + " dB");
+    }
+    {
+        // A time change crossfades the read. A steady tone plays all through,
+        // so dry and echo are one sine but for the change, and a jump in the
+        // read shows as a kink: the largest second difference against the
+        // peak, after the change and before it. The tone is not a whole
+        // number of cycles in either time, or the jump would land in phase,
+        // and sent gently, so the loop's limit leaves it a sine.
+        auto fx = make("Deesser", {{"freq", 2000.0f}, {"throw", 0.1f}, {"time", 1.0f}, {"feedback", 0.7f}});
+        const auto t = tone(2130.0f, 0.3f, 96000);
+        const std::vector<float> first(t.begin(), t.begin() + 48000), second(t.begin() + 48000, t.end());
+        const auto out1 = run(*fx, first);
+        set(*fx, "time", 3.0f);
+        const auto out2 = run(*fx, second, 120.0f, 48000);
+        auto kink = [](const Stereo &o, size_t from, size_t to) {
+            double k = 0.0, p = 1e-12;
+            for (size_t i = from + 2; i < to; ++i) {
+                for (const auto *x : {&o.l, &o.r}) {
+                    k = std::max(k, double(std::fabs((*x)[i] - 2.0f * (*x)[i - 1] + (*x)[i - 2])));
+                    p = std::max(p, double(std::fabs((*x)[i])));
+                }
+            }
+            return k / p;
+        };
+        const double after = kink(out2, 0, 4800), before = kink(out1, 43200, 48000);
+        ok("throw: a new time glides without a click", finite(out2) && after <= before * 1.2, num(after) + " vs " + num(before));
+    }
+    {
+        // staysBounded turns listen on, which mutes the throw: this runs the echo flat out.
+        auto fx = make("Deesser", {{"throw", 1.0f}, {"listen", 0.0f}, {"feedback", 0.9f}, {"range", 24.0f}, {"threshold", -60.0f}});
+        const auto out = run(*fx, noise(0.9f, 240000));
+        ok("throw: full send and feedback stay finite and bounded", finite(out) && peak(out.l) < 8.0 && peak(out.r) < 8.0,
+           num(peak(out.l)) + " / " + num(peak(out.r)));
     }
     staysBounded("Deesser");
 }
@@ -2094,6 +3024,7 @@ int main() {
     smash();
     acid();
     mouth();
+    mouthWords();
     tape();
     slicer();
     magneto();
@@ -2102,6 +3033,7 @@ int main() {
     formula();
     delayModes();
     transient();
+    transientGrid();
     midSide();
     deEsser();
     reverb();

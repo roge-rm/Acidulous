@@ -20,5 +20,7 @@ class LruMap<K, V>(private val keep: Int) {
         while (map.size > keep) map.remove(map.keys.first())
     }
 
+    fun remove(key: K): V? = map.remove(key)
+
     val size: Int get() = map.size
 }

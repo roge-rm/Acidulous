@@ -31,6 +31,7 @@
 #include <engine/format/WavReader.h>
 #include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
+#include <engine/inputmod/InputModRegistry.h>
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
@@ -44,6 +45,9 @@
 #include "audition_material.h"
 #include "audition_measure.h"
 #include "patchbank.h"
+
+/** The song playing, straight, as the engine tells an insert while it plays. */
+const acidulous::ModTransport kPlaying = [] { acidulous::ModTransport t; t.rolling = true; return t; }();
 
 using namespace acidulous;
 using namespace acidulous::audition;
@@ -161,8 +165,19 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = secondsToFrames(10.0f);
         p.frames = secondsToFrames(11.5f);
         p.ringOut = false;
+    } else if (kind == "halo") {
+        // Nothing played: for a machine rung by the song alone (Sympath with
+        // a sidechain), eight seconds of the song and its ring-out.
+        p.lastOff = secondsToFrames(8.0f);
+        p.frames = p.lastOff;
     } else if (kind == "hold") {
         p.lastOff = hit(p, 0.0f, 8.0f, note, velocity);
+        p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "pair") {
+        // Two notes held twenty seconds, the patch's note and the bottom of
+        // its range, for a Palm cycle shared between two drums.
+        hit(p, 0.0f, 20.0f, range.set() ? range.low : note - 5, velocity);
+        p.lastOff = hit(p, 0.0f, 20.0f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(4.0f);
     } else if (kind == "scene") {
         // One note held twenty seconds, for a patch that is a whole scene on
@@ -455,6 +470,18 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "melt") {
+        // Tine's melts: a note held while it melts, a soft one and a hard one
+        // to hear heat hurry it, a chord held while it melts, and a short
+        // note let go, left to ring out.
+        struct Hit { float at; int step; int vel; float hold; };
+        static const Hit kHits[] = {
+            {0.0f, 0, 100, 5.0f}, {5.5f, 7, 60, 2.5f}, {8.5f, 7, 124, 2.5f},
+            {11.5f, -5, 96, 5.0f}, {11.53f, 0, 92, 5.0f}, {11.56f, 4, 92, 5.0f},
+            {17.0f, 12, 104, 0.4f},
+        };
+        for (const Hit &h : kHits) p.lastOff = hit(p, h.at, h.hold, note + h.step, h.vel);
+        p.frames = p.lastOff + secondsToFrames(6.0f);
     } else if (kind == "bell") {
         // A bell is mostly its tail, so this leaves room between strikes:
         // about a second and a half apart, one pair together to hear two
@@ -759,6 +786,37 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
     return p;
 }
 
+/** Chanter's song demos: slow, one bass root a bar, so the drones can be heard moving. */
+constexpr float kChanterSongBpm = 80.0f;
+constexpr int kChanterSongBars = 8;
+
+/** Steps from the key: I, IV, bVII, V, played twice. */
+constexpr int kChanterSongSteps[4] = {0, 5, -2, 7};
+
+/**
+ * The chanter over the bass: the key's note held for the first four bars, so
+ * only the drones move, then a plain tune on each bar's chord.
+ */
+Phrase chanterSongPhrase(int tonic, int velocity) {
+    Phrase p;
+    const float beat = 60.0f / kChanterSongBpm;
+    hit(p, 0.0f, 16.0f * beat, tonic, velocity);
+    static const int kTune[4][4] = {{0, 4, 7, 4}, {5, 9, 5, 0}, {2, 5, 10, 7}, {7, 4, 2, 0}};
+    for (int bar = 0; bar < 4; ++bar) {
+        for (int q = 0; q < 4; ++q) {
+            const float at = (16.0f + static_cast<float>(bar * 4 + q)) * beat;
+            p.lastOff = hit(p, at, beat, tonic + kTune[bar][q], velocity);
+        }
+    }
+    p.frames = p.lastOff + secondsToFrames(2.0f);
+    std::stable_sort(p.events.begin(), p.events.end(),
+                     [](const NoteEvent &a, const NoteEvent &b) { return a.frame < b.frame; });
+    return p;
+}
+
+/** The bass the chanter follows: the key's note between E2 and D#3, one per bar. */
+std::vector<float> chanterSongBass(int tonic, int64_t frames);
+
 // --- What gets mounted -------------------------------------------------------
 
 /**
@@ -776,6 +834,12 @@ struct Material {
     std::unique_ptr<::acidulous::machine::nexus::Graph> graph;
     std::vector<float> input; // mono, published a block at a time
     bool scene = false;       // Bias: play scene 1 from the top, a cell holding the reel mix
+    /**
+     * Another track for a machine with a sidechain: stereo, looped over its
+     * first `songLoop` frames, handed over as the key and mixed into the take.
+     */
+    std::vector<float> song;
+    int64_t songLoop = 0;
 };
 
 /** How long the reel mix plays before its silent gap, and the gap. */
@@ -1168,6 +1232,7 @@ struct FxChain {
 
     void process(float *L, float *R, int32_t n, int64_t t0, int64_t t1, float bpm) {
         for (auto &fx : inserts) {
+            fx->setTransport(kPlaying);
             fx->onBlock(t0, t1, bpm);
             fx->run(L, R, n, true);
         }
@@ -1196,6 +1261,7 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
 
     float L[kBlock], R[kBlock];
     std::vector<float> inBlock(static_cast<size_t>(kBlock) * 2, 0.0f);
+    float keyBlock[kBlock] = {};
     size_t next = 0;
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
 
@@ -1223,6 +1289,14 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
             }
             InputBus::get().publish(inBlock.data(), kBlock);
         }
+        const bool keyed = mat.songLoop > 0;
+        if (keyed) {
+            for (int32_t i = 0; i < kBlock; ++i) {
+                const size_t src = static_cast<size_t>((at + i) % mat.songLoop) * 2;
+                keyBlock[i] = (mat.song[src] + mat.song[src + 1]) * 0.5f;
+            }
+            m->setKey(keyBlock);
+        }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
         if (mat.scene) m->onScene(1, t0, true, false);
@@ -1236,10 +1310,15 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
             fx->process(L, R, kBlock, t0, t1, bpm);
         }
         for (int32_t i = 0; i < kBlock; ++i) {
-            out.stereo.push_back(L[i]);
-            out.stereo.push_back(stereo ? R[i] : L[i]);
+            const size_t src = keyed ? static_cast<size_t>((at + i) % mat.songLoop) * 2 : 0;
+            // A little under the key's level, so the two together stay under full scale.
+            out.stereo.push_back(L[i] + (keyed ? 0.7f * mat.song[src] : 0.0f));
+            out.stereo.push_back((stereo ? R[i] : L[i]) + (keyed ? 0.7f * mat.song[src + 1] : 0.0f));
         }
     }
+    // The song stops with the phrase; the machine rings out on silence.
+    static const float kNoKey[kBlock] = {};
+    if (mat.songLoop > 0) m->setKey(kNoKey);
 
     // The ring-out. It stops 60 dB under the peak, the same floor the tail
     // measurement uses. It has to stay quiet for a tenth of a second, since a
@@ -1314,6 +1393,9 @@ struct Hit { float beat, beats; int note, velocity; };
 /** How loud every effect source is, in the units of kLoudness. */
 constexpr float kSourceLoudness = -20.0f;
 
+/** The bass under Chanter's song demos, kept under the pipes. */
+constexpr float kChanterSongLoudness = -24.0f;
+
 std::vector<float> renderPart(const std::string &unit, const std::string &patchName,
                               const std::vector<Hit> &hits, float bpm, int64_t frames,
                               const std::vector<std::pair<std::string, float>> &overrides = {}) {
@@ -1375,10 +1457,28 @@ std::vector<float> renderPart(const std::string &unit, const std::string &patchN
  */
 /** The pitched notes in the last effect source, frame and note, for an effect that follows them. */
 std::vector<std::pair<int64_t, int>> gSourceNotes;
+/** `--material drums` on an effect: a plain drum loop, every hit as loud as its kind, instead of the usual source. */
+std::string gEffectMaterial;
+
+/**
+ * Smash with a band ducking plays its own material (see effectSource), and
+ * a quiet kick goes round the effect, as it would on a track of its own, and
+ * comes back in after it (gBesideDrums), so the duck is heard against a
+ * kick it doesn't touch.
+ */
+bool gDrumsBeside = false;
+std::vector<float> gBesideDrums;
+/** The same with a band at sidechain: the beside kick is the key's, on every beat. */
+bool gKeyedBeside = false;
+/** Leave the beside drums out of the take, to measure the effected part alone. */
+bool gNoBeside = std::getenv("ACIDULOUS_NO_BESIDE") != nullptr;
+/** The Smash duck material's length, in bars of four beats. */
+constexpr int kDuckBars = 16;
 
 std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &stop) {
     gSourceNotes.clear();
-    const float bars = 2.0f;
+    gBesideDrums.clear();
+    const float bars = gDrumsBeside ? static_cast<float>(kDuckBars) : 2.0f;
     stop = secondsToFrames(bars * 4.0f * 60.0f / bpm);
     // A reverb gets longer to ring out, since a big hall outlasts three seconds.
     const int64_t frames = stop + secondsToFrames(effect == "Reverb" || effect == "Vessel" ? 6.0f : 3.0f);
@@ -1387,7 +1487,45 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
         for (size_t i = 0; i < out.size(); ++i) out[i] += part[i] * gain;
     };
 
-    if (effect == "Amp" || effect == "Distortion") {
+    if (gDrumsBeside) {
+        // Smash ducking: everything held through the beat, so the duck is the
+        // only movement. A pad, a bass and air on top, one chord every two bars
+        // overlapping the next; a kick beside, quiet, on 1 (or on every beat,
+        // the key's own, for a band at sidechain).
+        const int chords[4][4] = {{57, 60, 64, 67}, {53, 57, 60, 64}, {55, 59, 62, 67}, {52, 55, 59, 64}};
+        const int roots[4] = {33, 29, 31, 28};
+        std::vector<Hit> pad, bass;
+        for (int c = 0; c < kDuckBars / 2; ++c) {
+            const float at = static_cast<float>(c * 8) - (c > 0 ? 0.1f : 0.0f);
+            for (int n : chords[c % 4]) pad.push_back({at, 8.2f, n, 90});
+            bass.push_back({at, 8.2f, roots[c % 4], 100});
+        }
+        add(renderPart("Trinity", "Warm Pad", pad, bpm, frames), 0.7f);
+        add(renderPart("Trinity", "Sub Bass", bass, bpm, frames), 0.8f);
+        Rng air(0x5a5a5u);
+        float hp[2] = {0.0f, 0.0f};
+        for (int64_t i = 0; i < stop; ++i) {
+            for (int c = 0; c < 2; ++c) {
+                const float x = air.next() * 0.03f;
+                hp[c] += (x - hp[c]) * 0.35f; // a one-pole low, taken away: the top left
+                out[static_cast<size_t>(i) * 2 + c] += x - hp[c];
+            }
+        }
+        std::vector<Hit> kicks;
+        for (int b = 0; b < kDuckBars * 4; b += gKeyedBeside ? 1 : 4) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
+        gBesideDrums = renderPart("Hexbeat", "Squared", kicks, bpm, frames);
+        for (float &v : gBesideDrums) v *= 0.35f;
+    } else if (gEffectMaterial == "drums") {
+        // Kick on the beat, snare on 2 and 4, a closed hat every sixteenth at
+        // one velocity: a flat loop with no groove of its own.
+        std::vector<Hit> drums;
+        for (int b = 0; b < 8; ++b) {
+            drums.push_back({static_cast<float>(b), 0.25f, 36, 105});
+            if (b % 2 == 1) drums.push_back({static_cast<float>(b), 0.25f, 38, 105});
+            for (int q = 0; q < 4; ++q) drums.push_back({b + q * 0.25f, 0.2f, 43, 85});
+        }
+        add(renderPart("Hexbeat", "Squared", drums, bpm, frames), 0.9f);
+    } else if (effect == "Amp" || effect == "Distortion") {
         // A riff on the low strings, then a chord left to ring.
         add(renderPart("Fret", "Clean Neck", {
             {0.0f, 0.5f, 45, 100}, {0.5f, 0.5f, 48, 80}, {1.0f, 0.5f, 50, 90}, {1.5f, 0.5f, 52, 80},
@@ -1472,10 +1610,13 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
     // Except Horn's. Horn blows harder the louder the track is, and a brass
     // only speaks properly from a lead at a normal track level.
     const float target = effect == "Horn" ? kSourceLoudness + 6.0f : kSourceLoudness;
-    const float level = kLoudness(out, 0, stop);
+    std::vector<float> whole = out;
+    for (size_t i = 0; i < gBesideDrums.size() && i < whole.size(); ++i) whole[i] += gBesideDrums[i];
+    const float level = kLoudness(whole, 0, stop);
     if (level > -190.0f) {
         const float gain = std::pow(10.0f, (target - level) / 20.0f);
         for (float &v : out) v *= gain;
+        for (float &v : gBesideDrums) v *= gain;
     }
 
     if (effect == "Deesser") {
@@ -1499,21 +1640,67 @@ std::vector<float> effectSource(const std::string &effect, float bpm, int64_t &s
     return out;
 }
 
+std::vector<float> chanterSongBass(int tonic, int64_t frames) {
+    const int root = 40 + ((tonic - 40) % 12 + 12) % 12;
+    std::vector<Hit> bass;
+    for (int bar = 0; bar < kChanterSongBars; ++bar) {
+        bass.push_back({static_cast<float>(bar * 4), 4.0f, root + kChanterSongSteps[bar % 4], 100});
+    }
+    std::vector<float> out = renderPart("Trinity", "Felt Bass", bass, kChanterSongBpm, frames);
+    const float level = kLoudness(out, 0, frames);
+    if (level > -190.0f) {
+        const float gain = std::pow(10.0f, (kChanterSongLoudness - level) / 20.0f);
+        for (float &v : out) v *= gain;
+    }
+    return out;
+}
+
 /** The last effect source's loudness, for `levels`. */
 float gDryLoudness = -200.0f;
 
 Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
     Take out;
     int64_t stop = 0;
+    gDrumsBeside = gKeyedBeside = false;
+    if (effect == "Smash") {
+        for (const char *name : {"lowduck", "midduck", "highduck"}) {
+            const int32_t i = fx->params().indexOf(name);
+            const long v = i >= 0 ? std::lround(fx->params().get(i)) : 0;
+            gDrumsBeside = gDrumsBeside || v >= 1;
+            gKeyedBeside = gKeyedBeside || v == 1;
+        }
+    }
     std::vector<float> src = effectSource(effect, bpm, stop);
-    gDryLoudness = kLoudness(src, 0, stop);
+    {
+        std::vector<float> whole = src;
+        for (size_t i = 0; i < gBesideDrums.size() && i < whole.size(); ++i) whole[i] += gBesideDrums[i];
+        gDryLoudness = kLoudness(whole, 0, stop);
+    }
     const auto frames = static_cast<int64_t>(src.size() / 2);
     out.offAt = stop;
     out.stereo.reserve(src.size());
     float L[kBlock], R[kBlock];
     const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(kSr));
+    // Smash with a band keyed: another track's kick on every beat as the
+    // sidechain, which the source's own kick lines up with.
+    std::vector<float> key;
+    if (effect == "Smash") {
+        bool keyed = false;
+        for (const char *name : {"lowduck", "midduck", "highduck"}) {
+            const int32_t i = fx->params().indexOf(name);
+            keyed = keyed || (i >= 0 && std::lround(fx->params().get(i)) == 1);
+        }
+        if (keyed) {
+            std::vector<Hit> kicks;
+            for (int b = 0; b < kDuckBars * 4; ++b) kicks.push_back({static_cast<float>(b), 0.25f, 36, 110});
+            const auto kick = renderPart("Hexbeat", "Squared", kicks, bpm, frames);
+            key.resize(static_cast<size_t>(frames) + kBlock, 0.0f);
+            for (int64_t i = 0; i < frames; ++i) key[static_cast<size_t>(i)] = kick[static_cast<size_t>(i) * 2] * 0.8f;
+        }
+    }
     for (int64_t at = 0; at < frames; at += kBlock) {
         const int32_t n = static_cast<int32_t>(std::min<int64_t>(kBlock, frames - at));
+        if (!key.empty()) fx->setKey(key.data() + at);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
         for (int32_t i = 0; i < n; ++i) {
@@ -1525,13 +1712,17 @@ Take renderEffect(Effect *fx, const std::string &effect, float bpm) {
         // The notes starting in this block, as the rack hands them on.
         for (const auto &[frame, note] : gSourceNotes)
             if (frame >= at && frame < at + kBlock) fx->onNote(note, 440.0f * std::pow(2.0f, (static_cast<float>(note) - 69.0f) / 12.0f));
+        fx->setTransport(kPlaying);
         fx->onBlock(t0, t1, bpm);
         fx->run(L, R, n, true);
         for (int32_t i = 0; i < n; ++i) {
-            out.stereo.push_back(L[i]);
-            out.stereo.push_back(R[i]);
+            const size_t k = static_cast<size_t>(at + i) * 2;
+            const bool beside = !gNoBeside && k + 1 < gBesideDrums.size();
+            out.stereo.push_back(L[i] + (beside ? gBesideDrums[k] : 0.0f));
+            out.stereo.push_back(R[i] + (beside ? gBesideDrums[k + 1] : 0.0f));
         }
     }
+    gDrumsBeside = gKeyedBeside = false;
     return out;
 }
 
@@ -1764,6 +1955,7 @@ bool loadBank(const std::string &unit, Bank &bank) {
 
 const ParamDef *defsFor(const std::string &unit, int32_t &count) {
     if (unit.rfind("fx.", 0) == 0) return EffectRegistry::paramDefs(unit.substr(3).c_str(), count);
+    if (unit.rfind("mod.", 0) == 0) return InputModRegistry::paramDefs(unit.substr(4).c_str(), count);
     return MachineRegistry::paramDefs(unit.c_str(), count);
 }
 
@@ -1834,8 +2026,10 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         if (!fx) return false;
         fx->prepare(static_cast<int32_t>(kSr));
         fx->reset();
+        fx->setHearsNotes(true); // as a track's insert, which the source's notes stand for
         applyTo(fx->params(), r.norm);
         applyEffectSettings(fx.get(), r.settings);
+        gEffectMaterial = opt.material;
         take = renderEffect(fx.get(), bank.typeName(), opt.bpm);
     } else {
         std::unique_ptr<Machine> m(MachineRegistry::create(bank.unit.c_str()));
@@ -1846,6 +2040,11 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         m->prepare(static_cast<int32_t>(kSr));
         m->allNotesOff();
         m->reset();
+        // The patches leave the track to the song, so it's set here: track 1.
+        const bool song = (bank.unit == "Sympath" || bank.unit == "Chanter") && patch.family == "song";
+        for (int32_t i = 0; i < count && song; ++i) {
+            if (std::strcmp(defs[i].name, "sidechain") == 0) r.norm[static_cast<size_t>(i)] = defs[i].unmap(1.0f);
+        }
         applyTo(m->params(), r.norm);
 
         // The patch's inserts and sends, unless --dry.
@@ -1876,6 +2075,20 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         };
         dress();
         loadInput(input, mat);
+        // Sympath's and Chanter's song patches listen to another track: the band the
+        // effects get, looped, and it's mixed into the take.
+        // Chanter's get a bass alone instead, one root a bar.
+        const bool chanterSong = song && bank.unit == "Chanter";
+        if (chanterSong) {
+            const int tonic = opt.note > 0 ? opt.note : patch.note > 0 ? patch.note : 69;
+            const Phrase p = chanterSongPhrase(tonic, opt.velocity);
+            mat.song = chanterSongBass(tonic, p.frames);
+            mat.songLoop = p.frames;
+        } else if (song) {
+            int64_t stop = 0;
+            mat.song = effectSource(bank.unit, opt.bpm, stop);
+            mat.songLoop = stop;
+        }
 
         const Kit *kit = kitFor(bank.unit);
         // --note wins over the patch's note, then the middle of its range,
@@ -1946,9 +2159,10 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             // module's default. Without this those knobs go back to zero and
             // the render can be silent.
             dress();
-            const Phrase listen = listenKind == "loop" ? dicePhrase(m.get(), opt.bpm, opt.velocity)
-                                                       : buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range);
-            take = render(m.get(), listen, opt.bpm, mat, &chain);
+            const Phrase listen = chanterSong          ? chanterSongPhrase(note, opt.velocity)
+                                  : listenKind == "loop" ? dicePhrase(m.get(), opt.bpm, opt.velocity)
+                                                         : buildPhrase(listenKind, note, opt.velocity, opt.bpm, kit, range);
+            take = render(m.get(), listen, chanterSong ? kChanterSongBpm : opt.bpm, mat, &chain);
         }
     }
 
@@ -2282,6 +2496,9 @@ int cmdEmit(const std::string &outPath) {
     for (int32_t i = 0; i < EffectRegistry::count(); ++i) {
         units.emplace_back(std::string("fx.") + EffectRegistry::name(i));
     }
+    for (int32_t i = 0; i < InputModRegistry::count(); ++i) {
+        units.emplace_back(std::string("mod.") + InputModRegistry::name(i));
+    }
 
     std::string body, dispatch;
     int emitted = 0, patches = 0;
@@ -2426,7 +2643,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|hold|scene|jaw|harmonics\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
         "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"

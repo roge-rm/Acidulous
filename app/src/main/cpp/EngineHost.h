@@ -52,6 +52,34 @@ class EngineHost {
      */
     bool mountInputEffect(int slot, const std::string &typeName);
     std::string loadReel(int rack, const std::string &spec);
+    /** Listens through a phrase on a Bias, or stops with an empty spec. See Bias::swapObject. */
+    std::string listenReel(int rack, const std::string &spec);
+    /** Frames played since listening started on [rack], -1 when not listening. */
+    int64_t listenPlayed(int rack) const;
+    /**
+     * Scores every take of a stack over each phrase (see
+     * audio::takescore::scoreStack). The spec is
+     *
+     *   score|gridStep|gridPhase|cut,cut,...|tuning|leadDelta
+     *
+     * then the lane as a reel spec, cell 1 lane 0, and a lead it doubles
+     * as cell 2 lane 0 if it has one. The tuning is `refHz:period:cents,...`
+     * (empty for twelve equal steps from A 440). Returns takes, phrases,
+     * then five numbers per take per phrase, take-major. Empty on error.
+     */
+    std::vector<float> scoreTakes(const std::string &spec);
+    /**
+     * Lining up word by word (see audio::takescore::lineUpWords). The spec
+     * is `lineup|maxShift|cut,cut,...|delta`, the reference as cell 1 lane
+     * 0 and the double as cell 2 lane 0; frame [at] of the double meets
+     * frame `at + delta` of the reference. Returns start, end and shift per
+     * word in frames, the shift NaN where it can't tell.
+     *
+     * `blendup|...` has the same header with a stack as cell 2 and lines
+     * up each of its takes: the take count, then for each take its word
+     * count and the words. Empty on error.
+     */
+    std::vector<float> lineUpTakes(const std::string &spec);
     /**
      * Where converted long takes are stored. Set once at startup. If empty,
      * long takes are held in memory up to the resident limit instead.
@@ -706,6 +734,16 @@ class EngineHost {
     /** One file as a source: held in memory if short, mapped if long. */
     std::shared_ptr<const audio::Reel::Source> sourceFor(const std::string &path,
                                                          int64_t &residentFrames, int &mappedCount);
+    /** [path] as a source, shared with a reel that already holds it. */
+    std::shared_ptr<const audio::Reel::Source> sharedSource(const std::string &path,
+                                                            int64_t &residentFrames, int &mappedCount);
+    std::unique_ptr<audio::Reel> parseReel(const std::string &spec, int64_t &totalFrames, int &mapped,
+                                           size_t &files, bool settle = true);
+    /** Stops listening through on every Bias. Only with the audio thread stopped. */
+    void dropListening();
+    /** The sources mounted reels hold, by path, size and time, so a reload reuses them. */
+    std::mutex reelSourcesLock;
+    std::unordered_map<std::string, std::weak_ptr<const audio::Reel::Source>> reelSources;
     /** Where converted long takes are stored. See setCacheRoot. */
     std::string cacheRoot;
 
