@@ -245,8 +245,10 @@ void Tine::prepare(int32_t rate) {
 void Tine::reset() {
     for (Voice &v : voices) {
         v.settleLeft = 0;
-        for (Mode &m : v.modes) m.y1 = m.y2 = 0.0f;
-        for (Mode &m : v.pairModes) m.y1 = m.y2 = 0.0f;
+        // Whole modes, the melt's tuning (cw, sw, re) with them, so what follows doesn't hang on what went before.
+        for (Mode &m : v.modes) m = Mode();
+        for (Mode &m : v.pairModes) m = Mode();
+        v.modeCount = 0;
         v.paired = false;
         v.builtPair = -1.0f;
         v.macAt = v.macNow = 0.0f;
@@ -261,8 +263,8 @@ void Tine::reset() {
         for (float &a : v.fedShare) a = 0.0f;
         for (float &a : v.fedLevel) a = 0.0f;
         v.fed = 0;
-        for (Mode &m : v.modes) m.feed = m.bloomK = 0.0f;
-        for (Mode &m : v.pairModes) m.feed = m.bloomK = 0.0f;
+        v.sinceStep = 0;
+        v.breathing = false;
         std::fill(v.tube.begin(), v.tube.end(), 0.0f);
         v.tubeAt = 0;
         v.used = v.held = v.damped = false;
@@ -329,6 +331,8 @@ Tine::Voice *Tine::voiceFor(uint8_t note) {
 }
 
 void Tine::build(Voice &v) {
+    // A melting note keeps every mode it's ringing, so one the models no longer have can ring out.
+    const int ringing = v.modeCount;
     const Make &k = kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)];
     const float f = noteHz(pitchOf(v));
     const float bright = clampf(goalOf(Bright), 0.0f, 1.0f);
@@ -362,21 +366,24 @@ void Tine::build(Voice &v) {
     // The melt: both models as built for this note, and where the blend is.
     const int into = std::clamp(steppedTargetOf(Into), 0, KindCount - 1);
     v.canMelt = into != std::clamp(steppedTargetOf(Model), 0, KindCount - 1);
-    if (!v.canMelt) {
-        v.melted = false;
-        return;
-    }
+    if (!v.canMelt && !v.melted) return;
     shapeOf(std::clamp(steppedTargetOf(Model), 0, KindCount - 1), f, v.from);
-    shapeOf(into, f, v.to);
-    // The note's gain has the model's level in it, so the other's shares carry the difference.
-    const float level = kMakes[into].level / kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)].level;
-    for (int i = 0; i < v.to.count; ++i) {
-        v.to.amp[i] *= level;
-        v.to.logAmp[i] = std::log(v.to.amp[i]);
+    if (v.canMelt) {
+        shapeOf(into, f, v.to);
+        // The note's gain has the model's level in it, so the other's shares carry the difference.
+        const float level = kMakes[into].level / kMakes[std::clamp(steppedTargetOf(Model), 0, KindCount - 1)].level;
+        for (int i = 0; i < v.to.count; ++i) {
+            v.to.amp[i] *= level;
+            v.to.logAmp[i] = std::log(v.to.amp[i]);
+        }
+    } else {
+        // Into is the model now: a melted note struck again goes back to it, each mode carried from where it is.
+        v.to = v.from;
     }
+    meltReturn(v);
     if (v.melted) {
         // A note struck again while melting is struck where the melt is.
-        v.modeCount = std::max(v.from.count, v.to.count);
+        v.modeCount = std::max({ringing, v.from.count, v.to.count});
         meltTune(v);
     } else if (meltBlend(v, macGoal_[McMelt]) > 0.0f) {
         v.meltPos = meltBlend(v, macGoal_[McMelt]);
@@ -413,7 +420,7 @@ void Tine::shapeOf(int kind, float f, Shape &s) const {
 float Tine::meltBlend(const Voice &v, float mac) const {
     float base = 0.0f;
     if (v.meltU > 0.0f) {
-        if (steppedTargetOf(Return) > 0) {
+        if (v.breathing) {
             // Back and forth: a cosine, so it turns round without a corner.
             base = 0.5f - 0.5f * std::cos(3.14159265f * v.meltU);
         } else {
@@ -425,7 +432,19 @@ float Tine::meltBlend(const Voice &v, float mac) const {
     return clampf(base + mac, 0.0f, 1.0f);
 }
 
-void Tine::meltBegin(Voice &v, bool struck) {
+void Tine::meltReturn(Voice &v) const {
+    const bool breathe = steppedTargetOf(Return) > 0;
+    if (breathe == v.breathing) return;
+    if (v.meltU > 0.0f) {
+        // The same blend in the other count: the cosine's or the ease's inverse, on the way there.
+        const float b = meltBlend(v, 0.0f);
+        v.meltU = breathe ? std::acos(clampf(1.0f - 2.0f * b, -1.0f, 1.0f)) / 3.14159265f
+                          : 0.5f - std::sin(std::asin(clampf(1.0f - 2.0f * b, -1.0f, 1.0f)) / 3.0f);
+    }
+    v.breathing = breathe;
+}
+
+void Tine::meltBegin(Voice &v, bool struck, int32_t span) {
     v.melted = true;
     const int n = std::max(v.from.count, v.to.count);
     // Modes the note didn't start with start silent.
@@ -452,7 +471,7 @@ void Tine::meltBegin(Voice &v, bool struck) {
         v.lastLogAmp[i] = la;
         v.fedShare[i] = v.fedLevel[i] = 0.0f;
     }
-    meltTune(v);
+    meltTune(v, 0, span);
 }
 
 void Tine::carry(Mode &m, float w, float re) {
@@ -470,7 +489,10 @@ void Tine::carry(Mode &m, float w, float re) {
     m.a2 = -re * re;
 }
 
-void Tine::meltTune(Voice &v, int32_t samples) {
+void Tine::meltTune(Voice &v, int32_t samples, int32_t span) {
+    // Between blocks the next step is the next block's first.
+    if (span < 0) span = retuneCountdown;
+    const float glide = static_cast<float>(std::max(span, 1));
     const float p = v.meltPos;
     const float pitch = pitchOf(v);
     const float pair = v.paired ? clampf(paramOf(Pair), 0.0f, 50.0f) : 0.0f;
@@ -484,7 +506,7 @@ void Tine::meltTune(Voice &v, int32_t samples) {
                 m->a1 = 2.0f * m->r * m->cw;
                 m->a2 = -m->r * m->r;
             }
-            if (i < v.from.count || v.fedLevel[i] <= 0.0f) continue;
+            if (i < v.from.count || i >= v.to.count || v.fedLevel[i] <= 0.0f) continue;
             Mode &m = v.modes[i];
             const float y2 = m.re * m.y2, sn = std::fmax(m.sw, 1e-4f);
             const float have = std::sqrt(std::fmax(0.0f, m.y1 * m.y1 + y2 * y2 - 2.0f * m.cw * m.y1 * y2)) / sn;
@@ -505,10 +527,13 @@ void Tine::meltTune(Voice &v, int32_t samples) {
     float ringing = 0.0f, unit = 0.0f;
     for (int i = 0; i < n; ++i) {
         const bool inA = i < v.from.count, inB = i < v.to.count;
-        const float lr = inA && inB ? v.from.logRatio[i] + (v.to.logRatio[i] - v.from.logRatio[i]) * p
-                                    : (inA ? v.from.logRatio[i] : v.to.logRatio[i]);
         Mode &m = v.modes[i];
-        m.ratio = std::exp(lr);
+        // A mode neither model has any more keeps its ratio and rings out.
+        if (inA || inB) {
+            const float lr = inA && inB ? v.from.logRatio[i] + (v.to.logRatio[i] - v.from.logRatio[i]) * p
+                                        : (inA ? v.from.logRatio[i] : v.to.logRatio[i]);
+            m.ratio = std::exp(lr);
+        }
         w[i] = kTwoPi * std::fmin(f * m.ratio, sampleRate * 0.49f) / sampleRate;
         // How loud it's ringing, from where it is in its cycle.
         const float y2 = m.re * m.y2, sn = std::fmax(m.sw, 1e-4f);
@@ -524,6 +549,18 @@ void Tine::meltTune(Voice &v, int32_t samples) {
     for (int i = 0; i < n; ++i) {
         const bool inA = i < v.from.count, inB = i < v.to.count;
         Mode &m = v.modes[i];
+        if (!inA && !inB) {
+            // Left over from a model the note was melting from or into: no share, its own ring time.
+            float t60 = m.t60;
+            if (v.damped) t60 *= std::pow(std::fmin(1.0f, kDampedT60 / t60), v.dampBy);
+            m.r = std::exp(-6.9077553f / (std::fmax(t60, 0.005f) * sampleRate));
+            m.amp = m.bowShare = 0.0f;
+            v.lastLogAmp[i] = 0.0f;
+            v.fedShare[i] = v.fedLevel[i] = 0.0f;
+            carry(m, w[i], m.r);
+            m.b0 = m.bow = m.feed = 0.0f;
+            continue;
+        }
         float lt = inA && inB ? v.from.logT60[i] + (v.to.logT60[i] - v.from.logT60[i]) * p
                               : (inA ? v.from.logT60[i] : v.to.logT60[i]);
         m.t60 = std::exp(lt);
@@ -540,7 +577,7 @@ void Tine::meltTune(Voice &v, int32_t samples) {
             amp[i] = std::exp(la);
             // Spread over the step as a change in the pole, so the level glides rather than steps.
             // exp() of at most 2/17, by its series: plenty close, and 1 exactly when nothing moves.
-            const float x = clampf(la - v.lastLogAmp[i], -2.0f, 2.0f) / static_cast<float>(kStep);
+            const float x = clampf(la - v.lastLogAmp[i], -2.0f, 2.0f) / glide;
             scale = 1.0f + x * (1.0f + x * (0.5f + x * (1.0f / 6.0f + x * (1.0f / 24.0f))));
             v.lastLogAmp[i] = la;
         } else {
@@ -767,6 +804,8 @@ void Tine::noteOn(uint8_t note, uint8_t velocity) {
         v->paired = false;
         v->melted = false;
         v->meltU = v->meltPos = 0.0f;
+        v->sinceStep = 0;
+        v->breathing = steppedTargetOf(Return) > 0;
     }
     v->hit = vel;
     // A pair starts where the note is, so a ringing note struck again with
@@ -774,8 +813,14 @@ void Tine::noteOn(uint8_t note, uint8_t velocity) {
     if (!v->paired && goalOf(Pair) > 0.0f) {
         v->paired = true;
         for (int i = 0; i < kModes; ++i) {
-            v->pairModes[i].y1 = v->modes[i].y1;
-            v->pairModes[i].y2 = v->modes[i].y2;
+            Mode &c = v->pairModes[i];
+            const Mode &m = v->modes[i];
+            c.y1 = m.y1;
+            c.y2 = m.y2;
+            // The melt's tuning too, so a melting note's pair carries on from the same swing.
+            c.cw = m.cw;
+            c.sw = m.sw;
+            c.re = m.re;
         }
     }
     // A note struck again rings on from where it was, as a bar does.
@@ -853,10 +898,13 @@ bool Tine::render(float *L, float *R, int32_t frames) {
     const float volume = paramOf(Volume);
     // The melt: how long one takes, how much a hit or pressure hurries it, and the macro's place.
     const float meltKnob = clampf(paramOf(Melt), 0.0f, 1.0f);
-    const float meltRate = meltKnob > 0.0f ? static_cast<float>(kStep) / (sampleRate * kMeltShortest * std::pow(kMeltLongest / kMeltShortest, meltKnob)) : 0.0f;
+    // Per sample: a step moves the melt by the samples since the last.
+    const float meltRate = meltKnob > 0.0f ? 1.0f / (sampleRate * kMeltShortest * std::pow(kMeltLongest / kMeltShortest, meltKnob)) : 0.0f;
     const float heat = clampf(paramOf(Heat), 0.0f, 1.0f);
     const float meltMac = mac_[McMelt];
-    const bool breathe = steppedTargetOf(Return) > 0;
+    // Where the first step of the next block falls, as set below, so a melt step knows how long it has.
+    int nextCountdown = retuneCountdown - frames;
+    while (nextCountdown < 0) nextCountdown += kRetuneEvery;
     const float clickFall = std::exp(-1.0f / (0.0015f * sampleRate));
     const auto tubeSize = static_cast<int32_t>(voices[0].tube.size());
     bool any = false;
@@ -869,15 +917,22 @@ bool Tine::render(float *L, float *R, int32_t frames) {
         float phase = motorPhase;
         const float phaseStep = motorHz / sampleRate;
         int countdown = retuneCountdown;
+        // The last step, counted from this block's start.
+        int32_t lastStep = -v.sinceStep;
         for (int32_t i = 0; i < frames; ++i) {
             if (countdown-- <= 0) {
                 countdown = kRetuneEvery;
+                // The samples since the last step, and to the next: the cadence isn't even across blocks.
+                const int32_t since = i - lastStep;
+                const int32_t span = i + kStep < frames ? kStep : frames - i + nextCountdown;
+                lastStep = i;
                 if (v.canMelt) {
+                    meltReturn(v);
                     // Hard hits and pressed notes melt faster: velocity 76 or so is the knob's own time.
                     if (meltRate > 0.0f) {
                         const float speed = heat > 0.0f ? std::exp2(heat * (4.0f * (v.hit - 0.6f) + 3.0f * v.bowing)) : 1.0f;
-                        v.meltU += meltRate * speed;
-                        if (breathe) {
+                        v.meltU += meltRate * speed * static_cast<float>(since);
+                        if (v.breathing) {
                             if (v.meltU >= 2.0f) v.meltU -= 2.0f;
                         } else if (v.meltU > 1.0f) {
                             v.meltU = 1.0f;
@@ -886,11 +941,14 @@ bool Tine::render(float *L, float *R, int32_t frames) {
                     const float pos = meltBlend(v, meltMac);
                     if (!v.melted && pos > 0.0f) {
                         v.meltPos = pos;
-                        meltBegin(v, false);
+                        meltBegin(v, false, span);
                     } else if (v.melted) {
                         v.meltPos = pos;
-                        meltTune(v, kStep);
+                        meltTune(v, since, span);
                     }
+                } else if (v.melted) {
+                    // Into set back to the model: it still follows the pitch, and its leftovers ring out.
+                    meltTune(v, since, span);
                 }
                 if (!v.melted) retune(v);
                 // A bow drawn under pressure, eased in and out.
@@ -966,6 +1024,7 @@ bool Tine::render(float *L, float *R, int32_t frames) {
             R[i] += y * pr;
             peak = std::fmax(peak, std::fabs(y));
         }
+        v.sinceStep = frames - lastStep;
         v.level = peak;
         const bool keeps = v.held && (roll > 0.0f || v.bowing > 0.0f);
         if (peak < kSilent && v.strikeAt >= v.strikeLength && !keeps) {

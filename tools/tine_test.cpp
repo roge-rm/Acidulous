@@ -73,6 +73,15 @@ struct Bars {
             out.insert(out.end(), L, L + kBlock);
         }
     }
+    /** As play(), in blocks of [block] samples, the last one short. */
+    void playIn(double seconds, int block) {
+        std::vector<float> L(static_cast<size_t>(block)), R(static_cast<size_t>(block));
+        for (auto left = static_cast<int>(seconds * kRate); left > 0; left -= block) {
+            const int n = std::min(left, block);
+            f->render(L.data(), R.data(), n);
+            out.insert(out.end(), L.begin(), L.begin() + n);
+        }
+    }
     double level(double hz, double from, double to) const {
         const auto a = static_cast<size_t>(from * kRate), b = static_cast<size_t>(to * kRate);
         double re = 0.0, im = 0.0, wsum = 0.0;
@@ -510,6 +519,98 @@ void melt() {
         g.play(0.02);
         check(std::fabs(g.f->meltOf() - mid) < 0.05f && g.f->modeRatio(1) < 3.9f, "a re-strike lands on the melt where it is",
               fmt("%.3f then %.3f, mode 2 at %.3f", mid, g.f->meltOf(), g.f->modeRatio(1)));
+    }
+    {
+        // Play, reset, play again: the same to the bit, with a pair turned on mid-ring and mid-melt.
+        auto run = [&](Bars &g) {
+            g.set("pair", 0.0f);
+            g.f->noteOn(36, 110);
+            g.f->noteOn(55, 90);
+            g.play(0.3);
+            g.set("pair", 9.0f);
+            g.f->noteOn(36, 100);
+            g.play(0.4);
+            g.f->noteOff(55);
+            g.play(0.2);
+            std::vector<float> o(g.out);
+            g.out.clear();
+            return o;
+        };
+        Bars g({{"model", Marimba}, {"into", Gong}, {"melt", meltFor(0.6)}, {"return", 1.0f}, {"damp", 0.5f}});
+        const auto first = run(g);
+        g.f->reset();
+        check(run(g) == first, "a melting, paired note renders the same after a reset", "");
+        // The pair joins where the note is, whatever the voice played before: no louder than
+        // the same re-strike with no pair.
+        auto low = [&](bool pairAgain) {
+            Bars v({{"model", Marimba}, {"into", Gong}, {"melt", meltFor(0.6)}, {"voices", 1.0f}, {"pair", 20.0f}});
+            v.f->noteOn(24, 110);
+            v.play(0.3);
+            v.set("pair", 0.0f);
+            v.f->noteOn(36, 110);
+            v.play(0.3);
+            if (pairAgain) v.set("pair", 9.0f);
+            v.f->noteOn(36, 100);
+            v.play(0.4);
+            double p = 0.0;
+            for (size_t i = 0.6 * kRate; i < v.out.size(); ++i) p = std::max(p, double(std::fabs(v.out[i])));
+            return p;
+        };
+        const double paired = low(true), unpaired = low(false);
+        check(paired < unpaired * 1.1, "a pair turned on mid-melt starts from the note", fmt("peak %.3f, unpaired %.3f", paired, unpaired));
+    }
+    {
+        // The melt's timing doesn't hang on the block size.
+        auto at = [&](int block, double &loud) {
+            Bars g({{"model", Vibraphone}, {"into", Glockenspiel}, {"melt", meltFor(1.0)}});
+            g.f->noteOn(60, 100);
+            g.playIn(0.5, block);
+            loud = g.rms(0.4, 0.5);
+            return g.f->meltOf();
+        };
+        double l64 = 0.0, l256 = 0.0, l1000 = 0.0;
+        const float m64 = at(64, l64), m256 = at(256, l256), m1000 = at(1000, l1000);
+        check(std::fabs(m64 - 0.5f) < 0.005f && std::fabs(m256 - 0.5f) < 0.005f && std::fabs(m1000 - 0.5f) < 0.005f,
+              "a melt takes its time whatever the block size", fmt("%.4f, %.4f, %.4f at 0.5 s of 1 s", m64, m256, m1000));
+        check(std::fabs(l64 - l256) < 0.3 && std::fabs(l64 - l1000) < 0.3, "and sounds the same along the way",
+              fmt("%.2f, %.2f, %.2f dB", l64, l256, l1000));
+    }
+    {
+        // Return switched to once on the way back carries on from where the melt is.
+        Bars g({{"model", Vibraphone}, {"into", Gong}, {"melt", meltFor(0.5)}, {"return", 1.0f}});
+        g.f->noteOn(60, 100);
+        g.play(0.75);
+        const float back = g.f->meltOf();
+        g.set("return", 0.0f);
+        g.play(0.01);
+        const float once = g.f->meltOf();
+        g.play(0.6);
+        check(back > 0.3f && back < 0.7f && std::fabs(once - back) < 0.05f && g.f->meltOf() > 0.999f,
+              "switched to once mid-way back, it carries on from there", fmt("%.3f, then %.3f, then %.3f", back, once, g.f->meltOf()));
+    }
+    {
+        // A melted note struck again once into is set back to the model: the modes the model
+        // doesn't have ring out, and nothing clicks.
+        auto run = [&](bool back, float melt = meltFor(0.3)) {
+            Bars g({{"model", Marimba}, {"into", Gong}, {"melt", melt}});
+            g.f->noteOn(48, 100);
+            g.play(0.5);
+            if (back) g.set("into", Marimba);
+            g.f->noteOn(48, 100);
+            g.play(0.3);
+            return g;
+        };
+        // Against a marimba struck twice, never melted.
+        Bars back = run(true), still = run(false, 0.0f);
+        const double h = noteHz(48) * 3.72;
+        const double before = back.level(h, 0.4, 0.5), after = back.level(h, 0.52, 0.62);
+        check(after > before - 12.0, "a mode the model doesn't have rings out", fmt("%+.1f dB at the gong's 3.72", after - before));
+        double worst = 0.0, ref = 0.0;
+        for (size_t i = 0.5 * kRate + 2; i < 0.52 * kRate; ++i) {
+            worst = std::max(worst, std::fabs(double(back.out[i]) - 2.0 * back.out[i - 1] + back.out[i - 2]));
+            ref = std::max(ref, std::fabs(double(still.out[i]) - 2.0 * still.out[i - 1] + still.out[i - 2]));
+        }
+        check(worst <= ref * 1.5 + 1e-4, "and the re-strike is no sharper than a plain one", fmt("edge %.4f vs %.4f", worst, ref));
     }
     {
         // Sixteen melting voices, every knob up, stay bounded.

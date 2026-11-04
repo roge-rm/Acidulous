@@ -173,6 +173,10 @@ class Tine final : public Machine {
         float fedShare[kModes]{}, fedLevel[kModes]{};
         /** Modes being fed, for the per-sample noise. */
         int fed = 0;
+        /** Samples since the last retune step, at the start of a block: what a melt step moves by. */
+        int32_t sinceStep = 0;
+        /** The return [meltU] is counted in: back and forth, or once. */
+        bool breathing = false;
     };
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -195,10 +199,16 @@ class Tine final : public Machine {
     void shapeOf(int kind, float f, Shape &s) const;
     /** Where the melt is for [v] now, 0 to 1, from its progress and the melt macro [mac]. */
     float meltBlend(const Voice &v, float mac) const;
+    /** Recounts [v.meltU] in the return now set, keeping the blend where it is. */
+    void meltReturn(Voice &v) const;
     /** Puts [v] on the melting path; [struck] when a strike is about to land at the blend. */
-    void meltBegin(Voice &v, bool struck);
-    /** Tunes a melting voice's modes to the blend at [v.meltPos]: retune() for a melting note, [samples] after the last. */
-    void meltTune(Voice &v, int32_t samples = 0);
+    void meltBegin(Voice &v, bool struck, int32_t span = -1);
+    /**
+     * Tunes a melting voice's modes to the blend at [v.meltPos]: retune() for a melting note,
+     * [samples] after the last, with levels glided over the [span] samples to the next step
+     * (-1: from the start of the next block).
+     */
+    void meltTune(Voice &v, int32_t samples = 0, int32_t span = -1);
     /** Moves a ringing mode to step [w] and pole [re] keeping its phase and level, so a glide doesn't wobble. */
     static void carry(Mode &m, float w, float re);
     /** ring() for a melting note: [nz] the noise feeding modes the note didn't start with. */
