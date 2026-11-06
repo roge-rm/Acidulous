@@ -166,6 +166,28 @@ void refusals() {
     check(presetfile::read(b.data(), b.size(), out, error) && out.kind == "effect" && out.unit == "Chorus" &&
               out.patches.size() == 1 && out.patches[0].machine == "Chorus",
           "an effect preset");
+
+    // A chord preset keeps key, scale and memory as parameters and settings like any patch.
+    Preset chord;
+    chord.kind = "modifier";
+    chord.unit = "Chord";
+    PresetPatch cp;
+    cp.machine = "Chord";
+    cp.name = "Open Fifths";
+    cp.params = {{"key", 0.25f}, {"scale", 0.5f}, {"memory", 0.125f}, {"latch", 1.0f}, {"spread", 0.75f}};
+    cp.settings = {{"note", "x"}};
+    chord.patches = {cp};
+    b = presetfile::write(chord);
+    check(presetfile::read(b.data(), b.size(), out, error) && out.kind == "modifier" && out.unit == "Chord" &&
+              out.patches.size() == 1 && out.patches[0].machine == "Chord",
+          "a modifier preset: " + error);
+    same(out, chord, "a modifier preset");
+    chord.unit = "Arp";
+    b = presetfile::write(chord);
+    check(presetfile::read(b.data(), b.size(), out, error) && out.unit == "Arp", "an arp preset");
+    chord.unit = "Scale";
+    b = presetfile::write(chord);
+    check(!presetfile::read(b.data(), b.size(), out, error), "a modifier without presets is refused");
 }
 
 void waitBlocks(int n) {
