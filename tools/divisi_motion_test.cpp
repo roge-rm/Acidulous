@@ -72,9 +72,9 @@ std::vector<float> play(Divisi &d, float seconds) {
     return out;
 }
 
-std::unique_ptr<Divisi> fresh(const std::vector<Setting> &s) {
+std::unique_ptr<Divisi> fresh(const std::vector<Setting> &s, int32_t rate = kSampleRate) {
     auto d = std::make_unique<Divisi>();
-    d->prepare(kSampleRate);
+    d->prepare(rate);
     d->reset();
     applySettings(*d, s);
     return d;
@@ -397,6 +397,134 @@ void ageWorks() {
         ok("a macro at full is age 1", play(*byMacro, 2.0f) == play(*byKnob, 2.0f));
     }
 }
+/** Renders [seconds] into [out], interleaved, appending. */
+void renderInto(Divisi &d, float seconds, std::vector<float> &out) {
+    const int32_t blocks = static_cast<int32_t>(seconds * kSampleRate / kBlockFrames);
+    float L[kBlockFrames], R[kBlockFrames];
+    for (int32_t b = 0; b < blocks; ++b) {
+        d.render(L, R, kBlockFrames);
+        for (int32_t i = 0; i < kBlockFrames; ++i) {
+            out.push_back(L[i]);
+            out.push_back(R[i]);
+        }
+    }
+}
+
+void ageComesInCleanly() {
+    printf("- age turned up from 0 mid-note, or the stage opened with age on, doesn't dip or click\n");
+    const std::vector<Setting> strings = {{Divisi::Violin, 0.0f}, {Divisi::Viola, 0.0f}, {Divisi::Cello, 0.8f},
+                                          {Divisi::Contrabass, 0.8f}, {Divisi::Tone, 0.2f}, {Divisi::Ensemble, 1.0f}};
+    // [p] glides from [from] to [to] after a second of a held chord. Over the first 128 samples of the glide
+    // the sound can only have moved a little from the same chord left at [from].
+    const auto moves = [&](std::vector<Setting> base, int32_t p, float from, float to) {
+        std::vector<Setting> a = base;
+        a.push_back({p, from});
+        auto moved = fresh(a), stays = fresh(a);
+        std::vector<float> xa, xb;
+        for (Divisi *d : {moved.get(), stays.get()}) for (uint8_t n : {36, 43, 48, 55}) d->noteOn(n, 100);
+        renderInto(*moved, 1.0f, xa);
+        renderInto(*stays, 1.0f, xb);
+        moved->params().set(p, moved->params().def(p).unmap(to));
+        const size_t at = xa.size();
+        renderInto(*moved, 0.3f, xa);
+        renderInto(*stays, 0.3f, xb);
+        float first = 0.0f, peak = 0.0f;
+        for (size_t i = at; i < at + 256; ++i) first = std::fmax(first, std::fabs(xa[i] - xb[i]));
+        for (size_t i = at - 9600; i < at; ++i) peak = std::fmax(peak, std::fabs(xa[i]));
+        return first / peak;
+    };
+    char det[128];
+    const float age = moves(strings, Divisi::Age, 0.0f, 0.3f);
+    std::snprintf(det, sizeof det, "moved %.4f of the peak in 128 samples", age);
+    ok("age 0 to 0.3 on a held chord", age < 0.02f, det);
+    // The stage moves the sound itself as it opens: with age on, no more than with it off.
+    std::vector<Setting> aged = strings;
+    aged.push_back({Divisi::Age, 0.3f});
+    const float clean = moves(strings, Divisi::Stage, 0.0f, 0.7f), old = moves(aged, Divisi::Stage, 0.0f, 0.7f);
+    std::snprintf(det, sizeof det, "moved %.4f of the peak in 128 samples (age 0: %.4f)", old, clean);
+    ok("stage opened to 0.7 with age 0.3", old < 1.2f * clean + 0.005f, det);
+}
+
+void playersKeepTheirSeatsInATail() {
+    printf("- a note played into a room's tail doesn't move the players' reads of it\n");
+    const std::vector<Setting> s = {{Divisi::Cello, 0.8f}, {Divisi::Viola, 0.5f}, {Divisi::Players, 3.0f},
+                                    {Divisi::Scatter, 60.0f}, {Divisi::Room, 0.6f}, {Divisi::Attack, 2.0f},
+                                    {Divisi::Release, 0.05f}, {Divisi::VelocityAmount, 1.0f},
+                                    {Divisi::Mode, static_cast<float>(Divisi::Poly)}};
+    auto a = fresh(s), b = fresh(s);
+    std::vector<float> xa, xb;
+    for (Divisi *d : {a.get(), b.get()}) for (uint8_t n : {48, 55, 60}) d->noteOn(n, 100);
+    renderInto(*a, 1.0f, xa);
+    renderInto(*b, 1.0f, xb);
+    for (Divisi *d : {a.get(), b.get()}) for (uint8_t n : {48, 55, 60}) d->noteOff(n);
+    renderInto(*a, 0.25f, xa);
+    renderInto(*b, 0.25f, xb);
+    const int keysLeft = a->activeKeys();
+    const size_t at = xa.size();
+    // So quiet a note that what's heard is the tail.
+    a->noteOn(62, 1);
+    renderInto(*a, 0.1f, xa);
+    renderInto(*b, 0.1f, xb);
+    float tail = 0.0f, jump = 0.0f;
+    for (size_t i = at; i < xa.size(); ++i) {
+        tail = std::fmax(tail, std::fabs(xb[i]));
+        jump = std::fmax(jump, std::fabs(xa[i] - xb[i]));
+    }
+    char det[96];
+    std::snprintf(det, sizeof det, "keys left %d, tail %.4f, moved by %.6f", keysLeft, tail, jump);
+    ok("3 players, scatter 60 ms, room 0.6, 0.25 s after", keysLeft == 0 && tail > 1e-3f && jump < 0.05f * tail, det);
+}
+
+void latePlayersAreHeard() {
+    printf("- a staccato note isn't cut off before its latest player has played it\n");
+    for (int players : {2, 3}) {
+        // Short notes, the players as far apart as they go, the violins at the front and the basses at the back.
+        const std::vector<Setting> s = {{Divisi::Violin, 0.8f}, {Divisi::Viola, 0.0f}, {Divisi::Cello, 0.0f},
+                                        {Divisi::Contrabass, 0.8f}, {Divisi::Stage, 1.0f}, {Divisi::Players, static_cast<float>(players)},
+                                        {Divisi::Scatter, 80.0f}, {Divisi::Drift, 25.0f}, {Divisi::Vibrato, 60.0f},
+                                        {Divisi::Vibrate, 2.0f}, {Divisi::Attack, 0.002f}, {Divisi::Release, 0.02f},
+                                        {Divisi::VelocityAmount, 1.0f}, {Divisi::Mode, static_cast<float>(Divisi::Poly)}};
+        // At 96 kHz, where the lines hold twice the samples; even so a gap long enough to have
+        // slept on takes seats and drifts near their ends, so many deals. Times below are at 48 kHz.
+        constexpr int kDeals = 40, kRate = 96000;
+        float worst = 0.0f, peak = 0.0f;
+        int cut = 0;
+        for (int deal = 0; deal < kDeals; ++deal) {
+            // The same note alone, and with a far quieter key held after it that keeps the machine awake.
+            // Notes before it, let ring out, deal the players new seats and let them drift.
+            auto a = fresh(s, kRate), b = fresh(s, kRate);
+            std::vector<float> xa, xb;
+            for (int k = 0; k < deal; ++k) {
+                for (Divisi *d : {a.get(), b.get()}) d->noteOn(64, 100);
+                renderInto(*a, 0.0014f, xa);
+                renderInto(*b, 0.0014f, xb);
+                for (Divisi *d : {a.get(), b.get()}) d->noteOff(64);
+                renderInto(*a, 0.6f, xa);
+                renderInto(*b, 0.6f, xb);
+            }
+            xa.clear();
+            xb.clear();
+            for (Divisi *d : {a.get(), b.get()}) d->noteOn(64, 100);
+            b->noteOn(30, 1);
+            renderInto(*a, 0.0014f, xa);
+            renderInto(*b, 0.0014f, xb);
+            for (Divisi *d : {a.get(), b.get()}) d->noteOff(64);
+            renderInto(*a, 0.3f, xa);
+            renderInto(*b, 0.3f, xb);
+            float w = 0.0f;
+            for (size_t i = 0; i < xa.size(); ++i) {
+                w = std::fmax(w, std::fabs(xa[i] - xb[i]));
+                peak = std::fmax(peak, std::fabs(xa[i]));
+            }
+            worst = std::fmax(worst, w);
+            if (w > 0.02f * peak) ++cut;
+        }
+        char name[64], det[96];
+        std::snprintf(name, sizeof name, "%d players, scatter 80 ms, drift 25 cents, 96 kHz", players);
+        std::snprintf(det, sizeof det, "peak %.3f, differs by %.5f, %d of %d cut", peak, worst, cut, kDeals);
+        ok(name, cut == 0, det);
+    }
+}
 } // namespace
 
 int main() {
@@ -406,6 +534,9 @@ int main() {
     macrosReachTheMotion();
     aBarSoundsTheSameWherePlayStarts();
     ageWorks();
+    ageComesInCleanly();
+    playersKeepTheirSeatsInATail();
+    latePlayersAreHeard();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

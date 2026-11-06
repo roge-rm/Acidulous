@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <mutex>
 #include <engine/dsp/Math.h>
 #include <engine/machine/Voices.h>
 
@@ -38,9 +39,11 @@ constexpr float kLineMs = 6.0f, kSlowMs = 1.8f, kFastMs = 0.3f;
 constexpr float kSlowHz = 0.55f, kFastHz = 5.8f;
 /** The phaser's sweep, Hz. */
 constexpr float kPhaseLow = 180.0f, kPhaseHigh = 2600.0f;
-/** Below this a key is silent, and the whole machine after enough of it. */
+/** Below this a key is silent, and the whole machine after this long of it and its lines empty. */
 constexpr float kSilent = 1e-6f;
 constexpr int32_t kSleepAfter = 4096;
+/** Where the counts of samples since the lines last heard sound stop. */
+constexpr int32_t kHeardCap = 1 << 30;
 constexpr float kTwoTo32 = 4294967296.0f;
 /** A pitch ratio's departure from 1 per cent, near enough for a few tens of cents. */
 constexpr float kPerCent = 0.69314718f / 1200.0f;
@@ -435,8 +438,24 @@ void Divisi::prepare(int32_t rate) {
     seatMask = seatSize - 1;
     seatLines.assign(static_cast<size_t>(seatSize * kSections), 0.0f);
     ambience.prepare(sampleRate);
-    for (auto &row : compCache) for (float &c : row) c = 0.0f;
-    compRef = choirPower((kVowelRows - 1) / 2, kCompNote);
+    // The whole table here, off the audio thread, since a moving vowel crosses rows while notes are held.
+    // It takes tens of milliseconds, so it's worked out once per sample rate and shared by every Divisi.
+    {
+        static std::mutex lock;
+        static float sharedRate = 0.0f;
+        static float shared[kVowelRows][128];
+        std::lock_guard<std::mutex> hold(lock);
+        if (sharedRate != sampleRate) {
+            const float ref = choirPower((kVowelRows - 1) / 2, kCompNote);
+            for (int r = 0; r < kVowelRows; ++r) {
+                for (int n = 0; n < 128; ++n) {
+                    shared[r][n] = clampf(std::sqrt(ref / std::fmax(choirPower(r, n), 1e-12f)), 1.0f / kCompMax, kCompMax);
+                }
+            }
+            sharedRate = sampleRate;
+        }
+        std::copy(&shared[0][0], &shared[0][0] + kVowelRows * 128, &compCache[0][0]);
+    }
     reset();
 }
 
@@ -449,6 +468,7 @@ void Divisi::clearState() {
     lineR.clear();
     std::fill(playerLines.begin(), playerLines.end(), 0.0f);
     lineWrite = lineQuiet = 0;
+    lineHeard = stageHeard = kHeardCap;
     snapPlayers = true;
     std::fill(seatLines.begin(), seatLines.end(), 0.0f);
     seatWrite = 0;
@@ -562,6 +582,12 @@ float Divisi::runAged(Aged &a, int s, const AgeAt &at, float x, float whineStep)
         const float go = b.out > 0.0f ? std::pow(b.out / at.nominal, at.open) : 0.0f;
         b.dIn = (gi - b.gIn) * (1.0f / kEvery);
         b.dOut = (go - b.gOut) * (1.0f / kEvery);
+        if (b.entering) {
+            // Age has come on with sound passing: the squeeze and the opening start where they cancel.
+            b.gIn = gi;
+            b.gOut = 1.0f / gi;
+            b.dIn = b.dOut = 0.0f;
+        }
     }
     --b.count;
     b.gIn += b.dIn;
@@ -583,6 +609,12 @@ float Divisi::runAged(Aged &a, int s, const AgeAt &at, float x, float whineStep)
     const float ay = std::fabs(y);
     b.out = dsp::undenormal(b.out + (ay > b.out ? at.up : at.down) * (ay - b.out));
     const float z = y * b.gOut;
+    if (b.entering) {
+        // The low-pass settled on the sound, as it would be on a steady level.
+        b.entering = false;
+        b.ic1 = 0.0f;
+        b.ic2 = z;
+    }
     // The low-pass, a state-variable one.
     const float v3 = z - b.ic2;
     const float v1 = at.a1 * b.ic1 + at.a2 * v3;
@@ -803,21 +835,13 @@ float Divisi::choirPower(int row, int note) const {
     return static_cast<float>(power);
 }
 
-float Divisi::compFor(float vowel, int note) {
+float Divisi::compFor(float vowel, int note) const {
     note = std::clamp(note, 0, 127);
     const float at = clampf(vowel, 0.0f, 1.0f) * static_cast<float>(kVowelRows - 1);
     const int r0 = std::min(static_cast<int>(at), kVowelRows - 2);
     const float t = at - static_cast<float>(r0);
-    float c[2];
-    for (int i = 0; i < 2; ++i) {
-        float &cell = compCache[r0 + i][note];
-        if (cell == 0.0f) {
-            const float p = choirPower(r0 + i, note);
-            cell = clampf(std::sqrt(compRef / std::fmax(p, 1e-12f)), 1.0f / kCompMax, kCompMax);
-        }
-        c[i] = cell;
-    }
-    return c[0] + (c[1] - c[0]) * t;
+    const float c0 = compCache[r0][note], c1 = compCache[r0 + 1][note];
+    return c0 + (c1 - c0) * t;
 }
 
 void Divisi::tuneChains() {
@@ -843,18 +867,35 @@ void Divisi::tuneChains() {
     }
 }
 
+bool Divisi::linesSpent() const {
+    // The longest any player reads back, and any seat, with its chorus's swing.
+    float player = 0.0f, seat = 0.0f;
+    for (int p = 0; p < kMaxPlayers; ++p) {
+        if (p < playerCount || players_[p].mid != 0.0f) player = std::fmax(player, players_[p].delay);
+    }
+    for (const Seat &st : seats_) {
+        seat = std::fmax(seat, st.at.delay);
+        for (float d : st.at.erDelay) seat = std::fmax(seat, d);
+    }
+    seat += (kSlowMs + kFastMs) * 0.001f * sampleRate;
+    return static_cast<float>(lineHeard) > player + 64.0f && static_cast<float>(stageHeard) > player + seat + 64.0f;
+}
+
 void Divisi::noteOn(uint8_t note, uint8_t velocity) {
     updateMacroGoals(); // a note reads where the knobs are going, so renders repeat
     const bool poly = steppedTargetOf(Mode) == Poly;
     const bool first = heldCount() == 0;
     if (activeKeys() == 0) {
-        // A note from silence: the players come in in a new order, at once,
-        // since their lines hold nothing.
         motionRestart = true;
-        const float scatter = clampf(goalOf(Scatter), 0.0f, 80.0f) * 0.001f * sampleRate;
-        for (int p = 1; p < kMaxPlayers; ++p) {
-            players_[p].seat = nextRand(dealRng);
-            players_[p].seatDelay = scatter * players_[p].seat;
+        // A note from silence: the players come in in a new order, at once,
+        // when their lines hold nothing. While a room's tail still rings
+        // through them they keep their seats, so their reads don't jump.
+        if (asleep || linesSpent()) {
+            const float scatter = clampf(goalOf(Scatter), 0.0f, 80.0f) * 0.001f * sampleRate;
+            for (int p = 1; p < kMaxPlayers; ++p) {
+                players_[p].seat = nextRand(dealRng);
+                players_[p].seatDelay = scatter * players_[p].seat;
+            }
         }
     }
     Key *k = keyFor(note);
@@ -1772,8 +1813,8 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
     float partIn[4][kChunk];
     bool anyParted = false;
     for (const Key &k : keys) anyParted = anyParted || (k.used && k.parted);
-    if (!staged || !aging) agedStage.clear(0x1b873593u);
-    if (!aging) agedShared.clear(0x6d2b79f5u);
+    if (!staged || !aging) agedStage.clear(0x1b873593u, true);
+    if (!aging) agedShared.clear(0x6d2b79f5u, true);
     float wowAt[kChunk], clockL[kChunk], clockR[kChunk];
     for (int32_t at = 0; at < frames; at += kChunk) {
         const int32_t n = std::min(kChunk, frames - at);
@@ -1996,12 +2037,24 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                 c0[s] = keepFrom[s] + (keepTo[s] - keepFrom[s]) * f0;
                 c1[s] = keepFrom[s] + (keepTo[s] - keepFrom[s]) * f1;
             }
+            bool loud = false;
+            for (int s = 0; s < kSections && !loud; ++s) {
+                for (int32_t i = 0; i < n && !loud; ++i) loud = std::fabs(sec[s][i]) > kSilent;
+            }
+            stageHeard = loud ? 0 : std::min(stageHeard + n, kHeardCap);
             runStage(sec, staged, seatGoal, e0, e1, c0, c1, reach * msToSamples, slowStep, fastStep,
                      normStart + (stageNorm - normStart) * f0, normStart + (stageNorm - normStart) * f1, mid, right, wide, n,
                      wowAt, clockL, clockR, aging);
             snapSeats = false;
         }
         if (!staged) for (int32_t i = 0; i < n; ++i) right[i] = mid[i];
+        {
+            bool loud = false;
+            for (int32_t i = 0; i < n && !loud; ++i) {
+                loud = std::fabs(mid[i]) > kSilent || std::fabs(wide[i]) > kSilent || std::fabs(right[i]) > kSilent;
+            }
+            lineHeard = loud ? 0 : std::min(lineHeard + n, kHeardCap);
+        }
         {
             const float f0 = static_cast<float>(at) / static_cast<float>(frames);
             const float f1 = static_cast<float>(at + n) / static_cast<float>(frames);
@@ -2131,7 +2184,8 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
     }
     if (!any && shared.idle() && outPeak < kSilent) {
         quietSamples += frames;
-        if (quietSamples > kSleepAfter) {
+        // A late player or seat may not have spoken yet.
+        if (quietSamples > kSleepAfter && linesSpent()) {
             asleep = true;
             clearState();
         }

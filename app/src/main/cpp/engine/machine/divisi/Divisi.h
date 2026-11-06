@@ -342,7 +342,7 @@ class Divisi final : public Machine {
     /** The choir's power for [note] at vowel row [row], through the formants as heard. */
     float choirPower(int row, int note) const;
     /** A key's choir level, so every note comes out of the formants about as loud as C4's aah. */
-    float compFor(float vowel, int note);
+    float compFor(float vowel, int note) const;
 
     Key keys[kKeys];
     float sampleRate = 48000.0f;
@@ -361,13 +361,11 @@ class Divisi final : public Machine {
     dsp::Svf brassLow;
     int brassCountdown = 0;
     /**
-     * The choir's per-note levels, worked out the first time a vowel row and
-     * note are played and kept, since they depend only on the sample rate.
-     * 0 means not worked out yet.
+     * The choir's per-note levels at each vowel row, all worked out in
+     * prepare(), since they depend only on the sample rate.
      */
     static constexpr int kVowelRows = 17;
     float compCache[kVowelRows][128] = {};
-    float compRef = 0.0f;
     /**
      * The players: their state, their two lines (one buffer, the mix's
      * power-of-two line then the wide one's, written together), the write
@@ -425,6 +423,10 @@ class Divisi final : public Machine {
     int phaserCountdown = 0;
     uint32_t clock = 0;
     int32_t quietSamples = 0;
+    /** Samples since the players' lines, and the stage's, last heard more than silence. */
+    int32_t lineHeard = 0, stageHeard = 0;
+    /** True when every player and seat has read back past the last sound its line heard. */
+    bool linesSpent() const;
     bool asleep = true;
     /**
      * Motion: each section's value of the shape at the end of the last
@@ -462,18 +464,24 @@ class Divisi final : public Machine {
         /** The low-pass's coefficients. */
         float a1 = 0.0f, a2 = 0.0f, a3 = 0.0f, k = 0.0f;
     };
-    /** One side of an aged chorus: the followers, the gains now and their steps, the low-pass and the whine's phase. */
+    /**
+     * One side of an aged chorus: the followers, the gains now and their steps, the low-pass and the whine's phase.
+     * [entering] is set while age is off, so turning it on mid-sound starts with the gains cancelling and the
+     * low-pass settled on the sound, rather than from silence.
+     */
     struct Bucket {
         float in = 0.0f, out = 0.0f, gIn = 1.0f, gOut = 1.0f, dIn = 0.0f, dOut = 0.0f;
         float ic1 = 0.0f, ic2 = 0.0f, whine = 0.0f;
         int32_t count = 0;
+        bool entering = false;
     };
     /** An aged chorus's two sides and its hiss's generator. */
     struct Aged {
         Bucket side[2];
         uint32_t noise = 1;
-        void clear(uint32_t seed) {
+        void clear(uint32_t seed, bool entering = false) {
             side[0] = side[1] = Bucket();
+            side[0].entering = side[1].entering = entering;
             noise = seed;
         }
     };

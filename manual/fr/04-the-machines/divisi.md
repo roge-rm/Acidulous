@@ -137,23 +137,28 @@ chaque doigt infléchit et fait gonfler sa propre note.
 
 ## Macros
 
-La page **jeu** a huit boutons macro. Les patchs les nomment Bright, Swell,
-Longer, Lush, Voices, Brass, Phase et Low, ou l’inverse quand un patch en a
-déjà beaucoup (Dark, Sharper, Shorter, Drier, Vowel, Blat, Still, Light). Ils
-sont à zéro au chargement d’un patch, ce qui donne le patch tel qu’il a été
-fait.
+La page **jeu** a huit boutons macro. Les patchs les nomment Bright, Slow,
+Lush, Voices, Brass, Phase, Motion et Age, ou l’inverse quand un patch en a
+déjà beaucoup (Dark, Quick, Drier, Vowel, Blat ou Smooth, Still, Calm, Newer).
+Slow allonge l’attaque et le relâchement ensemble. Un patch sans mouvement a
+Low (la contrebasse) ou Light à la place de Motion. Ils sont à zéro au
+chargement d’un patch, ce qui donne le patch tel qu’il a été fait.
 
 La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace toutes les notes, 24
-demi-tons à 1. Le mode, l’accordage, l’octave, le bend et la forme et la
-synchro du mouvement ne sont pas accessibles. Touchez le nom d’une macro pour
-la renommer.
+demi-tons à 1. Le mode, l’accordage, l’octave, le bend, les joueurs, la
+scène et la forme et la synchro du mouvement ne sont pas accessibles.
+Touchez le nom d’une macro pour la renommer.
 
 ## Astuces
 
 - Un gros accord avec tous les registres à fond et à pleine vélocité devient
   fort. Baissez un peu la vélocité ou le volume quand vous empilez tout.
-- **Para Brass** et **Brass Swell** partagent un seul filtre : tenez un accord
-  et ajoutez-y des notes plutôt que de rejouer chaque note.
+- **Brass Swell** et **Dusty Brass** partagent un seul filtre : tenez un
+  accord et ajoutez-y des notes plutôt que de rejouer chaque note.
+- Les patchs sont rangés en sept familles : **strings**, **stage** (les
+  pupitres assis), **low**, **choir**, **brass**, **motion** et **worn** (un
+  vieux chorus, parfois sur bande). La plupart apportent leur salle, leur
+  plaque, leur caisse de bois ou leur bande en inserts.

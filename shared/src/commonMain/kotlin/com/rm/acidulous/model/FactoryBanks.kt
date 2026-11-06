@@ -14065,381 +14065,431 @@ internal object FactoryBanks {
         low = 36, high = 84)
 
     private fun divisi1() = Patch("Divisi", "Full Strings",
-        mapOf("viola" to 0.7f, "cello" to 0.6f, "ensemble" to 0.8f, "volume" to 0.556f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4235f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.433f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.597f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+        mapOf("viola" to 0.7f, "cello" to 0.6f, "ensemble" to 0.8f, "volume" to 0.543f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.7407407f, "mac3_a1" to 0.25f, "mac3_a2" to 0.403999984f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.444f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5945f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
         low = 36, high = 84)
 
     private fun divisi2() = Patch("Divisi", "Bright Violins",
-        mapOf("violin" to 1f, "viola" to 0.2f, "cello" to 0f, "tone" to 0.75f, "volume" to 0.708f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3965f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6235f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+        mapOf("violin" to 1f, "viola" to 0.2f, "cello" to 0f, "tone" to 0.75f, "volume" to 0.716f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3895f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6195f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Dark", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
         low = 36, high = 84)
 
-    private fun divisi3() = Patch("Divisi", "Warm Section",
-        mapOf("violin" to 0.3f, "viola" to 0.8f, "cello" to 0.6f, "tone" to 0.35f, "volume" to 0.638f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.429499984f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6235f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi3() = Patch("Divisi", "Big Section",
+        mapOf("viola" to 0.7f, "cello" to 0.6f, "ensemble" to 0.45f, "volume" to 0.396f, "players" to 1f, "drift" to 0.6f, "vibrato" to 0.5f, "scatter" to 0.625f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.543f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.578500032f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi4() = Patch("Divisi", "Slow Strings",
-        mapOf("attack" to 0.8461189f, "release" to 0.852558553f, "volume" to 0.589f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4135f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.628f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi4() = Patch("Divisi", "Warm Section",
+        mapOf("violin" to 0.3f, "viola" to 0.8f, "cello" to 0.6f, "tone" to 0.35f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.428f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.65f, "damp" to 0.8f, "tone" to 0.543016553f, "predelay" to 0.15f, "mix" to 0.25f, "model" to 0.181818187f))))
 
-    private fun divisi5() = Patch("Divisi", "Quick Strings",
-        mapOf("mode" to 1f, "attack" to 0.294295937f, "release" to 0.547290742f, "volume" to 0.603f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4135f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.628f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi5() = Patch("Divisi", "Slow Strings",
+        mapOf("attack" to 0.8461189f, "release" to 0.852558553f, "volume" to 0.692f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.375f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6425f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Quick", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi6() = Patch("Divisi", "Chamber",
-        mapOf("violin" to 0.6f, "viola" to 0.6f, "tone" to 0.55f, "ensemble" to 0.3f, "volume" to 0.427f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.593f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.458f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.593f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi6() = Patch("Divisi", "Quick Strings",
+        mapOf("mode" to 1f, "attack" to 0.294295937f, "release" to 0.547290742f, "volume" to 0.725f, "players" to 0.2f, "drift" to 0.2f, "vibrato" to 0.166666672f, "scatter" to 0.1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.343500018f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6045f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4495f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.35f, "damp" to 0.2f, "tone" to 0.862571836f, "predelay" to 0.04f, "mix" to 0.18f, "model" to 0.09090909f))))
 
-    private fun divisi7() = Patch("Divisi", "Poly Section",
-        mapOf("viola" to 0.6f, "mode" to 1f, "attack" to 0.55182296f, "release" to 0.6588259f, "volume" to 0.569f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4235f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.621f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi7() = Patch("Divisi", "Soloists",
+        mapOf("viola" to 0.6f, "ensemble" to 0.15f, "volume" to 0.349f, "players" to 0.06666667f, "drift" to 0.16f, "vibrato" to 0.5833333f, "vibrate" to 0.6352807f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.561f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.469f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.555500031f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Vessel", mapOf("size" to 0.430555552f, "decay" to 0.347067326f, "damp" to 0.5f, "mix" to 0.2f)), UnitSlot("Reverb", mapOf("size" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.075f, "mix" to 0.18f, "model" to 0.181818187f))))
 
     private fun divisi8() = Patch("Divisi", "Silk",
-        mapOf("viola" to 0.6f, "tone" to 0.3f, "ensemble" to 0.9f, "speed" to 0.3f, "volume" to 0.645f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4005f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4125f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5935f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+        mapOf("viola" to 0.6f, "tone" to 0.3f, "ensemble" to 0.9f, "speed" to 0.3f, "volume" to 0.668f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.7407407f, "mac3_a1" to 0.25f, "mac3_a2" to 0.4285f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4255f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.638f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
     private fun divisi9() = Patch("Divisi", "High Octave",
-        mapOf("violin" to 0.9f, "viola" to 0.3f, "cello" to 0f, "tone" to 0.6f, "octave" to 0.75f, "volume" to 0.624f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4475f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4535f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.612f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+        mapOf("violin" to 0.9f, "viola" to 0.3f, "cello" to 0f, "tone" to 0.6f, "volume" to 0.813f, "players" to 0.6f, "drift" to 0.32f, "vibrato" to 0.333333343f, "scatter" to 0.3125f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.420000017f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.371500015f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5935f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "strings",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi10() = Patch("Divisi", "Wide Section",
-        mapOf("violin" to 0.7f, "viola" to 0.6f, "cello" to 0.7f, "contrabass" to 0.3f, "ensemble" to 1f, "speed" to 0.6f, "volume" to 0.519f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4515f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4375f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5865f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "strings",
-        low = 36, high = 84)
+    private fun divisi10() = Patch("Divisi", "Orchestra",
+        mapOf("viola" to 0.6f, "cello" to 0.7f, "contrabass" to 0.4f, "volume" to 0.628f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.8f, "room" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.444f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5905f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.85f, "damp" to 0.5f, "tone" to 0.69342643f, "predelay" to 0.225f, "mix" to 0.28f, "model" to 0.181818187f))))
 
-    private fun divisi11() = Patch("Divisi", "Lento",
-        mapOf("attack" to 0.9347108f, "release" to 0.9640937f, "ensemble" to 0.8f, "speed" to 0.25f, "volume" to 0.669f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.7407407f, "mac2_a1" to 0.325f, "mac2_a2" to 0.331f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.353f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3865f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.605f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "strings",
-        low = 36, high = 84)
+    private fun divisi11() = Patch("Divisi", "Front Row",
+        mapOf("viola" to 0.6f, "cello" to 0.6f, "volume" to 0.6f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.25f, "stage" to 0.45f, "room" to 0.15f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4355f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5865f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4495f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.075f, "mix" to 0.18f, "model" to 0.181818187f))))
 
-    private fun divisi12() = Patch("Divisi", "Cellos",
-        mapOf("violin" to 0f, "viola" to 0.3f, "cello" to 1f, "volume" to 0.794f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.546f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4255f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.429499984f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi12() = Patch("Divisi", "Wide Stage",
+        mapOf("viola" to 0.6f, "cello" to 0.7f, "contrabass" to 0.3f, "ensemble" to 0.5f, "volume" to 0.499f, "players" to 1f, "drift" to 0.6f, "vibrato" to 0.5f, "scatter" to 0.625f, "stage" to 1f, "room" to 0.6f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4555f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.458f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.587f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4605f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi13() = Patch("Divisi", "Divided",
+        mapOf("viola" to 0.7f, "cello" to 0.8f, "contrabass" to 0.6f, "volume" to 0.554f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.9f, "room" to 0.5f, "split" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5485f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.584f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi14() = Patch("Divisi", "Everything",
+        mapOf("violin" to 0.6f, "contrabass" to 0.4f, "choir" to 0.5f, "brass" to 0.5f, "volume" to 0.582f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 1f, "room" to 0.8f, "split" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.380500019f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6595f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi15() = Patch("Divisi", "Back of the Hall",
+        mapOf("tone" to 0.4f, "attack" to 0.76577574f, "release" to 0.852558553f, "volume" to 0.857f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 1f, "room" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.424f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3855f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5715f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.424f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.8f, "damp" to 0.6f, "tone" to 0.6425486f, "predelay" to 0.25f, "mix" to 0.32f, "model" to 0.181818187f))))
+
+    private fun divisi16() = Patch("Divisi", "Chamber",
+        mapOf("violin" to 0.7f, "viola" to 0.6f, "cello" to 0.6f, "ensemble" to 0.3f, "volume" to 0.513f, "players" to 0.13333334f, "drift" to 0.2f, "vibrato" to 0.3f, "scatter" to 0.1875f, "stage" to 0.6f, "room" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.555500031f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4545f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.57f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Vessel", mapOf("size" to 0.430555552f, "decay" to 0.347067326f, "damp" to 0.5f, "mix" to 0.2f))))
+
+    private fun divisi17() = Patch("Divisi", "Lento",
+        mapOf("attack" to 0.9347108f, "release" to 0.9640937f, "ensemble" to 0.6f, "speed" to 0.25f, "volume" to 0.742f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.7f, "room" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.377f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.607f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Quick", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.85f, "damp" to 0.5f, "tone" to 0.69342643f, "predelay" to 0.225f, "mix" to 0.28f, "model" to 0.181818187f))))
+
+    private fun divisi18() = Patch("Divisi", "Choir Loft",
+        mapOf("violin" to 0.7f, "choir" to 0.6f, "vowel" to 0.3f, "volume" to 0.614f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.9f, "room" to 0.6f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.434000015f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.607f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "stage",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi19() = Patch("Divisi", "Cellos",
+        mapOf("violin" to 0f, "viola" to 0.3f, "cello" to 1f, "volume" to 0.966f, "players" to 0.333333343f, "drift" to 0.24f, "vibrato" to 0.233333334f, "scatter" to 0.1875f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.366999984f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.517f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.428f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.075f, "mix" to 0.18f, "model" to 0.181818187f))))
+
+    private fun divisi20() = Patch("Divisi", "Basses",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.6f, "contrabass" to 1f, "volume" to 0.758f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.13333334f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.44f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.25f, "mac7_a2" to 0.621f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Light", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.35f, "tone" to 0.7737056f, "predelay" to 0.075f, "mix" to 0.18f, "model" to 0.181818187f))))
+
+    private fun divisi21() = Patch("Divisi", "Low Section",
+        mapOf("violin" to 0f, "viola" to 0.4f, "cello" to 0.8f, "contrabass" to 0.6f, "volume" to 0.891f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.6f, "room" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4005f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.438f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi22() = Patch("Divisi", "Bass Pedal",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.6f, "contrabass" to 1f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.593582f, "volume" to 0.776f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3965f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.25f, "mac7_a2" to 0.612f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Light", "macro8" to "Age"),
         family = "low",
         low = 24, high = 60)
 
-    private fun divisi13() = Patch("Divisi", "Basses",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.6f, "contrabass" to 1f, "volume" to 0.776f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5465f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.411f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.612f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Light"),
+    private fun divisi23() = Patch("Divisi", "Dark Cellos",
+        mapOf("violin" to 0f, "viola" to 0.4f, "cello" to 1f, "tone" to 0.25f, "volume" to 1f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.25f, "age" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3705f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4305f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.65f, "damp" to 0.8f, "tone" to 0.543016553f, "predelay" to 0.15f, "mix" to 0.25f, "gain" to 0.53125f, "model" to 0.181818187f))))
+
+    private fun divisi24() = Patch("Divisi", "Deep Swell",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.7f, "contrabass" to 0.9f, "attack" to 0.794295967f, "release" to 0.888464868f, "volume" to 0.841f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "motion" to 0.5f, "msync" to 0.5714286f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.429499984f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.406000018f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Quick", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
+
+    private fun divisi25() = Patch("Divisi", "Low Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.7f, "contrabass" to 0.4f, "choir" to 0.9f, "vowel" to 0.1f, "volume" to 0.519f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.4565f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5945f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6615f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.65f, "damp" to 0.8f, "tone" to 0.543016553f, "predelay" to 0.15f, "mix" to 0.25f, "model" to 0.181818187f))))
+
+    private fun divisi26() = Patch("Divisi", "Low Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "contrabass" to 0.5f, "brass" to 1f, "sweep" to 0.5f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.517953157f, "volume" to 0.589f, "players" to 0.2f, "drift" to 0.16f, "scatter" to 0.1875f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.459f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4505f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "low",
+        low = 24, high = 60,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.75f, "tone" to 0.6131472f, "predelay" to 0.1f, "mix" to 0.22f, "model" to 0.09090909f))))
+
+    private fun divisi27() = Patch("Divisi", "Undertow",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.9f, "contrabass" to 0.7f, "phaser" to 0.4f, "rate" to 0.15051499f, "feedback" to 0.5555556f, "volume" to 0.407f, "players" to 0.333333343f, "drift" to 0.4f, "vibrato" to 0.1f, "motion" to 0.25f, "mrate" to 0.19897f, "mbalance" to 0.6f, "mtone" to 0.4f, "age" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4695f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4475f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.4675f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
         family = "low",
         low = 24, high = 60)
 
-    private fun divisi14() = Patch("Divisi", "Low Section",
-        mapOf("violin" to 0f, "viola" to 0.4f, "cello" to 0.8f, "contrabass" to 0.6f, "volume" to 0.785f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.548f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.43f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.412f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5635f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Light"),
-        family = "low",
-        low = 24, high = 60)
+    private fun divisi28() = Patch("Divisi", "Aah Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "volume" to 0.49f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.375f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.6345f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.657f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "choir",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi15() = Patch("Divisi", "Bass Pedal",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.6f, "contrabass" to 1f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.593582f, "volume" to 0.776f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5465f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.416f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.612f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Light"),
-        family = "low",
-        low = 24, high = 60)
+    private fun divisi29() = Patch("Divisi", "Ooh Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0f, "volume" to 0.759f, "players" to 0.466666669f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.375f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.3545f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3655f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.620499969f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5985f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "choir",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi16() = Patch("Divisi", "Dark Cellos",
-        mapOf("violin" to 0f, "viola" to 0.4f, "cello" to 1f, "tone" to 0.25f, "volume" to 0.776f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5515f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.442f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "low",
-        low = 24, high = 60)
+    private fun divisi30() = Patch("Divisi", "Ee Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 1f, "volume" to 0.495f, "players" to 0.333333343f, "drift" to 0.32f, "vibrato" to 0.233333334f, "scatter" to 0.3125f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.434000015f, "mac4_d1" to 0.222222224f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.54f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.575f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5715f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "choir",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
-    private fun divisi17() = Patch("Divisi", "Deep Swell",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.7f, "contrabass" to 0.9f, "attack" to 0.88288784f, "release" to 0.888464868f, "volume" to 0.668f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.588f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4535f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.411f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5865f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.622f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Light"),
-        family = "low",
-        low = 24, high = 60)
-
-    private fun divisi18() = Patch("Divisi", "Low Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.7f, "contrabass" to 0.4f, "choir" to 0.9f, "vowel" to 0.1f, "volume" to 0.638f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4385f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.7f, "mac5_a2" to 0.4495f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6015f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "low",
-        low = 24, high = 60)
-
-    private fun divisi19() = Patch("Divisi", "Low Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "contrabass" to 0.5f, "brass" to 1f, "sweep" to 0.5f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.517953157f, "volume" to 0.55f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.536f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.548f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Light"),
-        family = "low",
-        low = 24, high = 60)
-
-    private fun divisi20() = Patch("Divisi", "Sub Octave",
-        mapOf("violin" to 0.6f, "viola" to 0.6f, "cello" to 0.4f, "octave" to 0.25f, "volume" to 0.923f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5265f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3505f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5385f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "low",
-        low = 36, high = 72)
-
-    private fun divisi21() = Patch("Divisi", "Undertow",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.9f, "contrabass" to 0.7f, "phaser" to 0.4f, "rate" to 0.15051499f, "feedback" to 0.5555556f, "volume" to 0.724f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.539f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.4205f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.199999988f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.25f, "mac8_a2" to 0.5885f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Light"),
-        family = "low",
-        low = 24, high = 60)
-
-    private fun divisi22() = Patch("Divisi", "Aah Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "volume" to 0.531f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5465f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.627f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi31() = Patch("Divisi", "Oh Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0.25f, "volume" to 0.636f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.587f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.601f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "choir",
         low = 36, high = 84)
 
-    private fun divisi23() = Patch("Divisi", "Ooh Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0f, "volume" to 0.61f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.437f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.7f, "mac5_a2" to 0.517f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.572f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5615f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi32() = Patch("Divisi", "Big Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "vowel" to 0.45f, "ensemble" to 0.45f, "volume" to 0.517f, "players" to 1f, "drift" to 0.6f, "vibrato" to 0.5f, "scatter" to 0.75f, "stage" to 0.7f, "room" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.5745f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.651f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "choir",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.85f, "damp" to 0.5f, "tone" to 0.69342643f, "predelay" to 0.225f, "mix" to 0.28f, "model" to 0.181818187f))))
 
-    private fun divisi24() = Patch("Divisi", "Oh Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0.25f, "volume" to 0.636f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.7f, "mac5_a2" to 0.516f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.587f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.631f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi33() = Patch("Divisi", "Distant Voices",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "vowel" to 0.3f, "tone" to 0.35f, "attack" to 0.8175987f, "release" to 0.852558553f, "volume" to 0.62f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 1f, "room" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.654f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Quick", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "choir",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.8f, "damp" to 0.6f, "tone" to 0.6425486f, "predelay" to 0.25f, "mix" to 0.32f, "model" to 0.181818187f))))
 
-    private fun divisi25() = Patch("Divisi", "Eh Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0.75f, "volume" to 0.651f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.454999983f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5535f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.624f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5595f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi34() = Patch("Divisi", "Vowel Drift",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.95f, "vowel" to 0.4f, "volume" to 0.593f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "motion" to 0.25f, "mrate" to 0.238560632f, "mbalance" to 0.3f, "mvowel" to 0.8f, "mtone" to 0.2f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5945f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.599f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.8518519f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.7f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
         family = "choir",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi26() = Patch("Divisi", "Ee Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 1f, "volume" to 0.602f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4415f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5465f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.5505f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5565f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi35() = Patch("Divisi", "Choir and Strings",
+        mapOf("violin" to 0.5f, "viola" to 0.4f, "cello" to 0.3f, "choir" to 0.7f, "volume" to 0.646f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.8f, "room" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.25f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6385f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "choir",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi27() = Patch("Divisi", "Choir and Strings",
-        mapOf("violin" to 0.5f, "viola" to 0.4f, "cello" to 0.3f, "choir" to 0.7f, "volume" to 0.496f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_a1" to 0.3f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6145f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi36() = Patch("Divisi", "Chant",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.3f, "choir" to 0.9f, "vowel" to 0.2f, "tone" to 0.4f, "ensemble" to 0.4f, "volume" to 0.789f, "players" to 0.2f, "drift" to 0.2f, "vibrato" to 0.1f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.6055f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "choir",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.92f, "damp" to 0.35f, "tone" to 0.736443f, "predelay" to 0.2f, "mix" to 0.35f, "model" to 0.181818187f))))
 
-    private fun divisi28() = Patch("Divisi", "Distant Voices",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "vowel" to 0.3f, "tone" to 0.35f, "attack" to 0.8175987f, "release" to 0.852558553f, "ensemble" to 1f, "volume" to 0.565f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_a1" to 0.25f, "mac5_d1" to 0.222222224f, "mac5_a1" to 0.7f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.545f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5615f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Drier", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "choir",
-        low = 36, high = 84)
-
-    private fun divisi29() = Patch("Divisi", "Bright Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0.6f, "tone" to 0.8f, "volume" to 0.622f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5035f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.604f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "choir",
-        low = 36, high = 84)
-
-    private fun divisi30() = Patch("Divisi", "Poly Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "mode" to 1f, "attack" to 0.5f, "release" to 0.6294883f, "volume" to 0.531f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5465f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.627f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "choir",
-        low = 36, high = 84)
-
-    private fun divisi31() = Patch("Divisi", "Cathedral Air",
-        mapOf("violin" to 0f, "viola" to 0.3f, "cello" to 0f, "choir" to 0.7f, "attack" to 0.88288784f, "release" to 0.942607f, "ensemble" to 0.9f, "speed" to 0.3f, "volume" to 0.617f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.7407407f, "mac2_a1" to 0.325f, "mac2_a2" to 0.4425f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.4255f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.506f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6915f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Drier", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "choir",
-        low = 36, high = 84)
-
-    private fun divisi32() = Patch("Divisi", "Chant",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0.3f, "choir" to 0.9f, "vowel" to 0.2f, "tone" to 0.4f, "ensemble" to 0.4f, "volume" to 0.449f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5875f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.7f, "mac5_a2" to 0.532f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.5645f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6025f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "choir",
-        low = 36, high = 84)
-
-    private fun divisi33() = Patch("Divisi", "Brass Section",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "mode" to 1f, "attack" to 0.205704033f, "release" to 0.435755581f, "volume" to 0.881f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4965f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.465f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5595f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.402f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi37() = Patch("Divisi", "Brass Section",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "mode" to 1f, "attack" to 0.205704033f, "release" to 0.435755581f, "volume" to 0.881f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5595f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.39f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
         low = 36, high = 84)
 
-    private fun divisi34() = Patch("Divisi", "Soft Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.4f, "blat" to 0.2f, "tone" to 0.45f, "mode" to 1f, "attack" to 0.471479744f, "release" to 0.482046843f, "volume" to 0.933f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.498f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4565f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5335f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.397f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi38() = Patch("Divisi", "Blat Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.8f, "brassdecay" to 0.525461257f, "blat" to 1f, "mode" to 1f, "attack" to 0.117112122f, "release" to 0.435755581f, "volume" to 0.861f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.3885f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.25f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.569499969f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4035f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Smooth", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
         low = 36, high = 84)
 
-    private fun divisi35() = Patch("Divisi", "Blat Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.8f, "brassdecay" to 0.525461257f, "blat" to 1f, "mode" to 1f, "attack" to 0.117112122f, "release" to 0.435755581f, "volume" to 0.861f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4945f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.388f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.3f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.569499969f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4205f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Smooth", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi39() = Patch("Divisi", "Soft Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.4f, "blat" to 0.2f, "tone" to 0.45f, "mode" to 1f, "attack" to 0.471479744f, "release" to 0.482046843f, "volume" to 0.75f, "players" to 0.2f, "drift" to 0.16f, "vibrato" to 0.0833333358f, "scatter" to 0.125f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.625f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.43f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
-    private fun divisi36() = Patch("Divisi", "Brass Swell",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.5f, "brassdecay" to 0.8927429f, "attack" to 0.76577574f, "release" to 0.6294883f, "volume" to 0.891f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4975f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.445f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5545f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.406499982f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi40() = Patch("Divisi", "Brass Swell",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.5f, "brassdecay" to 0.8927429f, "attack" to 0.76577574f, "release" to 0.6294883f, "volume" to 0.989f, "players" to 0.333333343f, "drift" to 0.2f, "vibrato" to 0.1f, "scatter" to 0.25f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5055f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.336f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "gain" to 0.5104167f, "model" to 0.181818187f))))
 
-    private fun divisi37() = Patch("Divisi", "Stab Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.9f, "brassdecay" to 0.367281646f, "blat" to 0.7f, "mode" to 1f, "attack" to 0.05182294f, "release" to 0.324220449f, "volume" to 0.851f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.498f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4535f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.3f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5745f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.411f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Smooth", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi41() = Patch("Divisi", "Stab Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.9f, "brassdecay" to 0.367281646f, "blat" to 0.7f, "mode" to 1f, "attack" to 0.05182294f, "release" to 0.324220449f, "volume" to 0.989f, "players" to 0.13333334f, "drift" to 0.12f, "scatter" to 0.1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.417f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.25f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5055f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.355499983f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Smooth", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.35f, "damp" to 0.2f, "tone" to 0.862571836f, "predelay" to 0.04f, "mix" to 0.18f, "gain" to 0.5104167f, "model" to 0.09090909f))))
 
-    private fun divisi38() = Patch("Divisi", "Para Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.7f, "brassdecay" to 0.7252475f, "blat" to 0.6f, "attack" to 0.294295937f, "release" to 0.482046843f, "volume" to 0.871f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.495f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4565f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5645f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.406499982f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi42() = Patch("Divisi", "Horn Section",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "blat" to 0.4f, "mode" to 1f, "attack" to 0.3461189f, "release" to 0.517953157f, "volume" to 1f, "players" to 0.466666669f, "drift" to 0.24f, "vibrato" to 0.1f, "scatter" to 0.25f, "stage" to 0.6f, "room" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.397f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "gain" to 0.5416667f, "model" to 0.181818187f))))
 
-    private fun divisi39() = Patch("Divisi", "Brass and Strings",
-        mapOf("violin" to 0.5f, "viola" to 0.4f, "cello" to 0.3f, "brass" to 0.8f, "sweep" to 0.5f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.547290742f, "volume" to 0.861f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.366999984f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.569499969f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4265f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi43() = Patch("Divisi", "Mellow Horns",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.3f, "brassdecay" to 0.776169956f, "blat" to 0.3f, "tone" to 0.35f, "mode" to 1f, "attack" to 0.4347108f, "release" to 0.547290742f, "ensemble" to 0.4f, "volume" to 1f, "players" to 0.333333343f, "drift" to 0.2f, "vibrato" to 0.166666672f, "scatter" to 0.25f, "stage" to 0.9f, "room" to 0.6f, "mac1_d1" to 0.4074074f, "mac1_d2" to 0.7407407f, "mac1_a1" to 0.675f, "mac1_a2" to 0.392499983f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.346000016f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.342f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.65f, "damp" to 0.8f, "tone" to 0.543016553f, "predelay" to 0.15f, "mix" to 0.25f, "gain" to 0.5625f, "model" to 0.181818187f))))
 
-    private fun divisi40() = Patch("Divisi", "Bright Fanfare",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 1f, "blat" to 0.6f, "tone" to 0.8f, "mode" to 1f, "attack" to 0.205704033f, "release" to 0.435755581f, "volume" to 0.841f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4935f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.49f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5795f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.411f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi44() = Patch("Divisi", "Brass and Strings",
+        mapOf("violin" to 0.5f, "viola" to 0.4f, "cello" to 0.3f, "brass" to 0.8f, "sweep" to 0.5f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.547290742f, "volume" to 0.851f, "players" to 0.6f, "drift" to 0.32f, "vibrato" to 0.2f, "scatter" to 0.3125f, "stage" to 0.8f, "room" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.405f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.405f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5745f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.440999985f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Blat", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi41() = Patch("Divisi", "Mellow Horns",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.3f, "brassdecay" to 0.776169956f, "blat" to 0.3f, "tone" to 0.35f, "mode" to 1f, "attack" to 0.4347108f, "release" to 0.547290742f, "ensemble" to 0.4f, "volume" to 0.759f, "mac1_d1" to 0.4074074f, "mac1_d2" to 0.7407407f, "mac1_a1" to 0.675f, "mac1_a2" to 0.4435f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.620499969f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4585f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5985f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.402f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
+    private fun divisi45() = Patch("Divisi", "Vox Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "vowel" to 0.8f, "brass" to 0.6f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.593582f, "volume" to 0.861f, "players" to 0.333333343f, "drift" to 0.24f, "vibrato" to 0.13333334f, "scatter" to 0.1875f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.4075f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.25f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.569499969f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.8f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
         family = "brass",
-        low = 36, high = 84)
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
-    private fun divisi42() = Patch("Divisi", "Dark Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.45f, "brassdecay" to 0.934349537f, "tone" to 0.35f, "mode" to 1f, "attack" to 0.3461189f, "release" to 0.517953157f, "volume" to 0.923f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.491f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4245f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5385f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.406499982f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
-        family = "brass",
-        low = 36, high = 84)
+    private fun divisi46() = Patch("Divisi", "Drifting Sections",
+        mapOf("viola" to 0.6f, "cello" to 0.7f, "contrabass" to 0.3f, "volume" to 0.614f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.7f, "room" to 0.3f, "motion" to 0.25f, "mrate" to 0.30102998f, "mbalance" to 0.6f, "mtone" to 0.35f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4205f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5795f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi43() = Patch("Divisi", "Brass Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.8f, "vowel" to 0.4f, "brass" to 1f, "mode" to 1f, "attack" to 0.38288784f, "release" to 0.547290742f, "volume" to 0.837f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.511f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.7f, "mac5_a2" to 0.5815f, "mac6_d1" to 0.370370358f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.7f, "mac6_a2" to 0.3845f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5815f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.447f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
-        family = "brass",
-        low = 36, high = 84)
+    private fun divisi47() = Patch("Divisi", "Breathing",
+        mapOf("viola" to 0.7f, "cello" to 0.6f, "volume" to 0.6f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "motion" to 0.5f, "msync" to 0.5714286f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.405f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.624f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi44() = Patch("Divisi", "Everything",
-        mapOf("violin" to 0.6f, "contrabass" to 0.4f, "choir" to 0.5f, "brass" to 0.5f, "volume" to 0.49f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_a1" to 0.3f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.601f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4635f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
+    private fun divisi48() = Patch("Divisi", "Pulse",
+        mapOf("viola" to 0.6f, "volume" to 0.517f, "players" to 0.466666669f, "drift" to 0.24f, "vibrato" to 0.166666672f, "motion" to 0.5f, "msync" to 0.142857149f, "mbalance" to 0.6f, "mtone" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5705f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
-    private fun divisi45() = Patch("Divisi", "Orchestra Pad",
-        mapOf("violin" to 0.6f, "contrabass" to 0.4f, "choir" to 0.3f, "brass" to 0.4f, "sweep" to 0.4f, "brassdecay" to 0.8418204f, "volume" to 0.55f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.401f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.611f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4535f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
+    private fun divisi49() = Patch("Divisi", "Tide",
+        mapOf("viola" to 0.7f, "cello" to 0.8f, "contrabass" to 0.5f, "volume" to 0.554f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 1f, "room" to 0.4f, "motion" to 0.75f, "mrate" to 0.238560632f, "mbalance" to 0.65f, "mtone" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.456f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.448f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.584f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.675f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi46() = Patch("Divisi", "Vox Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "vowel" to 0.8f, "brass" to 0.6f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.593582f, "volume" to 0.822f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.431f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.4425f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6085f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
+    private fun divisi50() = Patch("Divisi", "Cues",
+        mapOf("violin" to 0.7f, "viola" to 0.6f, "cello" to 0.7f, "contrabass" to 0.4f, "choir" to 0.4f, "brass" to 0.3f, "volume" to 0.628f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.9f, "room" to 0.5f, "motion" to 1f, "msync" to 0.428571433f, "mtone" to 0.3f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.45f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5725f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi47() = Patch("Divisi", "Hall Pad",
-        mapOf("violin" to 0.6f, "viola" to 0f, "choir" to 0.5f, "attack" to 0.794295967f, "release" to 0.888464868f, "volume" to 0.575f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.222222224f, "mac5_a1" to 0.3f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6355f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
+    private fun divisi51() = Patch("Divisi", "Shimmer Steps",
+        mapOf("violin" to 0.9f, "viola" to 0.3f, "cello" to 0f, "tone" to 0.6f, "volume" to 0.689f, "players" to 0.6f, "drift" to 0.32f, "vibrato" to 0.266666681f, "motion" to 1f, "msync" to 0.2857143f, "mbalance" to 0.4f, "mtone" to 0.7f, "mensemble" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5745f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.62f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "damp" to 0.3f, "predelay" to 0.1f, "mix" to 0.2f, "model" to 0.09090909f))))
 
-    private fun divisi48() = Patch("Divisi", "Glass Section",
-        mapOf("violin" to 0.9f, "viola" to 0f, "cello" to 0f, "choir" to 0.3f, "vowel" to 1f, "tone" to 0.9f, "octave" to 0.75f, "volume" to 0.661f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.435f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5905f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
+    private fun divisi52() = Patch("Divisi", "Vowel Tide",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 1f, "volume" to 0.681f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.8f, "room" to 0.4f, "motion" to 0.75f, "msync" to 0.714285731f, "mbalance" to 0.4f, "mvowel" to 0.9f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.25f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.619f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.8518519f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.7f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
+        family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.7f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.15f, "mix" to 0.22f, "model" to 0.181818187f))))
 
-    private fun divisi49() = Patch("Divisi", "Dusk",
-        mapOf("violin" to 0f, "viola" to 0.7f, "cello" to 0.6f, "choir" to 0.4f, "vowel" to 0.2f, "tone" to 0.25f, "attack" to 0.837300837f, "release" to 0.8062673f, "volume" to 0.618f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.416f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.629500031f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
-
-    private fun divisi50() = Patch("Divisi", "Swell and Bite",
-        mapOf("violin" to 0.6f, "cello" to 0f, "brass" to 0.6f, "sweep" to 0.7f, "blat" to 0.6f, "mode" to 1f, "attack" to 0.6771838f, "volume" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.3015f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.388f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
-
-    private fun divisi51() = Patch("Divisi", "Poly Ensemble",
-        mapOf("violin" to 0.6f, "choir" to 0.3f, "mode" to 1f, "attack" to 0.4114081f, "release" to 0.6125346f, "volume" to 0.576f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.401f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.626f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
-
-    private fun divisi52() = Patch("Divisi", "Morning Mist",
-        mapOf("violin" to 0.5f, "viola" to 0f, "cello" to 0f, "choir" to 0.5f, "vowel" to 0.9f, "tone" to 0.6f, "attack" to 0.911408067f, "release" to 0.888464868f, "ensemble" to 1f, "speed" to 0.2f, "volume" to 0.851f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.7407407f, "mac2_a1" to 0.325f, "mac2_a2" to 0.314f, "mac3_d1" to 0.4814815f, "mac3_d2" to 0.7407407f, "mac3_a1" to 0.35f, "mac3_a2" to 0.5745f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.25f, "mac4_a2" to 0.427f, "mac5_d1" to 0.222222224f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.3f, "mac5_a2" to 0.5095f, "mac6_d1" to 0.259259254f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.75f, "mac6_a2" to 0.5745f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.557f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Drier", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
-
-    private fun divisi53() = Patch("Divisi", "Sunrise",
-        mapOf("violin" to 0.7f, "cello" to 0.4f, "brass" to 0.4f, "sweep" to 0.4f, "brassdecay" to 0.934349537f, "attack" to 0.9347108f, "release" to 0.917802453f, "volume" to 0.684f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.7407407f, "mac2_a1" to 0.325f, "mac2_a2" to 0.364f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.379f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.6165f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.446f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "layers",
-        low = 36, high = 84)
-
-    private fun divisi54() = Patch("Divisi", "Phased Strings",
-        mapOf("phaser" to 0.7f, "rate" to 0.389075637f, "feedback" to 0.5555556f, "volume" to 0.803f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4365f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.414f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
+    private fun divisi53() = Patch("Divisi", "Phased Strings",
+        mapOf("phaser" to 0.7f, "rate" to 0.389075637f, "feedback" to 0.5555556f, "volume" to 0.851f, "motion" to 0.25f, "mbalance" to 0.2f, "mtone" to 0.1f, "mensemble" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.379f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.199999988f, "mac6_a2" to 0.4125f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Still", "macro7" to "Motion", "macro8" to "Age"),
         family = "motion",
         low = 36, high = 84)
 
-    private fun divisi55() = Patch("Divisi", "Slow Phase",
-        mapOf("attack" to 0.8461189f, "release" to 0.852558553f, "phaser" to 0.8f, "rate" to 0.102059975f, "feedback" to 0.6666667f, "volume" to 0.803f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.325f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4125f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.3915f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.406499982f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
+    private fun divisi54() = Patch("Divisi", "Sunrise",
+        mapOf("violin" to 0.7f, "cello" to 0.4f, "brass" to 0.4f, "sweep" to 0.4f, "brassdecay" to 0.934349537f, "attack" to 0.9347108f, "release" to 0.917802453f, "volume" to 0.776f, "players" to 0.733333349f, "drift" to 0.4f, "vibrato" to 0.333333343f, "scatter" to 0.375f, "stage" to 0.6f, "room" to 0.4f, "motion" to 0.5f, "msync" to 0.857142866f, "mbalance" to 0.6f, "mtone" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.35f, "mac2_a2" to 0.4f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4275f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4385f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.606f, "mac7_d1" to 0.8148148f, "mac7_d2" to 0.8888889f, "mac7_d3" to 0.9259259f, "mac7_a1" to 0.7f, "mac7_a2" to 0.65f, "mac7_a3" to 0.65f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Quick", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Motion", "macro8" to "Age"),
         family = "motion",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.85f, "damp" to 0.5f, "tone" to 0.69342643f, "predelay" to 0.225f, "mix" to 0.28f, "model" to 0.181818187f))))
+
+    private fun divisi55() = Patch("Divisi", "Old Box",
+        mapOf("viola" to 0.7f, "cello" to 0.6f, "ensemble" to 0.8f, "volume" to 0.541f, "age" to 0.45f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.7407407f, "mac3_a1" to 0.25f, "mac3_a2" to 0.403999984f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4445f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5945f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Age"),
+        family = "worn",
         low = 36, high = 84)
 
-    private fun divisi56() = Patch("Divisi", "Fast Shimmer",
-        mapOf("violin" to 0.9f, "tone" to 0.65f, "ensemble" to 1f, "speed" to 1f, "volume" to 0.537f, "mac1_d1" to 0.4074074f, "mac1_d2" to 0.7407407f, "mac1_a1" to 0.3f, "mac1_a2" to 0.545f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_a1" to 0.25f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4425f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.5855f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "motion",
+    private fun divisi56() = Patch("Divisi", "Bucket Brigade",
+        mapOf("viola" to 0.6f, "ensemble" to 1f, "speed" to 0.6f, "volume" to 0.535f, "age" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_a1" to 0.25f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4475f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.597499967f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.15f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
         low = 36, high = 84)
 
-    private fun divisi57() = Patch("Divisi", "Dry Section",
-        mapOf("viola" to 0.6f, "ensemble" to 0f, "volume" to 0.302f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.57f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4675f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.8f, "mac7_a2" to 0.555f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Phase", "macro8" to "Low"),
-        family = "motion",
+    private fun divisi57() = Patch("Divisi", "Worn Strings",
+        mapOf("viola" to 0.7f, "cello" to 0.6f, "ensemble" to 0.8f, "phaser" to 0.3f, "rate" to 0.1901056f, "volume" to 0.517f, "age" to 0.7f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.7407407f, "mac3_a1" to 0.25f, "mac3_a2" to 0.4145f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4515f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.545f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.464f, "mac8_d1" to 1f, "mac8_a1" to 0.15f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tape", mapOf("flutter" to 0.18f, "drive" to 0.4f, "tone" to 0.60205996f, "hiss" to 0.06f, "age" to 0.5f))))
+
+    private fun divisi58() = Patch("Divisi", "Cassette",
+        mapOf("viola" to 0.6f, "tone" to 0.6f, "volume" to 0.405f, "players" to 0.2f, "drift" to 0.24f, "age" to 0.6f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.466f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5525f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.462f, "mac8_d1" to 1f, "mac8_a1" to 0.199999988f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tape", mapOf("wow" to 0.35f, "flutter" to 0.3f, "drive" to 0.35f, "tone" to 0.5118834f, "hiss" to 0.12f, "age" to 0.45f))))
+
+    private fun divisi59() = Patch("Divisi", "Jet Phase",
+        mapOf("tone" to 0.8f, "phaser" to 1f, "rate" to 0.238560632f, "feedback" to 0.9444445f, "volume" to 0.66f, "age" to 0.4f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.3f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.412f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_a1" to 0.199999988f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.438f, "mac8_d1" to 1f, "mac8_a1" to 0.8f),
+        mapOf("macro1" to "Dark", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Still", "macro7" to "Low", "macro8" to "Age"),
+        family = "worn",
         low = 36, high = 84)
 
-    private fun divisi58() = Patch("Divisi", "Jet Phase",
-        mapOf("tone" to 0.8f, "phaser" to 1f, "rate" to 0.238560632f, "feedback" to 0.9444445f, "volume" to 0.512f, "mac1_d1" to 0.4074074f, "mac1_d2" to 0.7407407f, "mac1_a1" to 0.3f, "mac1_a2" to 0.5575f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.485f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.424f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_a1" to 0.199999988f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.4545f),
-        mapOf("macro1" to "Dark", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
+    private fun divisi60() = Patch("Divisi", "Warble",
+        mapOf("ensemble" to 1f, "speed" to 1f, "phaser" to 0.4f, "rate" to 0.80103f, "volume" to 0.734f, "age" to 0.8f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_a1" to 0.25f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.4385f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.564f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.15f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Drier", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
         low = 36, high = 84)
 
-    private fun divisi59() = Patch("Divisi", "Phased Choir",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.85f, "phaser" to 0.6f, "rate" to 0.30102998f, "feedback" to 0.5555556f, "volume" to 0.751f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5655f, "mac5_d1" to 0.222222224f, "mac5_a1" to 0.3f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.384f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Vowel", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
-        low = 36, high = 84)
+    private fun divisi61() = Patch("Divisi", "Faded Choir",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "choir" to 0.9f, "vowel" to 0.3f, "tone" to 0.55f, "volume" to 0.541f, "age" to 0.7f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.222222224f, "mac4_a1" to 0.75f, "mac5_d1" to 0.259259254f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.582f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5945f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.15f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Vowel", "macro5" to "Brass", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tape", mapOf("flutter" to 0.18f, "drive" to 0.4f, "tone" to 0.60205996f, "hiss" to 0.06f, "age" to 0.5f))))
 
-    private fun divisi60() = Patch("Divisi", "Phased Brass",
-        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.8f, "mode" to 1f, "attack" to 0.294295937f, "release" to 0.482046843f, "phaser" to 0.4f, "rate" to 0.5f, "volume" to 1f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4945f, "mac5_d1" to 0.185185179f, "mac5_a1" to 0.75f, "mac6_d1" to 0.370370358f, "mac6_a1" to 0.7f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4305f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.402f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Blat", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
-        low = 36, high = 84)
-
-    private fun divisi61() = Patch("Divisi", "Warble",
-        mapOf("ensemble" to 1f, "speed" to 1f, "phaser" to 0.4f, "rate" to 0.80103f, "volume" to 0.742f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_a1" to 0.25f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.420000017f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.429499984f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Drier", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
-        low = 36, high = 84)
-
-    private fun divisi62() = Patch("Divisi", "Tidal",
-        mapOf("contrabass" to 0.4f, "attack" to 0.9714798f, "release" to 1f, "phaser" to 0.7f, "rate" to 0f, "feedback" to 0.7777778f, "volume" to 0.617f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.7407407f, "mac2_a1" to 0.325f, "mac2_a2" to 0.336f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.35f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.5535f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.469f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.4505f, "mac8_d1" to 0.148148149f, "mac8_d2" to 0.7407407f, "mac8_a1" to 0.75f, "mac8_a2" to 0.434000015f),
-        mapOf("macro1" to "Bright", "macro2" to "Sharper", "macro3" to "Shorter", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
-        low = 36, high = 84)
+    private fun divisi62() = Patch("Divisi", "Dusty Brass",
+        mapOf("violin" to 0f, "viola" to 0f, "cello" to 0f, "brass" to 1f, "sweep" to 0.7f, "brassdecay" to 0.7252475f, "blat" to 0.6f, "attack" to 0.294295937f, "release" to 0.482046843f, "ensemble" to 0.5f, "volume" to 0.575f, "age" to 0.6f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_d3" to 0.7407407f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac3_a3" to 0.6475f, "mac4_d1" to 0.185185179f, "mac4_a1" to 0.75f, "mac5_d1" to 0.370370358f, "mac5_a1" to 0.25f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.8f, "mac6_a2" to 0.5705f, "mac7_d1" to 0.148148149f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.75f, "mac7_a2" to 0.4355f, "mac8_d1" to 1f, "mac8_a1" to 0.199999988f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Smooth", "macro6" to "Phase", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Tape", mapOf("wow" to 0.1f, "flutter" to 0.06f, "drive" to 0.35f, "hiss" to 0.03f, "age" to 0.2f))))
 
     private fun divisi63() = Patch("Divisi", "Spin Cycle",
-        mapOf("viola" to 0.6f, "phaser" to 0.9f, "rate" to 0.889075637f, "feedback" to 0.333333343f, "volume" to 0.832f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_a1" to 0.6f, "mac3_d1" to 0.4814815f, "mac3_a1" to 0.6f, "mac4_d1" to 0.5185185f, "mac4_d2" to 0.5555556f, "mac4_d3" to 0.7407407f, "mac4_a1" to 0.65f, "mac4_a2" to 0.575f, "mac4_a3" to 0.4845f, "mac5_d1" to 0.185185179f, "mac5_d2" to 0.7407407f, "mac5_a1" to 0.75f, "mac5_a2" to 0.4105f, "mac6_d1" to 0.259259254f, "mac6_a1" to 0.75f, "mac7_d1" to 0.5925926f, "mac7_d2" to 0.7407407f, "mac7_a1" to 0.199999988f, "mac7_a2" to 0.3845f, "mac8_d1" to 0.148148149f, "mac8_a1" to 0.75f),
-        mapOf("macro1" to "Bright", "macro2" to "Swell", "macro3" to "Longer", "macro4" to "Lush", "macro5" to "Voices", "macro6" to "Brass", "macro7" to "Still", "macro8" to "Low"),
-        family = "motion",
+        mapOf("viola" to 0.6f, "phaser" to 0.9f, "rate" to 0.889075637f, "feedback" to 0.333333343f, "volume" to 0.832f, "age" to 0.5f, "mac1_d1" to 0.4074074f, "mac1_a1" to 0.675f, "mac2_d1" to 0.444444448f, "mac2_d2" to 0.4814815f, "mac2_a1" to 0.6f, "mac2_a2" to 0.6f, "mac3_d1" to 0.5185185f, "mac3_d2" to 0.5555556f, "mac3_a1" to 0.65f, "mac3_a2" to 0.575f, "mac4_d1" to 0.185185179f, "mac4_d2" to 0.7407407f, "mac4_a1" to 0.75f, "mac4_a2" to 0.434000015f, "mac5_d1" to 0.259259254f, "mac5_a1" to 0.75f, "mac6_d1" to 0.5925926f, "mac6_d2" to 0.7407407f, "mac6_a1" to 0.199999988f, "mac6_a2" to 0.4145f, "mac7_d1" to 0.148148149f, "mac7_a1" to 0.75f, "mac8_d1" to 1f, "mac8_a1" to 0.25f),
+        mapOf("macro1" to "Bright", "macro2" to "Slow", "macro3" to "Lush", "macro4" to "Voices", "macro5" to "Brass", "macro6" to "Still", "macro7" to "Low", "macro8" to "Newer"),
+        family = "worn",
         low = 36, high = 84)
 
     private val divisi: List<Patch> by lazy { listOf(divisi0(), divisi1(), divisi2(), divisi3(), divisi4(), divisi5(), divisi6(), divisi7(), divisi8(), divisi9(), divisi10(), divisi11(), divisi12(), divisi13(), divisi14(), divisi15(), divisi16(), divisi17(), divisi18(), divisi19(), divisi20(), divisi21(), divisi22(), divisi23(), divisi24(), divisi25(), divisi26(), divisi27(), divisi28(), divisi29(), divisi30(), divisi31(), divisi32(), divisi33(), divisi34(), divisi35(), divisi36(), divisi37(), divisi38(), divisi39(), divisi40(), divisi41(), divisi42(), divisi43(), divisi44(), divisi45(), divisi46(), divisi47(), divisi48(), divisi49(), divisi50(), divisi51(), divisi52(), divisi53(), divisi54(), divisi55(), divisi56(), divisi57(), divisi58(), divisi59(), divisi60(), divisi61(), divisi62(), divisi63()) }

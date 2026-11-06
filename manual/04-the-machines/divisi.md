@@ -129,22 +129,26 @@ bends and swells its own note.
 
 ## Macros
 
-The **play** page has eight macro knobs. The patches name them Bright, Swell,
-Longer, Lush, Voices, Brass, Phase and Low, or the opposite where a patch
-already has a lot of one (Dark, Sharper, Shorter, Drier, Vowel, Blat, Still,
-Light). They sit at zero when a patch loads, which is the patch as it was
-made.
+The **play** page has eight macro knobs. The patches name them Bright, Slow,
+Lush, Voices, Brass, Phase, Motion and Age, or the opposite where a patch
+already has a lot of one (Dark, Quick, Drier, Vowel, Blat or Smooth, Still,
+Calm, Newer). Slow lengthens the attack and release together. A patch with no
+motion has Low (the contrabass) or Light in Motion's place. They sit at zero
+when a patch loads, which is the patch as it was made.
 
 The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves every note, 24 semitones at 1. The mode, tune,
-octave, bend and the motion's shape and sync can't be reached. Tap a macro's
-name to rename it.
+octave, bend, the players, the stage and the motion's shape and sync can't be
+reached. Tap a macro's name to rename it.
 
 ## Tips
 
 - A big chord with every register up at full velocity gets loud. Pull the
   velocity or volume down a little when you stack everything.
-- **Para Brass** and **Brass Swell** share one filter: hold a chord and add
+- **Brass Swell** and **Dusty Brass** share one filter: hold a chord and add
   notes to it, rather than playing each note fresh.
+- The patches come in seven families: strings, stage (the sections seated),
+  low, choir, brass, motion and worn (an old chorus, some on tape). Most
+  bring their own hall, plate, wooden body or tape as inserts.
