@@ -1354,6 +1354,7 @@ internal val PANEL_WORDS: Map<String, StringResource> = mapOf(
     "squeeze" to Res.string.pw_squeeze,
     "Stack" to Res.string.pw_stack,
     "stack" to Res.string.pw_stack_b26dc7,
+    "stage" to Res.string.pw_stage,
     "stages" to Res.string.pw_stages,
     "Stair" to Res.string.pw_stair,
     "stairs" to Res.string.pw_stairs,

@@ -49,6 +49,24 @@ namespace acidulous::machine {
  * off the other. One player with no drift or vibrato reads the newest
  * sample, so it sounds as the machine did before players. The paraphonic
  * envelope and the volume come after the players.
+ *
+ * The stage: each section has a seat on a stage, scaled by the stage knob
+ * from all in the middle to spread out, violins front left, cellos right,
+ * basses back right, brass back left of middle and the choir at the back.
+ * Before the players each section goes into a line of its own and is read
+ * late by its distance, panned by its direction, made quieter and duller
+ * the further back it sits, and run through a chorus of its own (the same
+ * shape as the ensemble, its LFOs its own), which takes over from the shared
+ * ensemble as the stage opens so the delay through the machine stays the
+ * same. The room knob adds two reflections a section off the side walls,
+ * worked out from its seat, and sends it into a short dark ambience, the
+ * back rows more. The players then read the stage's left and right as well
+ * as the width-weighted mix. With stage and room at 0 the stage is skipped
+ * and the machine sounds as it did before.
+ *
+ * The split knob gives each section its own part of the keyboard, set per
+ * note as it's played, so held notes never change; at 0 every section plays
+ * every note as before.
  */
 class Divisi final : public Machine {
   public:
@@ -58,6 +76,7 @@ class Divisi final : public Machine {
         Ensemble, Speed, Phaser, Rate, Feedback,
         Tune, Octave, BendRange, VelocityAmount, Volume,
         Players, Drift, Vibrato, Vibrate, Scatter,
+        Stage, Room, Split,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -180,6 +199,9 @@ class Divisi final : public Machine {
         BrassLp brassLp;
         float drive = 1.0f, invDrive = 1.0f;
         int brassCountdown = 0;
+        /** How much of it each section plays, fixed at note-on; parted once any is not 1. */
+        float part[6] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+        bool parted = false;
     };
 
     /** One player of a section: a tap on the section's line. */
@@ -201,8 +223,53 @@ class Divisi final : public Machine {
     };
     /** Deals every player's walk, vibrato and seat from fixed seeds. */
     void seatPlayers();
-    /** Runs the players over [n] samples of the registers' mix [mid] and its width-weighted twin [wide], into [outL] and [outR]. */
-    void runPlayers(const float *mid, const float *wide, float *outL, float *outR, int32_t n);
+    /**
+     * Runs the players over [n] samples of the registers' mix [mid] (the
+     * stage's left when [stereo]), its right [right] and its width-weighted
+     * twin [wide], into [outL] and [outR]. On the stage a player's place
+     * tips the balance by [width], [tilt0] to [tilt1] of the way from the
+     * width-weighted mix.
+     */
+    void runPlayers(const float *mid, const float *right, const float *wide, bool stereo, float tilt0, float tilt1,
+                    float width, float *outL, float *outR, int32_t n);
+
+    static constexpr int kSections = 6;
+    static constexpr int kReflections = 2;
+    /** Where a section sits for this block: its delays, samples, and its gains. */
+    struct SeatAt {
+        /** The direct sound's delay, the chorus's reach either side of it, and the reflections' delays. */
+        float delay = 0.0f, reach = 0.0f, erDelay[kReflections] = {};
+        /** The direct sound's gains left and right and into the width-weighted mix, and how much of its air loss is heard. */
+        float gL = 1.0f, gR = 1.0f, gW = 0.0f, air = 0.0f;
+        float erL[kReflections] = {}, erR[kReflections] = {};
+        /** What it sends into the ambience, left and right. */
+        float sendL = 0.0f, sendR = 0.0f;
+    };
+    /** A section's seat: its chorus's LFO phases and rates, its air filter, and what it was set to at the end of the last chunk. */
+    struct Seat {
+        float slowPhase = 0.0f, fastPhase = 0.0f, slowRate = 1.0f, fastRate = 1.0f;
+        float airState = 0.0f;
+        /** Samples its line has heard only silence. */
+        int32_t quiet = 0;
+        SeatAt at;
+    };
+    /**
+     * Works out every section's seat for [stage] and [room] into [goal], with
+     * the sections' choruses [k] of the way in at ensemble depth [ens], and
+     * the gain that keeps the level of the sections at [lv] as they were in
+     * the middle.
+     */
+    /** How much of [note] each section plays, split [split] of the way into its own range. */
+    void partsOf(int note, float split, float part[kSections]) const;
+    void placeSeats(float stage, float room, float k, float ens, const float lv[kSections], SeatAt goal[kSections],
+                    float &norm) const;
+    /**
+     * Writes the sections' [n] samples [sec] into their lines and, when
+     * [staged], reads them back from their seats into [outL], [outR] and the
+     * width-weighted [outW].
+     */
+    void runStage(float sec[][64], bool staged, const SeatAt goal[kSections], float ensDepth, float ensMove,
+                  float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n);
 
     /** Param [p], smoothed, with the macros' routes to it added. */
     float paramOf(int32_t p) const { return val(p, false); }
@@ -265,6 +332,39 @@ class Divisi final : public Machine {
     bool snapPlayers = true;
     int playerCount = 1, seatedFor = 0;
     float driftRatio = 0.0f, vibRatio = 0.0f, vibHz = 5.0f, scatterSamples = 0.0f, playerNorm = 1.0f;
+    /** The sections' seats and lines (one buffer, a power-of-two line each), and the write place. */
+    Seat seats_[kSections];
+    std::vector<float> seatLines;
+    int32_t seatSize = 0, seatMask = 0, seatWrite = 0;
+    bool snapSeats = true;
+    /** The stage and room knobs glided, so a seat's delays move slowly; the chorus's share of the ensemble; the level kept. */
+    float stageNow = 0.0f, roomNow = 0.0f, handNow = 0.0f, stageNorm = 1.0f;
+    /** The last seats worked out, and the stage, room, chorus share and section levels they were for. */
+    SeatAt placed[kSections];
+    float placedFor[4 + kSections] = {-1.0f};
+    float placedNorm = 1.0f;
+    /**
+     * The stage's ambience: a short, dark diffuse sound from what the
+     * sections send it. Two all-passes a side smear the input, then four
+     * lines fed back through a mixing matrix, each through a low-pass.
+     */
+    struct Ambience {
+        std::vector<float> lines, diffusers;
+        int32_t lineSize = 0, lineMask = 0, apSize = 0, apMask = 0, write = 0;
+        int32_t len[4] = {}, apLen[4] = {};
+        float back[4] = {}, damp[4] = {};
+        float dampCoef = 0.0f, out = 0.0f;
+        /** Samples since it last heard anything or rang above a whisper. */
+        int32_t quiet = 0;
+        void prepare(float rate);
+        void clear();
+        bool ringing() const { return quiet <= lineSize * 4; }
+        /** Adds the ambience of [n] samples of [inL] and [inR] to [outL] and [outR]. */
+        void run(const float *inL, const float *inR, float *outL, float *outR, int32_t n);
+    };
+    Ambience ambience;
+    /** The reflections' shared air loss, a side. */
+    float erAir[2] = {};
     /** The ensemble: a line a side read at its middle and two places, and its two LFOs' phases, turns. */
     dsp::DelayLine line, lineR;
     float slowPhase = 0.0f, fastPhase = 0.0f;

@@ -5519,7 +5519,7 @@ val DIVISI_MACRO_DESTS = listOf(
 
 private val DIVISI_PLAYERS = (1..16).map { "$it" }
 
-/** Divisi: the macros, the six registers, the envelope, the players, the ensemble and phaser, and the notes. */
+/** Divisi: the macros, the six registers, the envelope, the players, the stage, the ensemble and phaser, and the notes. */
 @Composable
 private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
@@ -5579,6 +5579,11 @@ private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "vibrato", "vibrato")
                     PanelKnob(b, "vibrate", "rate")
                     PanelKnob(b, "scatter", "scatter")
+                }
+                Group("stage") {
+                    PanelKnob(b, "stage", "spread", PanelAmber)
+                    PanelKnob(b, "room", "room")
+                    PanelKnob(b, "split", "split")
                 }
                 Group("ensemble") {
                     PanelKnob(b, "ensemble", "depth", PanelAmber)

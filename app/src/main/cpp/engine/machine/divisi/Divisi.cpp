@@ -67,6 +67,77 @@ constexpr float kSpreadScatter = 0.29f, kSpreadDrift = 0.09f, kSpreadVibrato = 0
 /** How loud the width-weighted mix is against the mix, by power, for the pan law's extra level at the sides. */
 constexpr float kWideShare = 0.4f;
 
+/**
+ * The stage, metres. The listener sits this far in front of the stage's
+ * front middle; each section's seat at full stage, across (left negative)
+ * and back from the front: violin, viola, cello, contrabass, choir, brass.
+ */
+constexpr float kListener = 5.0f;
+constexpr float kSeatX[6] = {-4.0f, 1.5f, 4.0f, 5.5f, 0.0f, -2.0f};
+constexpr float kSeatY[6] = {0.8f, 2.5f, 1.5f, 6.0f, 13.0f, 10.0f};
+/** The side walls either side of the middle, and what they give back. */
+constexpr float kWallX = 8.0f, kWallGain = 0.7f;
+/** The side walls' reflections' level at full room, against their path lengths. */
+constexpr float kRoomLevel = 1.0f;
+/**
+ * The stage's ambience: what a section sends into it at full room, and how
+ * much more of that the back rows send than the front, over the metres to the
+ * back; it's about as loud wherever you sit, the direct sound is not.
+ */
+constexpr float kSendLevel = 0.55f, kSendFront = 0.3f, kSendDepth = 13.0f;
+/** The ambience's power against what it's sent, on held chords, whose partials sit where it rings longest. */
+constexpr float kAmbiencePower = 1.5f;
+/** Sound's speed, m/s; a direction's pan per radian off the middle (45 degrees is fully to one side). */
+constexpr float kSound = 343.0f, kPanPerRadian = 4.0f / dsp::kPi;
+/** How the direct sound falls with distance, a power of the listener's distance over the seat's, softer than 1/r. */
+constexpr float kFall = 0.8f;
+/** Air loss: the low-pass the far seats lean toward, Hz, the metres before it starts, how much of it per metre after, and the most. */
+constexpr float kAirHz = 2500.0f, kAirFrom = 1.5f, kAirPerMetre = 0.075f, kAirMost = 0.85f;
+/** The reflections' low-pass, Hz. */
+constexpr float kReflectionHz = 4000.0f;
+/**
+ * How much of the reflections' power is heard in the level while the shared
+ * ensemble runs, since on held notes they cancel the direct sound about as
+ * often as they add; once the sections' choruses move the direct sound they
+ * add by power.
+ */
+constexpr float kReflectionShare = 0.35f;
+/** How much two string sections, and a string section and the choir or brass or those two, add as one in the middle. */
+constexpr float kLockedStrings = 0.25f, kLockedOthers = 0.07f;
+/** How long the sections' choruses take to take over from the shared ensemble when the stage opens, s. */
+constexpr float kHandTime = 0.05f;
+/** A chorus's power at [depth] against its dry sound's, its two taps a side wandering apart from it and each other. */
+inline float chorusPower(float depth) {
+    constexpr float taps = 0.65f * 0.65f + 0.35f * 0.35f;
+    return (1.0f - depth) * (1.0f - depth) + depth * depth * taps;
+}
+/** The ambience: its decay to -60 dB, s; the four lines and the four all-passes, ms; the all-passes' gain; its loop's low-pass, Hz. */
+constexpr float kAmbienceTime = 0.9f;
+constexpr float kAmbienceMs[4] = {29.7f, 37.1f, 41.3f, 44.9f};
+constexpr float kDiffuseMs[4] = {4.7f, 3.3f, 5.3f, 3.9f};
+constexpr float kDiffuse = 0.6f, kAmbienceHz = 4500.0f;
+/** Its output level, so a held chord in the middle registers comes out about as loud. */
+constexpr float kAmbienceOut = 0.46f;
+/**
+ * The sections' own ranges, split: the middle of each string section's,
+ * violin to contrabass, as sounding notes; the fade where two meet, either
+ * side of halfway, semitones. The choir and brass each keep a window in the
+ * middle, full between the inner pair and fading out to the outer.
+ */
+constexpr float kRangeCentre[4] = {67.0f, 58.0f, 49.0f, 38.0f};
+constexpr float kRangeFade = 4.0f;
+/** What a note loses to the split it gets back, as a power of the power it lost. */
+constexpr float kPartComp = 0.55f;
+constexpr float kChoirRange[4] = {45.0f, 50.0f, 67.0f, 72.0f};
+constexpr float kBrassRange[4] = {41.0f, 45.0f, 60.0f, 65.0f};
+/** How long the stage and room knobs take to move a seat, s. */
+constexpr float kSeatTime = 0.15f;
+/** The longest a seat's line holds: the furthest reflection, the chorus's middle and reach, with room, s. */
+constexpr float kSeatLine = 0.1f;
+/** The sections' chorus rates against the ensemble's, slow and fast. */
+constexpr float kSeatSlow[6] = {1.0f, 0.83f, 1.13f, 0.91f, 0.77f, 1.07f};
+constexpr float kSeatFast[6] = {1.0f, 1.09f, 0.88f, 1.16f, 0.94f, 0.81f};
+
 /** A step of a player's own generator, 0 to 1. */
 inline float nextRand(uint32_t &r) {
     r = r * 1664525u + 1013904223u;
@@ -173,6 +244,11 @@ const ParamDef *Divisi::paramDefs(int32_t &count) const {
         {"vibrato", 0.0f, 60.0f, 0.0f, Curve::Linear, 0, "cents"},
         {"vibrate", 2.0f, 9.0f, 5.5f, Curve::Exponential, 0, "Hz"},
         {"scatter", 0.0f, 80.0f, 0.0f, Curve::Linear, 0, "ms"},
+        // How far the sections spread over the stage, and how much of the hall's early reflections is heard.
+        {"stage", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"room", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // How far each section keeps to its own part of the keyboard.
+        {"split", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     static ParamDef defs[Count];
     static char names[kMacros * MacroParams][12];
@@ -280,7 +356,12 @@ void Divisi::prepare(int32_t rate) {
     lineSize = 1;
     while (static_cast<float>(lineSize) < kPlayerLine * sampleRate + 4.0f) lineSize <<= 1;
     lineMask = lineSize - 1;
-    playerLines.assign(static_cast<size_t>(lineSize * 2), 0.0f);
+    playerLines.assign(static_cast<size_t>(lineSize * 3), 0.0f);
+    seatSize = 1;
+    while (static_cast<float>(seatSize) < kSeatLine * sampleRate + 4.0f) seatSize <<= 1;
+    seatMask = seatSize - 1;
+    seatLines.assign(static_cast<size_t>(seatSize * kSections), 0.0f);
+    ambience.prepare(sampleRate);
     for (auto &row : compCache) for (float &c : row) c = 0.0f;
     compRef = choirPower((kVowelRows - 1) / 2, kCompNote);
     reset();
@@ -296,6 +377,17 @@ void Divisi::clearState() {
     std::fill(playerLines.begin(), playerLines.end(), 0.0f);
     lineWrite = lineQuiet = 0;
     snapPlayers = true;
+    std::fill(seatLines.begin(), seatLines.end(), 0.0f);
+    seatWrite = 0;
+    snapSeats = true;
+    for (Seat &st : seats_) {
+        st.airState = 0.0f;
+        st.quiet = seatSize + 65;
+        st.at = SeatAt();
+    }
+    erAir[0] = erAir[1] = 0.0f;
+    ambience.clear();
+    placedFor[0] = -1.0f;
     for (auto &side : apState) for (float &s : side) s = 0.0f;
     apBack[0] = apBack[1] = 0.0f;
     sharedBright = Bright();
@@ -319,6 +411,13 @@ void Divisi::reset() {
     }
     slowPhase = 0.0f;
     fastPhase = 0.0f;
+    for (int s = 0; s < kSections; ++s) {
+        Seat &st = seats_[s];
+        st.slowPhase = static_cast<float>(s) * 0.37f - std::floor(static_cast<float>(s) * 0.37f);
+        st.fastPhase = static_cast<float>(s) * 0.61f - std::floor(static_cast<float>(s) * 0.61f);
+        st.slowRate = kSeatSlow[s];
+        st.fastRate = kSeatFast[s];
+    }
     phaserPhase = 0.0f;
     apCoef[0] = apCoef[1] = 0.0f;
     brassCountdown = phaserCountdown = 0;
@@ -518,6 +617,9 @@ void Divisi::noteOn(uint8_t note, uint8_t velocity) {
         k->sounding = std::clamp(static_cast<int>(note) + 12 * steppedTargetOf(Octave), 0, 127);
         k->pc = k->sounding % 12;
         k->octave = k->sounding / 12;
+        partsOf(k->sounding, clampf(goalOf(Split), 0.0f, 1.0f), k->part);
+        k->parted = false;
+        for (float p : k->part) k->parted = k->parted || p != 1.0f;
     }
     const float vel = static_cast<float>(velocity) / 127.0f;
     k->gain = kHouse * velocityGain(vel, goalOf(VelocityAmount));
@@ -600,20 +702,383 @@ float Divisi::stepBright(Bright &b, float target, float level, const BrightCoefs
     return b.y * (kBrassFloor + (1.0f - kBrassFloor) * b.settle) + c.over * (b.slow - b.fast) * target;
 }
 
-void Divisi::runPlayers(const float *mid, const float *wide, float *outL, float *outR, int32_t n) {
+namespace {
+/** A pan from -1 to 1 as gains left and right, both 1 in the middle. */
+inline void panGains(float pan, float g, float &l, float &r) {
+    const float a = (clampf(pan, -1.0f, 1.0f) + 1.0f) * 0.25f * dsp::kPi;
+    l = g * 1.41421356f * std::cos(a);
+    r = g * 1.41421356f * std::sin(a);
+}
+} // namespace
+
+void Divisi::partsOf(int note, float split, float part[kSections]) const {
+    for (int s = 0; s < kSections; ++s) part[s] = 1.0f;
+    if (split <= 0.0f) return;
+    const float lvl[kSections] = {
+        clampf(goalOf(Violin), 0.0f, 1.0f) * kViolinTrim, clampf(goalOf(Viola), 0.0f, 1.0f) * kViolaTrim,
+        clampf(goalOf(Cello), 0.0f, 1.0f) * kCelloTrim, clampf(goalOf(Contrabass), 0.0f, 1.0f) * kBassTrim,
+        clampf(goalOf(Choir), 0.0f, 1.0f) * kChoirTrim, clampf(goalOf(Brass), 0.0f, 1.0f) * kBrassTrim,
+    };
+    const float x = static_cast<float>(note);
+    // An equal-power fade up across [a, b].
+    auto rise = [](float v, float a, float b) {
+        const float t = clampf((v - a) / (b - a), 0.0f, 1.0f);
+        return std::sin(0.5f * dsp::kPi * t);
+    };
+    float r[kSections] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f};
+    // The string sections playing, highest first; each hands over to the next one down halfway between them.
+    int on[4], count = 0;
+    for (int s = 0; s < 4; ++s) {
+        if (lvl[s] > 0.0f) on[count++] = s;
+    }
+    for (int j = 0; j + 1 < count; ++j) {
+        const int hi = on[j], lo = on[j + 1];
+        const float mid = 0.5f * (kRangeCentre[hi] + kRangeCentre[lo]);
+        const float up = rise(x, mid - kRangeFade, mid + kRangeFade);
+        r[hi] *= up;
+        r[lo] *= rise(-x, -mid - kRangeFade, -mid + kRangeFade);
+    }
+    if (count > 0) {
+        // With strings to carry the rest, the choir and brass keep to the middle.
+        r[4] = rise(x, kChoirRange[0], kChoirRange[1]) * rise(-x, -kChoirRange[3], -kChoirRange[2]);
+        r[5] = rise(x, kBrassRange[0], kBrassRange[1]) * rise(-x, -kBrassRange[3], -kBrassRange[2]);
+    }
+    // The note keeps its power over the sections that play it.
+    float all = 0.0f, kept = 0.0f;
+    for (int s = 0; s < kSections; ++s) {
+        part[s] = 1.0f + split * (r[s] - 1.0f);
+        all += lvl[s] * lvl[s];
+        kept += lvl[s] * lvl[s] * part[s] * part[s];
+    }
+    const float comp = kept > 0.0f ? std::fmin(std::pow(all / kept, kPartComp), 2.5f) : 1.0f;
+    for (int s = 0; s < kSections; ++s) part[s] *= comp;
+}
+
+void Divisi::placeSeats(float stage, float room, float k, float ens, const float lv[kSections], SeatAt goal[kSections],
+                        float &norm) const {
+    // Delays are counted from where a seat at the stage's front middle hears it, plus the chorus's middle.
+    const float centre = (std::round(kLineMs * 0.001f * sampleRate) - 1.0f) * k;
+    const float top = static_cast<float>(seatSize - 2);
+    const float perMetre = sampleRate / kSound;
+    float before = 0.0f, after = 0.0f;
+    // The reflections come off the section's line before its chorus, which takes some of the direct sound's power.
+    const float thinned = std::sqrt(chorusPower(ens * k));
+    // How far the sections' choruses have pulled them apart, from each other and from their reflections.
+    const float apart = k * std::fmin(1.0f, 2.0f * ens + stage);
+    const float share = kReflectionShare + (1.0f - kReflectionShare) * apart;
+    for (int s = 0; s < kSections; ++s) {
+        SeatAt &g = goal[s];
+        const float x = kSeatX[s] * stage, y = kSeatY[s] * stage + kListener;
+        const float r = std::sqrt(x * x + y * y);
+        const float level = std::pow(kListener / r, kFall);
+        const float pan = std::atan2(x, y) * kPanPerRadian;
+        g.delay = std::fmin((r - kListener) * perMetre + centre, top);
+        g.reach = k;
+        panGains(pan, level, g.gL, g.gR);
+        g.gW = kWidth[s] * level;
+        g.air = clampf(kAirPerMetre * (r - kListener - kAirFrom), 0.0f, kAirMost);
+        // The reflections, from the seat's images in the side walls.
+        const float ix[kReflections] = {-2.0f * kWallX - x, 2.0f * kWallX - x};
+        float energy = level * level;
+        for (int j = 0; j < kReflections; ++j) {
+            const float ri = std::sqrt(ix[j] * ix[j] + y * y);
+            const float gi = room * kRoomLevel * kWallGain * kListener / ri * thinned;
+            g.erDelay[j] = std::fmin((ri - kListener) * perMetre + centre, top);
+            panGains(std::atan2(ix[j], y) * kPanPerRadian, gi, g.erL[j], g.erR[j]);
+            energy += share * gi * gi;
+        }
+        // Into the ambience from where it sits, the back rows more.
+        const float send = room * kSendLevel * thinned *
+                           (kSendFront + (1.0f - kSendFront) * std::fmin(1.0f, (r - kListener) / kSendDepth));
+        panGains(pan, send, g.sendL, g.sendR);
+        energy += kAmbiencePower * send * send;
+        before += lv[s] * lv[s];
+        after += lv[s] * lv[s] * energy;
+    }
+    // The sections together keep their power: further back is quieter against the rest, not quieter overall.
+    norm = after > 0.0f ? std::sqrt(before / after) : 1.0f;
+    // In the middle the sections partly add as one, by amplitude, as the
+    // dividers lock them; with choruses of their own, or far enough apart,
+    // they add by power. Put back what that takes.
+    float together = 0.0f;
+    for (int i = 0; i < kSections; ++i) {
+        for (int j = i + 1; j < kSections; ++j) {
+            together += 2.0f * lv[i] * lv[j] * (i < 4 && j < 4 ? kLockedStrings : kLockedOthers);
+        }
+    }
+    if (before > 0.0f) norm *= std::sqrt((before + together) / (before + (1.0f - apart) * together));
+}
+
+void Divisi::runStage(float sec[][64], bool staged, const SeatAt goal[kSections], float ensDepth, float ensMove,
+                      float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n) {
+    const float perSample = 1.0f / static_cast<float>(n);
+    float erInL[64], erInR[64], amInL[64], amInR[64];
+    bool anyEr = false;
+    if (staged) {
+        for (int32_t i = 0; i < n; ++i) outL[i] = outR[i] = outW[i] = erInL[i] = erInR[i] = amInL[i] = amInR[i] = 0.0f;
+    }
+    const float airC = 1.0f - std::exp(-2.0f * dsp::kPi * kAirHz / sampleRate);
+    for (int s = 0; s < kSections; ++s) {
+        Seat &st = seats_[s];
+        float *const buf = seatLines.data() + static_cast<size_t>(s) * static_cast<size_t>(seatSize);
+        const float *x = sec[s];
+        // The chorus's LFOs turn whether it's heard or not.
+        const float slow0 = st.slowPhase, fast0 = st.fastPhase;
+        st.slowPhase += slowStep * st.slowRate * static_cast<float>(n);
+        st.fastPhase += fastStep * st.fastRate * static_cast<float>(n);
+        st.slowPhase -= std::floor(st.slowPhase);
+        st.fastPhase -= std::floor(st.fastPhase);
+
+        // Counted to a chunk past the line's length, so the samples a skipped chunk leaves are silent ones too.
+        bool silent = true;
+        for (int32_t i = 0; i < n && silent; ++i) silent = x[i] == 0.0f;
+        st.quiet = silent ? std::min(st.quiet + n, seatSize + 65) : 0;
+        const SeatAt &g = goal[s];
+        SeatAt &a = st.at;
+        if (!staged) {
+            // Where the stage starts from: in the middle, as the mix and its width-weighted twin.
+            a = SeatAt();
+            a.gW = kWidth[s];
+        } else if (snapSeats) {
+            a = g;
+        }
+        if (st.quiet > seatSize + 64) {
+            // Its line is all zeros: nothing to write or read.
+            st.airState = 0.0f;
+            if (staged) a = g;
+            continue;
+        }
+        if (!staged) {
+            for (int32_t i = 0; i < n; ++i) buf[(seatWrite + i) & seatMask] = x[i];
+            st.airState = 0.0f;
+            continue;
+        }
+        // Air loss, then into the line.
+        float airS = st.airState;
+        const float air0 = a.air, dAir = (g.air - a.air) * perSample;
+        for (int32_t i = 0; i < n; ++i) {
+            airS = dsp::undenormal(airS + airC * (x[i] - airS));
+            const float amt = air0 + dAir * static_cast<float>(i + 1);
+            buf[(seatWrite + i) & seatMask] = x[i] + amt * (airS - x[i]);
+        }
+        st.airState = airS;
+
+        auto readAt = [&](int32_t i, float d) {
+            const int32_t whole = static_cast<int32_t>(d);
+            const float frac = d - static_cast<float>(whole);
+            const int32_t at = seatWrite + i - whole;
+            const float p = buf[at & seatMask], q = buf[(at - 1) & seatMask];
+            return p + frac * (q - p);
+        };
+        const float d0 = a.delay, dd = (g.delay - a.delay) * perSample;
+        const float gl0 = a.gL, dgl = (g.gL - a.gL) * perSample;
+        const float gr0 = a.gR, dgr = (g.gR - a.gR) * perSample;
+        const float gw0 = a.gW, dgw = (g.gW - a.gW) * perSample;
+        const float sl0 = a.sendL, dsl = (g.sendL - a.sendL) * perSample;
+        const float sr0 = a.sendR, dsr = (g.sendR - a.sendR) * perSample;
+        const bool chorus = ensDepth > 0.0f && (a.reach > 0.0f || g.reach > 0.0f);
+        if (chorus) {
+            // Its own chorus, the ensemble's shape: two reads a side, the
+            // left moved one way and the right the other about the middle,
+            // as deep as it has taken over.
+            float m0[2], m1[2], dm[2];
+            for (int j = 0; j < 2; ++j) {
+                const float third = static_cast<float>(j) / 3.0f;
+                m0[j] = a.reach * ensMove * (kSlowMs * lfoSin(slow0 + third) + kFastMs * lfoSin(fast0 + third));
+                m1[j] = g.reach * ensMove * (kSlowMs * lfoSin(st.slowPhase + third) + kFastMs * lfoSin(st.fastPhase + third));
+                dm[j] = (m1[j] - m0[j]) * perSample;
+            }
+            const float k0 = a.reach, dk = (g.reach - a.reach) * perSample;
+            for (int32_t i = 0; i < n; ++i) {
+                const float t = static_cast<float>(i + 1);
+                const float d = d0 + dd * t, ma = m0[0] + dm[0] * t, mb = m0[1] + dm[1] * t;
+                const float depth = ensDepth * (k0 + dk * t);
+                const float dry = readAt(i, d);
+                const float wl = 0.65f * readAt(i, d + ma) + 0.35f * readAt(i, d + mb);
+                const float wr = 0.65f * readAt(i, d - ma) + 0.35f * readAt(i, d - mb);
+                outL[i] += (gl0 + dgl * t) * (dry + depth * (wl - dry));
+                outR[i] += (gr0 + dgr * t) * (dry + depth * (wr - dry));
+                outW[i] += (gw0 + dgw * t) * dry;
+                amInL[i] += (sl0 + dsl * t) * dry;
+                amInR[i] += (sr0 + dsr * t) * dry;
+            }
+        } else {
+            for (int32_t i = 0; i < n; ++i) {
+                const float t = static_cast<float>(i + 1);
+                const float dry = readAt(i, d0 + dd * t);
+                outL[i] += (gl0 + dgl * t) * dry;
+                outR[i] += (gr0 + dgr * t) * dry;
+                outW[i] += (gw0 + dgw * t) * dry;
+                amInL[i] += (sl0 + dsl * t) * dry;
+                amInR[i] += (sr0 + dsr * t) * dry;
+            }
+        }
+        bool still = true, heard = false;
+        for (int j = 0; j < kReflections; ++j) {
+            still = still && a.erDelay[j] == g.erDelay[j] && a.erL[j] == g.erL[j] && a.erR[j] == g.erR[j];
+            heard = heard || a.erL[j] != 0.0f || a.erR[j] != 0.0f || g.erL[j] != 0.0f || g.erR[j] != 0.0f;
+        }
+        if (heard && still) {
+            // The usual case, nothing moving: four fixed reads.
+            anyEr = true;
+            int32_t whole[kReflections];
+            float frac[kReflections];
+            for (int j = 0; j < kReflections; ++j) {
+                whole[j] = static_cast<int32_t>(g.erDelay[j]);
+                frac[j] = g.erDelay[j] - static_cast<float>(whole[j]);
+            }
+            for (int32_t i = 0; i < n; ++i) {
+                const int32_t now = seatWrite + i;
+                float l = 0.0f, r = 0.0f;
+                for (int j = 0; j < kReflections; ++j) {
+                    const int32_t at = now - whole[j];
+                    const float p = buf[at & seatMask], q = buf[(at - 1) & seatMask];
+                    const float v = p + frac[j] * (q - p);
+                    l += g.erL[j] * v;
+                    r += g.erR[j] * v;
+                }
+                erInL[i] += l;
+                erInR[i] += r;
+            }
+        } else if (heard) {
+            anyEr = true;
+            for (int j = 0; j < kReflections; ++j) {
+                const float e0 = a.erDelay[j], de = (g.erDelay[j] - a.erDelay[j]) * perSample;
+                const float l0 = a.erL[j], dl = (g.erL[j] - a.erL[j]) * perSample;
+                const float r0 = a.erR[j], dr = (g.erR[j] - a.erR[j]) * perSample;
+                for (int32_t i = 0; i < n; ++i) {
+                    const float t = static_cast<float>(i + 1);
+                    const float v = readAt(i, e0 + de * t);
+                    erInL[i] += (l0 + dl * t) * v;
+                    erInR[i] += (r0 + dr * t) * v;
+                }
+            }
+        }
+        a = g;
+    }
+    seatWrite = (seatWrite + n) & seatMask;
+    if (!staged) {
+        erAir[0] = erAir[1] = 0.0f;
+        return;
+    }
+    // The reflections lose their highs to the walls; then everything is levelled.
+    const float erC = 1.0f - std::exp(-2.0f * dsp::kPi * kReflectionHz / sampleRate);
+    if (anyEr || erAir[0] != 0.0f || erAir[1] != 0.0f) {
+        float el = erAir[0], er = erAir[1];
+        for (int32_t i = 0; i < n; ++i) {
+            el = dsp::undenormal(el + erC * (erInL[i] - el));
+            er = dsp::undenormal(er + erC * (erInR[i] - er));
+            outL[i] += el;
+            outR[i] += er;
+        }
+        erAir[0] = el;
+        erAir[1] = er;
+    }
+    ambience.run(amInL, amInR, outL, outR, n);
+    const float dn = (norm1 - norm0) * perSample;
+    for (int32_t i = 0; i < n; ++i) {
+        const float g = norm0 + dn * static_cast<float>(i + 1);
+        outL[i] *= g;
+        outR[i] *= g;
+        outW[i] *= g;
+    }
+}
+
+void Divisi::Ambience::prepare(float rate) {
+    float longest = 0.0f, longestAp = 0.0f;
+    for (int j = 0; j < 4; ++j) {
+        len[j] = static_cast<int32_t>(kAmbienceMs[j] * 0.001f * rate);
+        apLen[j] = static_cast<int32_t>(kDiffuseMs[j] * 0.001f * rate);
+        longest = std::fmax(longest, static_cast<float>(len[j]));
+        longestAp = std::fmax(longestAp, static_cast<float>(apLen[j]));
+        // Each line's share of the decay, by its length.
+        back[j] = std::pow(10.0f, -3.0f * static_cast<float>(len[j]) / (kAmbienceTime * rate));
+    }
+    lineSize = 1;
+    while (static_cast<float>(lineSize) < longest + 2.0f) lineSize <<= 1;
+    apSize = 1;
+    while (static_cast<float>(apSize) < longestAp + 2.0f) apSize <<= 1;
+    lineMask = lineSize - 1;
+    apMask = apSize - 1;
+    lines.assign(static_cast<size_t>(lineSize * 4), 0.0f);
+    diffusers.assign(static_cast<size_t>(apSize * 4), 0.0f);
+    dampCoef = 1.0f - std::exp(-2.0f * dsp::kPi * kAmbienceHz / rate);
+    clear();
+}
+
+void Divisi::Ambience::clear() {
+    std::fill(lines.begin(), lines.end(), 0.0f);
+    std::fill(diffusers.begin(), diffusers.end(), 0.0f);
+    for (float &d : damp) d = 0.0f;
+    write = 0;
+    quiet = lineSize * 8;
+}
+
+void Divisi::Ambience::run(const float *inL, const float *inR, float *outL, float *outR, int32_t n) {
+    bool silent = true;
+    for (int32_t i = 0; i < n && silent; ++i) silent = inL[i] == 0.0f && inR[i] == 0.0f;
+    // Long after its input stopped it has rung out: nothing to do. (A
+    // whisper is left in its lines, the same every time.)
+    if (silent && quiet > lineSize * 4) {
+        write = (write + n) & lineMask;
+        return;
+    }
+    float *const ap = diffusers.data();
+    float *const ln = lines.data();
+    float peak = 0.0f;
+    for (int32_t i = 0; i < n; ++i) {
+        const int32_t w = (write + i);
+        // One input, the sum, smeared two different ways.
+        const float sum = 0.5f * (inL[i] + inR[i]);
+        float x[2] = {sum, sum};
+        for (int c = 0; c < 2; ++c) {
+            for (int a = 0; a < 2; ++a) {
+                const int j = 2 * c + a;
+                float *b = ap + j * apSize;
+                const float delayed = b[(w - apLen[j]) & apMask];
+                const float v = x[c] - kDiffuse * delayed;
+                b[w & apMask] = v;
+                x[c] = delayed + kDiffuse * v;
+            }
+        }
+        float y[4];
+        for (int j = 0; j < 4; ++j) {
+            const float d = ln[j * lineSize + ((w - len[j]) & lineMask)];
+            damp[j] = dsp::undenormal(damp[j] + dampCoef * (d - damp[j]));
+            y[j] = damp[j];
+        }
+        // An orthogonal mix of the four, so the loop keeps its energy but for each line's decay.
+        const float s01 = y[0] + y[1], d01 = y[0] - y[1], s23 = y[2] + y[3], d23 = y[2] - y[3];
+        const float f[4] = {0.5f * (s01 + s23), 0.5f * (d01 + d23), 0.5f * (s01 - s23), 0.5f * (d01 - d23)};
+        const float feed[4] = {x[0], x[1], x[0], -x[1]};
+        for (int j = 0; j < 4; ++j) ln[j * lineSize + (w & lineMask)] = back[j] * f[j] + feed[j];
+        const float l = kAmbienceOut * (y[0] + y[2]), r = kAmbienceOut * (y[1] - y[3]);
+        outL[i] += l;
+        outR[i] += r;
+        peak = std::fmax(peak, std::fmax(std::fabs(l), std::fabs(r)));
+    }
+    write = (write + n) & lineMask;
+    quiet = (silent && peak < 1e-7f) ? std::min(quiet + n, lineSize * 8) : 0;
+}
+
+void Divisi::runPlayers(const float *mid, const float *right, const float *wide, bool stereo, float tilt0, float tilt1,
+                         float width, float *outL, float *outR, int32_t n) {
     float *const bufM = playerLines.data();
     float *const bufW = bufM + lineSize;
+    float *const bufR = bufW + lineSize;
     // Lines that have heard only silence for their whole length are all
-    // zeros: nothing to write or read.
+    // zeros: nothing to write or read. Counted to a chunk past the length,
+    // so the samples a skipped chunk leaves are silent ones too.
     bool silent = true;
-    for (int32_t i = 0; i < n && silent; ++i) silent = mid[i] == 0.0f && wide[i] == 0.0f;
-    lineQuiet = silent ? std::min(lineQuiet + n, lineSize + 1) : 0;
-    const bool empty = lineQuiet > lineSize;
+    for (int32_t i = 0; i < n && silent; ++i) silent = mid[i] == 0.0f && wide[i] == 0.0f && right[i] == 0.0f;
+    lineQuiet = silent ? std::min(lineQuiet + n, lineSize + 65) : 0;
+    const bool empty = lineQuiet > lineSize + 64;
     if (!empty) {
         for (int32_t i = 0; i < n; ++i) {
             const int32_t w = (lineWrite + i) & lineMask;
             bufM[w] = mid[i];
             bufW[w] = wide[i];
+            bufR[w] = right[i];
         }
     }
 
@@ -657,6 +1122,41 @@ void Divisi::runPlayers(const float *mid, const float *wide, float *outL, float 
 
         const float dd = (d1 - d0) * perSample;
         const float dm = (pl.mid - m0) * perSample;
+        if (stereo) {
+            // The stage's left and right. A player's place tips the balance
+            // between them, as far as the sections are wide on average; until
+            // the sections' choruses have taken over, partly by the
+            // width-weighted mix as in the middle.
+            const float ds = (pl.side - s0) * perSample;
+            const float dTilt = (tilt1 - tilt0) * perSample;
+            if (tilt0 == 1.0f && tilt1 == 1.0f) {
+                for (int32_t i = 0; i < n; ++i) {
+                    const float t = static_cast<float>(i + 1);
+                    const float d = d0 + dd * t;
+                    const int32_t whole = static_cast<int32_t>(d);
+                    const float frac = d - static_cast<float>(whole);
+                    const int32_t at = lineWrite + i - whole, i0 = at & lineMask, i1 = (at - 1) & lineMask;
+                    const float g = m0 + dm * t, b = (s0 + ds * t) * width;
+                    outL[i] += (g - b) * (bufM[i0] + frac * (bufM[i1] - bufM[i0]));
+                    outR[i] += (g + b) * (bufR[i0] + frac * (bufR[i1] - bufR[i0]));
+                }
+                continue;
+            }
+            for (int32_t i = 0; i < n; ++i) {
+                const float t = static_cast<float>(i + 1);
+                const float d = d0 + dd * t;
+                const int32_t whole = static_cast<int32_t>(d);
+                const float frac = d - static_cast<float>(whole);
+                const int32_t at = lineWrite + i - whole, i0 = at & lineMask, i1 = (at - 1) & lineMask;
+                const float g = m0 + dm * t, sd = s0 + ds * t, h = tilt0 + dTilt * t;
+                const float l = bufM[i0] + frac * (bufM[i1] - bufM[i0]), r = bufR[i0] + frac * (bufR[i1] - bufR[i0]);
+                const float w = (1.0f - h) * sd * (bufW[i0] + frac * (bufW[i1] - bufW[i0]));
+                const float b = h * sd * width;
+                outL[i] += (g - b) * l - w;
+                outR[i] += (g + b) * r + w;
+            }
+            continue;
+        }
         if (s0 == 0.0f && pl.side == 0.0f) {
             // In the middle: the mix alone.
             for (int32_t i = 0; i < n; ++i) {
@@ -703,6 +1203,12 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
         slowPhase -= std::floor(slowPhase);
         fastPhase -= std::floor(fastPhase);
         phaserPhase -= std::floor(phaserPhase);
+        for (Seat &st : seats_) {
+            st.slowPhase += slowStep * st.slowRate * static_cast<float>(frames);
+            st.fastPhase += fastStep * st.fastRate * static_cast<float>(frames);
+            st.slowPhase -= std::floor(st.slowPhase);
+            st.fastPhase -= std::floor(st.fastPhase);
+        }
         return true;
     }
 
@@ -828,13 +1334,71 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
         }
     }
 
+    // The stage: the knobs glided, the sections' choruses' share, and each seat.
+    {
+        const float stageGoal = clampf(paramOf(Stage), 0.0f, 1.0f), roomGoal = clampf(paramOf(Room), 0.0f, 1.0f);
+        if (snapSeats) {
+            stageNow = stageGoal;
+            roomNow = roomGoal;
+        } else {
+            const float c = 1.0f - std::exp(-static_cast<float>(frames) / (kSeatTime * sampleRate));
+            stageNow = std::fabs(stageGoal - stageNow) < 1e-5f ? stageGoal : stageNow + (stageGoal - stageNow) * c;
+            roomNow = std::fabs(roomGoal - roomNow) < 1e-5f ? roomGoal : roomNow + (roomGoal - roomNow) * c;
+        }
+    }
+    // The sections' choruses take over in a moment once the stage is open at all, and hand back once it's shut.
+    const float handGoal = stageNow > 0.0f ? 1.0f : 0.0f;
+    if (snapSeats) {
+        handNow = handGoal;
+    }
+    const float handFrom = handNow;
+    {
+        const float step = static_cast<float>(frames) / (kHandTime * sampleRate);
+        handNow = handGoal > handNow ? std::fmin(handGoal, handNow + step) : std::fmax(handGoal, handNow - step);
+    }
+    // Staged too while the ambience still rings.
+    const bool staged = stageNow > 0.0f || roomNow > 0.0f || handNow > 0.0f || handFrom > 0.0f || ambience.ringing();
+    SeatAt seatGoal[kSections];
+    // The sections' width on average, by level, for the players' places on the stage.
+    float meanWidth = 0.0f;
+    {
+        float sum = 0.0f;
+        for (int s = 0; s < kSections; ++s) {
+            meanWidth += kWidth[s] * lv[s];
+            sum += lv[s];
+        }
+        meanWidth = sum > 0.0f ? meanWidth / sum : 0.0f;
+    }
+    const float normFrom = stageNorm;
+    if (staged) {
+        // Worked out again only when something they depend on has moved.
+        const float key[4 + kSections] = {stageNow, roomNow, handNow, ens, lv[0], lv[1], lv[2], lv[3], lv[4], lv[5]};
+        if (!std::equal(key, key + 4 + kSections, placedFor)) {
+            placeSeats(stageNow, roomNow, handNow, ens, lv, placed, placedNorm);
+            std::copy(key, key + 4 + kSections, placedFor);
+        }
+        std::copy(placed, placed + kSections, seatGoal);
+        stageNorm = placedNorm;
+    } else {
+        stageNorm = 1.0f;
+    }
+    const float normStart = snapSeats ? stageNorm : normFrom;
+
     float outPeak = 0.0f;
     constexpr int32_t kChunk = 64;
     float mid[kChunk], wide[kChunk], outL[kChunk], outR[kChunk], envAt[kChunk];
+    float right[kChunk], sec[kSections][kChunk];
     float bus4[kChunk], bus8[kChunk], bus16[kChunk], bus32[kChunk], busSq[kChunk], busBr[kChunk];
+    // The string sections' inputs from keys split between them.
+    float partIn[4][kChunk];
+    bool anyParted = false;
+    for (const Key &k : keys) anyParted = anyParted || (k.used && k.parted);
     for (int32_t at = 0; at < frames; at += kChunk) {
         const int32_t n = std::min(kChunk, frames - at);
         for (int32_t i = 0; i < n; ++i) bus4[i] = bus8[i] = bus16[i] = bus32[i] = busSq[i] = busBr[i] = 0.0f;
+        if (anyParted) {
+            for (int32_t i = 0; i < n; ++i) partIn[0][i] = partIn[1][i] = partIn[2][i] = partIn[3][i] = 0.0f;
+        }
 
         for (int ki = 0; ki < kKeys; ++ki) {
             Key &k = keys[ki];
@@ -855,7 +1419,7 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             k.scoop *= n == kChunk ? scoopChunk : std::pow(scoopFall, static_cast<float>(n));
             if (k.scoop > -1e-4f) k.scoop = 0.0f;
             const float r1 = k.scoop == 0.0f ? 1.0f : std::exp2(k.scoop / 12.0f);
-            const bool kb = brassOn && has16;
+            const bool kb = brassOn && has16 && k.part[5] > 0.0f;
             const uint32_t step16 = step << 1;
             const bool exact = r0 == 1.0f;
             float bstep = static_cast<float>(step16) * r0;
@@ -887,16 +1451,24 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                     const float s16 = has16 ? sawOf(phase << 1, step << 1) : 0.0f;
                     const float s8 = has8 ? sawOf(phase << 2, step << 2) : 0.0f;
                     const float s4 = has4 ? sawOf(phase << 3, step << 3) : 0.0f;
-                    bus32[i] += g * s32;
-                    bus16[i] += g * s16;
-                    bus8[i] += g * s8;
-                    bus4[i] += g * s4;
+                    if (k.parted) {
+                        // Each section its own share of the key.
+                        partIn[0][i] += g * k.part[0] * (s8 + 0.35f * s4);
+                        partIn[1][i] += g * k.part[1] * (s8 + 0.25f * s16);
+                        partIn[2][i] += g * k.part[2] * s16;
+                        partIn[3][i] += g * k.part[3] * s32;
+                    } else {
+                        bus32[i] += g * s32;
+                        bus16[i] += g * s16;
+                        bus8[i] += g * s8;
+                        bus4[i] += g * s4;
+                    }
                     // A divider's square is twice its saw less the next saw up.
                     const float sq8 = has4 ? 2.0f * s8 - s4 : 0.0f;
                     const float sq16 = has8 ? 2.0f * s16 - s8 : 0.0f;
-                    if (choirOn) {
+                    if (choirOn && k.part[4] > 0.0f) {
                         const float comp = compFrom[ki] + (compTo[ki] - compFrom[ki]) * static_cast<float>(at + i + 1) * perFrame;
-                        busSq[i] += g * comp * (kChoirSq8 * sq8 + kChoirSq16 * sq16 + kChoirSaw8 * s8);
+                        busSq[i] += g * comp * k.part[4] * (kChoirSq8 * sq8 + kChoirSq16 * sq16 + kChoirSaw8 * s8);
                     }
                     peak = std::fmax(peak, g);
                 }
@@ -918,7 +1490,7 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                     if (has8) x += sawOf(k.brassPhase << 1, bs << 1);
                     k.brassPhase += bs;
                     // A soft drive, louder notes harder; a small signal passes at unity.
-                    const float y = g * dsp::fastTanh(k.drive * x) * k.invDrive;
+                    const float y = g * k.part[5] * dsp::fastTanh(k.drive * x) * k.invDrive;
                     busBr[i] += poly ? k.brassLp.run(y) : y;
                 }
                 phase += step;
@@ -939,25 +1511,32 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             // The mix, and the same weighted by each section's width.
             float m = 0.0f, w = 0.0f;
             if (lv[0] > 0.0f) {
-                const float v = lv[0] * violinLow.lowpass(violinHigh.highpass(x8 + 0.35f * bus4[i]));
+                const float v = lv[0] * violinLow.lowpass(violinHigh.highpass(anyParted ? x8 + 0.35f * bus4[i] + partIn[0][i] : x8 + 0.35f * bus4[i]));
                 m += v;
                 w += kWidth[0] * v;
-            } else { violinLow.reset(); violinHigh.reset(); }
+                sec[0][i] = v;
+            } else { violinLow.reset(); violinHigh.reset(); sec[0][i] = 0.0f; }
             if (lv[1] > 0.0f) {
-                const float v = lv[1] * violaLow.lowpass(violaHigh.highpass(x8 + 0.25f * bus16[i]));
+                const float v = lv[1] * violaLow.lowpass(violaHigh.highpass(anyParted ? x8 + 0.25f * bus16[i] + partIn[1][i] : x8 + 0.25f * bus16[i]));
                 m += v;
                 w += kWidth[1] * v;
-            } else { violaLow.reset(); violaHigh.reset(); }
+                sec[1][i] = v;
+            } else { violaLow.reset(); violaHigh.reset(); sec[1][i] = 0.0f; }
             if (lv[2] > 0.0f) {
-                const float v = lv[2] * celloLow.lowpass(celloHigh.highpass(bus16[i]));
+                const float v = lv[2] * celloLow.lowpass(celloHigh.highpass(anyParted ? bus16[i] + partIn[2][i] : bus16[i]));
                 m += v;
                 w += kWidth[2] * v;
-            } else { celloLow.reset(); celloHigh.reset(); }
+                sec[2][i] = v;
+            } else { celloLow.reset(); celloHigh.reset(); sec[2][i] = 0.0f; }
             if (lv[3] > 0.0f) {
-                const float v = lv[3] * bassLow.lowpass(bus32[i]);
+                const float v = lv[3] * bassLow.lowpass(anyParted ? bus32[i] + partIn[3][i] : bus32[i]);
                 m += v;
                 w += kWidth[3] * v;
-            } else bassLow.reset();
+                sec[3][i] = v;
+            } else {
+                bassLow.reset();
+                sec[3][i] = 0.0f;
+            }
             if (lv[4] > 0.0f) {
                 const float c = choirHigh.highpass(busSq[i]);
                 float f = 0.0f;
@@ -965,7 +1544,9 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                 const float v = lv[4] * choirLow.lowpass(f);
                 m += v;
                 w += kWidth[4] * v;
+                sec[4][i] = v;
             } else {
+                sec[4][i] = 0.0f;
                 choirHigh.reset();
                 choirLow.reset();
                 for (dsp::Svf &f : formant) f.reset();
@@ -974,6 +1555,9 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                 const float v = lv[5] * (poly ? busBr[i] : brassLow.lowpass(busBr[i]));
                 m += v;
                 w += kWidth[5] * v;
+                sec[5][i] = v;
+            } else {
+                sec[5][i] = 0.0f;
             }
             if (!brassOn || poly) brassLow.reset();
             mid[i] = m;
@@ -983,7 +1567,21 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             envAt[i] = shared.level;
         }
 
-        runPlayers(mid, wide, outL, outR, n);
+        // The stage, which in the middle with no room leaves the mix as it is.
+        {
+            const float f0 = static_cast<float>(at) / static_cast<float>(frames);
+            const float f1 = static_cast<float>(at + n) / static_cast<float>(frames);
+            runStage(sec, staged, seatGoal, ens, reach * msToSamples, slowStep, fastStep,
+                     normStart + (stageNorm - normStart) * f0, normStart + (stageNorm - normStart) * f1, mid, right, wide, n);
+            snapSeats = false;
+        }
+        if (!staged) for (int32_t i = 0; i < n; ++i) right[i] = mid[i];
+        {
+            const float f0 = static_cast<float>(at) / static_cast<float>(frames);
+            const float f1 = static_cast<float>(at + n) / static_cast<float>(frames);
+            runPlayers(mid, right, wide, staged, handFrom + (handNow - handFrom) * f0, handFrom + (handNow - handFrom) * f1,
+                       meanWidth, outL, outR, n);
+        }
         lineWrite = (lineWrite + n) & lineMask;
         snapPlayers = false;
 
@@ -1002,21 +1600,33 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             // partial by the same amount at every moment, so a narrow sound
             // like the choir doesn't swing from side to side, and their pitch
             // moves cancel in the mono sum.
+            // As the stage opens the sections' own choruses take over: this
+            // one's middle comes nearer by as much as theirs moves away, and
+            // its reach shrinks.
+            const float hand = handFrom + (handNow - handFrom) * static_cast<float>(at + i + 1) * perFrame;
+            const float here = 1.0f + (centre - 1.0f) * (1.0f - hand), shrink = reach * (1.0f - hand);
+            const float depth = ens * (1.0f - hand);
             line.write(inL);
             lineR.write(inR);
-            const float dryL = line.read(centre), dryR = lineR.read(centre);
+            const float dryL = line.read(here), dryR = lineR.read(here);
             float l = dryL, r = dryR;
-            if (ens > 0.0f) {
+            if (ens > 0.0f && shrink > 0.0f) {
                 float wetL = 0.0f, wetR = 0.0f;
                 for (int j = 0; j < 2; ++j) {
                     const float third = static_cast<float>(j) / 3.0f;
-                    const float move = reach * msToSamples * (kSlowMs * lfoSin(slowPhase + third) + kFastMs * lfoSin(fastPhase + third));
+                    const float move = shrink * msToSamples * (kSlowMs * lfoSin(slowPhase + third) + kFastMs * lfoSin(fastPhase + third));
                     const float w = j == 0 ? 0.65f : 0.35f;
-                    wetL += w * line.read(centre + move);
-                    wetR += w * lineR.read(centre - move);
+                    wetL += w * line.read(here + move);
+                    wetR += w * lineR.read(here - move);
                 }
-                l = dryL + ens * (wetL - dryL);
-                r = dryR + ens * (wetR - dryR);
+                l = dryL + depth * (wetL - dryL);
+                r = dryR + depth * (wetR - dryR);
+            }
+            if (hand > 0.0f && hand < 1.0f) {
+                // Two choruses in a row while they hand over, each part deep: keep the level of one.
+                const float keep = std::sqrt(chorusPower(ens) / (chorusPower(ens * hand) * chorusPower(depth)));
+                l *= keep;
+                r *= keep;
             }
             slowPhase += slowStep;
             fastPhase += fastStep;

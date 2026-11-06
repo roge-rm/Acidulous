@@ -70,6 +70,27 @@ son est épais, chacun un peu décalé des autres.
 Les joueurs sont répartis sur la largeur de chaque pupitre. Plus il y a de
 dérive, plus le son arrive tard : jusqu’à environ 20 ms au maximum.
 
+## Scène
+
+Chaque pupitre a sa place sur une scène : les violons devant à gauche, les
+altos juste à droite du centre, les violoncelles à droite, les contrebasses
+derrière eux, les cuivres au fond à gauche du centre et le chœur au fond. Un
+pupitre plus loin arrive plus tard, moins fort et plus sourd, et chaque
+pupitre a son propre chorus.
+
+- **écart** : jusqu’où les pupitres s’étalent sur la scène. À 0, ils sont
+  tous au centre et partagent un seul chorus. Au maximum, le chœur arrive
+  environ 30 ms après les violons.
+- **salle** : le son de la scène elle-même : les réflexions sur les murs et
+  une ambiance courte et sombre de moins d’une seconde. On entend les rangs
+  du fond surtout par la salle, ceux de devant surtout en direct. Ce n’est
+  pas une grande salle : mettez une réverbération après pour ça.
+- **partage** : chaque pupitre garde sa partie du clavier : les contrebasses
+  en bas, puis les violoncelles, les altos et les violons en haut, le chœur
+  et les cuivres au milieu. Un accord s’ouvre sur la scène et une ligne qui
+  monte passe des violoncelles aux violons. Chaque note est réglée quand on
+  la joue. Un pupitre éteint laisse sa partie au suivant.
+
 ## Notes
 
 - **accordage** (en cents), **octave**, **bend**, **vélocité** et **volume**.

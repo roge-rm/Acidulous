@@ -386,6 +386,21 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "stage") {
+        // A slow line rising two octaves on the major scale, each note into
+        // the next, then a wide chord held: for hearing where each register
+        // sits and how a split hands a line from one section to the next.
+        static const int kScale[7] = {0, 2, 4, 5, 7, 9, 11};
+        for (int i = 0; i <= 14; ++i) {
+            const int step = 12 * (i / 7) + kScale[i % 7];
+            p.lastOff = hit(p, 0.7f * static_cast<float>(i), 0.75f, note - 12 + step, velocity);
+        }
+        static const int kSpread[6] = {-24, -17, -8, 0, 7, 16};
+        const float at = 0.7f * 15.0f + 0.8f;
+        for (int n = 0; n < 6; ++n) {
+            p.lastOff = hit(p, at + 0.02f * static_cast<float>(n), 5.0f, note + kSpread[n], velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "lead") {
         // A lead line: two long notes to hear the tone settle, a fast run,
         // and a leap at the end that a mono voice has to glide across.
@@ -2644,7 +2659,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
-        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze|stage\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

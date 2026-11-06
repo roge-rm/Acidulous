@@ -66,6 +66,26 @@ each a little off from the others.
 The players sit across each section's width. The more drift, the later the
 sound: up to about 20 ms at full.
 
+## Stage
+
+Each section has a seat on a stage: violins at the front on the left, violas
+just right of the middle, cellos on the right, basses behind them, brass at
+the back left of the middle and the choir at the back. A section further back
+comes in later, quieter and duller, and each section has its own chorus.
+
+- **spread** - how far the sections spread out over the stage. At 0 they all
+  sit in the middle and share one chorus. At full the choir comes in about
+  30 ms after the violins.
+- **room** - the stage's own sound: reflections off the side walls and a
+  short, dark ambience of under a second. The back rows are heard mostly
+  through the room, the front rows mostly direct. It isn't a hall: put a
+  reverb after it for one.
+- **split** - each section keeps to its own part of the keyboard: basses at
+  the bottom, then cellos, violas and violins at the top, with the choir and
+  brass in the middle. A chord fans out over the stage and a rising line
+  moves from the cellos to the violins. It sets each note as it's played.
+  Sections that are off leave their part to the next one.
+
 ## Notes
 
 - **tune** (in cents), **octave**, **bend**, **velocity** and **volume**.
