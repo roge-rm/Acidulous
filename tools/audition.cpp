@@ -401,6 +401,14 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             p.lastOff = hit(p, at + 0.02f * static_cast<float>(n), 5.0f, note + kSpread[n], velocity);
         }
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "held") {
+        // One wide chord held sixteen seconds, for hearing a slow motion
+        // move across the sections while nothing else changes.
+        static const int kSpread[6] = {-24, -12, -5, 0, 4, 12};
+        for (int n = 0; n < 6; ++n) {
+            p.lastOff = hit(p, 0.02f * static_cast<float>(n), 16.0f, note + kSpread[n], velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "lead") {
         // A lead line: two long notes to hear the tone settle, a fast run,
         // and a leap at the end that a mono voice has to glide across.
@@ -2659,7 +2667,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
-        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze|stage\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze|stage|held\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

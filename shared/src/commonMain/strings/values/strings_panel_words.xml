@@ -920,6 +920,11 @@
     <string name="pw_morph_to">morph to</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">motion</string>
+    <string name="pw_motion_balance">motion balance</string>
+    <string name="pw_motion_ensemble">motion ensemble</string>
+    <string name="pw_motion_rate">motion rate</string>
+    <string name="pw_motion_tone">motion tone</string>
+    <string name="pw_motion_vowel">motion vowel</string>
     <string name="pw_motor">motor</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">mouth</string>
@@ -1469,6 +1474,7 @@
     <string name="pw_thru">thru</string>
     <string name="pw_thumb">thumb</string>
     <string name="pw_thunder">thunder</string>
+    <string name="pw_tide">tide</string>
     <string name="pw_tight">tight</string>
     <string name="pw_tighten">tighten</string>
     <string name="pw_tile">tile</string>

@@ -750,6 +750,12 @@
     <string name="pw_morph_to">fondu vers</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">mouvement</string>
+    <string name="pw_motion_balance">balance du mouvement</string>
+    <string name="pw_motion_ensemble">ensemble du mouvement</string>
+    <string name="pw_motion_rate">vitesse du mouvement</string>
+    <string name="pw_motion_tone">ton du mouvement</string>
+    <string name="pw_motion_vowel">voyelle du mouvement</string>
+    <string name="pw_tide">marée</string>
     <string name="pw_motor">moteur</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">bouche</string>

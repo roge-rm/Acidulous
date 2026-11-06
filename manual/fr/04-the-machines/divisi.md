@@ -91,6 +91,38 @@ pupitre a son propre chorus.
   monte passe des violoncelles aux violons. Chaque note est réglée quand on
   la joue. Un pupitre éteint laisse sa partie au suivant.
 
+## Mouvement
+
+Le mouvement fait bouger les pupitres lentement pendant que vous tenez un
+accord, comme s’ils s’écoutaient.
+
+- **forme** : ce qui bouge :
+  - **dérive** : chaque pupitre erre de son côté, plus fort et plus doux,
+    plus clair et plus sombre.
+  - **crescendo** : tout l’ensemble respire en même temps, plus doux et plus
+    sombre au creux de chaque souffle. Un accord joué dans le silence part du
+    creux.
+  - **marée** : une vague traverse la scène, des violons devant à gauche aux
+    contrebasses au fond à droite.
+  - **pas** : une nouvelle balance à chaque pas, comme un chef qui fait
+    entrer et sortir les pupitres. Chaque changement glisse au début de son
+    pas.
+- **vitesse** : de un pas ou une vague en 50 s à deux par seconde.
+- **Synchro** : sur **libre**, elle suit la vitesse. Sinon un pas ou une vague
+  dure une valeur de note ou un nombre de mesures. Pendant que le morceau
+  joue, elle suit sa position, donc une mesure sonne pareil à chaque fois.
+- **balance** : jusqu’où le niveau de chaque pupitre bouge, jusqu’à environ
+  6 dB dans un sens ou l’autre, les pupitres ensemble gardant leur niveau. En
+  crescendo, c’est le souffle, jusqu’à 12 dB plus bas.
+- **voyelle** : jusqu’où la voyelle du chœur bouge.
+- **ton** : jusqu’où chaque pupitre devient plus clair ou plus sombre,
+  jusqu’à une octave dans un sens ou l’autre.
+- **ensemble** : jusqu’où le chorus de chaque pupitre devient plus ou moins
+  profond.
+
+La dérive et la marée s’entendent le mieux avec l’**écart** monté, pour que
+les pupitres soient séparés.
+
 ## Notes
 
 - **accordage** (en cents), **octave**, **bend**, **vélocité** et **volume**.
@@ -110,8 +142,9 @@ La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune.
 Tourner le bouton déplace la destination de bouton fois quantité, sur toute la
 course de cette commande à 1. La hauteur déplace toutes les notes, 24
-demi-tons à 1. Le mode, l’accordage, l’octave et le bend ne sont pas
-accessibles. Touchez le nom d’une macro pour la renommer.
+demi-tons à 1. Le mode, l’accordage, l’octave, le bend et la forme et la
+synchro du mouvement ne sont pas accessibles. Touchez le nom d’une macro pour
+la renommer.
 
 ## Astuces
 

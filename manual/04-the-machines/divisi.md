@@ -86,6 +86,36 @@ comes in later, quieter and duller, and each section has its own chorus.
   moves from the cellos to the violins. It sets each note as it's played.
   Sections that are off leave their part to the next one.
 
+## Motion
+
+Motion moves the sections slowly while you hold a chord, as if they were
+listening to each other.
+
+- **shape** - what moves:
+  - **drift** - each section wanders on its own, louder and softer, brighter
+    and darker.
+  - **swell** - the whole ensemble breathes together, quieter and darker at
+    the bottom of each breath. A chord played from silence starts at the
+    bottom.
+  - **tide** - one wave rolls across the stage, from the violins at the front
+    left to the basses at the back right.
+  - **steps** - a new balance every step, like a conductor bringing sections
+    in and out. Each change glides in over the start of its step.
+- **rate** - how fast, from one step or wave in 50 s to two a second.
+- **sync** - on **free** it uses the rate. Otherwise a step or wave is a note
+  value or a number of bars. While the song plays it follows the song's
+  position, so a bar sounds the same every time.
+- **balance** - how far each section's level moves, up to about 6 dB either
+  way, the sections together staying as loud. On swell it's the breath, up to
+  12 dB down.
+- **vowel** - how far the choir's vowel moves.
+- **tone** - how far each section gets brighter or darker, up to an octave
+  either way.
+- **ensemble** - how far each section's chorus gets deeper or shallower.
+
+Drift and tide are easiest to hear with **spread** up, so the sections sit
+apart.
+
 ## Notes
 
 - **tune** (in cents), **octave**, **bend**, **velocity** and **volume**.
@@ -105,7 +135,8 @@ The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
 knob moves the destination by knob times amount, across that control's whole
 range at 1. Pitch moves every note, 24 semitones at 1. The mode, tune,
-octave and bend can't be reached. Tap a macro's name to rename it.
+octave, bend and the motion's shape and sync can't be reached. Tap a macro's
+name to rename it.
 
 ## Tips
 

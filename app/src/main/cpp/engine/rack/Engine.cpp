@@ -671,7 +671,11 @@ void Engine::renderRack(int32_t r, int32_t *usOut, bool *frozenOut) {
         }
     }
     // A machine can listen too: Diction mouthing another track's sound.
-    if (Machine *m = rack.currentMachine()) m->setKey(keyFor(m->sidechainRack(), r));
+    if (Machine *m = rack.currentMachine()) {
+        m->setKey(keyFor(m->sidechainRack(), r));
+        // The clock has already moved past this block, so back by a block for where it starts.
+        m->onSongTick(clock.phase() - kBlockFrames / clock.samplesPerTickNow() + static_cast<double>(modTransport.songOffset));
+    }
     if (rack.frozenActive()) {
         rack.syncFrozen(scheduler.rackTick(r), clock.bpm());
     } else {

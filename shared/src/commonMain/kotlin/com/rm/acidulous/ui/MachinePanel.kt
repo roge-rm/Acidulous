@@ -5515,11 +5515,15 @@ val DIVISI_MACRO_DESTS = listOf(
     "tone", "attack", "release", "ensemble", "speed", "phaser", "rate", "feedback",
     "velocity", "volume",
     "pitch",
+    "motion balance", "motion vowel", "motion tone", "motion ensemble", "motion rate",
 )
 
 private val DIVISI_PLAYERS = (1..16).map { "$it" }
+private val DIVISI_MOTION = listOf("off", "drift", "swell", "tide", "steps")
+/** The motion's sync: free, then note values and bars, as the engine's kMotionBeats. */
+private val DIVISI_MOTION_SYNC = listOf("free", "1/4", "1/2", "1", "2", "4", "8", "16")
 
-/** Divisi: the macros, the six registers, the envelope, the players, the stage, the ensemble and phaser, and the notes. */
+/** Divisi: the macros, the six registers, the envelope, the players, the stage, the motion, the ensemble and phaser, and the notes. */
 @Composable
 private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
     var section by rememberSaveable { mutableStateOf(0) }
@@ -5584,6 +5588,15 @@ private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "stage", "spread", PanelAmber)
                     PanelKnob(b, "room", "room")
                     PanelKnob(b, "split", "split")
+                }
+                Group("motion") {
+                    PanelStepKnob(b, "motion", DIVISI_MOTION, "shape", PanelAmber)
+                    PanelKnob(b, "mrate", "rate")
+                    PanelStepKnob(b, "msync", DIVISI_MOTION_SYNC, "sync")
+                    PanelKnob(b, "mbalance", "balance", PanelAmber)
+                    PanelKnob(b, "mvowel", "vowel")
+                    PanelKnob(b, "mtone", "tone")
+                    PanelKnob(b, "mensemble", "ensemble")
                 }
                 Group("ensemble") {
                     PanelKnob(b, "ensemble", "depth", PanelAmber)

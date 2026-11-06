@@ -67,6 +67,21 @@ namespace acidulous::machine {
  * The split knob gives each section its own part of the keyboard, set per
  * note as it's played, so held notes never change; at 0 every section plays
  * every note as before.
+ *
+ * Motion: a slow shape gives each section a value from -1 to 1 once a
+ * block (drift, a seeded curve each; swell, all together, with a level for
+ * the whole ensemble; tide, one wave in seat order; steps, a seeded balance
+ * a step, glided in). Its depths turn that into each section's gain (the
+ * sections kept as loud together), filter brightness and chorus depth (kept
+ * as loud), and the choir's vowel. Gains and depths are ramped across the
+ * block; filters and the vowel move a block at a time, as their knobs do.
+ * Synced, the position comes from the song's tick (onSongTick()), as the
+ * inserts' mods have it, so a bar
+ * always sounds the same; the clock runs at the tempo stopped too. Free,
+ * or outside an engine, it runs from reset(). Either way renders repeat. A
+ * jump (a new shape, a locate, play starting) glides out over a quarter
+ * second unless the machine was silent. Off, nothing is touched and the
+ * machine sounds as it did before.
  */
 class Divisi final : public Machine {
   public:
@@ -77,6 +92,7 @@ class Divisi final : public Machine {
         Tune, Octave, BendRange, VelocityAmount, Volume,
         Players, Drift, Vibrato, Vibrate, Scatter,
         Stage, Room, Split,
+        Motion, MotionRate, MotionSync, MotionBalance, MotionVowel, MotionTone, MotionEnsemble,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -91,12 +107,16 @@ class Divisi final : public Machine {
         McOff, McViolin, McViola, McCello, McContrabass, McChoir, McVowel, McBrass, McSweep, McBrassDecay, McBlat,
         McTone, McAttack, McRelease, McEnsemble, McSpeed, McPhaser, McRate, McFeedback,
         McVelocity, McVolume, McPitch,
+        McMotionBalance, McMotionVowel, McMotionTone, McMotionEnsemble, McMotionRate,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum EnvelopeMode : int32_t { Paraphonic = 0, Poly, ModeCount };
+    enum MotionShape : int32_t { MotionOff = 0, MotionDrift, MotionSwell, MotionTide, MotionSteps, MotionShapeCount };
+    /** The synced lengths after off, in quarter notes: 1/4, 1/2, then 1 to 16 bars of 4/4. */
+    static constexpr int kMotionSyncs = 7;
     static constexpr int kKeys = 24;
     static constexpr int kMaxPlayers = 16;
 
@@ -114,11 +134,18 @@ class Divisi final : public Machine {
     void noteBend(uint8_t note, float semitones) override;
     void notePressure(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
+    void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
+    void onSongTick(double tick) override {
+        songClock = tick;
+        inSong = true;
+    }
 
     /** Keys sounding, for tests. */
     int activeKeys() const;
     /** Keys sounding on a divider chain of their own, for tests. */
     int ownChains() const;
+    /** Section [s]'s motion at the end of the last block, -1 to 1, or the swell's level (6), -1 to 0, for tests. */
+    float motionOf(int s) const { return (s >= 0 && s < kMotionChannels) ? motionShown[s] : 0.0f; }
 
   private:
     /** A rising-and-falling level: a straight attack to full and a release that falls 100 dB in its time. */
@@ -266,9 +293,11 @@ class Divisi final : public Machine {
     /**
      * Writes the sections' [n] samples [sec] into their lines and, when
      * [staged], reads them back from their seats into [outL], [outR] and the
-     * width-weighted [outW].
+     * width-weighted [outW]. Each section's chorus is [ens0] to [ens1] deep
+     * across the chunk, its direct sound [keep0] to [keep1] as loud.
      */
-    void runStage(float sec[][64], bool staged, const SeatAt goal[kSections], float ensDepth, float ensMove,
+    void runStage(float sec[][64], bool staged, const SeatAt goal[kSections], const float ens0[kSections],
+                  const float ens1[kSections], const float keep0[kSections], const float keep1[kSections], float ensMove,
                   float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n);
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -377,6 +406,29 @@ class Divisi final : public Machine {
     uint32_t clock = 0;
     int32_t quietSamples = 0;
     bool asleep = true;
+    /**
+     * Motion: each section's value of the shape at the end of the last
+     * block, -1 to 1, and after them the whole ensemble's level (the swell's,
+     * -1 to 0); what a jump left to glide out; the position running from
+     * reset(), in periods.
+     */
+    static constexpr int kMotionChannels = kSections + 1;
+    float motionShown[kMotionChannels] = {}, motionGlide[kMotionChannels] = {};
+    double motionPos = 0.0;
+    int motionShapeWas = -1, motionSyncWas = -1;
+    bool motionLocked = false, motionRestart = false, sleptLast = true;
+    /** The song's tick where the next render starts, and where the last ended; whether an engine gives one; the tempo. */
+    double songClock = 0.0, lockedEnd = 0.0;
+    bool inSong = false;
+    float tempo = 120.0f;
+    /** What motion did at the end of the last block: section gains, chorus depths and their level, and the shared chorus's. */
+    bool motionWasLive = false;
+    float motionGain[kSections] = {}, motionEns[kSections] = {}, motionEnsKeep[kSections] = {};
+    float motionEnsShared = 0.0f, motionEnsSharedKeep = 1.0f;
+    /** Moves the motion on by [frames]: the position, jumps, the glide; true when it moves anything. */
+    bool stepMotion(int32_t frames);
+    /** The shape's value for each section at [pos] periods. */
+    static void shapeAt(int shape, double pos, float out[kMotionChannels]);
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
 };
 
