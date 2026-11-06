@@ -27,6 +27,7 @@
 #include <engine/core/Constants.h>
 #include <engine/core/InputBus.h>
 #include <engine/core/Messages.h>
+#include <engine/core/Reel.h>
 #include <engine/format/WavReader.h>
 #include <engine/format/WavWriter.h>
 #include <engine/effect/EffectRegistry.h>
@@ -159,6 +160,11 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         p.lastOff = hit(p, 0.0f, 0.15f, note, velocity);
         p.lastOff = hit(p, 6.0f, 0.15f, note, velocity);
         p.frames = p.lastOff + secondsToFrames(9.0f);
+    } else if (kind == "reel") {
+        // No notes: Bias plays its reel through, ten seconds and the gap.
+        p.lastOff = secondsToFrames(10.0f);
+        p.frames = secondsToFrames(11.5f);
+        p.ringOut = false;
     } else if (kind == "halo") {
         // Nothing played: for a machine rung by the song alone (Sympath with
         // a sidechain), eight seconds of the song and its ring-out.
@@ -380,6 +386,29 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
             }
         }
         p.frames = p.lastOff + secondsToFrames(4.0f);
+    } else if (kind == "stage") {
+        // A slow line rising two octaves on the major scale, each note into
+        // the next, then a wide chord held: for hearing where each register
+        // sits and how a split hands a line from one section to the next.
+        static const int kScale[7] = {0, 2, 4, 5, 7, 9, 11};
+        for (int i = 0; i <= 14; ++i) {
+            const int step = 12 * (i / 7) + kScale[i % 7];
+            p.lastOff = hit(p, 0.7f * static_cast<float>(i), 0.75f, note - 12 + step, velocity);
+        }
+        static const int kSpread[6] = {-24, -17, -8, 0, 7, 16};
+        const float at = 0.7f * 15.0f + 0.8f;
+        for (int n = 0; n < 6; ++n) {
+            p.lastOff = hit(p, at + 0.02f * static_cast<float>(n), 5.0f, note + kSpread[n], velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "held") {
+        // One wide chord held sixteen seconds, for hearing a slow motion
+        // move across the sections while nothing else changes.
+        static const int kSpread[6] = {-24, -12, -5, 0, 4, 12};
+        for (int n = 0; n < 6; ++n) {
+            p.lastOff = hit(p, 0.02f * static_cast<float>(n), 16.0f, note + kSpread[n], velocity);
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "lead") {
         // A lead line: two long notes to hear the tone settle, a fast run,
         // and a leap at the end that a mono voice has to glide across.
@@ -827,6 +856,7 @@ struct Material {
     std::unique_ptr<::acidulous::machine::formulate::Program> program;
     std::unique_ptr<::acidulous::machine::nexus::Graph> graph;
     std::vector<float> input; // mono, published a block at a time
+    bool scene = false;       // Bias: play scene 1 from the top, a cell holding the reel mix
     /**
      * Another track for a machine with a sidechain: stereo, looped over its
      * first `songLoop` frames, handed over as the key and mixed into the take.
@@ -834,6 +864,84 @@ struct Material {
     std::vector<float> song;
     int64_t songLoop = 0;
 };
+
+/** How long the reel mix plays before its silent gap, and the gap. */
+constexpr float kReelMusicSeconds = 10.0f;
+constexpr float kReelGapSeconds = 1.5f;
+
+/** Scales [v] to [rms] over all of it. */
+void levelTo(std::vector<float> &v, float rms) {
+    double sum = 0.0;
+    for (float x : v) sum += static_cast<double>(x) * x;
+    const auto now = static_cast<float>(std::sqrt(sum / std::max<size_t>(1, v.size())));
+    if (now > 1e-9f) for (float &x : v) x *= rms / now;
+}
+
+/**
+ * What Bias plays in the audition: a recorded song, so a medium has lows,
+ * transients, a voice and a silent gap at the end to work on. Drums from the
+ * break, chords and bass from the music seed, and the real voice from
+ * tools/local.env if there is one (the synthetic phrase otherwise), ten
+ * seconds of it and then a second and a half of nothing, where hiss and
+ * dropouts show. Planar 16-bit stereo, the way a take is held.
+ */
+std::shared_ptr<audio::Reel::Source> reelSource() {
+    const auto music = static_cast<size_t>(kSr * kReelMusicSeconds);
+    const auto total = music + static_cast<size_t>(kSr * kReelGapSeconds);
+    std::vector<float> dl(music), dr(music), cl(music), cr(music);
+    const std::unique_ptr<audio::Take> brk = breakLoop();
+    const std::unique_ptr<audio::Take> seed = musicSeed();
+    const size_t chords = static_cast<size_t>(kSr * 8.0f); // the seed's four chords, then its tail
+    for (size_t i = 0; i < music; ++i) {
+        const size_t b = i % static_cast<size_t>(brk->frames);
+        dl[i] = brk->left[b];
+        dr[i] = brk->right[b];
+        const size_t c = i % chords;
+        cl[i] = seed->left[c];
+        cr[i] = seed->right[c];
+    }
+    levelTo(dl, 0.05f);
+    levelTo(dr, 0.05f);
+    levelTo(cl, 0.045f);
+    levelTo(cr, 0.045f);
+    std::vector<float> voice;
+    const char *file = std::getenv("ACIDULOUS_INPUT_FILE");
+    std::string error;
+    if (file != nullptr && *file != '\0') voice = fileMono(file, error);
+    if (voice.empty()) voice = voicePhrase();
+    levelTo(voice, 0.06f);
+    std::vector<int16_t> planes(total * 2, 0);
+    const auto fade = static_cast<size_t>(kSr * 0.05f);
+    for (size_t i = 0; i < music; ++i) {
+        float env = 1.0f;
+        if (i + fade > music) env = static_cast<float>(music - i) / static_cast<float>(fade);
+        const float v = i < voice.size() ? voice[i] : 0.0f;
+        const float l = (dl[i] + cl[i] + v) * env;
+        const float r = (dr[i] + cr[i] + v) * env;
+        planes[i] = static_cast<int16_t>(std::lround(std::clamp(l, -1.0f, 1.0f) * 32767.0f));
+        planes[total + i] = static_cast<int16_t>(std::lround(std::clamp(r, -1.0f, 1.0f) * 32767.0f));
+    }
+    auto src = std::make_shared<audio::Reel::Source>();
+    src->hold(std::move(planes), static_cast<int32_t>(total), true);
+    return src;
+}
+
+/** A reel with one cell, scene 1, the mix on its first lane. The machine owns it. */
+void mountReel(Machine *m, Material &mat) {
+    static const std::shared_ptr<audio::Reel::Source> src = reelSource();
+    auto *reel = new audio::Reel();
+    audio::Reel::Cell cell;
+    cell.sceneId = 1;
+    audio::Reel::Region &r = cell.lanes[0];
+    r.source = src;
+    r.offset = 0;
+    r.frames = src->frames;
+    r.bpm = 120.0f;
+    r.ticks = static_cast<int32_t>(static_cast<double>(src->frames) * 120.0 * kPPQN / (60.0 * kSr));
+    reel->cells.push_back(cell);
+    delete static_cast<audio::Reel *>(m->swapObject(0, reel));
+    mat.scene = true;
+}
 
 /**
  * Cumulus is silent until it's given a table, built off the audio thread from
@@ -849,6 +957,10 @@ void buildCumulusCloud(Machine *m, Material &mat) {
 void mountMaterial(Machine *m, const std::string &machine, const std::string &kind, Material &mat) {
     if (machine == "Cumulus") {
         buildCumulusCloud(m, mat);
+        return;
+    }
+    if (kind == "reel") {
+        mountReel(m, mat);
         return;
     }
     if (kind == "kit" || (kind.empty() && machine == "Forage")) {
@@ -1032,6 +1144,7 @@ std::string defaultMaterial(const std::string &machine) {
     if (machine == "Pollen") return "seed";
     if (machine == "Mosaic") return "map";
     if (machine == "Molt") return "voice";
+    if (machine == "Bias") return "reel";
     return "none";
 }
 
@@ -1209,6 +1322,7 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
         }
         const auto t0 = static_cast<int64_t>(static_cast<double>(at) * ticksPerFrame);
         const auto t1 = static_cast<int64_t>(static_cast<double>(at + kBlock) * ticksPerFrame);
+        if (mat.scene) m->onScene(1, t0, true, false);
         m->onBlock(t0, t1, bpm);
         std::memset(L, 0, sizeof(L));
         std::memset(R, 0, sizeof(R));
@@ -2012,7 +2126,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         // purpose. Every patch is measured on one plain note so patches of
         // different kinds can be compared. A kit is measured one voice at a
         // time instead.
-        const std::string measureKind = kit != nullptr ? "voices" : "note";
+        // Bias has no notes, so it's measured on the reel it plays.
+        const std::string measureKind = kit != nullptr ? "voices" : bank.unit == "Bias" ? "reel" : "note";
         const Phrase measurePhrase = buildPhrase(measureKind, note, opt.velocity, opt.bpm, kit);
         const Take measureTake = render(m.get(), measurePhrase, opt.bpm, mat, &chain);
         gMeasureTake = measureTake;
@@ -2052,6 +2167,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         std::string listenKind = !opt.phrase.empty() ? opt.phrase
                                : !patch.role.empty() ? patch.role
                                                      : bank.role;
+        if (bank.unit == "Bias") listenKind = "reel";
         if (kit != nullptr && (listenKind == "note" || listenKind.empty())) listenKind = "beat";
         // A slicer's demo is its loop.
         if (bank.unit == "Dice" && listenKind == "beat") listenKind = "loop";
@@ -2551,7 +2667,7 @@ void usage() {
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
         "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
-        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze\n"
+        "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze|stage|held\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"
         "  --note N  --vel N  --bpm N  --set name=value\n"

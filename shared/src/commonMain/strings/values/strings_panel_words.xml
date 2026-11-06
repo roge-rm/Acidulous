@@ -158,6 +158,7 @@
     <string name="pw_bits">bits</string>
     <string name="pw_biwa">biwa</string>
     <string name="pw_black">black</string>
+    <string name="pw_blat">blat</string>
     <string name="pw_bleed">bleed</string>
     <string name="pw_blend">blend</string>
     <string name="pw_bloom">bloom</string>
@@ -186,6 +187,7 @@
     <string name="pw_brake">brake</string>
     <string name="pw_brass">Brass</string>
     <string name="pw_brass_80c48f">brass</string>
+    <string name="pw_brass_decay">brass decay</string>
     <string name="pw_brassiness">brassiness</string>
     <string name="pw_breath">breath</string>
     <string name="pw_breathe">breathe</string>
@@ -218,6 +220,7 @@
     <string name="pw_caw">caw</string>
     <string name="pw_ceiling">ceiling</string>
     <string name="pw_celesta">celesta</string>
+    <string name="pw_cello">cello</string>
     <string name="pw_central">central</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chamber</string>
@@ -281,6 +284,7 @@
     <string name="pw_consonant_level">consonant level</string>
     <string name="pw_consonants">consonants</string>
     <string name="pw_contacts">contacts</string>
+    <string name="pw_contrabass">contrabass</string>
     <string name="pw_converge">converge</string>
     <string name="pw_coo">coo</string>
     <string name="pw_copies">copies</string>
@@ -742,6 +746,7 @@
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">lattice</string>
     <string name="pw_launeddas">launeddas</string>
+    <string name="pw_layers">layers</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">leakage</string>
     <string name="pw_learn">learn</string>
@@ -915,6 +920,11 @@
     <string name="pw_morph_to">morph to</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">motion</string>
+    <string name="pw_motion_balance">motion balance</string>
+    <string name="pw_motion_ensemble">motion ensemble</string>
+    <string name="pw_motion_rate">motion rate</string>
+    <string name="pw_motion_tone">motion tone</string>
+    <string name="pw_motion_vowel">motion vowel</string>
     <string name="pw_motor">motor</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">mouth</string>
@@ -1027,6 +1037,7 @@
     <string name="pw_performance">performance</string>
     <string name="pw_phase">phase</string>
     <string name="pw_phaser">Phaser</string>
+    <string name="pw_phaser_66cfbe">phaser</string>
     <string name="pw_phrase">phrase</string>
     <string name="pw_pick">pick</string>
     <string name="pw_picked">picked</string>
@@ -1134,6 +1145,7 @@
     <string name="pw_reedy">reedy</string>
     <string name="pw_reggae">reggae</string>
     <string name="pw_register">register</string>
+    <string name="pw_registers">registers</string>
     <string name="pw_rel">rel</string>
     <string name="pw_relative">relative</string>
     <string name="pw_release">release</string>
@@ -1342,6 +1354,7 @@
     <string name="pw_squeeze">squeeze</string>
     <string name="pw_stack">Stack</string>
     <string name="pw_stack_b26dc7">stack</string>
+    <string name="pw_stage">stage</string>
     <string name="pw_stages">stages</string>
     <string name="pw_stair">Stair</string>
     <string name="pw_stairs">stairs</string>
@@ -1461,6 +1474,7 @@
     <string name="pw_thru">thru</string>
     <string name="pw_thumb">thumb</string>
     <string name="pw_thunder">thunder</string>
+    <string name="pw_tide">tide</string>
     <string name="pw_tight">tight</string>
     <string name="pw_tighten">tighten</string>
     <string name="pw_tile">tile</string>
@@ -1584,6 +1598,8 @@
     <string name="pw_vib_width">vib width</string>
     <string name="pw_vibes">vibes</string>
     <string name="pw_vibrato">vibrato</string>
+    <string name="pw_viola">viola</string>
+    <string name="pw_violin">violin</string>
     <string name="pw_voice">voice</string>
     <string name="pw_voices">voices</string>
     <string name="pw_voicing">voicing</string>

@@ -270,6 +270,7 @@ fun MachinePanel(
             "Chanter" -> ChanterPanel(binding, track, trackIndex, editor)
             "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
             "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
+            "Divisi" -> DivisiPanel(binding, track, trackIndex, editor)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -5491,6 +5492,131 @@ private fun FathomPanel(b: ParamBinding, pad: Int, track: Track, trackIndex: Int
                     PanelKnob(b, "velocity", "velocity")
                     PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
                     PanelKnob(b, "bend", "bend")
+                }
+                Group("out") {
+                    PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
+}
+
+/** Where a Divisi macro route goes, in the engine's MacroDest order. */
+val DIVISI_MACRO_DESTS = listOf(
+    "off", "violin", "viola", "cello", "contrabass", "choir", "vowel", "brass", "sweep", "brass decay", "blat",
+    "tone", "attack", "release", "ensemble", "speed", "phaser", "rate", "feedback",
+    "velocity", "volume",
+    "pitch",
+    "motion balance", "motion vowel", "motion tone", "motion ensemble", "motion rate",
+    "age",
+    "players", "drift", "vibrato", "vibrate", "scatter", "stage", "room", "split",
+)
+
+private val DIVISI_PLAYERS = (1..16).map { "$it" }
+private val DIVISI_MOTION = listOf("off", "drift", "swell", "tide", "steps")
+/** The motion's sync: free, then note values and bars, as the engine's kMotionBeats. */
+private val DIVISI_MOTION_SYNC = listOf("free", "1/4", "1/2", "1", "2", "4", "8", "16")
+
+/** Divisi: the macros, the six registers, the envelope, the players, the stage, the motion, the ensemble and phaser, and the notes. */
+@Composable
+private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(listOf("play", "registers", "ensemble", "notes", "macros"), section, { section = it }) { sec ->
+        when (sec) {
+            0 -> Group("macros") {
+                for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", DIVISI_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", DIVISI_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", DIVISI_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", DIVISI_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
+                Group("registers") {
+                    PanelKnob(b, "violin", "violin", PanelAmber)
+                    PanelKnob(b, "viola", "viola", PanelAmber)
+                    PanelKnob(b, "cello", "cello", PanelAmber)
+                    PanelKnob(b, "contrabass", "contrabass", PanelAmber)
+                    PanelKnob(b, "tone", "tone")
+                }
+                Group("choir") {
+                    PanelKnob(b, "choir", "level", PanelAmber)
+                    PanelKnob(b, "vowel", "vowel")
+                }
+                Group("brass") {
+                    PanelKnob(b, "brass", "level", PanelAmber)
+                    PanelKnob(b, "sweep", "sweep")
+                    PanelKnob(b, "brassdecay", "decay")
+                    PanelKnob(b, "blat", "blat", PanelPink)
+                }
+            }
+            2 -> {
+                Group("envelope") {
+                    PanelSwitch(b, "mode", listOf("para", "poly"), "mode")
+                    PanelKnob(b, "attack", "attack", PanelAmber)
+                    PanelKnob(b, "release", "release", PanelAmber)
+                }
+                Group("players") {
+                    PanelStepKnob(b, "players", DIVISI_PLAYERS, "players", PanelAmber)
+                    PanelKnob(b, "drift", "drift")
+                    PanelKnob(b, "vibrato", "vibrato")
+                    PanelKnob(b, "vibrate", "rate")
+                    PanelKnob(b, "scatter", "scatter")
+                }
+                Group("stage") {
+                    PanelKnob(b, "stage", "spread", PanelAmber)
+                    PanelKnob(b, "room", "room")
+                    PanelKnob(b, "split", "split")
+                }
+                Group("motion") {
+                    PanelStepKnob(b, "motion", DIVISI_MOTION, "shape", PanelAmber)
+                    PanelKnob(b, "mrate", "rate")
+                    PanelStepKnob(b, "msync", DIVISI_MOTION_SYNC, "sync")
+                    PanelKnob(b, "mbalance", "balance", PanelAmber)
+                    PanelKnob(b, "mvowel", "vowel")
+                    PanelKnob(b, "mtone", "tone")
+                    PanelKnob(b, "mensemble", "ensemble")
+                }
+                Group("ensemble") {
+                    PanelKnob(b, "ensemble", "depth", PanelAmber)
+                    PanelKnob(b, "speed", "speed")
+                    PanelKnob(b, "age", "age")
+                }
+                Group("phaser") {
+                    PanelKnob(b, "phaser", "depth", PanelAmber)
+                    PanelKnob(b, "rate", "rate")
+                    PanelKnob(b, "feedback", "feedback")
+                }
+            }
+            else -> {
+                Group("notes") {
+                    PanelKnob(b, "tune", "tune")
+                    PanelStepKnob(b, "octave", (-2..2).map { if (it > 0) "+$it" else "$it" }, "octave")
+                    PanelKnob(b, "bend", "bend")
+                    PanelKnob(b, "velocity", "velocity")
                 }
                 Group("out") {
                     PanelKnob(b, "volume", "volume", PanelAmber)

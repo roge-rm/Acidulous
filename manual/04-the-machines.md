@@ -10,6 +10,7 @@ Each track holds one machine and you can use multiple of the same machine.
 ## Keys and pads
 
 - [**Cumulus**](04-the-machines/cumulus.md) - big, smooth pads built from a spectrum of partials.
+- [**Divisi**](04-the-machines/divisi.md) - a string ensemble: violins to contrabass, a choir and brass, through a thick chorus.
 - [**Manual**](04-the-machines/manual.md) - an organ with two manuals, pedals, four models and a rotary cabinet.
 - [**Formulate**](04-the-machines/formulate.md) - an 8-bit chip synth with tracker tables, and a waveform you can type in as a formula.
 

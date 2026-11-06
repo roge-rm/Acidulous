@@ -59,6 +59,14 @@ class Machine {
      */
     virtual void onCountIn(double /*ticksLeft*/) {}
     /**
+     * Once per block before onBlock(), on the block's job: the song tick the
+     * block starts on, with its fraction: the clock's phase plus the offset
+     * the inserts' mods add (ModTransport::songOffset). Runs at the tempo
+     * stopped too. For a machine whose slow movement follows the song's
+     * position (Divisi's motion).
+     */
+    virtual void onSongTick(double /*tick*/) {}
+    /**
      * The track's tuning: each MIDI note's ratio to equal temperament, or
      * null for equal temperament. The rack sets it before every block, and
      * machines read it through [noteHz].

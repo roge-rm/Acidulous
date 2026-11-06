@@ -116,6 +116,7 @@
     <string name="pw_bits">bits</string>
     <string name="pw_biwa">biwa</string>
     <string name="pw_black">noires</string>
+    <string name="pw_blat">éclat</string>
     <string name="pw_bleed">fuite</string>
     <string name="pw_blend">fondu</string>
     <string name="pw_bloom">éclosion</string>
@@ -137,6 +138,7 @@
     <string name="pw_bp6">BP6</string>
     <string name="pw_brake">frein</string>
     <string name="pw_brass">Cuivre</string>
+    <string name="pw_brass_decay">déclin des cuivres</string>
     <string name="pw_brassiness">cuivré</string>
     <string name="pw_breath">souffle</string>
     <string name="pw_breathe">respirer</string>
@@ -165,6 +167,7 @@
     <string name="pw_caw">croassement</string>
     <string name="pw_ceiling">plafond</string>
     <string name="pw_celesta">célesta</string>
+    <string name="pw_cello">violoncelle</string>
     <string name="pw_central">centre</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chambre</string>
@@ -215,6 +218,7 @@
     <string name="pw_conga">conga</string>
     <string name="pw_consonant_level">niveau consonnes</string>
     <string name="pw_consonants">consonnes</string>
+    <string name="pw_contrabass">contrebasse</string>
     <string name="pw_converge">converge</string>
     <string name="pw_coo">roucoulement</string>
     <string name="pw_copies">copies</string>
@@ -615,6 +619,7 @@
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">treillis</string>
     <string name="pw_launeddas">launeddas</string>
+    <string name="pw_layers">couches</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>
     <string name="pw_learn">apprendre</string>
@@ -745,6 +750,12 @@
     <string name="pw_morph_to">fondu vers</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">mouvement</string>
+    <string name="pw_motion_balance">balance du mouvement</string>
+    <string name="pw_motion_ensemble">ensemble du mouvement</string>
+    <string name="pw_motion_rate">vitesse du mouvement</string>
+    <string name="pw_motion_tone">ton du mouvement</string>
+    <string name="pw_motion_vowel">voyelle du mouvement</string>
+    <string name="pw_tide">marée</string>
     <string name="pw_motor">moteur</string>
     <string name="pw_mouth">Mouth</string>
     <string name="pw_mouth_87d178">bouche</string>
@@ -845,6 +856,7 @@
     <string name="pw_performance">jeu</string>
     <string name="pw_phase">phase</string>
     <string name="pw_phaser">Phaser</string>
+    <string name="pw_phaser_66cfbe">phaser</string>
     <string name="pw_phrase">phrase</string>
     <string name="pw_pick">médiator</string>
     <string name="pw_pickup">capteur</string>
@@ -940,6 +952,7 @@
     <string name="pw_reedy">anché</string>
     <string name="pw_reggae">reggae</string>
     <string name="pw_register">registre</string>
+    <string name="pw_registers">registres</string>
     <string name="pw_rel">rel.</string>
     <string name="pw_relative">relatif</string>
     <string name="pw_release">relâche</string>
@@ -1122,6 +1135,7 @@
     <string name="pw_squeeze">serrer</string>
     <string name="pw_stack">Pile</string>
     <string name="pw_stages">étages</string>
+    <string name="pw_stage">scène</string>
     <string name="pw_stairs">escalier</string>
     <string name="pw_start">début</string>
     <string name="pw_started_by">excité par</string>
@@ -1305,6 +1319,8 @@
     <string name="pw_vib">vib</string>
     <string name="pw_vibes">vibra</string>
     <string name="pw_vibrato">vibrato</string>
+    <string name="pw_viola">alto</string>
+    <string name="pw_violin">violon</string>
     <string name="pw_voice">voix</string>
     <string name="pw_voices">voix</string>
     <string name="pw_voicing">disposition</string>

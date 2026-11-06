@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Divisi, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -28,6 +28,7 @@
 #include <engine/machine/tongue/Tongue.h>
 #include <engine/machine/sympath/Sympath.h>
 #include <engine/machine/chanter/Chanter.h>
+#include <engine/machine/divisi/Divisi.h>
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <engine/machine/diction/Diction.h>
@@ -1965,6 +1966,69 @@ void chanterRoutes() {
     }
 }
 
+// Divisi: routes to the players, drift, vibrato, vibrate, scatter, stage, room and split match their knobs.
+void divisiRoutes() {
+    using Dv = acidulous::machine::Divisi;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    const std::vector<std::pair<std::string, float>> section = {{"players", 4.0f}};
+    // Players 1 by default: a route of 0.2 is the knob at 4 players, whole players either way.
+    {
+        const auto plain = playHeld("Divisi", {}, {57, 64}, blocks);
+        const auto knob = playHeld("Divisi", {{"players", 4.0f}, {"scatter", 20.0f}}, {57, 64}, blocks);
+        Route r{1, 1, Dv::McPlayers, 0.2f, 1.0f};
+        const auto routed = playHeld("Divisi", {{"scatter", 20.0f}}, {57, 64}, blocks, &r, Dv::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Divisi: a route to the players matches the knob", buf);
+    }
+    struct Case { const char *name; const char *what; int dest; float add; float knob; };
+    const Case cases[] = {
+        {"drift", "drift", Dv::McDrift, 0.4f, 10.0f},
+        {"vibrato", "vibrato", Dv::McVibrato, 0.5f, 30.0f},
+        {"scatter", "scatter", Dv::McScatter, 0.5f, 40.0f},
+    };
+    int n = 2;
+    for (const Case &c : cases) {
+        const auto plain = playHeld("Divisi", section, {57, 64}, blocks);
+        auto set = section;
+        set.push_back({c.name, c.knob});
+        const auto knob = playHeld("Divisi", set, {57, 64}, blocks);
+        Route r{n, 1, c.dest, c.add, 1.0f};
+        ++n;
+        const auto routed = playHeld("Divisi", section, {57, 64}, blocks, &r, Dv::MacroDestCount);
+        const std::string what = std::string("Divisi: a route to ") + c.what + " matches the knob";
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, what.c_str(), buf);
+    }
+    // Vibrate 5.5 Hz by default, exponential: a route of 0.3 moves it 0.3 of its range, with some vibrato to hear it.
+    {
+        const ParamDef &d = MachineRegistry::create("Divisi")->params().def(Dv::Vibrate);
+        const float to = d.map(d.unmap(5.5f) + 0.3f);
+        auto base = section;
+        base.push_back({"vibrato", 40.0f});
+        auto set = base;
+        set.push_back({"vibrate", to});
+        const auto plain = playHeld("Divisi", base, {57, 64}, blocks);
+        const auto knob = playHeld("Divisi", set, {57, 64}, blocks);
+        Route r{n++, 1, Dv::McVibrate, 0.3f, 1.0f};
+        const auto routed = playHeld("Divisi", base, {57, 64}, blocks, &r, Dv::MacroDestCount);
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Divisi: a route to vibrate matches the knob", buf);
+    }
+    // Stage, room and split.
+    const Case more[] = {
+        {"stage", "stage", Dv::McStage, 0.6f, 0.6f},
+        {"room", "room", Dv::McRoom, 0.6f, 0.6f},
+        {"split", "split", Dv::McSplit, 0.7f, 0.7f},
+    };
+    for (const Case &c : more) {
+        const auto plain = playHeld("Divisi", {}, {40, 60, 76}, blocks);
+        const auto knob = playHeld("Divisi", {{c.name, c.knob}}, {40, 60, 76}, blocks);
+        Route r{n, 1, c.dest, c.add, 1.0f};
+        ++n;
+        const auto routed = playHeld("Divisi", {}, {40, 60, 76}, blocks, &r, Dv::MacroDestCount);
+        const std::string what = std::string("Divisi: a route to ") + c.what + " matches the knob";
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, what.c_str(), buf);
+    }
+}
+
 // Pollen: routes to density, size, cutoff and bits match their knobs.
 void pollenRoutes() {
     using Po = acidulous::machine::Pollen;
@@ -2312,6 +2376,12 @@ int main() {
     using Ch = acidulous::machine::Chanter;
     basics("Chanter", Ch::MacroDestCount, Ch::McVolume, Ch::McPitch, Ch::McOff, Ch::kMacros);
     chanterRoutes();
+    using Dv = acidulous::machine::Divisi;
+    // Violins alone and no chorus, so the zero crossings count the note.
+    gUnits = {{"viola", 0.0f}, {"cello", 0.0f}, {"ensemble", 0.0f}};
+    basics("Divisi", Dv::MacroDestCount, Dv::McVolume, Dv::McPitch, Dv::McOff, Dv::kMacros);
+    gUnits.clear();
+    divisiRoutes();
     using Po = acidulous::machine::Pollen;
     // Volume 0.8 of 1.5: a route of -0.5 leaves 0.05, and half of it 0.425.
     basics("Pollen", Po::MacroDestCount, Po::McVolume, Po::McPitch, Po::McOff, Po::kMacros, 0.05 / 0.8, 0.425 / 0.8);
