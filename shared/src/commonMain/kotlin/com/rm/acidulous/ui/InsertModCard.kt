@@ -154,10 +154,12 @@ private fun StepBars(a: ModAccess, length: Int) {
     val count by rememberUpdatedState(length)
     val col = Acid.colors
     val said = panelWord("steps")
+    // As tall as the knobs beside it, label included, so the card doesn't grow.
+    val barsH = LocalControlH.current - 18.dp
     Column {
         Text(said, color = col.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace)
         Canvas(
-            Modifier.padding(top = 2.dp).width((length * 11).dp).height(PanelControlH - 18.dp)
+            Modifier.padding(top = 2.dp).width((length * 11).dp).height(barsH)
                 .semantics { contentDescription = said }
                 .pointerInput(Unit) {
                     detectTapGestures { p ->
