@@ -5516,6 +5516,7 @@ val DIVISI_MACRO_DESTS = listOf(
     "velocity", "volume",
     "pitch",
     "motion balance", "motion vowel", "motion tone", "motion ensemble", "motion rate",
+    "age",
 )
 
 private val DIVISI_PLAYERS = (1..16).map { "$it" }
@@ -5601,6 +5602,7 @@ private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 Group("ensemble") {
                     PanelKnob(b, "ensemble", "depth", PanelAmber)
                     PanelKnob(b, "speed", "speed")
+                    PanelKnob(b, "age", "age")
                 }
                 Group("phaser") {
                     PanelKnob(b, "phaser", "depth", PanelAmber)

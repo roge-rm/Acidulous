@@ -958,6 +958,7 @@ private fun labels1(): Map<String, String> = mapOf(
     "Diction:volume" to "out|volume",
     "Diction:vowel" to "voice|vowel",
     "Diction:whisper" to "air|whisper",
+    "Divisi:age" to "ensemble|age",
     "Divisi:attack" to "envelope|attack",
     "Divisi:bend" to "notes|bend",
     "Divisi:blat" to "brass|blat",
@@ -1621,10 +1622,10 @@ private fun labels1(): Map<String, String> = mapOf(
     "Forage:p07_reverse" to "pad 8|sample|reverse",
     "Forage:p07_start" to "pad 8|sample|start",
     "Forage:p08_choke" to "pad 9|amp|choke",
-    "Forage:p08_crush" to "pad 9|tone|crush",
 )
 
 private fun labels2(): Map<String, String> = mapOf(
+    "Forage:p08_crush" to "pad 9|tone|crush",
     "Forage:p08_cutoff" to "pad 9|tone|cutoff",
     "Forage:p08_decay" to "pad 9|amp|decay",
     "Forage:p08_end" to "pad 9|sample|end",
@@ -2424,10 +2425,10 @@ private fun labels2(): Map<String, String> = mapOf(
     "Manual:pan" to "amp|pan",
     "Manual:pedal" to "balance|pedal",
     "Manual:pedalon" to "manuals|pedals",
-    "Manual:pedsplit" to "manuals|pedal at",
 )
 
 private fun labels3(): Map<String, String> = mapOf(
+    "Manual:pedsplit" to "manuals|pedal at",
     "Manual:pedsus" to "balance|ped sus",
     "Manual:perc" to "percussion|perc",
     "Manual:percdec" to "percussion|time",
@@ -3227,10 +3228,10 @@ private fun labels3(): Map<String, String> = mapOf(
     "Ratio:transpose" to "tuning|transpose",
     "Ratio:velamt" to "out|vel",
     "Ratio:voicemode" to "voice|mode",
-    "Ratio:volume" to "out|volume",
 )
 
 private fun labels4(): Map<String, String> = mapOf(
+    "Ratio:volume" to "out|volume",
     "Reflux:accent" to "touch|accent",
     "Reflux:cutoff" to "filter|cutoff",
     "Reflux:decay" to "filter|decay",
@@ -4030,10 +4031,10 @@ private fun labels4(): Map<String, String> = mapOf(
     "Trinity:m12_src2" to "mod 12|× from",
     "Trinity:mac1" to "play|macro 1",
     "Trinity:mac1_a1" to "macro 1|by 1",
-    "Trinity:mac1_a2" to "macro 1|by 2",
 )
 
 private fun labels5(): Map<String, String> = mapOf(
+    "Trinity:mac1_a2" to "macro 1|by 2",
     "Trinity:mac1_a3" to "macro 1|by 3",
     "Trinity:mac1_a4" to "macro 1|by 4",
     "Trinity:mac1_d1" to "macro 1|to 1",
@@ -5064,6 +5065,7 @@ private fun short1(): Map<String, String> = mapOf(
     "Diction:volume" to "volume",
     "Diction:vowel" to "vowel",
     "Diction:whisper" to "whisper",
+    "Divisi:age" to "age",
     "Divisi:attack" to "attack",
     "Divisi:bend" to "bend",
     "Divisi:blat" to "blat",
@@ -5761,10 +5763,10 @@ private fun short1(): Map<String, String> = mapOf(
     "Forage:p10_mode" to "mode",
     "Forage:p10_pan" to "pan",
     "Forage:p10_pdecay" to "decay",
-    "Forage:p10_penv" to "pitch env",
 )
 
 private fun short2(): Map<String, String> = mapOf(
+    "Forage:p10_penv" to "pitch env",
     "Forage:p10_pitch" to "pitch",
     "Forage:p10_play" to "play",
     "Forage:p10_reso" to "reso",
@@ -6564,10 +6566,10 @@ private fun short2(): Map<String, String> = mapOf(
     "Manual:vibdepth" to "depth",
     "Manual:viblow" to "lower",
     "Manual:vibrate" to "rate",
-    "Manual:vibtype" to "type",
 )
 
 private fun short3(): Map<String, String> = mapOf(
+    "Manual:vibtype" to "type",
     "Manual:vibup" to "upper",
     "Manual:vibwide" to "width",
     "Manual:volume" to "volume",
@@ -7367,10 +7369,10 @@ private fun short3(): Map<String, String> = mapOf(
     "Reflux:mac4_d2" to "to 2",
     "Reflux:mac4_d3" to "to 3",
     "Reflux:mac4_d4" to "to 4",
-    "Reflux:mac5" to "macro 5",
 )
 
 private fun short4(): Map<String, String> = mapOf(
+    "Reflux:mac5" to "macro 5",
     "Reflux:mac5_a1" to "by 1",
     "Reflux:mac5_a2" to "by 2",
     "Reflux:mac5_a3" to "by 3",
@@ -8170,10 +8172,10 @@ private fun short4(): Map<String, String> = mapOf(
     "Trinity:mac7_a4" to "by 4",
     "Trinity:mac7_d1" to "to 1",
     "Trinity:mac7_d2" to "to 2",
-    "Trinity:mac7_d3" to "to 3",
 )
 
 private fun short5(): Map<String, String> = mapOf(
+    "Trinity:mac7_d3" to "to 3",
     "Trinity:mac7_d4" to "to 4",
     "Trinity:mac8" to "macro 8",
     "Trinity:mac8_a1" to "by 1",

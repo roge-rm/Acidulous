@@ -48,6 +48,10 @@ so play it legato. In poly mode each key has its own.
 - **ensemble** **depth** and **speed** - the chorus: two delay lines a side,
   each moved by a slow and a fast wobble, the right side the opposite way to
   the left. At 0 you hear the oscillators as they are.
+- **age** - the chorus from clean to an old, worn box: the highs go, a little
+  hiss comes in that rises and falls with the sound, the pitch wobbles more
+  and loud chords press into it. Past half way a faint whine follows the
+  chorus's sweep. It ages the sections' own choruses on the stage too.
 - **phaser** **depth**, **rate** and **feedback**.
 
 ## Players

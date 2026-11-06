@@ -82,6 +82,20 @@ namespace acidulous::machine {
  * jump (a new shape, a locate, play starting) glides out over a quarter
  * second unless the machine was silent. Off, nothing is touched and the
  * machine sounds as it did before.
+ *
+ * Age turns the choruses (the shared ensemble and the sections' own alike)
+ * from clean to an old bucket-brigade box. Their wet sound, the sections'
+ * summed a side, is squeezed 2:1 by a slow follower, picks up hiss and,
+ * past half way, a faint whine at an eighth of the delay's clock (taken as
+ * 1024 stages, so a longer delay whines lower), is soft clipped against the
+ * level it reaches, opened back out 1:2 by a follower of its own, so the
+ * hiss breathes with the sound and the tails pump a little, and loses its
+ * highs to a low-pass with a small hump, open at 0 and about 3.5 kHz at 1.
+ * The squeeze and its opening are worked out every 16 samples and ramped.
+ * Hiss and whine follow the sound in, so a quiet machine still sleeps. A
+ * seeded slow wander and a warble move every wet read, the same on both
+ * sides; they turn while asleep, as the LFOs do. At 0 none of it runs and
+ * the machine sounds as it did before.
  */
 class Divisi final : public Machine {
   public:
@@ -93,6 +107,7 @@ class Divisi final : public Machine {
         Players, Drift, Vibrato, Vibrate, Scatter,
         Stage, Room, Split,
         Motion, MotionRate, MotionSync, MotionBalance, MotionVowel, MotionTone, MotionEnsemble,
+        Age,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -108,6 +123,7 @@ class Divisi final : public Machine {
         McTone, McAttack, McRelease, McEnsemble, McSpeed, McPhaser, McRate, McFeedback,
         McVelocity, McVolume, McPitch,
         McMotionBalance, McMotionVowel, McMotionTone, McMotionEnsemble, McMotionRate,
+        McAge,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
@@ -294,11 +310,15 @@ class Divisi final : public Machine {
      * Writes the sections' [n] samples [sec] into their lines and, when
      * [staged], reads them back from their seats into [outL], [outR] and the
      * width-weighted [outW]. Each section's chorus is [ens0] to [ens1] deep
-     * across the chunk, its direct sound [keep0] to [keep1] as loud.
+     * across the chunk, its direct sound [keep0] to [keep1] as loud. When
+     * [aging], the choruses' reads move by [wow] samples and their wet sound,
+     * summed a side, goes through the aged bucket, its whine stepping by
+     * [clockL] and [clockR].
      */
     void runStage(float sec[][64], bool staged, const SeatAt goal[kSections], const float ens0[kSections],
                   const float ens1[kSections], const float keep0[kSections], const float keep1[kSections], float ensMove,
-                  float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n);
+                  float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n,
+                  const float *wow, const float *clockL, const float *clockR, bool aging);
 
     /** Param [p], smoothed, with the macros' routes to it added. */
     float paramOf(int32_t p) const { return val(p, false); }
@@ -430,6 +450,46 @@ class Divisi final : public Machine {
     /** The shape's value for each section at [pos] periods. */
     static void shapeAt(int shape, double pos, float out[kMotionChannels]);
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
+
+    /** Age's settings for one block: the squeeze's power, its level, and what the bucket adds. */
+    struct AgeAt {
+        /** The squeeze's power on the level (0.5 at 2:1), the opening's, the level it's centred on and its floor. */
+        float squeeze = 0.0f, open = 0.0f, nominal = 1.0f, floor = 0.0f;
+        /** The followers' coefficients up and down, and the hiss's and whine's gate per unit of the input's level. */
+        float up = 0.0f, down = 0.0f, gate = 0.0f;
+        /** The hiss's and whine's sizes; the clip's share, where it bends and the gain that keeps the nominal level. */
+        float hiss = 0.0f, whine = 0.0f, clip = 0.0f, bendAt = 1.0f, keep = 1.0f;
+        /** The low-pass's coefficients. */
+        float a1 = 0.0f, a2 = 0.0f, a3 = 0.0f, k = 0.0f;
+    };
+    /** One side of an aged chorus: the followers, the gains now and their steps, the low-pass and the whine's phase. */
+    struct Bucket {
+        float in = 0.0f, out = 0.0f, gIn = 1.0f, gOut = 1.0f, dIn = 0.0f, dOut = 0.0f;
+        float ic1 = 0.0f, ic2 = 0.0f, whine = 0.0f;
+        int32_t count = 0;
+    };
+    /** An aged chorus's two sides and its hiss's generator. */
+    struct Aged {
+        Bucket side[2];
+        uint32_t noise = 1;
+        void clear(uint32_t seed) {
+            side[0] = side[1] = Bucket();
+            noise = seed;
+        }
+    };
+    /** Runs [x], one sample of side [s]'s wet sound, through [a]; its whine moves on [whineStep] turns. */
+    static float runAged(Aged &a, int s, const AgeAt &at, float x, float whineStep);
+    /** Sets [at] for [age] with its level centred on [nominal], its hiss and whine scaled by [noise]. */
+    void ageSettings(float age, float nominal, float noise, AgeAt &at) const;
+    /** The shared ensemble's and the sections' aged choruses, and this block's settings for each. */
+    Aged agedShared, agedStage;
+    AgeAt ageShared, ageStage;
+    /** Age's wander: its generator, target, two smoothing stages and samples to the next target; the warble's phase. */
+    uint32_t wowRng = 1;
+    float wowTarget = 0.0f, wowY1 = 0.0f, wowY2 = 0.0f, warblePhase = 0.0f;
+    int32_t wowNext = 0;
+    /** Moves the wander on by [n] samples, returning its start and end, -1 to 1. */
+    void stepWow(int32_t n, float &from, float &to);
 };
 
 } // namespace acidulous::machine

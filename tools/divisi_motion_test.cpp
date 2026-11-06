@@ -6,6 +6,10 @@
 // off). In the whole Engine: a synced shape at a bar is the same whether the
 // song played into it from the top or started there, a free one is not
 // (so the check can fail), and a song with motion renders the same twice.
+//
+// Age: it repeats, stays a number, changes the sound without moving the
+// level much, lets an idle machine sleep (its hiss is gated), doesn't zipper,
+// and a macro reaches it.
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -312,6 +316,87 @@ void aBarSoundsTheSameWherePlayStarts() {
         ok(n + ": and the same after a panic", a1 == a2 && m1 == m2);
     }
 }
+/** Mean square of an interleaved stretch, dB. */
+float levelDb(const std::vector<float> &x, size_t from, size_t to) {
+    double sum = 0.0;
+    for (size_t i = from; i < to; ++i) sum += static_cast<double>(x[i]) * x[i];
+    return static_cast<float>(10.0 * std::log10(sum / static_cast<double>(to - from) + 1e-30));
+}
+
+void ageWorks() {
+    printf("- age repeats, stays a number, changes the sound but not much the level, and sleeps\n");
+    for (float stage : {0.0f, 0.7f}) {
+        std::vector<Setting> base = busy(Divisi::MotionOff, 0, 0.7f);
+        for (Setting &x : base) if (x.p == Divisi::Stage) x.v = stage;
+        auto ref = fresh(base);
+        const std::vector<float> clean = play(*ref, 4.0f);
+        for (float age : {0.5f, 1.0f}) {
+            std::vector<Setting> s = base;
+            s.push_back({Divisi::Age, age});
+            auto d = fresh(s);
+            const std::vector<float> a = play(*d, 4.0f);
+            // Let go and let it ring out: an idle machine sleeps and is silent, hiss and all.
+            float L[kBlockFrames], R[kBlockFrames];
+            float tail = 0.0f;
+            const int32_t blocks = static_cast<int32_t>(6.0f * kSampleRate / kBlockFrames);
+            for (int32_t b = 0; b < blocks; ++b) {
+                d->render(L, R, kBlockFrames);
+                if (b >= blocks - static_cast<int32_t>(kSampleRate / kBlockFrames)) {
+                    for (int32_t i = 0; i < kBlockFrames; ++i) tail = std::fmax(tail, std::fmax(std::fabs(L[i]), std::fabs(R[i])));
+                }
+            }
+            d->reset();
+            const std::vector<float> b = play(*d, 4.0f);
+            auto e = fresh(s);
+            const std::vector<float> c = play(*e, 4.0f);
+            float peak = 0.0f, diff = 0.0f;
+            bool finite = true;
+            for (size_t i = 0; i < a.size(); ++i) {
+                finite = finite && std::isfinite(a[i]);
+                peak = std::fmax(peak, std::fabs(a[i]));
+                diff = std::fmax(diff, std::fabs(a[i] - clean[i]));
+            }
+            const size_t from = static_cast<size_t>(kSampleRate) * 2, to = a.size();
+            const float moved = levelDb(a, from, to) - levelDb(clean, from, to);
+            char name[64], det[96];
+            std::snprintf(name, sizeof name, "age %.1f, stage %.1f", age, stage);
+            std::snprintf(det, sizeof det, "peak %.2f, level %+.2f dB, tail %.1e", peak, moved, tail);
+            ok(std::string(name) + ": same after a panic and fresh", a == b && a == c, det);
+            ok(std::string(name) + ": a number, changed, level within 1.5 dB", finite && peak < 2.0f && diff > 1e-3f && std::fabs(moved) < 1.5f, det);
+            ok(std::string(name) + ": silent once let go", tail == 0.0f, det);
+        }
+    }
+
+    printf("- age doesn't zipper, and a macro reaches it\n");
+    {
+        const auto edges = [](const std::vector<float> &x) {
+            double bin[kBlockFrames] = {};
+            for (size_t f = static_cast<size_t>(kSampleRate) + 2; f < x.size() / 2; ++f) {
+                for (int c = 0; c < 2; ++c) bin[f % kBlockFrames] += std::fabs(x[f * 2 + c] - 2.0f * x[(f - 1) * 2 + c] + x[(f - 2) * 2 + c]);
+            }
+            std::vector<double> v(bin, bin + kBlockFrames);
+            std::sort(v.begin(), v.end());
+            return static_cast<float>(v.back() / v[kBlockFrames / 2]);
+        };
+        const std::vector<Setting> s = {{Divisi::Violin, 0.0f}, {Divisi::Viola, 0.0f}, {Divisi::Cello, 0.8f},
+                                        {Divisi::Contrabass, 0.8f}, {Divisi::Tone, 0.2f}, {Divisi::Ensemble, 1.0f},
+                                        {Divisi::Age, 1.0f}};
+        auto d = fresh(s);
+        const float r = edges(play(*d, 6.0f));
+        char det[96];
+        std::snprintf(det, sizeof det, "%.3f of the rest", r);
+        ok("age 1 on low strings", r < 1.05f, det);
+
+        std::vector<Setting> m = s;
+        m.back().v = 0.0f;
+        m.push_back({Divisi::MacroBase, 1.0f});
+        m.push_back({Divisi::MacroBase + 1, static_cast<float>(Divisi::McAge)});
+        m.push_back({Divisi::MacroBase + 5, 1.0f});
+        auto byMacro = fresh(m);
+        auto byKnob = fresh(s);
+        ok("a macro at full is age 1", play(*byMacro, 2.0f) == play(*byKnob, 2.0f));
+    }
+}
 } // namespace
 
 int main() {
@@ -320,6 +405,7 @@ int main() {
     fastMotionDoesNotZipper();
     macrosReachTheMotion();
     aBarSoundsTheSameWherePlayStarts();
+    ageWorks();
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures == 0 ? 0 : 1;
 }

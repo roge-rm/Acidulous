@@ -159,6 +159,24 @@ constexpr float kStepGlide = 0.2f;
 constexpr float kTidePlace[6] = {0.0f, 0.504f, 0.631f, 1.0f, 0.996f, 0.676f};
 constexpr float kTideSpread = 0.5f;
 
+/** Age: the level a loud chord's wet sound reaches in the shared chorus, which the squeeze is centred on and the bucket's clip and noise are sized by. */
+constexpr float kAgeNominal = 0.15f;
+/** The squeeze's followers, up and down, s; its floor, against the nominal level. */
+constexpr float kAgeUp = 0.008f, kAgeDown = 0.08f, kAgeFloor = 1e-3f;
+/** The hiss and whine come in fully once the input is this much of the nominal level. */
+constexpr float kAgeGate = 0.01f;
+/** Hiss and whine at full age, against the nominal level; the clip bends at three times it. */
+constexpr float kAgeHiss = 0.0093f, kAgeWhine = 0.02f, kAgeBend = 3.0f;
+/** The sections' bucket adds its hiss and whine after their depth and gains, so it comes out louder: brought back to about the shared one's. */
+constexpr float kAgeStageNoise = 0.5f;
+/** The low-pass, Hz, open at 0 and shut at 1, and its damping from flat to a small hump. */
+constexpr float kAgeOpenHz = 20000.0f, kAgeShutHz = 3500.0f, kAgeFlatK = 1.414f, kAgeHumpK = 0.96f;
+/** Turns a sample of whine at a delay of one sample: an eighth of a 1024-stage clock, 1024 / (2 * 8). */
+constexpr float kWhineTurns = 64.0f;
+/** The wander's depth at full age, ms, its new target every 0.25 to 0.85 s, smoothed twice over 0.2 s; the warble's depth, ms, rate and how far the wander moves its rate. */
+constexpr float kWowMs = 0.35f, kWowPickMin = 0.25f, kWowPickSpan = 0.6f, kWowTime = 0.2f;
+constexpr float kWarbleMs = 0.05f, kWarbleHz = 6.3f, kWarbleWander = 0.25f;
+
 /** A seeded value for section [s] at step [i], -1 to 1: the same wherever play starts. */
 inline float motionHash(int s, int64_t i) {
     uint32_t x = static_cast<uint32_t>(i) * 0x9e3779b1u ^ static_cast<uint32_t>(static_cast<uint64_t>(i) >> 32) * 0x85ebca77u;
@@ -177,6 +195,14 @@ inline float nextRand(uint32_t &r) {
     return static_cast<float>(r >> 8) * (1.0f / 16777216.0f);
 }
 constexpr float kInvTwoTo32 = 1.0f / 4294967296.0f;
+
+/** A soft clip close to tanh, flat at 1 from 3. */
+inline float softClip(float u) {
+    if (u >= 3.0f) return 1.0f;
+    if (u <= -3.0f) return -1.0f;
+    const float u2 = u * u;
+    return u * (27.0f + u2) / (27.0f + 9.0f * u2);
+}
 
 /** A sine of [turns], close enough for an LFO. */
 inline float lfoSin(float turns) {
@@ -291,6 +317,8 @@ const ParamDef *Divisi::paramDefs(int32_t &count) const {
         {"mvowel", 0.0f, 1.0f, 0.3f, Curve::Linear, 0, ""},
         {"mtone", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
         {"mensemble", 0.0f, 1.0f, 0.25f, Curve::Linear, 0, ""},
+        // The choruses from clean to an old bucket-brigade box.
+        {"age", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
     };
     static ParamDef defs[Count];
     static char names[kMacros * MacroParams][12];
@@ -337,7 +365,7 @@ struct DestMap {
             {D::VelocityAmount, D::McVelocity}, {D::Volume, D::McVolume},
             {D::MotionBalance, D::McMotionBalance}, {D::MotionVowel, D::McMotionVowel},
             {D::MotionTone, D::McMotionTone}, {D::MotionEnsemble, D::McMotionEnsemble},
-            {D::MotionRate, D::McMotionRate},
+            {D::MotionRate, D::McMotionRate}, {D::Age, D::McAge},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
     }
@@ -438,6 +466,8 @@ void Divisi::clearState() {
     sharedBright = Bright();
     sharedDrive = 1.0f;
     shared = Env();
+    agedShared.clear(0x6d2b79f5u);
+    agedStage.clear(0x1b873593u);
 }
 
 void Divisi::reset() {
@@ -475,6 +505,91 @@ void Divisi::reset() {
     motionShapeWas = motionSyncWas = -1;
     motionLocked = motionRestart = motionWasLive = false;
     sleptLast = true;
+    wowRng = 0x2545f491u;
+    wowTarget = wowY1 = wowY2 = warblePhase = 0.0f;
+    wowNext = 0;
+}
+
+void Divisi::stepWow(int32_t n, float &from, float &to) {
+    from = wowY2;
+    wowNext -= n;
+    if (wowNext <= 0) {
+        wowTarget = 2.0f * nextRand(wowRng) - 1.0f;
+        wowNext += static_cast<int32_t>((kWowPickMin + kWowPickSpan * nextRand(wowRng)) * sampleRate);
+    }
+    const float c = 1.0f - std::exp(-static_cast<float>(n) / (kWowTime * sampleRate));
+    wowY1 += c * (wowTarget - wowY1);
+    wowY2 += c * (wowY1 - wowY2);
+    to = wowY2;
+}
+
+void Divisi::ageSettings(float age, float nominal, float noise, AgeAt &at) const {
+    at.squeeze = 0.5f * age;
+    at.open = at.squeeze / (1.0f - at.squeeze);
+    at.nominal = nominal;
+    at.floor = nominal * kAgeFloor;
+    at.up = 1.0f - std::exp(-1.0f / (kAgeUp * sampleRate));
+    at.down = 1.0f - std::exp(-1.0f / (kAgeDown * sampleRate));
+    at.gate = 1.0f / (nominal * kAgeGate);
+    at.hiss = kAgeHiss * noise * nominal * age;
+    // Nothing below half way, then rising.
+    const float w = std::fmax(0.0f, 2.0f * age - 1.0f);
+    at.whine = kAgeWhine * noise * nominal * w * w;
+    at.clip = age;
+    at.bendAt = kAgeBend * nominal;
+    {
+        // The clip keeps the nominal level where it is.
+        const float u = 1.0f / kAgeBend;
+        at.keep = u / softClip(u);
+    }
+    const float hz = std::fmin(kAgeOpenHz * std::pow(kAgeShutHz / kAgeOpenHz, age), 0.45f * sampleRate);
+    const float g = std::tan(dsp::kPi * hz / sampleRate);
+    at.k = kAgeFlatK + (kAgeHumpK - kAgeFlatK) * age;
+    at.a1 = 1.0f / (1.0f + g * (g + at.k));
+    at.a2 = g * at.a1;
+    at.a3 = g * at.a2;
+}
+
+float Divisi::runAged(Aged &a, int s, const AgeAt &at, float x, float whineStep) {
+    Bucket &b = a.side[s];
+    const float ax = std::fabs(x);
+    b.in = dsp::undenormal(b.in + (ax > b.in ? at.up : at.down) * (ax - b.in));
+    if (b.count <= 0) {
+        // The squeeze and its opening every 16 samples, ramped there.
+        constexpr int32_t kEvery = 16;
+        b.count = kEvery;
+        const float gi = std::pow(at.nominal / std::fmax(b.in, at.floor), at.squeeze);
+        const float go = b.out > 0.0f ? std::pow(b.out / at.nominal, at.open) : 0.0f;
+        b.dIn = (gi - b.gIn) * (1.0f / kEvery);
+        b.dOut = (go - b.gOut) * (1.0f / kEvery);
+    }
+    --b.count;
+    b.gIn += b.dIn;
+    b.gOut += b.dOut;
+    float y = x * b.gIn;
+    // The bucket's hiss and whine, let in by the sound.
+    const float gate = std::fmin(1.0f, b.in * at.gate);
+    if (gate > 0.0f) {
+        a.noise = a.noise * 1664525u + 1013904223u;
+        float add = at.hiss * static_cast<float>(static_cast<int32_t>(a.noise)) * (1.0f / 2147483648.0f);
+        if (at.whine > 0.0f) {
+            b.whine += whineStep;
+            b.whine -= std::floor(b.whine);
+            add += at.whine * lfoSin(b.whine);
+        }
+        y += gate * add;
+    }
+    if (at.clip > 0.0f) y += at.clip * (at.bendAt * at.keep * softClip(y / at.bendAt) - y);
+    const float ay = std::fabs(y);
+    b.out = dsp::undenormal(b.out + (ay > b.out ? at.up : at.down) * (ay - b.out));
+    const float z = y * b.gOut;
+    // The low-pass, a state-variable one.
+    const float v3 = z - b.ic2;
+    const float v1 = at.a1 * b.ic1 + at.a2 * v3;
+    const float v2 = b.ic2 + at.a2 * b.ic1 + at.a3 * v3;
+    b.ic1 = dsp::undenormal(2.0f * v1 - b.ic1);
+    b.ic2 = dsp::undenormal(2.0f * v2 - b.ic2);
+    return v2;
 }
 
 void Divisi::onBlock(int64_t, int64_t, float bpm) { tempo = bpm > 1.0f ? bpm : 120.0f; }
@@ -953,12 +1068,14 @@ void Divisi::placeSeats(float stage, float room, float k, float ens, const float
 
 void Divisi::runStage(float sec[][64], bool staged, const SeatAt goal[kSections], const float ens0[kSections],
                       const float ens1[kSections], const float keep0[kSections], const float keep1[kSections], float ensMove,
-                      float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n) {
+                      float slowStep, float fastStep, float norm0, float norm1, float *outL, float *outR, float *outW, int32_t n,
+                      const float *wow, const float *clockL, const float *clockR, bool aging) {
     const float perSample = 1.0f / static_cast<float>(n);
-    float erInL[64], erInR[64], amInL[64], amInR[64];
+    float erInL[64], erInR[64], amInL[64], amInR[64], wetL[64], wetR[64];
     bool anyEr = false;
     if (staged) {
         for (int32_t i = 0; i < n; ++i) outL[i] = outR[i] = outW[i] = erInL[i] = erInR[i] = amInL[i] = amInR[i] = 0.0f;
+        if (aging) for (int32_t i = 0; i < n; ++i) wetL[i] = wetR[i] = 0.0f;
     }
     const float airC = 1.0f - std::exp(-2.0f * dsp::kPi * kAirHz / sampleRate);
     for (int s = 0; s < kSections; ++s) {
@@ -1035,7 +1152,27 @@ void Divisi::runStage(float sec[][64], bool staged, const SeatAt goal[kSections]
             // Motion moves the depth and keeps the level; without it these are the knob and 1.
             const float e0 = ens0[s], de = (ens1[s] - ens0[s]) * perSample;
             const float c0 = keep0[s], dc = (keep1[s] - keep0[s]) * perSample;
-            for (int32_t i = 0; i < n; ++i) {
+            if (aging) {
+                // The same, with the wet sound kept apart for the bucket, and its reads moved by the wander.
+                for (int32_t i = 0; i < n; ++i) {
+                    const float t = static_cast<float>(i + 1);
+                    const float k = k0 + dk * t;
+                    const float d = d0 + dd * t, ma = m0[0] + dm[0] * t, mb = m0[1] + dm[1] * t, wob = wow[i] * k;
+                    const float depth = (e0 + de * t) * k;
+                    const float keep = c0 + dc * t;
+                    const float dry = readAt(i, d);
+                    const float wl = 0.65f * readAt(i, d + ma + wob) + 0.35f * readAt(i, d + mb + wob);
+                    const float wr = 0.65f * readAt(i, d - ma + wob) + 0.35f * readAt(i, d - mb + wob);
+                    const float gl = (gl0 + dgl * t) * keep, gr = (gr0 + dgr * t) * keep;
+                    outL[i] += gl * (dry - depth * dry);
+                    outR[i] += gr * (dry - depth * dry);
+                    wetL[i] += gl * depth * wl;
+                    wetR[i] += gr * depth * wr;
+                    outW[i] += (gw0 + dgw * t) * dry;
+                    amInL[i] += (sl0 + dsl * t) * dry;
+                    amInR[i] += (sr0 + dsr * t) * dry;
+                }
+            } else for (int32_t i = 0; i < n; ++i) {
                 const float t = static_cast<float>(i + 1);
                 const float d = d0 + dd * t, ma = m0[0] + dm[0] * t, mb = m0[1] + dm[1] * t;
                 const float depth = (e0 + de * t) * (k0 + dk * t);
@@ -1107,6 +1244,12 @@ void Divisi::runStage(float sec[][64], bool staged, const SeatAt goal[kSections]
     if (!staged) {
         erAir[0] = erAir[1] = 0.0f;
         return;
+    }
+    if (aging) {
+        for (int32_t i = 0; i < n; ++i) {
+            outL[i] += runAged(agedStage, 0, ageStage, wetL[i], clockL[i]);
+            outR[i] += runAged(agedStage, 1, ageStage, wetR[i], clockR[i]);
+        }
     }
     // The reflections lose their highs to the walls; then everything is levelled.
     const float erC = 1.0f - std::exp(-2.0f * dsp::kPi * kReflectionHz / sampleRate);
@@ -1358,6 +1501,14 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             st.slowPhase -= std::floor(st.slowPhase);
             st.fastPhase -= std::floor(st.fastPhase);
         }
+        // Age's wander and warble keep turning too.
+        for (int32_t at = 0; at < frames; at += 64) {
+            const int32_t n = std::min<int32_t>(64, frames - at);
+            float w0, w1;
+            stepWow(n, w0, w1);
+            warblePhase += kWarbleHz * (1.0f + kWarbleWander * w1) / sampleRate * static_cast<float>(n);
+            warblePhase -= std::floor(warblePhase);
+        }
         sleptLast = true;
         motionWasLive = false;
         return true;
@@ -1474,6 +1625,15 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
     const float phaser = clampf(paramOf(Phaser), 0.0f, 1.0f);
     const float feedback = clampf(paramOf(Feedback), 0.0f, 0.9f);
     const float volume = paramOf(Volume);
+    // Age, for the shared chorus (after the volume) and the sections' (before it).
+    const float age = clampf(paramOf(Age), 0.0f, 1.0f);
+    const bool aging = age > 0.0f;
+    if (aging) {
+        ageSettings(age, kAgeNominal, 1.0f, ageShared);
+        ageSettings(age, kAgeNominal / std::fmax(volume, 0.05f), kAgeStageNoise, ageStage);
+    }
+    const float wowSamples = age * kWowMs * msToSamples, warbleSamples = age * kWarbleMs * msToSamples;
+    const float warbleStep = kWarbleHz / sampleRate;
 
     // Each key's pressure as a swell, ramped across the block.
     // And its choir level, ramped the same way; a fresh key starts at its own.
@@ -1612,8 +1772,39 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
     float partIn[4][kChunk];
     bool anyParted = false;
     for (const Key &k : keys) anyParted = anyParted || (k.used && k.parted);
+    if (!staged || !aging) agedStage.clear(0x1b873593u);
+    if (!aging) agedShared.clear(0x6d2b79f5u);
+    float wowAt[kChunk], clockL[kChunk], clockR[kChunk];
     for (int32_t at = 0; at < frames; at += kChunk) {
         const int32_t n = std::min(kChunk, frames - at);
+        // Age's wander and warble over this chunk, in samples, and the whine's steps from the shared chorus's delay a side.
+        {
+            float w0, w1;
+            stepWow(n, w0, w1);
+            if (aging) {
+                const float dw = (w1 - w0) / static_cast<float>(n);
+                for (int32_t i = 0; i < n; ++i) {
+                    const float w = w0 + dw * static_cast<float>(i + 1);
+                    warblePhase += warbleStep * (1.0f + kWarbleWander * w);
+                    if (warblePhase >= 1.0f) warblePhase -= 1.0f;
+                    wowAt[i] = wowSamples * w + warbleSamples * lfoSin(warblePhase);
+                }
+                if (ageShared.whine > 0.0f) {
+                    for (int32_t i = 0; i < n; ++i) {
+                        const float fi = static_cast<float>(i);
+                        const float m = reach * msToSamples *
+                                        (kSlowMs * lfoSin(slowPhase + slowStep * fi) + kFastMs * lfoSin(fastPhase + fastStep * fi));
+                        clockL[i] = kWhineTurns / (centre + m);
+                        clockR[i] = kWhineTurns / (centre - m);
+                    }
+                } else {
+                    for (int32_t i = 0; i < n; ++i) clockL[i] = clockR[i] = 0.0f;
+                }
+            } else {
+                warblePhase += warbleStep * (1.0f + kWarbleWander * w1) * static_cast<float>(n);
+                warblePhase -= std::floor(warblePhase);
+            }
+        }
         for (int32_t i = 0; i < n; ++i) bus4[i] = bus8[i] = bus16[i] = bus32[i] = busSq[i] = busBr[i] = 0.0f;
         if (anyParted) {
             for (int32_t i = 0; i < n; ++i) partIn[0][i] = partIn[1][i] = partIn[2][i] = partIn[3][i] = 0.0f;
@@ -1806,7 +1997,8 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
                 c1[s] = keepFrom[s] + (keepTo[s] - keepFrom[s]) * f1;
             }
             runStage(sec, staged, seatGoal, e0, e1, c0, c1, reach * msToSamples, slowStep, fastStep,
-                     normStart + (stageNorm - normStart) * f0, normStart + (stageNorm - normStart) * f1, mid, right, wide, n);
+                     normStart + (stageNorm - normStart) * f0, normStart + (stageNorm - normStart) * f1, mid, right, wide, n,
+                     wowAt, clockL, clockR, aging);
             snapSeats = false;
         }
         if (!staged) for (int32_t i = 0; i < n; ++i) right[i] = mid[i];
@@ -1845,7 +2037,22 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
             lineR.write(inR);
             const float dryL = line.read(here), dryR = lineR.read(here);
             float l = dryL, r = dryR;
-            if ((ens > 0.0f || ensAt > 0.0f) && shrink > 0.0f) {
+            if (aging && (ens > 0.0f || ensAt > 0.0f) && shrink > 0.0f) {
+                // Aged: the reads moved by the wander, and the wet sound through the bucket.
+                const float wob = wowAt[i] * (1.0f - hand);
+                float wetL = 0.0f, wetR = 0.0f;
+                for (int j = 0; j < 2; ++j) {
+                    const float third = static_cast<float>(j) / 3.0f;
+                    const float move = shrink * msToSamples * (kSlowMs * lfoSin(slowPhase + third) + kFastMs * lfoSin(fastPhase + third));
+                    const float w = j == 0 ? 0.65f : 0.35f;
+                    wetL += w * line.read(here + move + wob);
+                    wetR += w * lineR.read(here - move + wob);
+                }
+                wetL = runAged(agedShared, 0, ageShared, wetL, clockL[i]);
+                wetR = runAged(agedShared, 1, ageShared, wetR, clockR[i]);
+                l = dryL + depth * (wetL - dryL);
+                r = dryR + depth * (wetR - dryR);
+            } else if ((ens > 0.0f || ensAt > 0.0f) && shrink > 0.0f) {
                 float wetL = 0.0f, wetR = 0.0f;
                 for (int j = 0; j < 2; ++j) {
                     const float third = static_cast<float>(j) / 3.0f;

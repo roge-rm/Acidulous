@@ -50,6 +50,11 @@ par la première touche : jouez legato. En mode poly, chaque touche a le sien.
   retard de chaque côté, chacune bougée par une ondulation lente et une
   rapide, le côté droit à l’inverse du gauche. À 0, on entend les
   oscillateurs tels quels.
+- **âge** : le chorus, du propre à une vieille boîte usée : les aigus
+  s’en vont, un léger souffle arrive qui monte et descend avec le son, la
+  hauteur ondule davantage et les accords forts saturent un peu. Passé la
+  moitié, un faible sifflement suit le balayage du chorus. Il vieillit aussi
+  les chorus des sections sur la scène.
 - **prof.**, **vitesse** et **réinjection** du **phaser**.
 
 ## Joueurs
