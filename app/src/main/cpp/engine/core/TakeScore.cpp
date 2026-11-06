@@ -219,13 +219,13 @@ float lagOf(const float *lead, const float *dbl, int32_t frames, int32_t maxLag,
     constexpr float kAgree = static_cast<float>(kAgreeBins * kHop);
     std::vector<float> agreed;
     for (const int32_t h : hb) {
-        float near = kAgree + 1.0f, gap = 0.0f;
+        float closest = kAgree + 1.0f, gap = 0.0f;
         auto it = std::lower_bound(ha.begin(), ha.end(), h - maxLag - static_cast<int32_t>(kAgree));
         for (; it != ha.end() && *it <= h + maxLag + static_cast<int32_t>(kAgree); ++it) {
             const float d = std::fabs(static_cast<float>(h - *it) - lag);
-            if (d < near) { near = d; gap = static_cast<float>(h - *it); }
+            if (d < closest) { closest = d; gap = static_cast<float>(h - *it); }
         }
-        if (near <= kAgree) agreed.push_back(gap);
+        if (closest <= kAgree) agreed.push_back(gap);
     }
     // Most of the hits have to agree, and at least two unless there's only one.
     const auto fewer = static_cast<int32_t>(std::min(ha.size(), hb.size()));
