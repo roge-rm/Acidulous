@@ -746,7 +746,6 @@
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">lattice</string>
     <string name="pw_launeddas">launeddas</string>
-    <string name="pw_layers">layers</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">leakage</string>
     <string name="pw_learn">learn</string>
@@ -1597,6 +1596,7 @@
     <string name="pw_vib_rate">vib rate</string>
     <string name="pw_vib_width">vib width</string>
     <string name="pw_vibes">vibes</string>
+    <string name="pw_vibrate">vibrate</string>
     <string name="pw_vibrato">vibrato</string>
     <string name="pw_viola">viola</string>
     <string name="pw_violin">violin</string>

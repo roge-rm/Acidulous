@@ -36,7 +36,7 @@ All six are the demo song, Squelch.
 
 ### Machines and effects
 
-There are 31 machines. Each has patches to start from and a [manual page](manual/04-the-machines.md).
+There are 32 machines. Each has patches to start from and a [manual page](manual/04-the-machines.md).
 
 | Machine | What it does |
 |---|---|
@@ -50,21 +50,21 @@ There are 31 machines. Each has patches to start from and a [manual page](manual
 | Forage | A drum machine with thirteen sample pads. |
 | Genesis | Modelled drums with circuit drift and bus compression. |
 | Hexbeat | Thirteen synthesized drum voices. |
-| Palm | Modelled hand drums with different strokes and pressure. |
+| Palm | Modelled hand drums with different strokes and pressure. Hold a note and it plays a pattern on the beat. |
 | Resonance | Eight struck objects that ring into each other. |
 | Hammer | Modelled pianos, electric pianos and related instruments. |
 | Manual | Two-manual organ, pedals and rotary cabinet. |
 | Tine | Modelled bars, tines, pans and bells. |
 | Filament | Strings you can pluck, pick, hammer, bow or blow. |
 | Fret | Modelled guitars and basses with an amp. |
-| Sympath | Strings with buzzing bridges and sympathetic resonance. |
+| Sympath | Strings with buzzing bridges and sympathetic resonance. Another track can ring them and retune them to its notes. |
 | Brazen | Modelled brass, solo or in a section. |
-| Chanter | Bagpipes and hurdy-gurdy. |
+| Chanter | Bagpipes and hurdy-gurdy. The drones can follow another track's bass, and the bag can run dry. |
 | Draw | Harmonicas, accordions and other free reeds. |
 | Timber | Modelled woodwinds. |
 | Tongue | Modelled jaw harps with mouth control. |
 | Aviary | Modelled birdsong, from one bird or a flock. |
-| Fathom | Water, weather and environmental sounds. |
+| Fathom | Water, weather and environmental sounds. The drips and bubbles can play in key. |
 | Molt | Record a voice and play it at drawn pitches. |
 | Mosaic | SoundFonts, multisamples and granular playback. |
 | Pollen | Grains from a file or live input. |
@@ -73,11 +73,11 @@ There are 31 machines. Each has patches to start from and a [manual page](manual
 | Diction | A vocal synthesizer trained on your voice. |
 | Nexus | A modular synth built from the other machines. |
 
-There are 32 effects, including filters, distortion, amps, dynamics, delays, reverb, modulation, pitch and frequency shifting, granular and spectral processing. Some follow the tempo, the signal or another track. Each has its own page in the manual.
+There are 34 effects, including filters, distortion, amps, dynamics, delays, reverb, modulation, pitch and frequency shifting, granular and spectral processing. Some follow the tempo, the signal or another track. Each has its own page in the manual.
 
 ### Mixing
 
-- Two insert effects on every track, and two on the master before the limiter.
+- Four insert effects on every track, and two on the master before the limiter.
 - Two send buses for the whole song. They start as a reverb and a delay but can hold any effect.
 - Up to four groups in the mixer, to put tracks through the same effects and fader.
 - Sidechains: the compressor, gate and filter can follow another track, like ducking the bass under the kick.
