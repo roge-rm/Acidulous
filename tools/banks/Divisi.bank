@@ -30,8 +30,8 @@
 # #12 attack, #13 release, #14 ensemble, #15 speed, #16 phaser, #17 rate,
 # #18 feedback, #19 velocity, #20 volume, #21 pitch (24 semitones a unit),
 # #22 motion balance, #23 motion vowel, #24 motion tone, #25 motion
-# ensemble, #26 motion rate, #27 age. Players, stage, room and split have no
-# destination.
+# ensemble, #26 motion rate, #27 age, #28 players, #29 drift, #30 vibrato, #31 vibrate, #32 scatter,
+# #33 stage, #34 room, #35 split.
 #
 # The set is the same on every patch: Bright, Slow, Lush, Voices, Brass,
 # Phase, Motion and Age. Slow is the attack and release together. A macro

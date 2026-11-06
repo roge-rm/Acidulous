@@ -369,6 +369,9 @@ struct DestMap {
             {D::MotionBalance, D::McMotionBalance}, {D::MotionVowel, D::McMotionVowel},
             {D::MotionTone, D::McMotionTone}, {D::MotionEnsemble, D::McMotionEnsemble},
             {D::MotionRate, D::McMotionRate}, {D::Age, D::McAge},
+            {D::Players, D::McPlayers}, {D::Drift, D::McDrift}, {D::Vibrato, D::McVibrato},
+            {D::Vibrate, D::McVibrate}, {D::Scatter, D::McScatter}, {D::Stage, D::McStage},
+            {D::Room, D::McRoom}, {D::Split, D::McSplit},
         };
         for (const auto &pr : pairs) of[pr[0]] = static_cast<int8_t>(pr[1]);
     }
@@ -1720,7 +1723,7 @@ bool Divisi::render(float *L, float *R, int32_t frames) {
     const float paraVelB = kBrassVelFloor + (1.0f - kBrassVelFloor) * paraVel;
 
     // The players, and where each sits for this count.
-    playerCount = std::clamp(steppedTargetOf(Players), 1, kMaxPlayers);
+    playerCount = std::clamp(static_cast<int>(std::lround(goalOf(Players))), 1, kMaxPlayers);
     if (playerCount != seatedFor) {
         // Their places across a section, evenly spread in each player's own order.
         seatedFor = playerCount;

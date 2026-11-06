@@ -5517,6 +5517,7 @@ val DIVISI_MACRO_DESTS = listOf(
     "pitch",
     "motion balance", "motion vowel", "motion tone", "motion ensemble", "motion rate",
     "age",
+    "players", "drift", "vibrato", "vibrate", "scatter", "stage", "room", "split",
 )
 
 private val DIVISI_PLAYERS = (1..16).map { "$it" }

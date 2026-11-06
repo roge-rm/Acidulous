@@ -124,6 +124,7 @@ class Divisi final : public Machine {
         McVelocity, McVolume, McPitch,
         McMotionBalance, McMotionVowel, McMotionTone, McMotionEnsemble, McMotionRate,
         McAge,
+        McPlayers, McDrift, McVibrato, McVibrate, McScatter, McStage, McRoom, McSplit,
         MacroDestCount
     };
     static constexpr int kMacros = 8;

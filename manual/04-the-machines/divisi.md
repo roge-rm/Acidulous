@@ -137,11 +137,12 @@ motion has Low (the contrabass) or Light in Motion's place. They sit at zero
 when a patch loads, which is the patch as it was made.
 
 The **macros** page sets what each one does. A macro has four routes, a
-destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the
-knob moves the destination by knob times amount, across that control's whole
-range at 1. Pitch moves every note, 24 semitones at 1. The mode, tune,
-octave, bend, the players, the stage and the motion's shape and sync can't be
-reached. Tap a macro's name to rename it.
+destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
+the knob moves the destination by knob times amount, across that control's
+whole range at 1. Pitch moves every note, 24 semitones at 1. The mode, tune,
+octave, bend and the motion's shape and sync can't be reached. The players
+move in whole players, and split changes the notes you play after it. Tap a
+macro's name to rename it.
 
 ## Tips
 
