@@ -2,11 +2,9 @@
 
 Acidulous is a music studio for Android 8.1 or newer, Linux, Windows, macOS and browsers. Combine up to 16 synthesizers, drum machines, samplers and processors into scenes, then play them in order or launch clips as you go.
 
-It's an homage to Caustic and a collection of things I've liked or wanted in other music tools. You can sequence, record, play live, change your voice and export songs or stems. It's nearly at 1.0 and ready for people other than me to test.
+It's an homage to Caustic and a collection of things I've liked or wanted in other music tools. You can sequence, record, play live, change your voice and export songs or stems. Check out the details of what's below or take a look at the [manual](manual/) - also in the app under Help….
 
 Let me know what works, what doesn't and what you'd like in #acidulous [on my discord](https://discord.gg/9Wun47jGC6), or open an issue here.
-
-The [manual](manual/) is also in the app under Help….
 
 Enjoy,<br>
 Dan
@@ -279,5 +277,3 @@ app's About window.
 Everything else, including the engine, the machines and effects, the
 sequencer and the file writers, was written for this project. No DSP code,
 presets or samples come from anywhere else.
-
-This was made using Claude Opus 5.0/5.5
