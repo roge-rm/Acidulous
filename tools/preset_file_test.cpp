@@ -283,6 +283,33 @@ void host() {
     expect.chain.inserts[1].settings = {{"formula", "x/2"}};
     samePatch(copy, expect, "the patch on another track");
 
+    // A Venue saves the impulse it was given, applying the patch loads it again,
+    // and mounting the slot again forgets it.
+    const char *root = std::getenv("ACIDULOUS_ROOT");
+    const std::string room = std::string(root != nullptr ? root : ".") + "/shared/src/commonMain/files/impulse-wooden-hall.wav";
+    const int venue = 8;
+    h.mountMachine(venue, "Trinity");
+    h.mountEffect(venue, 0, "Venue");
+    waitBlocks(4);
+    const std::string impulseError = h.loadImpulse(venue, "effect1", room, 0.5f, 0.5f, 0.5f);
+    check(impulseError.empty(), "an impulse loads: " + impulseError);
+    waitBlocks(4);
+    const PresetPatch roomy = h.rackPatch(venue, "Roomy", why);
+    check(roomy.chain.inserts.size() == 1 && sameSet(roomy.chain.inserts[0].settings, {{"impulse", room}}),
+          "the Venue's impulse is saved");
+    const int venueCopy = 10;
+    h.mountMachine(venueCopy, "Trinity");
+    PatchTrackState venueState;
+    h.applyPatchChain(venueCopy, roomy.chain, venueState, 0.0f, 0.0f);
+    waitBlocks(4);
+    const PresetPatch roomyCopy = h.rackPatch(venueCopy, "Roomy", why);
+    check(roomyCopy.chain.inserts.size() == 1 && sameSet(roomyCopy.chain.inserts[0].settings, {{"impulse", room}}),
+          "applying the patch loads its impulse");
+    h.mountEffect(venue, 0, "Venue");
+    waitBlocks(4);
+    const PresetPatch fresh = h.rackPatch(venue, "Fresh", why);
+    check(fresh.chain.inserts.size() == 1 && fresh.chain.inserts[0].settings.empty(), "a new Venue has no impulse");
+
     // Sends a patch holds are saved even at zero, as the app does; the player's at zero aren't.
     const int quiet = 6;
     h.mountMachine(quiet, "Trinity");
