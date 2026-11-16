@@ -389,7 +389,8 @@ fun App(modifier: Modifier = Modifier) {
 
     // Mosaic's instrument: a SoundFont preset, or WAVs turned into zones.
     var mapTarget by remember { mutableStateOf<Int?>(null) }
-    var presetChoice by remember { mutableStateOf<Pair<Int, List<String>>?>(null) }
+    var presetChoice by AppState.presetChoice
+    var mapBottom by remember { mutableStateOf(false) }
     var mapBusy by remember { mutableStateOf(false) }
 
     fun copyIn(uri: Doc, folder: String, fallback: String): com.rm.acidulous.io.File {
@@ -483,11 +484,11 @@ fun App(modifier: Modifier = Modifier) {
      * because it belongs to the track it was opened from even if the
      * selection moves.
      */
-    var sampleEdit by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var sampleEditAt by AppState.sampleEdit
     // A track deleted under an open window would leave it pointing at nothing,
     // and the keys would play a track that isn't there any more.
     LaunchedEffect(song.tracks.size) {
-        if (sampleEdit?.first?.let { it !in song.tracks.indices } == true) sampleEdit = null
+        if (sampleEditAt?.first?.let { it !in song.tracks.indices } == true) sampleEditAt = null
         if (song.tracks.isNotEmpty() && midiTrack !in song.tracks.indices) midiTrack = song.tracks.size - 1
     }
     // The editor draws nothing for a track or scene that's gone, and its back
@@ -496,13 +497,15 @@ fun App(modifier: Modifier = Modifier) {
         val s = screen as? Screen.Edit ?: return@LaunchedEffect
         if (s.track !in song.tracks.indices || song.scenes.none { it.id == s.sceneId }) screen = Screen.Main
     }
-    sampleEdit?.takeIf { it.first in song.tracks.indices }?.let { (track, pad) ->
+    // A window the second screen asked for is drawn there, unless it has gone.
+    val bottomUp = AppState.secondScreenShown.value
+    sampleEditAt?.takeIf { it.first in song.tracks.indices && (!it.third || !bottomUp) }?.let { (track, pad) ->
         com.rm.acidulous.ui.SampleDialog(
             track = song.tracks[track],
             trackIndex = track,
             pad = pad,
             editor = editor,
-            onBack = { sampleEdit = null },
+            onBack = { sampleEditAt = null },
         )
     }
 
@@ -557,24 +560,25 @@ fun App(modifier: Modifier = Modifier) {
     }
 
     var importTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
-    val samplePicker = rememberOpenDocument { uri ->
-        val (track, key) = importTarget ?: return@rememberOpenDocument
+    val onSampleDoc: (Doc?) -> Unit = onSampleDoc@{ uri ->
+        val (track, key) = importTarget ?: return@onSampleDoc
         importTarget = null
-        if (uri == null) return@rememberOpenDocument
+        if (uri == null) return@onSampleDoc
         // A slice source is one file for the whole machine, so it may be a
         // whole track. See SLICE_SECONDS.
         val seconds = if (key == "slice_sample") NativeEngine.SLICE_SECONDS else NativeEngine.PAD_SECONDS
         bringIn(uri, "sample.wav", seconds) { rel -> editor.edit(track) { t -> t.withSetting(key, rel) } }
     }
+    val samplePicker = rememberOpenDocument(onSampleDoc)
 
     // A whole kit in one go: fills pads from the selected one onwards, in the
     // order the file names sort, which is how kit folders are usually
     // numbered. Works like Mosaic's multi-select zones.
     var kitTarget by remember { mutableStateOf<Pair<Int, Int>?>(null) }
-    val kitPicker = rememberOpenDocuments { uris ->
-        val (track, firstPad) = kitTarget ?: return@rememberOpenDocuments
+    val onKitDocs: (List<Doc>) -> Unit = onKitDocs@{ uris ->
+        val (track, firstPad) = kitTarget ?: return@onKitDocs
         kitTarget = null
-        if (uris.isEmpty()) return@rememberOpenDocuments
+        if (uris.isEmpty()) return@onKitDocs
         scope.launch {
             val named = uris.map { uri ->
                 AppHost.current.docName(uri, "sample.wav") to uri
@@ -622,14 +626,15 @@ fun App(modifier: Modifier = Modifier) {
             }
         }
     }
+    val kitPicker = rememberOpenDocuments(onKitDocs)
 
 
     var status by remember { mutableStateOf("starting…") }
 
-    val soundFontPicker = rememberOpenDocument { uri ->
-        val track = mapTarget ?: return@rememberOpenDocument
+    val onSoundFontDoc: (Doc?) -> Unit = onSoundFontDoc@{ uri ->
+        val track = mapTarget ?: return@onSoundFontDoc
         mapTarget = null
-        if (uri == null) return@rememberOpenDocument
+        if (uri == null) return@onSoundFontDoc
         runCatching {
             val dest = copyIn(uri, "soundfonts", "instrument.sf2")
             val rel = "soundfonts/${dest.name}"
@@ -643,16 +648,17 @@ fun App(modifier: Modifier = Modifier) {
                     val why = withContext(Dispatchers.IO) { NativeEngine.soundFontError(dest.absolutePath) }
                     Log.w(TAG, "soundfont ${dest.name}: ${why.ifEmpty { "no presets" }}")
                 } else if (presets.size > 1) {
-                    presetChoice = track to presets
+                    presetChoice = PresetChoice(track, presets, mapBottom)
                 }
             }
         }.onFailure { Log.w(TAG, "soundfont import failed", it) }
     }
+    val soundFontPicker = rememberOpenDocument(onSoundFontDoc)
 
-    val zoneSamplePicker = rememberOpenDocuments { uris ->
-        val track = mapTarget ?: return@rememberOpenDocuments
+    val onZoneDocs: (List<Doc>) -> Unit = onZoneDocs@{ uris ->
+        val track = mapTarget ?: return@onZoneDocs
         mapTarget = null
-        if (uris.isEmpty()) return@rememberOpenDocuments
+        if (uris.isEmpty()) return@onZoneDocs
         // Undispatched: on Android this runs straight through right here. In
         // a browser it waits on the imports.
         scope.launch(start = kotlinx.coroutines.CoroutineStart.UNDISPATCHED) { runCatching {
@@ -669,6 +675,7 @@ fun App(modifier: Modifier = Modifier) {
             }
         }.onFailure { Log.w(TAG, "zone import failed", it) } }
     }
+    val zoneSamplePicker = rememberOpenDocuments(onZoneDocs)
 
     // Where the playhead is, which is also what "this scene" means.
     var position by remember { mutableStateOf(Position(0, 0, 0)) }
@@ -2054,10 +2061,19 @@ fun App(modifier: Modifier = Modifier) {
     ) {
     // The machine panel's patches, imports and windows, for the editor and the
     // second screen. Built once; the pickers are read as they are now.
-    val pickSample by rememberUpdatedState(samplePicker)
-    val pickKit by rememberUpdatedState(kitPicker)
-    val pickSoundFont by rememberUpdatedState(soundFontPicker)
-    val pickZoneSamples by rememberUpdatedState(zoneSamplePicker)
+    // A picker asked for by the second screen is its own, so the system's
+    // window opens on that display.
+    val topSample by rememberUpdatedState(samplePicker)
+    val topKit by rememberUpdatedState(kitPicker)
+    val topSoundFont by rememberUpdatedState(soundFontPicker)
+    val topZones by rememberUpdatedState(zoneSamplePicker)
+    val pickSample: (Array<String>) -> Unit = { t -> AppState.bottomPickers?.takeIf { AppState.fromBottom }?.sample?.invoke(t) ?: topSample(t) }
+    val pickKit: (Array<String>) -> Unit = { t -> AppState.bottomPickers?.takeIf { AppState.fromBottom }?.kit?.invoke(t) ?: topKit(t) }
+    val pickSoundFont: (Array<String>) -> Unit = { t -> AppState.bottomPickers?.takeIf { AppState.fromBottom }?.soundFont?.invoke(t) ?: topSoundFont(t) }
+    val pickZoneSamples: (Array<String>) -> Unit = { t -> AppState.bottomPickers?.takeIf { AppState.fromBottom }?.zones?.invoke(t) ?: topZones(t) }
+    val pickerResults = PickerResults(onSampleDoc, onKitDocs, onSoundFontDoc, onZoneDocs)
+    androidx.compose.runtime.SideEffect { AppState.pickerResults = pickerResults }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { AppState.pickerResults = null } }
     val panelActions = remember {
         com.rm.acidulous.ui.PanelActions(
             patchNames = { track -> PatchStore.list(song.tracks[track].machine.type) },
@@ -2088,13 +2104,14 @@ fun App(modifier: Modifier = Modifier) {
                 importTarget = track to "slice_sample"
                 pickSample(AUDIO_TYPES)
             },
-            openSample = { track, pad -> sampleEdit = track to pad },
+            openSample = { track, pad -> sampleEditAt = Triple(track, pad, AppState.fromBottom) },
             importOneSample = { track ->
                 importTarget = track to "sample"
                 pickSample(AUDIO_TYPES)
             },
-            importSoundFont = { track -> mapTarget = track; pickSoundFont(arrayOf("*/*")) },
+            importSoundFont = { track -> mapTarget = track; mapBottom = AppState.fromBottom; pickSoundFont(arrayOf("*/*")) },
             pickPreset = { track ->
+                val bottom = AppState.fromBottom
                 val rel = song.tracks[track].machine.settings["sf2"]
                 if (rel != null) {
                     mapBusy = true
@@ -2102,12 +2119,14 @@ fun App(modifier: Modifier = Modifier) {
                         val path = File(EngineAssets.userRoot(), rel).absolutePath
                         val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(path) }
                         mapBusy = false
-                        if (presets.isNotEmpty()) presetChoice = track to presets
+                        if (presets.isNotEmpty()) presetChoice = PresetChoice(track, presets, bottom)
                     }
                 }
             },
-            importZoneSamples = { track -> mapTarget = track; pickZoneSamples(AUDIO_TYPES) },
-            openPatch = { track, sceneId -> screen = Screen.Patch(track, sceneId) },
+            importZoneSamples = { track -> mapTarget = track; mapBottom = AppState.fromBottom; pickZoneSamples(AUDIO_TYPES) },
+            openPatch = { track, sceneId ->
+                if (AppState.fromBottom) AppState.patchEdit.value = track to sceneId else screen = Screen.Patch(track, sceneId)
+            },
         )
     }
     val onClickNow: (Boolean) -> Unit = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) }
@@ -2262,21 +2281,7 @@ fun App(modifier: Modifier = Modifier) {
     // Choosing which SoundFont preset to play. Shown over either screen,
     // because the import starts from the Edit screen but the listing
     // finishes on a worker.
-    presetChoice?.let { (track, presets) ->
-        fun label(line: String): String {
-            val f = line.split('|')
-            return if (f.size >= 3) "%03d:%03d  %s".format(f[0].toIntOrNull() ?: 0, f[1].toIntOrNull() ?: 0, f[2]) else line
-        }
-        com.rm.acidulous.ui.PickerDialog(
-            title = stringResource(Res.string.app_soundfont_preset),
-            options = presets.map { label(it) },
-            onDismiss = { presetChoice = null },
-        ) { chosen ->
-            val index = presets.indexOfFirst { label(it) == chosen }
-            if (index >= 0) editor.edit(track) { t -> t.withSetting("sf2preset", index.toString()) }
-            presetChoice = null
-        }
-    }
+    presetChoice?.takeIf { !it.bottom || !bottomUp }?.let { com.rm.acidulous.ui.PresetChoiceWindow(it, editor) { presetChoice = null } }
 
     // Settings and About, from the song screen's menu or a Mac's app menu, over
     // whatever screen is showing. Not shown by the song screen, which is kept

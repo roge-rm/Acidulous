@@ -110,10 +110,10 @@ class PadTest {
         UiPrefs.choosePadJob(y, Pad.Job.Action(KeyAction.PlayStop))
         assertTrue(y !in UiPrefs.padJobs)
         // A button with no job of its own can be given one, and reset takes it away.
-        val l3 = KeyCodes.KEYCODE_BUTTON_THUMBL
-        UiPrefs.choosePadJob(l3, Pad.Job.Action(KeyAction.Undo))
-        assertEquals(Pad.Job.Action(KeyAction.Undo), Pad.jobOf(l3))
+        val r3 = KeyCodes.KEYCODE_BUTTON_THUMBR
+        UiPrefs.choosePadJob(r3, Pad.Job.Action(KeyAction.Undo))
+        assertEquals(Pad.Job.Action(KeyAction.Undo), Pad.jobOf(r3))
         UiPrefs.resetKeys()
-        assertEquals(Pad.Job.Nothing, Pad.jobOf(l3))
+        assertEquals(Pad.Job.Nothing, Pad.jobOf(r3))
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChangeIgnoreConsumed
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -153,9 +154,13 @@ private fun StepColumn(
                         if (lockMode) { onSelectState(); return@awaitEachGesture }
                         val start = pitchState
                         cb.first()
+                        var travel = 0f
+                        var first = true
                         drag(down.id) { change ->
+                            travel += if (first) down.position.y - change.position.y else -change.positionChangeIgnoreConsumed().y
+                            first = false
                             change.consume()
-                            cb.second(start + ((down.position.y - change.position.y) / 14f).roundToInt())
+                            cb.second(start + (travel / 14f).roundToInt())
                         }
                         cb.third()
                     }

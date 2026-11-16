@@ -82,6 +82,8 @@ Whatever the bottom screen shows leaves the top one: with **keys** (or **pads**)
 
 On **mix**, every strip has pan and both sends as knobs, and the master shows its two sends. On **fx**, the chips **sends**, **master** and the track's name pick what is shown: the two sends, the master's inserts or that track's inserts. Tap the track's chip again for the next track.
 
+The keys and a controller stay with the top screen, even after you touch the bottom one, and play the same track whichever screen you touched. To get round the bottom screen's controls with the d-pad or the arrows, press **L3** (the left stick) or **Ctrl+Tab** (**Alt+O**), and press it again to come back. A touch on the top screen brings them back too. While you type in a box on the bottom screen, the keys stay there until you're done.
+
 ## TalkBack
 
 TalkBack is turned on in the phone's own settings. With it on, every control

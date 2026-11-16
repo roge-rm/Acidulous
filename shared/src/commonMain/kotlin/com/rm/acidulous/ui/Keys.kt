@@ -50,6 +50,7 @@ enum class KeyAction(val label: StringResource, val group: KeyGroup) {
     Help(Res.string.keys_help, KeyGroup.App),
     KeysHelp(Res.string.keys_keys_help, KeyGroup.App),
     Back(Res.string.keys_back, KeyGroup.App),
+    OtherScreen(Res.string.keys_other_screen, KeyGroup.App),
     PagePrev(Res.string.keys_page_prev, KeyGroup.Editor),
     PageNext(Res.string.keys_page_next, KeyGroup.Editor),
     TrackPrev(Res.string.keys_track_prev, KeyGroup.Editor),
@@ -81,6 +82,7 @@ enum class KeyGroup(val label: StringResource) {
  */
 private val THROUGH_WINDOWS = setOf(
     KeyAction.PlayStop, KeyAction.Panic, KeyAction.PlayMode, KeyAction.KeysHelp, KeyAction.Back,
+    KeyAction.OtherScreen,
 )
 
 /** One key and the modifiers held with it. */
@@ -171,6 +173,7 @@ val DEFAULT_KEYS: Map<KeyAction, List<KeyChord>> = run {
         KeyAction.Help to listOf(k(KeyCodes.KEYCODE_F1), alt(KeyCodes.KEYCODE_H)),
         KeyAction.KeysHelp to listOf(k(KeyCodes.KEYCODE_SLASH, shift = true), alt(KeyCodes.KEYCODE_Q)),
         KeyAction.Back to listOf(k(KeyCodes.KEYCODE_ESCAPE)),
+        KeyAction.OtherScreen to listOf(k(KeyCodes.KEYCODE_TAB, ctrl = true), alt(KeyCodes.KEYCODE_O)),
         KeyAction.PagePrev to listOf(k(KeyCodes.KEYCODE_LEFT_BRACKET), alt(KeyCodes.KEYCODE_B)),
         KeyAction.PageNext to listOf(k(KeyCodes.KEYCODE_RIGHT_BRACKET), alt(KeyCodes.KEYCODE_N)),
         // Shift and the page keys, so the pair sits beside pages.
@@ -344,6 +347,24 @@ object KeyHub {
     /** Whether anything in the main window has focus. Set by the app's root. */
     var anyFocused = false
 
+    /**
+     * Keys are on the second screen, moved there by [KeyAction.OtherScreen]
+     * to get round its controls. Arrows then start from its first control.
+     */
+    var onSecond by mutableStateOf(false)
+    /** [focusFirst] and [anyFocused] for the second screen. Set by its root. */
+    var secondFocusFirst: () -> Boolean = { false }
+    var secondAnyFocused = false
+
+    /** Moves the keys to the other screen and back. Set while a second screen is up, null otherwise. */
+    var otherScreen: (() -> Unit)? = null
+
+    /** Text fields on the second screen focused now. That screen keeps the keys while one is. */
+    var typingSecond = 0
+        internal set
+    /** Called when [typingSecond] goes from none to some or back, with whether typing is on. */
+    var onSecondTyping: ((Boolean) -> Unit)? = null
+
     private val ARROWS = setOf(
         KeyCodes.KEYCODE_DPAD_UP, KeyCodes.KEYCODE_DPAD_DOWN, KeyCodes.KEYCODE_DPAD_LEFT, KeyCodes.KEYCODE_DPAD_RIGHT,
     )
@@ -407,6 +428,8 @@ object KeyHub {
     fun live(): List<KeyAction> = KeyAction.entries.filter { a -> handlerFor(a) != null }
 
     private fun handlerFor(action: KeyAction): (() -> Unit)? {
+        // Not a screen's: it works on whatever screen and window is up.
+        if (action == KeyAction.OtherScreen) return otherScreen
         for (scope in scopes.asReversed()) {
             scope.handlers[action]?.let { return it }
             if (scope.window && action !in THROUGH_WINDOWS) return null
@@ -458,7 +481,10 @@ object KeyHub {
         // the screen changes, has nothing to act on. Focus the screen's first
         // control instead, and the next press acts from there. Not in play
         // mode, where arrows are left alone.
-        if ((code in ARROWS || code == KeyCodes.KEYCODE_ENTER) && !anyFocused && !playMode && focusFirst()) {
+        val focusedNow = if (onSecond) secondAnyFocused else anyFocused
+        if ((code in ARROWS || code == KeyCodes.KEYCODE_ENTER) && !focusedNow && !playMode &&
+            (if (onSecond) secondFocusFirst() else focusFirst())
+        ) {
             taken += code
             return true
         }
@@ -537,7 +563,8 @@ fun KeyScope(vararg handlers: Pair<KeyAction, () -> Unit>, window: Boolean = fal
  * every shortcut would stay dead.
  */
 fun Modifier.typing(): Modifier = composed {
-    val field = androidx.compose.runtime.remember { TypingField() }
+    val second = LocalSecondScreen.current
+    val field = androidx.compose.runtime.remember(second) { TypingField(second) }
     DisposableEffect(field) { onDispose { field.focused(false) } }
     onFocusChanged { field.focused(it.isFocused) }
 }
@@ -546,15 +573,23 @@ fun Modifier.typing(): Modifier = composed {
  * One text field's part in [KeyHub.typing]. Each field counts itself, since
  * moving from one field to another can tell the new one before the old one.
  */
-internal class TypingField {
+internal class TypingField(private val second: Boolean = false) {
     private var on = false
 
     fun focused(now: Boolean) {
         if (now == on) return
         on = now
         KeyHub.typingFields = (KeyHub.typingFields + if (now) 1 else -1).coerceAtLeast(0)
+        if (second) {
+            val was = KeyHub.typingSecond > 0
+            KeyHub.typingSecond = (KeyHub.typingSecond + if (now) 1 else -1).coerceAtLeast(0)
+            if (was != KeyHub.typingSecond > 0) KeyHub.onSecondTyping?.invoke(!was)
+        }
     }
 }
+
+/** True for everything drawn on the second screen. */
+val LocalSecondScreen = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 /**
  * "PlayStop=:62;Undo=c:54,a:54": stored by name, so reordering the enum can't move anybody's

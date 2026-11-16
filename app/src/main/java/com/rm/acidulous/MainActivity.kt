@@ -156,6 +156,10 @@ class MainActivity : ComponentActivity() {
             SecondScreens.mainAlive = false
             SecondScreens.close()
         }
+        if (SecondScreens.main === this) {
+            SecondScreens.main = null
+            SecondScreens.mainResumed = false
+        }
         // Closing for good: turn the Exquis pads off.
         if (isFinishing) {
             com.rm.acidulous.midi.MidiHub.clearPads()
@@ -195,6 +199,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         SecondScreens.mainAlive = true
+        SecondScreens.main = this
+        SecondScreens.mainTaskId = taskId
         getSystemService(android.hardware.display.DisplayManager::class.java)?.registerDisplayListener(displayListener, null)
         setContent {
             // Opens or closes the second screen when the setting changes, and once at the start.
@@ -244,7 +250,25 @@ class MainActivity : ComponentActivity() {
 
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
         com.rm.acidulous.ui.KeyHub.usingKeys = false
+        // A touch here takes the keys back from the second screen.
+        if (ev.actionMasked == android.view.MotionEvent.ACTION_DOWN) com.rm.acidulous.ui.KeyHub.onSecond = false
         return super.dispatchTouchEvent(ev)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        SecondScreens.mainResumed = true
+    }
+
+    override fun onPause() {
+        SecondScreens.mainResumed = false
+        super.onPause()
+    }
+
+    override fun onTopResumedActivityChanged(isTopResumedActivity: Boolean) {
+        super.onTopResumedActivityChanged(isTopResumedActivity)
+        // Focus is here, so the keys are too.
+        if (isTopResumedActivity) com.rm.acidulous.ui.KeyHub.onSecond = false
     }
 
     /** What Meta+/ lists on a USB keyboard: the shortcuts this screen has. */

@@ -51,6 +51,7 @@ in the keys window (see **Changing the keys** below):
 - manual - **F1**, or **Alt+H**
 - the list of keys - **Shift+/**, or **Alt+Q**
 - back - **Esc**
+- keys to the other screen, on a device with two - **Ctrl+Tab**, or **Alt+O**
 <!-- desktop: - full screen - **F11** -->
 
 In the editor:
@@ -128,6 +129,8 @@ touching the screen, on a handheld like the Retroid Pocket.
 - **L2** and **R2** - previous and next track in the editor.
 - **Start** - play mode.
 - **Select** - the file menu.
+- **L3** (press the left stick) - the d-pad to the second screen and back, on
+  a device with two.
 - extra buttons, like a Steam Deck's four on the back - undo, redo, record, and
   play / stop.
 

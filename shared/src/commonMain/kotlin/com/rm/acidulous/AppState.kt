@@ -61,6 +61,24 @@ object AppState {
     /** The companion is up and showing right now, so the main screen can hand things to it. */
     val secondScreenShown: MutableState<Boolean> = mutableStateOf(false)
 
+    /** A panel action is running that the second screen asked for, so what it opens goes there. */
+    var fromBottom: Boolean = false
+
+    /** Track, pad and whether the sample editor is on the second screen. */
+    val sampleEdit: MutableState<Triple<Int, Int, Boolean>?> = mutableStateOf(null)
+
+    /** Track, scene and whether the SoundFont's preset list is for the second screen. */
+    val presetChoice: MutableState<PresetChoice?> = mutableStateOf(null)
+
+    /** The track whose Nexus graph the second screen shows, with its scene. */
+    val patchEdit: MutableState<Pair<Int, String>?> = mutableStateOf(null)
+
+    /** The second screen's own file pickers, so a system picker opens on its display. Set while it is composed. */
+    var bottomPickers: BottomPickers? = null
+
+    /** What [App] does with a file chosen in either screen's picker. Set while [App] is composed. */
+    var pickerResults: PickerResults? = null
+
     private val pads = HashMap<String, MutableState<Int>>()
 
     /** The pad a track's panel shows, shared by the editor and the second screen. */
@@ -86,4 +104,20 @@ class TopHooks(
     val clickOn: () -> Boolean,
     val onClick: (Boolean) -> Unit,
     val panel: com.rm.acidulous.ui.PanelActions,
+)
+
+class PresetChoice(val track: Int, val presets: List<String>, val bottom: Boolean)
+
+class BottomPickers(
+    val sample: (Array<String>) -> Unit,
+    val kit: (Array<String>) -> Unit,
+    val soundFont: (Array<String>) -> Unit,
+    val zones: (Array<String>) -> Unit,
+)
+
+class PickerResults(
+    val sample: (Doc?) -> Unit,
+    val kit: (List<Doc>) -> Unit,
+    val soundFont: (Doc?) -> Unit,
+    val zones: (List<Doc>) -> Unit,
 )

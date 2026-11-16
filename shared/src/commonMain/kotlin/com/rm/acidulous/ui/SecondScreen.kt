@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,10 +24,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.rm.acidulous.AppState
+import com.rm.acidulous.BottomPickers
+import com.rm.acidulous.PresetChoice
+import com.rm.acidulous.rememberOpenDocument
+import com.rm.acidulous.util.format
+import com.rm.acidulous.rememberOpenDocuments
+import com.rm.acidulous.model.SongEditor
+import com.rm.acidulous.model.withImpulseChanged
+import com.rm.acidulous.model.withSetting
 import com.rm.acidulous.ScaledTheme
 import com.rm.acidulous.Screen
 import com.rm.acidulous.model.MachineKind
@@ -41,8 +51,96 @@ import com.rm.acidulous.ui.theme.Acid
  */
 @Composable
 fun SecondScreenRoot() {
+    val song by AppState.song
+    // The bottom's own pickers, so the system's file window opens on this display.
+    val sample = rememberOpenDocument { AppState.pickerResults?.sample?.invoke(it) }
+    val kit = rememberOpenDocuments { AppState.pickerResults?.kit?.invoke(it) }
+    val soundFont = rememberOpenDocument { AppState.pickerResults?.soundFont?.invoke(it) }
+    val zones = rememberOpenDocuments { AppState.pickerResults?.zones?.invoke(it) }
+    DisposableEffect(Unit) {
+        val mine = BottomPickers(sample, kit, soundFont, zones)
+        AppState.bottomPickers = mine
+        onDispose { if (AppState.bottomPickers === mine) AppState.bottomPickers = null }
+    }
+    // Windows asked for here go away with the screen.
+    DisposableEffect(Unit) {
+        onDispose {
+            AppState.sampleEdit.value = AppState.sampleEdit.value?.takeIf { !it.third }
+            AppState.presetChoice.value = AppState.presetChoice.value?.takeIf { !it.bottom }
+            AppState.patchEdit.value = null
+        }
+    }
     ScaledTheme {
-        Box(Modifier.fillMaxSize().background(Acid.colors.bg)) { SecondScreen() }
+        CompositionLocalProvider(
+            LocalSongMappings provides song.mappings,
+            LocalRoomChanged provides { old, new -> AppState.editor.editSong { it.withImpulseChanged(old, new) } },
+            LocalSecondScreen provides true,
+        ) {
+            SecondFocus()
+            Box(
+                Modifier.fillMaxSize().background(Acid.colors.bg)
+                    .onFocusChanged { KeyHub.secondAnyFocused = it.hasFocus },
+            ) {
+                SecondScreen()
+                BottomWindows()
+            }
+        }
+    }
+}
+
+/** Where arrows start on this screen when the keys are moved here and nothing has focus. */
+@Composable
+private fun SecondFocus() {
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
+    val inputMode = androidx.compose.ui.platform.LocalInputModeManager.current
+    DisposableEffect(focusManager) {
+        val mine: () -> Boolean = {
+            // Keyboard mode, so the focus ring shows after a touch.
+            if (inputMode.inputMode != androidx.compose.ui.input.InputMode.Keyboard) {
+                inputMode.requestInputMode(androidx.compose.ui.input.InputMode.Keyboard)
+            }
+            focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Next)
+        }
+        KeyHub.secondFocusFirst = mine
+        onDispose {
+            if (KeyHub.secondFocusFirst === mine) KeyHub.secondFocusFirst = { false }
+            KeyHub.secondAnyFocused = false
+        }
+    }
+}
+
+/** The windows a bottom panel opened: the sample editor, the SoundFont's presets and Nexus's graph. */
+@Composable
+private fun BottomWindows() {
+    val song by AppState.song
+    val editor = AppState.editor
+    var sample by AppState.sampleEdit
+    sample?.takeIf { it.third && it.first in song.tracks.indices }?.let { (track, pad) ->
+        SampleDialog(song.tracks[track], track, pad, editor) { sample = null }
+    }
+    var preset by AppState.presetChoice
+    preset?.takeIf { it.bottom }?.let { PresetChoiceWindow(it, editor) { preset = null } }
+    var patch by AppState.patchEdit
+    patch?.takeIf { it.first in song.tracks.indices }?.let { (track, _) ->
+        PatchScreen(song.tracks[track], track, editor, { patch = null }, Modifier.fillMaxSize().background(Acid.colors.bg))
+    }
+}
+
+/** Which SoundFont preset to play, as a list. */
+@Composable
+fun PresetChoiceWindow(choice: PresetChoice, editor: SongEditor, onDone: () -> Unit) {
+    fun label(line: String): String {
+        val f = line.split('|')
+        return if (f.size >= 3) "%03d:%03d  %s".format(f[0].toIntOrNull() ?: 0, f[1].toIntOrNull() ?: 0, f[2]) else line
+    }
+    PickerDialog(
+        title = stringResource(Res.string.app_soundfont_preset),
+        options = choice.presets.map { label(it) },
+        onDismiss = onDone,
+    ) { chosen ->
+        val index = choice.presets.indexOfFirst { label(it) == chosen }
+        if (index >= 0) editor.edit(choice.track) { t -> t.withSetting("sf2preset", index.toString()) }
+        onDone()
     }
 }
 
@@ -121,7 +219,7 @@ private fun SecondScreen() {
             h != null && page == 1 -> Box(body) {
                 CompositionLocalProvider(LocalPanelGrid provides true) {
                     TrackMachinePanel(
-                        track, index, AppState.editor, h.panel, selectedPad, sceneId,
+                        track, index, AppState.editor, remember(h.panel) { h.panel.forSecondScreen() }, selectedPad, sceneId,
                         foldable = false, modifier = Modifier.fillMaxSize(),
                     )
                 }

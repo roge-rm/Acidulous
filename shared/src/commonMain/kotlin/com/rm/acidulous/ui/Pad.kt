@@ -37,9 +37,14 @@ object Pad {
     )
 
     /** Every job a button can be given: pressing, going back, a long press, nothing, or any shortcut's action. */
-    val CHOICES: List<Job> = listOf(
-        Job.Key(KeyCodes.KEYCODE_ENTER), Job.Key(KeyCodes.KEYCODE_ESCAPE), Job.Key(KeyCodes.KEYCODE_MENU), Job.Nothing,
-    ) + KeyAction.entries.map { Job.Action(it) }
+    val CHOICES: List<Job>
+        get() = listOf(
+            Job.Key(KeyCodes.KEYCODE_ENTER), Job.Key(KeyCodes.KEYCODE_ESCAPE), Job.Key(KeyCodes.KEYCODE_MENU), Job.Nothing,
+        ) + shownActions().map { Job.Action(it) }
+
+    /** The shortcut actions this platform has: the other screen is Android's. */
+    fun shownActions(): List<KeyAction> =
+        KeyAction.entries.filter { it != KeyAction.OtherScreen || runCatching { com.rm.acidulous.AppHost.current.platformName }.getOrNull() == null }
 
     /** A job as it's stored: "key:66", "action:PlayStop", "none". */
     fun encode(job: Job): String = when (job) {
@@ -68,6 +73,8 @@ object Pad {
         KeyCodes.KEYCODE_BUTTON_R1 to Job.Action(KeyAction.PageNext),
         KeyCodes.KEYCODE_BUTTON_L2 to Job.Action(KeyAction.TrackPrev),
         KeyCodes.KEYCODE_BUTTON_R2 to Job.Action(KeyAction.TrackNext),
+        // Pressing the left stick moves the d-pad to the second screen and back.
+        KeyCodes.KEYCODE_BUTTON_THUMBL to Job.Action(KeyAction.OtherScreen),
         // Extra buttons, like the Steam Deck's four on the back: L4, R4, L5, R5.
         KeyCodes.KEYCODE_BUTTON_1 to Job.Action(KeyAction.Undo),
         KeyCodes.KEYCODE_BUTTON_1 + 1 to Job.Action(KeyAction.Redo),
@@ -93,8 +100,8 @@ object Pad {
 
     /**
      * A controller's key in play mode. The notes, the octave on L1 and R1,
-     * play and stop on Select (Y is a note now). Start still leaves play
-     * mode, as its job. True when it was taken here.
+     * play and stop on Select (Y is a note now). Start, L3 and R3 keep
+     * their jobs, so Start still leaves play mode. True when it was taken here.
      */
     fun play(keyCode: Int, down: Boolean, repeat: Int): Boolean {
         DEGREES[keyCode]?.let { degree ->
@@ -110,7 +117,7 @@ object Pad {
             KeyCodes.KEYCODE_BUTTON_L1 -> { if (first) KeyHub.shiftOctave(-1); true }
             KeyCodes.KEYCODE_BUTTON_R1 -> { if (first) KeyHub.shiftOctave(1); true }
             KeyCodes.KEYCODE_BUTTON_SELECT -> { if (first) KeyHub.run(KeyAction.PlayStop); true }
-            KeyCodes.KEYCODE_BUTTON_START -> false
+            KeyCodes.KEYCODE_BUTTON_START, KeyCodes.KEYCODE_BUTTON_THUMBL, KeyCodes.KEYCODE_BUTTON_THUMBR -> false
             else -> isButton(keyCode)
         }
     }

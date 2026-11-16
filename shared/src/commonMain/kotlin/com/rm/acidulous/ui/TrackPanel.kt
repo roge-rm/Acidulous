@@ -38,6 +38,27 @@ class PanelActions(
     val openPatch: (track: Int, sceneId: String) -> Unit,
 )
 
+/** These actions for the second screen: what they open goes to that screen. */
+fun PanelActions.forSecondScreen(): PanelActions {
+    fun <T> there(f: () -> T): T {
+        AppState.fromBottom = true
+        try { return f() } finally { AppState.fromBottom = false }
+    }
+    val a = this
+    return PanelActions(
+        a.patchNames, a.savePatch, a.loadPatch, a.factoryPatches, a.userPatchNames, a.deletePatch,
+        importSample = { t, p -> there { a.importSample(t, p) } },
+        importKit = { t, p -> there { a.importKit(t, p) } },
+        importSlice = { t -> there { a.importSlice(t) } },
+        openSample = { t, p -> there { a.openSample(t, p) } },
+        importOneSample = { t -> there { a.importOneSample(t) } },
+        importSoundFont = { t -> there { a.importSoundFont(t) } },
+        pickPreset = { t -> there { a.pickPreset(t) } },
+        importZoneSamples = { t -> there { a.importZoneSamples(t) } },
+        openPatch = { t, s -> there { a.openPatch(t, s) } },
+    )
+}
+
 /**
  * A track's machine panel wired to [actions]: the one the editor shows, and
  * the second screen's. The keyboard's octave is the track's in [AppState].

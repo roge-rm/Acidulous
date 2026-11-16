@@ -102,7 +102,7 @@ fun KeysDialog(onDismiss: () -> Unit) {
             for (group in KeyGroup.entries) {
                 WindowCard(stringResource(group.label)) {
                     Column(Modifier.cardLine(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        for (action in KeyAction.entries.filter { it.group == group }) {
+                        for (action in Pad.shownActions().filter { it.group == group }) {
                             val chords = bindings[action].orEmpty()
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 Text(

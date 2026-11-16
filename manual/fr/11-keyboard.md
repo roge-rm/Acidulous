@@ -53,6 +53,7 @@ Un clavier complet a de la place pour deux octaves. Choisissez **tracker** sous
 - manuel - **F1**, ou **Alt+H**
 - la liste des touches - **Maj+/**, ou **Alt+Q**
 - retour - **Échap**
+- touches vers l’autre écran, sur un appareil qui en a deux - **Ctrl+Tab**, ou **Alt+O**
 <!-- desktop: - plein écran - **F11** -->
 
 Dans l’éditeur :
@@ -140,6 +141,8 @@ Pocket.
 - **L2** et **R2** - piste précédente et suivante dans l’éditeur.
 - **Start** - mode jeu.
 - **Select** - le menu fichier.
+- **L3** (appuyer sur le stick gauche) - la croix vers le second écran et
+  retour, sur un appareil qui en a deux.
 - les boutons en plus, comme les quatre au dos d’un Steam Deck - annuler,
   rétablir, enregistrer, et jouer / arrêter.
 

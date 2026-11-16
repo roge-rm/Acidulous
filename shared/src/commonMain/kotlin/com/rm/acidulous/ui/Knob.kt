@@ -45,6 +45,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChangeIgnoreConsumed
 import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
@@ -181,10 +182,14 @@ fun Knob(
                         return@awaitEachGesture
                     }
                     cb.first()
+                    // Summed from each move after the first, so a layout change under the finger can't jump the value.
+                    var travel = 0f
+                    var first = true
                     drag(down.id) { change ->
+                        travel += if (first) startY - change.position.y else -change.positionChangeIgnoreConsumed().y
+                        first = false
                         change.consume()
-                        val dv = (startY - change.position.y) / 200f
-                        cb.second((startValue + dv).coerceIn(0f, 1f))
+                        cb.second((startValue + travel / 200f).coerceIn(0f, 1f))
                     }
                     cb.third()
                 }

@@ -19,6 +19,7 @@
     <string name="keys_help">manuel</string>
     <string name="keys_keys_help">cette liste</string>
     <string name="keys_back">retour</string>
+    <string name="keys_other_screen">touches vers l’autre écran</string>
     <string name="keys_page_prev">page précédente</string>
     <string name="keys_page_next">page suivante</string>
     <string name="keys_track_prev">piste précédente</string>

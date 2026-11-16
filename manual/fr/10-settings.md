@@ -94,6 +94,8 @@ Ce que l’écran du bas montre quitte celui du haut : avec **clavier** (ou **pa
 
 Sur **mix**, chaque tranche a le panoramique et les deux envois en boutons, et le général montre ses deux envois. Sur **fx**, les puces **envois**, **général** et le nom de la piste choisissent ce qui est montré : les deux envois, les inserts du général ou ceux de cette piste. Touchez encore la puce de la piste pour la piste suivante.
 
+Les touches et la manette restent sur l’écran du haut, même après avoir touché celui du bas, et jouent la même piste quel que soit l’écran touché. Pour parcourir les commandes de l’écran du bas avec la croix ou les flèches, appuyez sur **L3** (le stick gauche) ou **Ctrl+Tab** (**Alt+O**), et encore une fois pour revenir. Toucher l’écran du haut les ramène aussi. Pendant que vous tapez dans un champ de l’écran du bas, les touches y restent jusqu’à ce que vous ayez fini.
+
 ## TalkBack
 
 TalkBack s’active dans les réglages du téléphone. Quand il est actif, chaque
