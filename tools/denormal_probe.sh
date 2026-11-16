@@ -6,6 +6,7 @@
 # envelope follower or a feedback path.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+. "$ROOT/tools/build_dir.sh"
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
@@ -14,7 +15,7 @@ LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 g++ -O2 -std=c++17 -I "$CPP" "$ROOT/tools/denormal_probe.cpp" "$LIB" -o "$DIR/plain" -lpthread || exit 1
 
 # The engine again with the web build's guards compiled in.
-GUARDED=$(HOST_ENGINE_OUT="$ROOT/build/host-engine-guarded" HOST_ENGINE_FLAGS=-DACID_SOFT_DENORMALS \
+GUARDED=$(HOST_ENGINE_OUT="$BUILD/host-engine-guarded" HOST_ENGINE_FLAGS=-DACID_SOFT_DENORMALS \
     "$ROOT/tools/host_engine.sh") || exit 1
 g++ -O2 -std=c++17 -DACID_SOFT_DENORMALS -I "$CPP" "$ROOT/tools/denormal_probe.cpp" "$GUARDED" \
     -o "$DIR/guarded" -lpthread || exit 1

@@ -6,6 +6,7 @@
 #   song_fingerprint.sh [seconds] [workers]
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+. "$ROOT/tools/build_dir.sh"
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
@@ -14,7 +15,7 @@ trap 'rm -rf "$DIR"' EXIT
 FLAGS="-O2"
 if [ "${TSAN:-0}" = 1 ]; then
     FLAGS="-O1 -g -fsanitize=thread"
-    export HOST_ENGINE_FLAGS="$FLAGS" HOST_ENGINE_OUT="$ROOT/build/host-engine-tsan"
+    export HOST_ENGINE_FLAGS="$FLAGS" HOST_ENGINE_OUT="$BUILD/host-engine-tsan"
 fi
 LIB=$("$ROOT/tools/host_engine.sh") || exit 1
 g++ $FLAGS -std=c++17 -pthread -I "$CPP" "$ROOT/tools/song_fingerprint.cpp" "$LIB" -o "$DIR/song_fingerprint" || exit 1

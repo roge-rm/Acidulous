@@ -4,8 +4,9 @@
 # host objects in build/engine-replay, built with the same flags.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+. "$ROOT/tools/build_dir.sh"
 CPP="$ROOT/app/src/main/cpp"
-OUT="$ROOT/build/engine-replay"
+OUT="$BUILD/engine-replay"
 BIN="$OUT/patch_chain_test"
 FLAGS="-O1 -fPIC -std=c++17 -pthread"
 REPLAY_FLAGS="-O3 -ffast-math -fno-finite-math-only -fPIC -std=c++17 -pthread"
@@ -35,7 +36,7 @@ fi
 touch "$STAMP"
 # EngineHost links the MP3 writer, so LAME for the host, as engine_replay.sh builds it.
 LAME_SRC="$CPP/third_party/lame"
-LAME_OUT="$ROOT/build/lame-host"
+LAME_OUT="$BUILD/lame-host"
 LAME="$LAME_OUT/libmp3lame.a"
 mkdir -p "$LAME_OUT"
 if [ ! -f "$LAME" ] || [ -n "$(find "$LAME_SRC" -name '*.[ch]' -newer "$LAME" -print -quit)" ]; then

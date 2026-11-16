@@ -5,6 +5,7 @@
 set -u
 set -o pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+. "$ROOT/tools/build_dir.sh"
 CPP="$ROOT/app/src/main/cpp"
 DIR=$(mktemp -d)
 trap 'rm -rf "$DIR"' EXIT
@@ -15,11 +16,11 @@ fail=0
 
 # Builds the host objects (and runs the patch chain checks, quietly).
 "$ROOT/tools/patch_chain_test.sh" > /dev/null 2>&1 || { echo "  FAIL patch_chain_test.sh did not build"; exit 1; }
-OUT="$ROOT/build/engine-replay"
+OUT="$BUILD/engine-replay"
 INCLUDES="-I $CPP/platform/lines -I $CPP/platform/desktop -I $CPP/platform/web -I $CPP -I $CPP/platform -I $CPP/third_party/lame/include"
 objs=$(ls "$OUT"/*.o | grep -v -e tools_ -e engine_replay)
 g++ -O1 -fPIC -std=c++17 -pthread $INCLUDES "$ROOT/tools/hostbeat_host_test.cpp" $objs \
-    "$ROOT/build/lame-host/libmp3lame.a" -lm -o "$DIR/hostbeat_host_test" || exit 1
+    "$BUILD/lame-host/libmp3lame.a" -lm -o "$DIR/hostbeat_host_test" || exit 1
 "$DIR/hostbeat_host_test" 2>&1 | grep -v "^[IE]/" || fail=1
 # Both binaries' totals, for all_tests.sh's tail.
 exit $fail

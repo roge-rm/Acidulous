@@ -13,9 +13,10 @@
 # objects are kept in build/engine-replay and only what changed is rebuilt.
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
+. "$ROOT/tools/build_dir.sh"
 CPP="$ROOT/app/src/main/cpp"
 LAME="$CPP/third_party/lame"
-OUT="$ROOT/build/engine-replay"
+OUT="$BUILD/engine-replay"
 BIN="$OUT/engine_replay"
 FLAGS="-O3 -ffast-math -fno-finite-math-only -fPIC -std=c++17 -pthread"
 [ -d /usr/lib/ccache ] && export PATH="/usr/lib/ccache:$PATH"
@@ -30,7 +31,7 @@ if [ $# -lt 2 ]; then
 fi
 
 # LAME for the host, shared with sink_test.sh.
-LAME_OUT="$ROOT/build/lame-host"
+LAME_OUT="$BUILD/lame-host"
 ARCHIVE="$LAME_OUT/libmp3lame.a"
 mkdir -p "$LAME_OUT"
 if [ ! -f "$ARCHIVE" ] || [ -n "$(find "$LAME" -name '*.[ch]' -newer "$ARCHIVE" -print -quit)" ]; then
