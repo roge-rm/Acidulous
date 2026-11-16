@@ -21,6 +21,7 @@
     <!-- Look for a new version once a day. -->
     <string name="settings_updates">mises à jour</string>
     <string name="settings_stay_awake">rester allumé</string>
+    <string name="settings_second_screen">second écran</string>
     <string name="settings_language">langue</string>
     <!-- The system's language, then each language named in itself, as a menu item starts: these stay as they are in every translation. In the order of UiPrefs.Language. -->
     <string-array name="settings_language_choices">
@@ -127,4 +128,10 @@
         <item>par canal</item>
     </string-array>
     <string name="settings_arriving_track">piste</string>
+    <!-- The second screen's pages: the mixer, and a machine's panel. -->
+    <string name="second_mix">mix</string>
+    <string name="second_panel">panneau</string>
+    <string name="second_grid">grille</string>
+    <string name="second_in_key">gamme</string>
+    <string name="second_all_notes">toutes</string>
 </resources>

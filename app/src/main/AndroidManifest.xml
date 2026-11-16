@@ -120,6 +120,18 @@
                 <data android:mimeType="audio/mp3" />
             </intent-filter>
         </activity>
+        <!-- Keys or pads on a second screen, started by MainActivity on the
+             display it picks (see SecondScreens). A task of its own so it
+             can sit on the other display. -->
+        <activity
+            android:name=".CompanionActivity"
+            android:exported="false"
+            android:taskAffinity="${applicationId}.companion"
+            android:excludeFromRecents="true"
+            android:resizeableActivity="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|density|uiMode|navigation|fontScale"
+            android:theme="@style/Theme.Acidulous"
+            android:launchMode="standard" />
 
         <!-- What the app hands to the share sheet: a song bundle it built. -->
         <provider

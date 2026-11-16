@@ -97,41 +97,7 @@ import kotlinx.coroutines.withContext
  */
 @Composable
 fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
-    // One density above everything.
-    //
-    // The interface scale multiplies the density rather than each size, so
-    // every `dp` and `sp` in the tree goes through this one `Density` and the
-    // whole app scales together. Composition locals reach into a `Dialog`'s
-    // subcomposition too, so windows scale with it.
-    //
-    // Outside `AcidulousTheme` because the splash and the Scaffold's insets
-    // are inside it and should scale too. Always computed from `base` rather
-    // than from `LocalDensity`, or the multiplier would compound on every
-    // recomposition.
-    //
-    // At a bigger scale the app just sees less screen (at 1.3 a Pixel 5
-    // reports 302 x 655 dp instead of 393 x 851), which every screen already
-    // handles. ui/UiScale.kt limits the scale to what the screen allows.
-    val base = androidx.compose.ui.platform.LocalDensity.current
-    // The window's size, whatever the platform calls its window.
-    val windowPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
-    val scale = com.rm.acidulous.ui.appliedScale(
-        com.rm.acidulous.ui.UiPrefs.uiScale,
-        minOf(windowPx.width, windowPx.height) / base.density,
-        maxOf(windowPx.width, windowPx.height) / base.density,
-    )
-    androidx.compose.runtime.CompositionLocalProvider(
-        androidx.compose.ui.platform.LocalDensity provides
-            androidx.compose.ui.unit.Density(base.density * scale, base.fontScale),
-        com.rm.acidulous.ui.LocalUiScale provides scale,
-        // The unscaled density goes along too, because Compose gives every
-        // window drawn over this one a fresh density and it has to reapply
-        // the scale itself. See ui/UiScale.kt.
-        com.rm.acidulous.ui.LocalBaseDensity provides base,
-    ) {
-    AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
-    // Everything is built again in a new language: strings are read as screens are made.
-    androidx.compose.runtime.key(com.rm.acidulous.ui.UiPrefs.language) {
+    ScaledTheme {
         // For the platform's own bars.
         val light = !com.rm.acidulous.ui.theme.Acid.colors.dark
         androidx.compose.runtime.LaunchedEffect(light) { onLightTheme(light) }
@@ -171,6 +137,51 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
             exit = androidx.compose.animation.fadeOut(androidx.compose.animation.core.tween(com.rm.acidulous.ui.SplashFadeOut)),
         ) { com.rm.acidulous.ui.SplashScreen() }
     }
+}
+
+/**
+ * The interface scale, the theme and the language, around [content]. Every
+ * window the app opens on a screen of its own goes inside one of these.
+ */
+@Composable
+fun ScaledTheme(content: @Composable () -> Unit) {
+    // One density above everything.
+    //
+    // The interface scale multiplies the density rather than each size, so
+    // every `dp` and `sp` in the tree goes through this one `Density` and the
+    // whole app scales together. Composition locals reach into a `Dialog`'s
+    // subcomposition too, so windows scale with it.
+    //
+    // Outside `AcidulousTheme` because the splash and the Scaffold's insets
+    // are inside it and should scale too. Always computed from `base` rather
+    // than from `LocalDensity`, or the multiplier would compound on every
+    // recomposition.
+    //
+    // At a bigger scale the app just sees less screen (at 1.3 a Pixel 5
+    // reports 302 x 655 dp instead of 393 x 851), which every screen already
+    // handles. ui/UiScale.kt limits the scale to what the screen allows.
+    val base = androidx.compose.ui.platform.LocalDensity.current
+    // The window's size, whatever the platform calls its window.
+    val windowPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
+    val scale = com.rm.acidulous.ui.appliedScale(
+        com.rm.acidulous.ui.UiPrefs.uiScale,
+        minOf(windowPx.width, windowPx.height) / base.density,
+        maxOf(windowPx.width, windowPx.height) / base.density,
+    )
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides
+            androidx.compose.ui.unit.Density(base.density * scale, base.fontScale),
+        com.rm.acidulous.ui.LocalUiScale provides scale,
+        // The unscaled density goes along too, because Compose gives every
+        // window drawn over this one a fresh density and it has to reapply
+        // the scale itself. See ui/UiScale.kt.
+        com.rm.acidulous.ui.LocalBaseDensity provides base,
+    ) {
+    AcidulousTheme(com.rm.acidulous.ui.UiPrefs.theme) {
+    // Everything is built again in a new language: strings are read as screens are made.
+    androidx.compose.runtime.key(com.rm.acidulous.ui.UiPrefs.language) {
+        content()
+    }
     }
     }
 }
@@ -205,7 +216,8 @@ private val AUDIO_TYPES = arrayOf(
     "audio/mpeg", "audio/mp3", "audio/x-mp3", "audio/mpeg3",
 )
 
-private sealed class Screen {
+/** What the main screen shows; see [AppState.screen]. */
+internal sealed class Screen {
     object Main : Screen()
     data class Edit(val track: Int, val sceneId: String) : Screen()
     // Nexus's graph needs a whole screen. A node canvas can't fit in the
@@ -226,14 +238,15 @@ private sealed class Screen {
                     else -> listOf("main")
                 }
             },
+            // Into AppState's, so the second screen sees it.
             restore = { saved ->
-                mutableStateOf(
-                    when (saved.firstOrNull()) {
+                AppState.screen.apply {
+                    value = when (saved.firstOrNull()) {
                         "edit" -> Edit(saved[1] as Int, saved[2] as String)
                         "patch" -> Patch(saved[1] as Int, saved[2] as String)
                         else -> Main
                     }
-                )
+                }
             },
         )
     }
@@ -244,22 +257,9 @@ fun App(modifier: Modifier = Modifier) {
     // Read through this rather than the context, so text follows a change of language.
     val resources = AppStrings
 
-    // Referential, not structural: Song equality is by value (rev is left out
-    // of equals on purpose), so a value-equal load or edit would otherwise be
-    // silently dropped.
-    var song by remember { mutableStateOf(DemoSong.build(), referentialEqualityPolicy()) }
-    var lastPushMs by remember { mutableStateOf(0L) }
-    val editor = remember {
-        SongEditor(song) { edited, pushNow ->
-            song = edited
-    // Taps and gesture ends push at once. Mid-gesture updates throttle to ~15 Hz.
-            val now = System.nanoTime() / 1_000_000L
-            if (pushNow || now - lastPushMs >= 66) {
-                EngineSync.sync(edited)
-                lastPushMs = now
-            }
-        }
-    }
+    // The song and its editor are the process's, so the second screen shares them.
+    var song by AppState.song
+    val editor = AppState.editor
     val recorder = remember { Recorder() }
     // Record quantise and replace, as set in Settings, record.
     androidx.compose.runtime.SideEffect {
@@ -267,10 +267,15 @@ fun App(modifier: Modifier = Modifier) {
         recorder.strength = com.rm.acidulous.ui.UiPrefs.recordStrength / 100f
         recorder.replace = com.rm.acidulous.ui.UiPrefs.recordReplace
     }
-    var screen by rememberSaveable(saver = Screen.Saver) { mutableStateOf<Screen>(Screen.Main) }
+    // AppState's, so the second screen follows it. A new activity starts on
+    // the song screen, as before.
+    var screen by rememberSaveable(saver = Screen.Saver) { AppState.screen.apply { value = Screen.Main } }
     // Hardware notes go to the track of the last opened clip, which is the
     // one being worked on whether or not its editor is still open.
-    var midiTrack by rememberSaveable { mutableStateOf(0) }
+    // Saved here so it comes back after process death, like the screen.
+    var midiTrack by rememberSaveable(
+        saver = Saver<MutableState<Int>, Int>({ it.value }, { AppState.midiTrack.apply { value = it } }),
+    ) { AppState.midiTrack }
     LaunchedEffect(screen) {
         (screen as? Screen.Edit)?.let { midiTrack = it.track }
         com.rm.acidulous.midi.MidiHub.target = { midiTrack }
@@ -2047,6 +2052,72 @@ fun App(modifier: Modifier = Modifier) {
         com.rm.acidulous.ui.LocalSongMappings provides song.mappings,
         com.rm.acidulous.ui.LocalRoomChanged provides { old, new -> editor.editSong { it.withImpulseChanged(old, new) } },
     ) {
+    // The machine panel's patches, imports and windows, for the editor and the
+    // second screen. Built once; the pickers are read as they are now.
+    val pickSample by rememberUpdatedState(samplePicker)
+    val pickKit by rememberUpdatedState(kitPicker)
+    val pickSoundFont by rememberUpdatedState(soundFontPicker)
+    val pickZoneSamples by rememberUpdatedState(zoneSamplePicker)
+    val panelActions = remember {
+        com.rm.acidulous.ui.PanelActions(
+            patchNames = { track -> PatchStore.list(song.tracks[track].machine.type) },
+            // Save the settings, not only the knobs: a Nexus patch without its
+            // graph, a Mosaic without its zones or a Formulate without its
+            // formula would come back wrong.
+            savePatch = { track, name, low, high, effects ->
+                val t = song.tracks[track]
+                val m = t.machine
+                val patch = Patch(m.type, name, m.params, m.settings, low, high)
+                PatchStore.save(if (effects) com.rm.acidulous.model.PatchChain.withEffectsOf(patch, t) else patch)
+            },
+            loadPatch = { track, name -> PatchStore.load(song.tracks[track].machine.type, name) },
+            factoryPatches = { track -> PatchStore.factory(song.tracks[track].machine.type) },
+            userPatchNames = { track -> PatchStore.userList(song.tracks[track].machine.type) },
+            deletePatch = { track, name -> PatchStore.delete(song.tracks[track].machine.type, name) },
+            importSample = { track, pad ->
+                importTarget = track to "p%02d_sample".format(pad)
+                pickSample(AUDIO_TYPES)
+            },
+            importKit = { track, pad ->
+                kitTarget = track to pad
+                pickKit(AUDIO_TYPES)
+            },
+            // One file for all thirteen pads. The slice points are worked
+            // out afterwards in the panel.
+            importSlice = { track ->
+                importTarget = track to "slice_sample"
+                pickSample(AUDIO_TYPES)
+            },
+            openSample = { track, pad -> sampleEdit = track to pad },
+            importOneSample = { track ->
+                importTarget = track to "sample"
+                pickSample(AUDIO_TYPES)
+            },
+            importSoundFont = { track -> mapTarget = track; pickSoundFont(arrayOf("*/*")) },
+            pickPreset = { track ->
+                val rel = song.tracks[track].machine.settings["sf2"]
+                if (rel != null) {
+                    mapBusy = true
+                    scope.launch {
+                        val path = File(EngineAssets.userRoot(), rel).absolutePath
+                        val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(path) }
+                        mapBusy = false
+                        if (presets.isNotEmpty()) presetChoice = track to presets
+                    }
+                }
+            },
+            importZoneSamples = { track -> mapTarget = track; pickZoneSamples(AUDIO_TYPES) },
+            openPatch = { track, sceneId -> screen = Screen.Patch(track, sceneId) },
+        )
+    }
+    val onClickNow: (Boolean) -> Unit = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) }
+    // Lent to the second screen while this is composed.
+    val hooks = remember { TopHooks({ rackPeaks }, { peak }, { clickOn }, onClickNow, panelActions) }
+    androidx.compose.runtime.DisposableEffect(hooks) {
+        AppState.hooks.value = hooks
+        onDispose { if (AppState.hooks.value === hooks) AppState.hooks.value = null }
+    }
+
     /**
      * The system back button goes back a screen, and only leaves the app from
      * the top.
@@ -2175,54 +2246,7 @@ fun App(modifier: Modifier = Modifier) {
             rackPeaks = { rackPeaks }, masterPeak = { peak }, clickOn = clickOn, onClick = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) },
             onBack = { screen = Screen.Main },
             onTrack = { t -> screen = Screen.Edit(t, s.sceneId) },
-            onOpenPatch = { screen = Screen.Patch(s.track, s.sceneId) },
-            onOpenSample = { pad -> sampleEdit = s.track to pad },
-            patchNames = { PatchStore.list(song.tracks[s.track].machine.type) },
-            // Save the settings, not only the knobs: a Nexus patch without its
-            // graph, a Mosaic without its zones or a Formulate without its
-            // formula would come back wrong.
-            onSavePatch = { name, low, high, effects ->
-                val t = song.tracks[s.track]
-                val m = t.machine
-                val patch = Patch(m.type, name, m.params, m.settings, low, high)
-                PatchStore.save(if (effects) com.rm.acidulous.model.PatchChain.withEffectsOf(patch, t) else patch)
-            },
-            onLoadPatch = { name -> PatchStore.load(song.tracks[s.track].machine.type, name) },
-            factoryPatchNames = { PatchStore.factory(song.tracks[s.track].machine.type) },
-            userPatchNames = { PatchStore.userList(song.tracks[s.track].machine.type) },
-            onDeletePatch = { name -> PatchStore.delete(song.tracks[s.track].machine.type, name) },
-            onImportSample = { track, pad ->
-                importTarget = track to "p%02d_sample".format(pad)
-                samplePicker(AUDIO_TYPES)
-            },
-            onImportOneSample = { track ->
-                importTarget = track to "sample"
-                samplePicker(AUDIO_TYPES)
-            },
-            onImportKit = { track, pad ->
-                kitTarget = track to pad
-                kitPicker(AUDIO_TYPES)
-            },
-            onImportSlice = { track ->
-                // One file for all thirteen pads. The slice points are worked
-                // out afterwards in the panel.
-                importTarget = track to "slice_sample"
-                samplePicker(AUDIO_TYPES)
-            },
-            onImportSoundFont = { track -> mapTarget = track; soundFontPicker(arrayOf("*/*")) },
-            onPickPreset = { track ->
-                val rel = song.tracks[track].machine.settings["sf2"]
-                if (rel != null) {
-                    mapBusy = true
-                    scope.launch {
-                        val path = File(EngineAssets.userRoot(), rel).absolutePath
-                        val presets = withContext(Dispatchers.IO) { NativeEngine.soundFontPresets(path) }
-                        mapBusy = false
-                        if (presets.isNotEmpty()) presetChoice = track to presets
-                    }
-                }
-            },
-            onImportZoneSamples = { track -> mapTarget = track; zoneSamplePicker(AUDIO_TYPES) },
+            actions = panelActions,
         )
         is Screen.Patch -> com.rm.acidulous.ui.PatchScreen(
             track = song.tracks[s.track],

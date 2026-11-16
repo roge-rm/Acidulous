@@ -108,6 +108,10 @@ private fun DisplayTab() {
             if (com.rm.acidulous.AppHost.current.canKeepScreenOn) {
                 ToggleSquare(stringResource(Res.string.settings_stay_awake), UiPrefs.keepAwake) { UiPrefs.chooseKeepAwake(it) }
             }
+            // Only while a second screen is attached.
+            if (com.rm.acidulous.AppState.secondScreenPresent.value) {
+                ToggleSquare(stringResource(Res.string.settings_second_screen), UiPrefs.secondScreen) { UiPrefs.chooseSecondScreen(it) }
+            }
             // Only where the app looks for new versions: not in the browser,
             // and not when F-Droid installed it.
             if (com.rm.acidulous.AppHost.current.checksForUpdates) {

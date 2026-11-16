@@ -63,6 +63,16 @@ fun PianoKeys(
     modifier: Modifier = Modifier,
     /** How the running scale spells its notes; empty is chromatic. */
     noteSpelling: Map<Int, String> = emptyMap(),
+    /**
+     * Keys about this wide, as many as fit, instead of the octave count from
+     * the settings. Null sizes them as the editor does.
+     */
+    keyWidth: androidx.compose.ui.unit.Dp? = null,
+    /**
+     * With a scale running, a normal piano with the out-of-scale keys dimmed
+     * instead of left out.
+     */
+    allNotes: Boolean = false,
 ) {
     val c = Acid.colors
     val measurer = rememberTextMeasurer()
@@ -73,12 +83,15 @@ fun PianoKeys(
     var strikes by remember { mutableStateOf(mapOf<Int, Float>()) }
     val base = 12 * (octave + 1)
     val octaves = UiPrefs.keyboardOctaves
-    val scale = scalePitchClasses?.takeIf { it.isNotEmpty() }?.sorted()
+    val keyClasses = scalePitchClasses?.takeIf { it.isNotEmpty() }
+    val dimOut = allNotes && keyClasses != null
+    val scale = if (dimOut) null else keyClasses?.sorted()
+    fun outOfKey(note: Int) = dimOut && ((note % 12) + 12) % 12 !in keyClasses!!
 
     // The pointer area is the whole box and the keys are drawn inset, so a
     // touch in the small gap next to the wheels still hits the outermost key.
     Box(
-        modifier.pointerInput(base, scale, octaves) {
+        modifier.pointerInput(base, scale, octaves, keyWidth, rack) {
             val grab = EdgeGrab.toPx()
                 // The loop owns which keys are down, not composition. Touches arrive
                 // faster than recomposition, so reading from drawn state brought back
@@ -94,6 +107,7 @@ fun PianoKeys(
                             val layout = Layout(
                                 size.width.toFloat() - grab * 2f, size.height.toFloat(),
                                 base, MinKey.toPx(), scale, octaves, RoomyKey.toPx(),
+                                keyWidth?.toPx() ?: 0f,
                             )
                             var changed = false
                             for (change in event.changes) {
@@ -152,7 +166,7 @@ fun PianoKeys(
                 // Framed while a computer keyboard or controller plays it.
                 .then(if (KeyHub.playMode) Modifier.border(2.dp, c.accent, RoundedCornerShape(3.dp)) else Modifier),
         ) {
-            val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale, octaves, RoomyKey.toPx())
+            val layout = Layout(size.width, size.height, base, MinKey.toPx(), scale, octaves, RoomyKey.toPx(), keyWidth?.toPx() ?: 0f)
             // Fingers, and notes from a computer keyboard or a controller.
             val down = held.values.toSet() + KeyHub.lit.mapNotNull { (r, note) -> note.takeIf { r == rack } }
             // How far up a sounding key to light it. A soft note lights from the
@@ -207,7 +221,10 @@ fun PianoKeys(
                         val fill = size.height * lit(note)
                         drawRect(c.teal, Offset(x + 0.5f, size.height - fill), Size(layout.keyW - 1f, fill))
                     }
-                    if (note % 12 == 0) {
+                    if (outOfKey(note) && !down.contains(note)) {
+                        drawRect(c.panel.copy(alpha = 0.6f), Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
+                    }
+                    if (if (dimOut) scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot else note % 12 == 0) {
                         val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle)
                         if (laid.size.width < layout.keyW - 2f) {
                             drawText(laid, topLeft = Offset(x + (layout.keyW - laid.size.width) / 2f,
@@ -221,13 +238,22 @@ fun PianoKeys(
                         val fill = layout.blackH * lit(note)
                         drawRect(c.green, Offset(x, layout.blackH - fill), Size(layout.blackW, fill))
                     }
+                    if (outOfKey(note) && !down.contains(note)) {
+                        drawRect(c.panel.copy(alpha = 0.6f), Offset(x, 0f), Size(layout.blackW, layout.blackH))
+                    }
                     drawRect(c.blackKeyEdge, Offset(x, 0f), Size(layout.blackW, layout.blackH), style = Stroke(1f))
+                    if (dimOut && scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot) {
+                        val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle.copy(color = c.keyLabelBlack))
+                        if (laid.size.width < layout.blackW - 2f) {
+                            drawText(laid, topLeft = Offset(x + (layout.blackW - laid.size.width) / 2f, layout.blackH - laid.size.height - 3f))
+                        }
+                    }
                 }
             }
         }
         // After the drawing, so the TalkBack keys lie over it. They draw
         // nothing themselves.
-        KeysForTalkBack(rack, base, scale, noteSpelling)
+        KeysForTalkBack(rack, base, scale, noteSpelling, keyWidth)
     }
 }
 
@@ -338,9 +364,12 @@ private val WhiteSteps = intArrayOf(0, 2, 4, 5, 7, 9, 11)
 private class Layout(
     val width: Float, val height: Float, val base: Int, minKey: Float, scale: List<Int>?,
     octaves: Int = 0, roomyKey: Float = minKey,
+    /** Over 0, keys this wide as many as fit, which overrides [octaves]. */
+    fixedKey: Float = 0f,
 ) {
     val scaleKeys: List<Int>? = scale?.let { pcs ->
-        val count = ((width / minKey).toInt()).coerceIn(5, 28)
+        val count = if (fixedKey > 0f) (width / fixedKey).toInt().coerceIn(1, 28)
+        else ((width / minKey).toInt()).coerceIn(5, 28)
         val out = ArrayList<Int>(count)
         var note = base
         while (out.size < count && note < 128) {
@@ -352,6 +381,7 @@ private class Layout(
 
     val whiteCount: Int = when {
         scaleKeys != null -> scaleKeys.size.coerceAtLeast(1)
+        fixedKey > 0f -> (width / fixedKey).toInt().coerceIn(1, 35)
         octaves > 0 -> 7 * octaves
         width / 35f >= roomyKey -> 35 // five octaves, on a wide screen
         width / 28f >= roomyKey -> 28
@@ -575,14 +605,17 @@ private fun Pill(label: String, on: Boolean, onClick: () -> Unit) {
  * laid over its key, named for its note, and a double tap plays it briefly.
  */
 @Composable
-private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: Map<Int, String>) {
+private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: Map<Int, String>, keyWidth: androidx.compose.ui.unit.Dp?) {
     val density = androidx.compose.ui.platform.LocalDensity.current
     val resources = AppStrings
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize().padding(horizontal = EdgeGrab)) {
         val w = with(density) { maxWidth.toPx() }
         val h = with(density) { maxHeight.toPx() }
-        val layout = Layout(w, h, base, with(density) { MinKey.toPx() }, scale, UiPrefs.keyboardOctaves, with(density) { RoomyKey.toPx() })
+        val layout = Layout(
+            w, h, base, with(density) { MinKey.toPx() }, scale, UiPrefs.keyboardOctaves, with(density) { RoomyKey.toPx() },
+            with(density) { keyWidth?.toPx() ?: 0f },
+        )
         // In pitch order, which is the order TalkBack walks them. Black keys are
         // raised over the whites so a touch on a black key's right half doesn't
         // hit the next white key.

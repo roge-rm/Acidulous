@@ -165,13 +165,15 @@ fun MachinePanel(
      * padding of its own. The desktop puts it in the keyboard's strip.
      */
     barInRow: Boolean = false,
+    /** False where the panel has the screen to itself: no fold, never folded. */
+    foldable: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val type = track.machine.type
     // Folded, the panel is just its title row and the roll gets the rest. Kept
     // in UiPrefs because the two halves can't share a flag that one of them
     // owns.
-    val minimized = UiPrefs.panelFolded
+    val minimized = foldable && UiPrefs.panelFolded
     val info = remember(type) { NativeEngine.machineParamInfo(type) }
     val binding = rememberParamBinding(trackIndex, type, info, editor)
 
@@ -240,7 +242,7 @@ fun MachinePanel(
             type, patchNames, savePatch, loadPatch, factoryPatchNames, userPatchNames, onDeletePatch,
             current = track.machine.settings[kPatchName],
             edited = stamp != null && stamp != nowStamp,
-            minimized = minimized, onToggleMinimized = { UiPrefs.foldPanel(!minimized) },
+            minimized = minimized, onToggleMinimized = if (foldable) ({ UiPrefs.foldPanel(!minimized) }) else null,
             vertical = vertical && !barInRow,
             inRow = barInRow,
         )
@@ -495,7 +497,8 @@ private fun PatchBar(
     type: String, patchNames: () -> List<String>, onSave: (String, Boolean) -> Unit, onLoad: (String) -> Unit,
     factoryPatches: () -> List<com.rm.acidulous.model.Patch>, userNames: () -> List<String>,
     onDelete: (String) -> Unit, current: String?, edited: Boolean,
-    minimized: Boolean, onToggleMinimized: () -> Unit,
+    /** Null for no fold. */
+    minimized: Boolean, onToggleMinimized: (() -> Unit)?,
     /** Down the left edge instead of across the top. */
     vertical: Boolean = false,
     /**
@@ -539,10 +542,12 @@ private fun PatchBar(
             // not this strip, so it points that way: ▸ hides them, ◂ brings
             // them back. The strip itself always stays, which is why it can
             // keep the mark.
-            BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) {
-                onToggleMinimized()
+            if (onToggleMinimized != null) {
+                BarIcon(if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid, vertical = true, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) {
+                    onToggleMinimized()
+                }
+                Spacer(Modifier.height(SideMarkGap))
             }
-            Spacer(Modifier.height(SideMarkGap))
             BarIcon("\u203A", Acid.colors.accent, vertical = true, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
             Spacer(Modifier.height(SideMarkGap))
             BarIcon("\u2039", Acid.colors.accent, vertical = true, said = stringResource(Res.string.a11y_prev_patch)) { step(-1) }
@@ -607,11 +612,13 @@ private fun PatchBar(
         BarIcon("\u203A", Acid.colors.accent, said = stringResource(Res.string.a11y_next_patch)) { step(1) }
         // A gap before the fold since it isn't part of the step arrows, which
         // do something very different.
-        Spacer(Modifier.width(if (inRow) 8.dp else 18.dp))
-        // In a row the cards are off to the right of the roll, so the fold
-        // points that way like the landscape column's.
-        val fold = if (inRow) (if (minimized) "\u25C2" else "\u25B8") else if (minimized) "▴" else "▾"
-        BarIcon(fold, Acid.colors.textMid, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) { onToggleMinimized() }
+        if (onToggleMinimized != null) {
+            Spacer(Modifier.width(if (inRow) 8.dp else 18.dp))
+            // In a row the cards are off to the right of the roll, so the fold
+            // points that way like the landscape column's.
+            val fold = if (inRow) (if (minimized) "\u25C2" else "\u25B8") else if (minimized) "▴" else "▾"
+            BarIcon(fold, Acid.colors.textMid, said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold)) { onToggleMinimized() }
+        }
     }
 }
 

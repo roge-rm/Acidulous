@@ -142,7 +142,20 @@ class MainActivity : ComponentActivity() {
         incomingFrom(intent)
     }
 
+    /** Opens and closes the second screen as displays come and go. */
+    private val displayListener = object : android.hardware.display.DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = SecondScreens.update(this@MainActivity)
+        override fun onDisplayRemoved(displayId: Int) = SecondScreens.update(this@MainActivity)
+        override fun onDisplayChanged(displayId: Int) = SecondScreens.update(this@MainActivity)
+    }
+
     override fun onDestroy() {
+        getSystemService(android.hardware.display.DisplayManager::class.java)?.unregisterDisplayListener(displayListener)
+        // Closing for good: the second screen goes with it.
+        if (isFinishing) {
+            SecondScreens.mainAlive = false
+            SecondScreens.close()
+        }
         // Closing for good: turn the Exquis pads off.
         if (isFinishing) {
             com.rm.acidulous.midi.MidiHub.clearPads()
@@ -181,7 +194,11 @@ class MainActivity : ComponentActivity() {
                 insets
             }
         }
+        SecondScreens.mainAlive = true
+        getSystemService(android.hardware.display.DisplayManager::class.java)?.registerDisplayListener(displayListener, null)
         setContent {
+            // Opens or closes the second screen when the setting changes, and once at the start.
+            LaunchedEffect(com.rm.acidulous.ui.UiPrefs.secondScreen) { SecondScreens.update(this@MainActivity) }
             AppRoot(onLightTheme = { light ->
                 // The bars are hidden but come back on a swipe, so their icons
                 // need to match the theme.

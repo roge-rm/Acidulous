@@ -50,6 +50,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.rm.acidulous.AppState
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.Position
 import com.rm.acidulous.model.Action
@@ -91,11 +92,6 @@ import com.rm.acidulous.res.*
  * The edit screen: header, piano roll, footer, and the machine panel under the
  * roll.
  */
-// One slot per modifier, in the order the notes travel through them.
-private const val EV_CHORD = 0
-private const val EV_SCALE = 1
-private const val EV_ARP = 2
-
 @Composable
 fun EditScreen(
     song: Song,
@@ -113,24 +109,8 @@ fun EditScreen(
     onBack: () -> Unit,
     /** Edit another track's clip in this scene, by index (previous and next track). */
     onTrack: (Int) -> Unit = {},
-    onOpenPatch: () -> Unit = {},
-    patchNames: () -> List<String>,
-    /** The name, and the note range the keyboard was showing, which a saved patch remembers. */
-    onSavePatch: (name: String, low: Int, high: Int, effects: Boolean) -> Unit,
-    onLoadPatch: (String) -> com.rm.acidulous.model.Patch?,
-    factoryPatchNames: () -> List<com.rm.acidulous.model.Patch> = { emptyList() },
-    userPatchNames: () -> List<String> = { emptyList() },
-    onDeletePatch: (String) -> Unit = {},
-    onImportSample: (track: Int, pad: Int) -> Unit = { _, _ -> },
-    onImportKit: (track: Int, pad: Int) -> Unit = { _, _ -> },
-    onImportSlice: (track: Int) -> Unit = {},
-    /** One pad's sample, on its own page with a picture of it. */
-    onOpenSample: (pad: Int) -> Unit = {},
-    /** Pollen's single sample, which is keyed by name instead of by pad. */
-    onImportOneSample: (track: Int) -> Unit = {},
-    onImportSoundFont: (track: Int) -> Unit = {},
-    onPickPreset: (track: Int) -> Unit = {},
-    onImportZoneSamples: (track: Int) -> Unit = {},
+    /** Patches, imports and the windows the machine panel opens. */
+    actions: PanelActions,
     /**
      * For the mixer, which opens over the editor. Read by its meters, not
      * here, so a level changing doesn't rebuild the editor.
@@ -330,33 +310,10 @@ fun EditScreen(
     androidx.compose.runtime.DisposableEffect(track.id) { onDispose { UiPrefs.chooseZoom(track.id, zoomNow.first, zoomNow.second) } }
     var scrollTick by rememberSaveable(trackIndex, sceneId) { mutableStateOf(0f) }
 
-    // Each modifier has a fixed slot, left to right like the chips: chord
-    // builds the notes, scale corrects them, arp sequences the result. The
-    // scale chip and its dialog are a shortcut to the Scale modifier.
-    fun scaleSlot(): Int = EV_SCALE
+    // The scale chip and its dialog are a shortcut to the Scale modifier.
+    fun currentScale(): ScaleSetting = scaleSettingOf(track)
 
-    fun currentScale(): ScaleSetting {
-        val ev = track.modifierAt(scaleSlot())
-        return ScaleSetting(
-            on = ev.type == "Scale" && !ev.bypass,
-            key = Math.round((ev.params["key"] ?: 0f) * 11f),
-            scale = Math.round((ev.params["scale"] ?: 0f) * 32f),
-            degree = (ev.params["mode"] ?: 0f) >= 0.5f,
-            snap = Math.round((ev.params["snap"] ?: 0f) * 2f),
-        )
-    }
-
-    fun applyScale(s: ScaleSetting) {
-        val slot = scaleSlot()
-        editor.edit(trackIndex) { t ->
-            (if (t.modifierAt(slot).type == "Scale") t else t.withModifier(slot, "Scale"))
-                .withModifierParam(slot, "key", s.key / 11f)
-                .withModifierParam(slot, "scale", s.scale / 32f)
-                .withModifierParam(slot, "mode", if (s.degree) 1f else 0f)
-                .withModifierParam(slot, "snap", s.snap / 2f)
-                .withModifierBypass(slot, !s.on)
-        }
-    }
+    fun applyScale(s: ScaleSetting) = applyScaleTo(editor, trackIndex, s)
     var lowestPitch by remember {
         val lowest = clip.notes.minOfOrNull { it.pitch } ?: 36
         mutableStateOf((lowest - 3).coerceIn(0, 127 - ROWS))
@@ -709,7 +666,8 @@ fun EditScreen(
         }
         // The editor is one stack in portrait and two panes in landscape. The
         // pieces are the same, so each is written once here and placed below.
-        var octave by rememberSaveable(trackIndex) { mutableStateOf(3) }
+        // Per track in AppState, so the second screen's keys agree.
+        var octave by AppState.octave(track.id)
         // Typed notes start where the on-screen keys do (the first key is note
         // 12 x (octave + 1), which is KeyHub's octave too), and Z and X move
         // both.
@@ -1008,47 +966,8 @@ fun EditScreen(
                 openStrip = mixerStrip, onOpenStrip = if (landscape) ({ mixerStrip = it }) else null,
             )
         }
-        else MachinePanel(
-            track, trackIndex, editor, patchNames,
-            // A patch knows the notes it's for. Loading one moves the
-            // keyboard's bottom C to the bottom of its range so the first key
-            // pressed is a note the instrument has. Saving one keeps where the
-            // keyboard was.
-            onSavePatch = { name, effects -> onSavePatch(name, 12 * (octave + 1), 12 * (octave + 3), effects) },
-            onLoadPatch = { name ->
-                onLoadPatch(name)?.also { p ->
-                    // The keyboard follows the patch, the roll doesn't. The
-                    // roll is where you were looking at your own music, and
-                    // auditioning patches shouldn't scroll it.
-                    if (p.low >= 0) octave = (p.low / 12 - 1).coerceIn(0, 8)
-                }
-            },
-            factoryPatchNames = factoryPatchNames, userPatchNames = userPatchNames, onDeletePatch = onDeletePatch,
-            onImportSoundFont = { onImportSoundFont(trackIndex) },
-            onPickPreset = { onPickPreset(trackIndex) },
-            onImportZoneSamples = { onImportZoneSamples(trackIndex) },
-            selectedPad = selectedPad,
-            onImportSample = { pad -> onImportSample(trackIndex, pad) },
-            onImportKit = { pad -> onImportKit(trackIndex, pad) },
-            onImportSlice = { onImportSlice(trackIndex) },
-            onOpenSample = onOpenSample,
-            onImportOneSample = { onImportOneSample(trackIndex) },
-            onClearSample = { pad -> editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), null) } },
-            // The whole kit in one edit, so clearing it is one undo and a
-            // half-cleared kit can't be autosaved. Only the settings here, the
-            // pads' trim is parameters, which the panel resets itself.
-            onClearKit = {
-                editor.edit(trackIndex) { t ->
-                    var out = t
-                    for (pad in 0 until 13) out = out.withSetting("p%02d_sample".format(pad), null)
-                    out.withSetting("slice_sample", null).withSetting("slice_count", null)
-                }
-            },
-            onAssignSample = { pad, rel ->
-                editor.edit(trackIndex) { t -> t.withSetting("p%02d_sample".format(pad), rel) }
-            },
-            onOpenPatch = onOpenPatch,
-            sceneId = sceneId,
+        else TrackMachinePanel(
+            track, trackIndex, editor, actions, selectedPad, sceneId,
             bar = bar, body = body, vertical = landscape,
             barInRow = barInStrip && !body,
             modifier = if (barInStrip && !body) Modifier
@@ -1057,178 +976,24 @@ fun EditScreen(
         )
         }
         }
-        // The performance controls are with the keys: a mod wheel, a bend
-        // wheel, and pressure, scale and octave on a strip above them.
-        var mod by rememberSaveable(trackIndex) { mutableStateOf(0f) }
-        var pressure by remember(trackIndex) { mutableStateOf(0f) }
-        var bend by remember(trackIndex) { mutableStateOf(0.5f) }
-        val touchable = MachineUi.usesPerformance(track.machine.type)
+        // The performance controls are with the keys, see PlayStrip. The mod
+        // wheel is per track in AppState, shared with the second screen.
+        val mod by AppState.modWheel(track.id)
         // Not a gesture, so opening a track doesn't write a lane point.
         LaunchedEffect(trackIndex) { NativeEngine.controlChange(trackIndex, 1, (mod * 127f).toInt(), record = false) }
 
-        // [grip] is the drag that moves the divider above the keys. There's no
-        // visible divider, the blank gaps in the performance row are the
-        // handle. Empty in landscape, where there's no divider.
+        // [grip] is the drag that moves the divider above the keys. Empty in
+        // landscape, where there's no divider.
         val keysSlot: @Composable (Dp, Modifier) -> Unit = { height, grip ->
-        val keysFolded = UiPrefs.keysFolded
-        val padsGrip = if (barInStrip) KeysStripH else PadsGrip
-        // A tape has no instrument and no performance row, so the lanes get the
-        // whole screen.
-        if (kind == MachineKind.Audio) Unit
-        else if (kind == MachineKind.Drums) Column(Modifier.fillMaxWidth().height(height)) {
-            // The pads have no performance row, so the gap above them is the
-            // handle.
-            //
-            // It has to be its own box, not padding on the pads. A pointerInput
-            // after padding only covers the inside, so the drag would land on
-            // the pads, which consume their own touches.
-            //
-            // It also holds the fold mark at the right-hand end, like the
-            // keyboard's row.
-            Box(
-                Modifier.fillMaxWidth().height(padsGrip).then(grip),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                if (barInStrip) Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                    // The bar gives way to the fold mark, and a bare stretch
-                    // before the mark is always left to drag by.
-                    Box(Modifier.weight(1f, fill = false).padding(start = 6.dp)) { panelSlot(true, false, FX_PANEL_MAX_H) }
-                    Spacer(Modifier.weight(1f).widthIn(min = PadsGrabMin))
-                    FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
-                } else FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
-            }
-            if (!keysFolded) DrumPads(
-                trackIndex, voices, selectedPad, { selectedPad = it },
-                Modifier.fillMaxWidth().weight(1f),
-                track.machine.type,
-                onEmpty = { pad -> if (MachineUi.acceptsSamples(track.machine.type)) onImportSample(trackIndex, pad) },
+            PlayStrip(
+                song, track, trackIndex, editor, height,
+                selectedPad, { selectedPad = it },
+                onOpenModifier = { modifierSlot = it },
+                onOpenScale = { scaleDialog = true },
+                grip = grip,
+                bar = if (barInStrip) ({ panelSlot(true, false, FX_PANEL_MAX_H) }) else null,
+                onEmptyPad = { pad -> if (MachineUi.acceptsSamples(track.machine.type)) actions.importSample(trackIndex, pad) },
             )
-        }
-        else Column(Modifier.fillMaxWidth().padding(top = 6.dp)) {
-            // The whole row is the handle. Upright there's no blank space left
-            // in it, so the drag is watched underneath the row and the controls
-            // in it win where they are: the wheel and stepper consume at the
-            // slop and cancel this, and a chip's tap detector never sees a
-            // drag. See keysGrip.
-            BoxWithConstraints(Modifier.fillMaxWidth().height(KeysStripH).then(grip)) {
-            // The chip labels switch to glyphs when the row gets too narrow
-            // (see PerfWideMin). At larger interface scales the chips at their
-            // fixed widths squeezed the pressure wheel and octave stepper to
-            // nothing. Glyphs give about 120 dp back to them.
-            // The patch bar on a desktop takes its share first.
-            val icons = maxWidth < PerfWideMin + (if (barInStrip) StripBarW else 0.dp)
-            Row(
-                Modifier.fillMaxSize(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                // Equal weights either side so the scale chip sits on the row's
-                // centre line. The chip is measured first as the one unweighted
-                // child, so it only takes what its text needs.
-                //
-                // The wheel is weighted for position and capped for size
-                // (PressureW), so it doesn't grow to fill a landscape row.
-                Row(
-                    Modifier.weight(1f).fillMaxHeight().then(grip),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // The machine and patch on a desktop, see barInStrip. It
-                    // gives way before the wheel does.
-                    if (barInStrip) Box(Modifier.weight(1f, fill = false).padding(start = 6.dp), contentAlignment = Alignment.CenterStart) { panelSlot(true, false, FX_PANEL_MAX_H) }
-                    if (touchable) TouchWheel(
-                        value = pressure, accent = Acid.colors.pink, vertical = false,
-                        // No label, the ridges and its place in the row say
-                        // what it is.
-                        springBackTo = 0f, label = null, said = stringResource(Res.string.a11y_pressure),
-                        modifier = Modifier.widthIn(max = PressureW).fillMaxHeight(),
-                    ) { v -> pressure = v; NativeEngine.channelPressure(trackIndex, (v * 127f).toInt()) }
-                }
-                // The modifiers sit either side of the scale chip since they
-                // all change notes between playing and hearing them. A tap
-                // toggles one, holding opens it.
-                ModifierChip(
-                    "Chord", EV_CHORD, track, trackIndex, editor,
-                    icon = if (icons) "\u2261" else null,
-                ) { modifierSlot = EV_CHORD }
-                ScaleChip(
-                    label = Scales.labelFor(track),
-                    onToggle = { applyScale(currentScale().let { it.copy(on = !it.on) }) },
-                    onOpen = { scaleDialog = true },
-                    vertical = false,
-                    // A fixed width, not a minimum, since the label changes
-                    // from "scale" to "C Ionian (Major)" and would push the
-                    // other chips around.
-                    modifier = Modifier.width(if (icons) PerfIconW else 112.dp).fillMaxHeight(),
-                    icon = if (icons) "\u266F" else null,
-                )
-                ModifierChip(
-                    "Arp", EV_ARP, track, trackIndex, editor,
-                    icon = if (icons) "\u266B" else null,
-                ) { modifierSlot = EV_ARP }
-                // A fixed width (see OctaveW). The wheel at the other end is
-                // the one that stretches. This puts the scale chip slightly off
-                // centre, which is the lesser problem.
-                Box(
-                    Modifier.width(OctaveW).fillMaxHeight().then(grip),
-                    contentAlignment = Alignment.CenterEnd,
-                ) {
-                    OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
-                }
-                // The fold mark, last in the row.
-                //
-                // It has its own slot. Inside the octave's weighted box it had
-                // no width and overflowed the screen margin upright.
-                //
-                // There's no balancing spacer at the start of the row, so the
-                // scale chip is about 11 dp left of centre. A spacer would cost
-                // the octave stepper its ▶ arrow.
-                FoldMark(keysFolded, Modifier.fillMaxHeight()) { UiPrefs.foldKeys(!keysFolded) }
-            }
-            }
-            if (keysFolded) return@Column
-            Row(
-                // 30 dp is the performance row above. Clamp at 0 since a narrow
-                // pane (landscape at the largest scale, or split screen) can
-                // make this negative.
-                Modifier.fillMaxWidth().height((height - 30.dp).coerceAtLeast(0.dp)).padding(top = 4.dp),
-                // No spacing. The keyboard draws its own 3 dp either side and
-                // takes touches there, so a finger just missing the outermost
-                // key still plays it instead of grabbing the wheel. See
-                // EdgeGrab in ui/PianoKeys.kt.
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-            ) {
-                TouchWheel(
-                    value = mod, accent = Acid.colors.accent, vertical = true, label = null,
-                    said = stringResource(Res.string.a11y_mod_wheel),
-                    modifier = Modifier.width(26.dp).fillMaxHeight(),
-                ) { v -> mod = v; NativeEngine.controlChange(trackIndex, 1, (v * 127f).toInt()) }
-                PianoKeys(
-                    trackIndex, Scales.activeFor(song, track), Scales.rootFor(song, track), octave,
-                    Modifier.weight(1f).fillMaxHeight(),
-                    noteSpelling = Scales.spellingFor(song, track),
-                )
-                // Bend springs back, so it's the wheel you can let go of
-                // quickly.
-                TouchWheel(
-                    value = bend, accent = Acid.colors.teal, vertical = true,
-                    springBackTo = 0.5f, centreMark = true, label = null,
-                    said = stringResource(Res.string.a11y_bend_wheel),
-                    state = kotlin.math.round((bend * 2f - 1f) * 100f).toInt().let { amount ->
-                        when {
-                            kotlin.math.abs(amount) < 2 -> stringResource(Res.string.a11y_centre)
-                            amount > 0 -> stringResource(Res.string.a11y_bend_up, amount)
-                            else -> stringResource(Res.string.a11y_bend_down, -amount)
-                        }
-                    },
-                    modifier = Modifier.width(26.dp).fillMaxHeight(),
-                ) { v ->
-                    bend = v
-                    val value14 = ((v * 2f - 1f) * 8192f + 8192f).toInt().coerceIn(0, 16383)
-                    NativeEngine.midiEvent(trackIndex, 0xE0, value14 and 0x7f, (value14 shr 7) and 0x7f)
-                }
-            }
-        }
         }
         val pad = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 4.dp)
         if (landscape) {
@@ -1477,40 +1242,6 @@ private val FxRollMin = 200.dp
 private const val SquareKeysShare = 0.40f
 
 /** Narrow, because upright the row it ends has about 20 dp to spare. */
-private val FoldMarkW = 22.dp
-
-/**
- * Width of a performance row chip when it shows a glyph. An anchor's width,
- * same as the footer, sized for a finger.
- */
-private val PerfIconW = 44.dp
-
-/**
- * The narrowest row that can still show the words "chord", "scale" and "arp".
- *
- * The three chips at 52, 112 and 52, the fold mark, the five gaps, the octave
- * stepper's width, and enough for the pressure wheel. A 393 dp phone just fits
- * at 1.0 and doesn't at any larger scale. Below this the chips show glyphs.
- */
-private val PerfWideMin = 52.dp + 112.dp + 52.dp + FoldMarkW + 20.dp + OctaveW + 32.dp
-
-/**
- * The mark that folds the instrument away and brings it back. The same as the
- * note lane's and automation strip's: an 11 sp chevron, ▾ to put it away and
- * ▴ to bring it back. It points down because the keyboard is on the bottom
- * edge.
- */
-@Composable
-private fun FoldMark(folded: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Box(
-        modifier.width(FoldMarkW).clickable(onClick = onClick)
-            .button(stringResource(if (folded) Res.string.a11y_unfold_keys else Res.string.a11y_fold_keys)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(if (folded) "\u25B4" else "\u25BE", color = Acid.colors.textMid, fontSize = 11.sp)
-    }
-}
-
 /**
  * The drag that moves the edge between the roll and the keyboard.
  *
@@ -1537,18 +1268,6 @@ private fun keysGrip(onDrag: (Dp) -> Unit, onEnd: () -> Unit): Modifier {
     }
 }
 
-/**
- * The blank above the drum pads, which is their drag handle. 18 dp is enough to
- * catch without looking like a band. The keyboard uses the gaps in its
- * performance row instead.
- */
-private val PadsGrip = 18.dp
-/** The keyboard's strip of chips, and the pads' grip when it holds the patch. */
-private val KeysStripH = 26.dp
-/** About what the patch bar takes in the strip with a typical name, see [PerfWideMin]. */
-private val StripBarW = 300.dp
-/** The bare part of the pads' grip left to drag by when it holds the patch bar. */
-private val PadsGrabMin = 48.dp
 
 /**
  * What's left at the bottom when the instrument is folded: its control row
@@ -1567,12 +1286,6 @@ private val LaneMinH = 56.dp
 
 /** Lane height upright, where there's room. */
 private val LaneH = 88.dp
-
-/**
- * The widest the pressure wheel gets, in either orientation. It's rolled with
- * one thumb, and past this the extra width isn't reachable anyway.
- */
-private val PressureW = 88.dp
 
 /**
  * How many rows the roll shows at the base interface scale.
@@ -1654,59 +1367,4 @@ private fun KeyboardKey(note: Int, rack: Int, modifier: Modifier = Modifier) {
     ) {
         Text(note.toString(), color = Acid.colors.onAccent, fontSize = 9.sp, modifier = Modifier.padding(bottom = 4.dp))
     }
-}
-
-/**
- * One modifier, as a chip.
- *
- * There are three modifiers and three chips, so nothing is chosen from a list:
- * chord on the left, scale in the middle, arp on the right, each on its own
- * slot. A tap toggles it, a long press opens it.
- *
- * Toggling is a parameter: bypass is a pseudo-parameter on the modifier unit,
- * so a tap saves, undoes and automates like anything else, and goes straight to
- * the running modifier as well as the document. Note the field is bypass, so
- * lit means bypass == false. An empty slot is filled on the first tap.
- */
-@Composable
-private fun ModifierChip(
-    type: String,
-    slot: Int,
-    track: Track,
-    trackIndex: Int,
-    editor: SongEditor,
-    /** A glyph instead of the word, when the row is too narrow. */
-    icon: String? = null,
-    onOpen: () -> Unit,
-) {
-    val ev = track.modifierAt(slot)
-    val loaded = ev.type == type
-    SlotChip(
-        text = icon ?: type.lowercase(),
-        said = panelWord(type.lowercase()),
-        on = loaded && !ev.bypass,
-        onToggle = {
-            if (!loaded) {
-                // Nothing there yet, so the first tap adds it, switched on.
-                editor.edit(trackIndex) { t -> t.withModifier(slot, type).withModifierBypass(slot, false) }
-                NativeEngine.setParam(trackIndex, modifierUnit(slot), "bypass", 0f, record = true)
-            } else {
-                val bypass = !ev.bypass
-                editor.edit(trackIndex) { t -> t.withModifierBypass(slot, bypass) }
-                NativeEngine.setParam(trackIndex, modifierUnit(slot), "bypass", if (bypass) 1f else 0f, record = true)
-            }
-        },
-        onOpen = {
-            // Hold also fills an empty slot so there's something to open, but
-            // bypassed, since holding means "let me look", not "turn it on".
-            if (!loaded) {
-                editor.edit(trackIndex) { t -> t.withModifier(slot, type).withModifierBypass(slot, true) }
-            }
-            onOpen()
-        },
-        vertical = false,
-        icon = icon != null,
-        modifier = (if (icon != null) Modifier.width(PerfIconW) else Modifier.widthIn(min = 52.dp))
-            .fillMaxHeight(),
-    )
 }

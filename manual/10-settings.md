@@ -12,6 +12,7 @@
 - **size** - makes everything bigger, in four steps.
 <!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
 - **stay awake** - on keeps the screen on while the song plays.
+- **second screen** - on by default. Only there while the device has a second screen. See below.
 - **updates** - on looks for a new version once a day, by asking GitHub for the
   latest release, and shows a line at the top of the song screen when there is
   one. GitHub sees the app's version and your internet address, as with any web
@@ -68,6 +69,14 @@
 What a new song starts with: tempo, time signature, the first track's machine,
 and whether it starts with a scale set. Pick **None** for the machine and a new
 song starts with no tracks at all.
+
+## second screen
+
+On a device with a second built-in screen, like the Retroid Pocket Duo, the app opens on both. The top screen is the app as usual, and the bottom one follows it. Turn **second screen** off in Settings to use the top one alone.
+
+With an editor or a track on top, the bottom screen has tabs along its top edge: **keys** (**pads** on a drum machine), which is the playing strip with the octave, the chord, scale and arp chips and the wheels, and **panel**, which is that machine's panel. With the song screen on top, the tabs are **mix** and **fx**. The bottom screen remembers its tab for each kind of top screen.
+
+On **keys** the **keys | grid** chip, set for each track, picks between a piano with two rows an octave apart and a grid of pads. The grid's rows are a fourth apart, with the root at the bottom left. While a scale is running, the **in key | all** chip, the same for every track, picks between showing only the scale's notes and showing every note with the others dimmed.
 
 ## TalkBack
 

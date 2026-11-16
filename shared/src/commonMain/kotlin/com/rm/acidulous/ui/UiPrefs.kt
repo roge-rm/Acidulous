@@ -100,6 +100,10 @@ object UiPrefs {
     var keysFullStrength by mutableStateOf(false)
         private set
 
+    /** The note grid shows every note, out-of-scale ones dimmed, instead of just the scale's. */
+    var gridAllNotes by mutableStateOf(false)
+        private set
+
     /**
      * How much taller than its normal height the instrument has been dragged,
      * upright. 1 is normal. A multiplier, since the normal height depends on
@@ -329,6 +333,7 @@ object UiPrefs {
         panelFolded = p.getBoolean(KEY_PANEL_FOLDED, false)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         keysFullStrength = p.getBoolean(KEY_KEYS_FULL, false)
+        gridAllNotes = p.getBoolean(KEY_GRID_ALL, false)
         keysStretch = p.getFloat(KEY_KEYS_STRETCH, 1f)
             .coerceIn(KeysStretchMin, KeysStretchMax)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
@@ -420,6 +425,43 @@ object UiPrefs {
         updateLatest = p.getString(KEY_UPDATE_LATEST, null)
         updateCheckedAt = p.getString(KEY_UPDATE_CHECKED, null)?.toLongOrNull() ?: 0L
         updateDismissed = p.getString(KEY_UPDATE_DISMISSED, null)
+        secondScreen = p.getBoolean(KEY_SECOND_SCREEN, true)
+        secondPageHome = p.getInt(KEY_SECOND_PAGE_HOME, 0)
+        secondPageTrack = p.getInt(KEY_SECOND_PAGE_TRACK, 0)
+        gridTracks = p.getString(KEY_GRID_TRACKS, null).orEmpty().split(',').filter { it.isNotEmpty() }
+    }
+
+    /** Keys or pads on a second screen, where the device has one. */
+    var secondScreen by mutableStateOf(true)
+        private set
+    fun chooseSecondScreen(on: Boolean) {
+        secondScreen = on
+        store?.edit()?.putBoolean(KEY_SECOND_SCREEN, on)?.apply()
+    }
+
+    /** The second screen's page under the song screen: 0 mixer, 1 effects. */
+    var secondPageHome by mutableStateOf(0)
+        private set
+    /** The second screen's page under a track's editor: 0 the keys or pads, 1 the machine's panel. */
+    var secondPageTrack by mutableStateOf(0)
+        private set
+    fun chooseSecondPage(home: Boolean, page: Int) {
+        if (home) secondPageHome = page else secondPageTrack = page
+        store?.edit()?.putInt(if (home) KEY_SECOND_PAGE_HOME else KEY_SECOND_PAGE_TRACK, page)?.apply()
+    }
+
+    /**
+     * Tracks whose keys show as a note grid on the second screen; the rest
+     * show two keyboards. By track id, oldest first, trimmed to the last
+     * [GRID_TRACKS_MAX] so it can't grow forever.
+     */
+    var gridTracks by mutableStateOf(listOf<String>())
+        private set
+    fun usesGrid(trackId: String): Boolean = trackId in gridTracks
+    fun chooseGrid(trackId: String, on: Boolean) {
+        val rest = gridTracks - trackId
+        gridTracks = if (on) (rest + trackId).takeLast(GRID_TRACKS_MAX) else rest
+        store?.edit()?.putString(KEY_GRID_TRACKS, gridTracks.joinToString(","))?.apply()
     }
 
     /** Look for a new version once a day, where the platform does (AppHost.checksForUpdates). */
@@ -519,6 +561,11 @@ object UiPrefs {
     fun choosePadsFullStrength(on: Boolean) {
         padsFullStrength = on
         store?.edit()?.putBoolean(KEY_PADS_FULL, on)?.apply()
+    }
+
+    fun chooseGridAllNotes(on: Boolean) {
+        gridAllNotes = on
+        store?.edit()?.putBoolean(KEY_GRID_ALL, on)?.apply()
     }
 
     fun chooseKeysFullStrength(on: Boolean) {
@@ -946,6 +993,7 @@ object UiPrefs {
     private const val KEY_PANEL_FOLDED = "panel_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_KEYS_FULL = "keys_full_strength"
+    private const val KEY_GRID_ALL = "grid_all_notes"
     private const val KEY_KEYS_STRETCH = "keys_stretch"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
@@ -1003,6 +1051,11 @@ object UiPrefs {
     private const val KEY_EXQUIS_NOTES_ONLY = "exquis_notes_only"
     private const val KEY_EXQUIS_HOLD = "exquis_hold"
     private const val KEY_UPDATE_CHECKS = "update_checks"
+    private const val KEY_SECOND_SCREEN = "second_screen"
+    private const val KEY_SECOND_PAGE_HOME = "second_page_home"
+    private const val KEY_SECOND_PAGE_TRACK = "second_page_track"
+    private const val KEY_GRID_TRACKS = "grid_tracks"
+    private const val GRID_TRACKS_MAX = 200
     private const val KEY_UPDATE_LATEST = "update_latest"
     private const val KEY_UPDATE_CHECKED = "update_checked"
     private const val KEY_UPDATE_DISMISSED = "update_dismissed"

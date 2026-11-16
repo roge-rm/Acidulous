@@ -14,6 +14,7 @@
 - **taille** - agrandit tout, en quatre crans.
 <!-- desktop: - **échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur. -->
 - **rester allumé** - activé, l’écran reste allumé pendant la lecture.
+- **second écran** - activé par défaut. Seulement là quand l’appareil a un second écran. Voir plus bas.
 - **mises à jour** - activé, l’appli cherche une nouvelle version une fois par
   jour, en demandant à GitHub la dernière sortie, et affiche une ligne en haut de
   l’écran du morceau quand il y en a une. GitHub voit la version de l’appli et
@@ -80,6 +81,14 @@
 Ce avec quoi un nouveau morceau commence : le tempo, le chiffrage, la machine de
 la première piste, et s’il commence avec une gamme réglée. Choisissez **Aucune**
 comme machine et un nouveau morceau commence sans aucune piste.
+
+## second écran
+
+Sur un appareil avec un second écran intégré, comme le Retroid Pocket Duo, l’appli s’ouvre sur les deux. L’écran du haut est l’appli comme d’habitude, et celui du bas le suit. Désactivez **second écran** dans les réglages pour n’utiliser que celui du haut.
+
+Avec un éditeur ou une piste en haut, l’écran du bas a des onglets sur son bord supérieur : **clavier** (**pads** sur une boîte à rythmes), qui est la bande de jeu avec l’octave, les puces d’accords, de gamme et d’arpège et les molettes, et **panneau**, qui est le panneau de cette machine. Avec l’écran du morceau en haut, les onglets sont **mix** et **fx**. L’écran du bas se souvient de son onglet pour chaque sorte d’écran du haut.
+
+Sur **clavier**, la puce **clavier | grille**, réglée par piste, choisit entre un piano à deux rangées espacées d’une octave et une grille de pads. Les rangées de la grille sont espacées d’une quarte, avec la fondamentale en bas à gauche. Tant qu’une gamme joue, la puce **gamme | toutes**, la même pour toutes les pistes, choisit entre montrer seulement les notes de la gamme et montrer toutes les notes, les autres étant atténuées.
 
 ## TalkBack
 
