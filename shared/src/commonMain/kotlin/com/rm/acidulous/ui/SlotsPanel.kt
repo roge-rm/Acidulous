@@ -60,6 +60,17 @@ import com.rm.acidulous.model.withModifierBypass
 import com.rm.acidulous.model.withModifier
 import com.rm.acidulous.model.modifierUnit
 import com.rm.acidulous.model.UnitSlot
+import com.rm.acidulous.model.masterInsertUnit
+import com.rm.acidulous.model.sendUnit
+import com.rm.acidulous.model.withMasterInsert
+import com.rm.acidulous.model.withMasterInsertBypass
+import com.rm.acidulous.model.withMasterInsertParam
+import com.rm.acidulous.model.withSend
+import com.rm.acidulous.model.withSendBypass
+import com.rm.acidulous.model.withSendParam
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.CompositionLocalProvider
 import com.rm.acidulous.model.VenueRooms
 import com.rm.acidulous.model.MODIFIER_SLOTS
 import com.rm.acidulous.model.SongEditor
@@ -308,6 +319,8 @@ private fun SlotRow(
     page: Int = -1,
     /** Put the patch picker on the header line; a panel with the room. */
     pickerInHeader: Boolean = false,
+    /** The second screen's page: fills the room it's given, see [LocalPanelGrid]. */
+    grid: Boolean = false,
 ) {
     val fx = kind.at(track, slot)
     // The bypass as the window found it. Bypass isn't a parameter, so it's not
@@ -318,8 +331,8 @@ private fun SlotRow(
     // Per slot and kept across rotation, like a machine panel's. Two effects
     // and a modifier can fill a phone, so a slot you aren't editing can be
     // folded down to its one line.
-    var minimized by rememberSaveable(kind.label, slot) { mutableStateOf(false) }
-    Column(Modifier.clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
+    var minimized by rememberSaveable(kind.label, slot, track.id) { mutableStateOf(false) }
+    Column(Modifier.then(if (grid) Modifier.fillMaxSize() else Modifier).clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
         val face = !fx.isEmpty && !minimized
         val hasPatches = kind.patchKey?.invoke(fx.type) != null && kind.loadPatch != null
         val headerHere = !wrap && pickerInHeader && face && hasPatches
@@ -365,7 +378,7 @@ private fun SlotRow(
             } else null
             // A chip's window turned has the picker in its own header row.
             val pickerElsewhere = wrap && fixedType != null && LocalDialogHeaderRow.current
-            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header, pickerElsewhere = pickerElsewhere) { b ->
+            SlotFace(kind, fx.type, trackIndex, slot, editor, wrap, page, header, pickerElsewhere = pickerElsewhere, grid = grid) { b ->
                 onRevert?.invoke {
                     b.resetAll()
                     if (fx.bypass != openedBypass) {
@@ -392,6 +405,7 @@ private fun SlotFace(
     header: (@Composable (@Composable () -> Unit) -> Unit)? = null,
     /** The window's header has the patch picker; see [SlotDialog]. */
     pickerElsewhere: Boolean = false,
+    grid: Boolean = false,
     /** Called with the binding once it exists, so a window can undo everything. */
     onBinding: ((ParamBinding) -> Unit)? = null,
 ) {
@@ -410,7 +424,7 @@ private fun SlotFace(
     }
     // The panel follows the engine, which already holds what the document
     // pushed, so there's nothing to seed here.
-    Column {
+    Column(if (grid) Modifier.fillMaxSize() else Modifier) {
         // The same patch picker a machine panel has, over the same store, with
         // a key that can't collide with a machine's.
         if (kind.patchKey?.invoke(type) != null && kind.loadPatch != null && !pickerElsewhere) {
@@ -536,6 +550,7 @@ private fun SlotFace(
                 androidx.compose.material3.LocalTextStyle provides tight,
                 LocalControlH provides PanelControlH - 24.dp,
             ) { when {
+                grid -> Box(Modifier.fillMaxSize()) { GridCards { cards() } }
                 // A side column: the cards go down it two knobs to a line, and
                 // the slots' column scrolls; see [SlotsPanel].
                 LocalPanelStacked.current -> Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) { cards() }
@@ -1107,7 +1122,7 @@ internal fun SongSlotFace(
         type == "Vessel" -> info.filter { it.name != "follow" }
         else -> info
     }
-    BusyCards(type) { perLine ->
+    val cards: @Composable (Int) -> Unit = { perLine ->
         lead?.invoke()
         for ((title, group) in groupsFor(type, shown, model)) {
             key(title) {
@@ -1118,6 +1133,7 @@ internal fun SongSlotFace(
         }
         if (modTracks != null) ModCard(type, modTracks, ModAccess(value, { start() }, change, end, set))
     }
+    if (LocalPanelGrid.current) GridCards { cards(4) } else BusyCards(type, cards)
 }
 
 /**
@@ -1173,13 +1189,18 @@ private fun androidx.compose.foundation.layout.RowScope.SlotHeader(
 @Composable
 private fun SlotBypass(kind: SlotKind, fx: UnitSlot, trackIndex: Int, slot: Int, editor: SongEditor) {
     val on = !fx.bypass
+    val toggle: () -> Unit = {
+        val bypass = !fx.bypass
+        // The document push mounts nothing new, so the flag also goes straight to the running effect.
+        editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
+        NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
+    }
+    if (LocalPanelGrid.current) {
+        BypassChip(on, toggle)
+        return
+    }
     TextButton(
-        onClick = {
-            val bypass = !fx.bypass
-            // The document push mounts nothing new, so the flag also goes straight to the running effect.
-            editor.edit(trackIndex) { t -> kind.withBypass(t, slot, bypass) }
-            NativeEngine.setParam(trackIndex, kind.unit(slot), "bypass", if (bypass) 1f else 0f, record = true)
-        },
+        onClick = toggle,
         contentPadding = PaddingValues(horizontal = 8.dp),
         modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) Acid.colors.green else Acid.colors.control),
     ) {
@@ -1332,3 +1353,134 @@ private fun LearnChord(b: ParamBinding, trackIndex: Int, unit: String, editor: S
     }
 }
 
+
+
+/**
+ * The second screen's fx page: the two sends, the master's inserts or one
+ * track's inserts, each slot a titled cell with its type, bypass and cards.
+ * Everything fills the room it's given.
+ */
+@Composable
+fun SecondFxPage(
+    chip: Int, song: com.rm.acidulous.model.Song, track: Track?, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier,
+) {
+    CompositionLocalProvider(LocalPanelGrid provides true) {
+        // A slot's share of the width goes by how many controls its effect has, and a row of
+        // empty slots shrinks.
+        fun share(type: String) = if (type.isEmpty()) 4f else NativeEngine.effectParamInfo(type).size + 6f
+        val cells: List<Pair<Float, @Composable () -> Unit>> = when {
+            chip == 0 -> List(com.rm.acidulous.model.SEND_SLOTS) { slot -> share(song.master.sendAt(slot).type) to {
+                SongSlotCell(
+                    stringResource(Res.string.mixer_send, slot + 1), slot, song, editor, hideMix = true,
+                    unitOf = ::sendUnit, at = { s, i -> s.master.sendAt(i) },
+                    withType = { s, i, t -> s.withSend(i, t) },
+                    withParam = { s, i, n, v -> s.withSendParam(i, n, v) },
+                    withBypass = { s, i, b -> s.withSendBypass(i, b) },
+                )
+            } }
+            chip == 1 -> List(com.rm.acidulous.model.MASTER_INSERT_SLOTS) { slot -> share(song.master.insertAt(slot).type) to {
+                SongSlotCell(
+                    stringResource(Res.string.mixer_master_insert, slot + 1), slot, song, editor, hideMix = false,
+                    unitOf = ::masterInsertUnit, at = { s, i -> s.master.insertAt(i) },
+                    withType = { s, i, t -> s.withMasterInsert(i, t) },
+                    withParam = { s, i, n, v -> s.withMasterInsertParam(i, n, v) },
+                    withBypass = { s, i, b -> s.withMasterInsertBypass(i, b) },
+                )
+            } }
+            track != null -> {
+                val types = SlotKind.Effects.types()
+                List(SlotKind.Effects.slots) { slot -> share(track.effectAt(slot).type) to {
+                    SlotRow(SlotKind.Effects, track, trackIndex, slot, types, editor, pickerInHeader = true, grid = true)
+                } }
+            }
+            else -> emptyList()
+        }
+        val across = if (cells.size > 2) 2 else cells.size.coerceAtLeast(1)
+        Column(modifier.background(Acid.colors.panel).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            cells.chunked(across).forEach { line ->
+                val empty = line.all { it.first == 4f }
+                Row(Modifier.fillMaxWidth().weight(if (empty) 0.3f else 1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    line.forEachIndexed { i, (w, cell) -> key(i) { Box(Modifier.weight(w).fillMaxHeight()) { cell() } } }
+                }
+            }
+        }
+    }
+}
+
+/** One song-level slot (a send or a master insert) as a cell of [SecondFxPage]. */
+@Composable
+private fun SongSlotCell(
+    title: String, slot: Int, song: com.rm.acidulous.model.Song, editor: SongEditor, hideMix: Boolean,
+    unitOf: (Int) -> String, at: (com.rm.acidulous.model.Song, Int) -> UnitSlot,
+    withType: (com.rm.acidulous.model.Song, Int, String) -> com.rm.acidulous.model.Song,
+    withParam: (com.rm.acidulous.model.Song, Int, String, Float) -> com.rm.acidulous.model.Song,
+    withBypass: (com.rm.acidulous.model.Song, Int, Boolean) -> com.rm.acidulous.model.Song,
+) {
+    val fx = at(song, slot)
+    val types = remember { NativeEngine.effectTypes }
+    var menu by remember { mutableStateOf(false) }
+    val info = remember(fx.type, hideMix) {
+        if (fx.isEmpty) emptyList() else NativeEngine.effectParamInfo(fx.type).filter { !hideMix || it.name != "mix" }
+    }
+    Column(Modifier.fillMaxSize().clip(RoundedCornerShape(6.dp)).background(Acid.colors.card).padding(4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(title, color = Acid.colors.teal, fontSize = 10.sp)
+            TextButton(onClick = { menu = true }) {
+                Text(stringResource(Res.string.slot_menu, if (fx.isEmpty) stringResource(Res.string.slot_none) else fx.type), color = Acid.colors.accent, fontSize = 12.sp)
+            }
+            val menuScroll = rememberScrollState()
+            DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                ScaledMenu(menuScroll) {
+                    DropdownMenuItem(text = { Text(stringResource(Res.string.slot_none), fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        editor.editSong { s -> withType(s, slot, "") }
+                    })
+                    for (t in types) DropdownMenuItem(text = { Text(t, fontSize = 12.sp) }, onClick = {
+                        menu = false
+                        if (t != fx.type) editor.editSong { s -> withType(s, slot, t) }
+                    })
+                }
+            }
+            if (!fx.isEmpty) {
+                BypassChip(!fx.bypass) {
+                    val bypass = !fx.bypass
+                    editor.editSong { s -> withBypass(s, slot, bypass) }
+                    NativeEngine.setParam(0, unitOf(slot), "bypass", if (bypass) 1f else 0f, record = false)
+                }
+            }
+        }
+        if (!fx.isEmpty) Box(Modifier.fillMaxSize()) {
+            SongSlotFace(
+                fx.type, info,
+                value = { n -> fx.params[n] ?: (info + modInfo).firstOrNull { it.name == n }?.defaultNormalized ?: 0f },
+                start = { editor.beginSongGesture() },
+                change = { n, nv ->
+                    NativeEngine.setParam(0, unitOf(slot), n, nv, record = false)
+                    editor.updateSongGesture { s -> withParam(s, slot, n, nv) }
+                },
+                end = { editor.endSongGesture() },
+                set = { n, nv ->
+                    NativeEngine.setParam(0, unitOf(slot), n, nv, record = false)
+                    editor.editSong { s -> withParam(s, slot, n, nv) }
+                },
+                modTracks = modTrackNames(editor),
+            )
+        }
+    }
+}
+
+/** The slot's on and bypass button at the height of a chip, for the second screen. */
+@Composable
+private fun BypassChip(on: Boolean, onClick: () -> Unit) {
+    Box(
+        Modifier.height(30.dp).clip(RoundedCornerShape(4.dp))
+            .background(if (on) Acid.colors.green else Acid.colors.control)
+            .clickable(onClick = onClick).padding(horizontal = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            stringResource(if (on) Res.string.slot_on else Res.string.slot_bypass),
+            color = if (on) Color.White else Acid.colors.textMid, fontSize = 10.sp, maxLines = 1, softWrap = false,
+        )
+    }
+}

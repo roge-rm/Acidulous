@@ -76,7 +76,11 @@ On a device with a second built-in screen, like the Retroid Pocket Duo, the app 
 
 With an editor or a track on top, the bottom screen has tabs along its top edge: **keys** (**pads** on a drum machine), which is the playing strip with the octave, the chord, scale and arp chips and the wheels, and **panel**, which is that machine's panel. With the song screen on top, the tabs are **mix** and **fx**. The bottom screen remembers its tab for each kind of top screen.
 
-On **keys** the **keys | grid** chip, set for each track, picks between a piano with two rows an octave apart and a grid of pads. The grid's rows are a fourth apart, with the root at the bottom left. While a scale is running, the **in key | all** chip, the same for every track, picks between showing only the scale's notes and showing every note with the others dimmed.
+On **keys** the **piano | grid** chip, set for each track, picks between a piano with two rows an octave apart and a grid of pads. The grid's rows are a fourth apart, with the root at the bottom left. While a scale is running, the **in key | all** chip, the same for every track, picks between showing only the scale's notes and showing every note with the others dimmed.
+
+Whatever the bottom screen shows leaves the top one: with **keys** (or **pads**) below, the top editor has no playing strip, so the roll gets that height. With **panel** below, the top keeps the strip and drops the panel, so the roll gets the room, the width or the height. The panel below fills the screen, its cards sharing the room evenly with the knobs sized to fit.
+
+On **mix**, every strip has pan and both sends as knobs, and the master shows its two sends. On **fx**, the chips **sends**, **master** and the track's name pick what is shown: the two sends, the master's inserts or that track's inserts. Tap the track's chip again for the next track.
 
 ## TalkBack
 

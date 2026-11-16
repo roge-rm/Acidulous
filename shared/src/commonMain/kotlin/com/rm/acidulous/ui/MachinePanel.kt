@@ -1178,6 +1178,7 @@ internal val LocalCardsPacked = androidx.compose.runtime.compositionLocalOf { fa
  */
 @Composable
 internal fun GroupRow(content: @Composable () -> Unit) {
+    if (LocalPanelGrid.current) { GridCards(content); return }
     // What a screen shows of the row is built first and the rest a frame
     // later, so a machine opens without waiting for cards off the edge.
     val widthDp = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
@@ -1238,6 +1239,14 @@ internal fun PanelSections(
     section: @Composable (Int) -> Unit,
 ) {
     val chosen = selected.coerceIn(0, (names.size - 1).coerceAtLeast(0))
+    if (LocalPanelGrid.current) {
+        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            SectionChips(names, chosen, onSelect)
+            above?.invoke(chosen)
+            Box(Modifier.weight(1f).fillMaxWidth()) { GroupRow { section(chosen) } }
+        }
+        return
+    }
     if (!LocalPanelStacked.current) {
         Column {
             SectionChips(names, chosen, onSelect)
@@ -1546,6 +1555,7 @@ internal fun Group(
     background: Color = Acid.colors.card,
     content: @Composable () -> Unit,
 ) {
+    if (inGridCards()) { GridCard(title, background, content); return }
     val later = LocalLaterCards.current
     val index = remember { later?.next() ?: 0 }
     if (later != null && !later.all && index >= later.first) {

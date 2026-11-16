@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -70,7 +71,12 @@ private fun SecondScreen() {
     // A stale index falls back to the first track, and its index goes on with it.
     val index = if (trackIndex in song.tracks.indices) trackIndex else 0
     val track = song.tracks.getOrNull(index) ?: if (home && page == 0) null else return
-    var selectedPad by remember(index) { mutableStateOf(0) }
+    var selectedPad by AppState.selectedPad(track?.id ?: "")
+    // The fx page: 0 the sends, 1 the master's inserts, 2 a track's. A tap on the track's chip
+    // again goes to the next track.
+    var fxChip by remember { mutableStateOf(0) }
+    var fxTrack by remember { mutableStateOf("") }
+    val fxIndex = song.tracks.indexOfFirst { it.id == fxTrack }.takeIf { it >= 0 } ?: index
     val c = Acid.colors
     Column(Modifier.fillMaxSize().padding(8.dp)) {
         Row(
@@ -96,16 +102,29 @@ private fun SecondScreen() {
         val h = hooks
         when {
             track == null || h != null && home && page == 0 -> if (h != null) MixerPanel(
-                song, AppState.editor, h.rackPeaks, h.masterPeak, h.clickOn(), h.onClick, body,
+                song, AppState.editor, h.rackPeaks, h.masterPeak, h.clickOn(), h.onClick, body, fill = true,
             )
-            h != null && home -> SlotsPanel(
-                SlotKind.Effects, track, index, AppState.editor, body, maxHeight = 2000.dp,
-            )
-            h != null && page == 1 -> Box(body) {
-                TrackMachinePanel(
-                    track, index, AppState.editor, h.panel, selectedPad, sceneId,
-                    foldable = false, modifier = Modifier.fillMaxSize(),
+            h != null && home -> Column(body) {
+                FxChips(
+                    fxChip, song.tracks.getOrNull(fxIndex)?.name.orEmpty(),
+                    onChip = { fxChip = it },
+                    onTrack = {
+                        if (fxChip == 2 && song.tracks.size > 1) fxTrack = song.tracks[(fxIndex + 1) % song.tracks.size].id
+                        fxChip = 2
+                    },
                 )
+                SecondFxPage(
+                    fxChip, song, song.tracks.getOrNull(fxIndex), fxIndex, AppState.editor,
+                    Modifier.fillMaxWidth().weight(1f).padding(top = 4.dp),
+                )
+            }
+            h != null && page == 1 -> Box(body) {
+                CompositionLocalProvider(LocalPanelGrid provides true) {
+                    TrackMachinePanel(
+                        track, index, AppState.editor, h.panel, selectedPad, sceneId,
+                        foldable = false, modifier = Modifier.fillMaxSize(),
+                    )
+                }
             }
             else -> PlayArea(song, track, index, selectedPad, { selectedPad = it }, body)
         }
@@ -142,6 +161,16 @@ private fun PlayArea(
             onDismiss = { scaleDialog = false },
             onApply = { applyScaleTo(AppState.editor, rack, it); scaleDialog = false },
         )
+    }
+}
+
+/** The fx page's chips: the sends, the master, and a track by name. */
+@Composable
+private fun FxChips(chip: Int, trackName: String, onChip: (Int) -> Unit, onTrack: () -> Unit) {
+    Row(Modifier.fillMaxWidth().height(28.dp).padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        PageTab(stringResource(Res.string.second_sends), chip == 0) { onChip(0) }
+        PageTab(stringResource(Res.string.mixer_master), chip == 1) { onChip(1) }
+        PageTab(trackName + if (chip == 2) " \u25B8" else "", chip == 2, onTrack)
     }
 }
 

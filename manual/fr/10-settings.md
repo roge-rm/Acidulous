@@ -88,7 +88,11 @@ Sur un appareil avec un second écran intégré, comme le Retroid Pocket Duo, l�
 
 Avec un éditeur ou une piste en haut, l’écran du bas a des onglets sur son bord supérieur : **clavier** (**pads** sur une boîte à rythmes), qui est la bande de jeu avec l’octave, les puces d’accords, de gamme et d’arpège et les molettes, et **panneau**, qui est le panneau de cette machine. Avec l’écran du morceau en haut, les onglets sont **mix** et **fx**. L’écran du bas se souvient de son onglet pour chaque sorte d’écran du haut.
 
-Sur **clavier**, la puce **clavier | grille**, réglée par piste, choisit entre un piano à deux rangées espacées d’une octave et une grille de pads. Les rangées de la grille sont espacées d’une quarte, avec la fondamentale en bas à gauche. Tant qu’une gamme joue, la puce **gamme | toutes**, la même pour toutes les pistes, choisit entre montrer seulement les notes de la gamme et montrer toutes les notes, les autres étant atténuées.
+Sur **clavier**, la puce **piano | grille**, réglée par piste, choisit entre un piano à deux rangées espacées d’une octave et une grille de pads. Les rangées de la grille sont espacées d’une quarte, avec la fondamentale en bas à gauche. Tant qu’une gamme joue, la puce **gamme | toutes**, la même pour toutes les pistes, choisit entre montrer seulement les notes de la gamme et montrer toutes les notes, les autres étant atténuées.
+
+Ce que l’écran du bas montre quitte celui du haut : avec **clavier** (ou **pads**) en bas, l’éditeur du haut n’a plus de bande de jeu, et le rouleau gagne cette hauteur. Avec **panneau** en bas, celui du haut garde la bande et perd le panneau, et le rouleau gagne la place, en largeur ou en hauteur. Le panneau du bas remplit l’écran, ses cartes se partageant la place également et les boutons ajustés à leur taille.
+
+Sur **mix**, chaque tranche a le panoramique et les deux envois en boutons, et le général montre ses deux envois. Sur **fx**, les puces **envois**, **général** et le nom de la piste choisissent ce qui est montré : les deux envois, les inserts du général ou ceux de cette piste. Touchez encore la puce de la piste pour la piste suivante.
 
 ## TalkBack
 

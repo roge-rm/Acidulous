@@ -308,14 +308,14 @@ private val FoldMarkW = 22.dp
 
 /** A key's width on the second screen's keyboards. */
 private val RoomyKeyW = 52.dp
-/** The keys/grid chip, two words side by side. */
-private val LayoutChipW = 100.dp
+/** The piano/grid chip, two words side by side. */
+private val LayoutChipW = 112.dp
 
-/** Keys or the note grid, for the second screen. */
+/** Piano or the note grid, for the second screen. */
 @Composable
 private fun LayoutChip(grid: Boolean, modifier: Modifier = Modifier, onGrid: (Boolean) -> Unit) {
     Row(modifier.width(LayoutChipW), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        LayoutHalf(stringResource(Res.string.edit_keys), !grid, Modifier.weight(1f)) { onGrid(false) }
+        LayoutHalf(stringResource(Res.string.second_piano), !grid, Modifier.weight(1f)) { onGrid(false) }
         LayoutHalf(stringResource(Res.string.second_grid), grid, Modifier.weight(1f)) { onGrid(true) }
     }
 }

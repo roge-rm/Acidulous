@@ -132,6 +132,8 @@
     <string name="second_mix">mix</string>
     <string name="second_panel">panneau</string>
     <string name="second_grid">grille</string>
+    <string name="second_piano">piano</string>
+    <string name="second_sends">envois</string>
     <string name="second_in_key">gamme</string>
     <string name="second_all_notes">toutes</string>
 </resources>

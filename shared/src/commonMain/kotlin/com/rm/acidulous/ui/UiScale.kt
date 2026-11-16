@@ -123,8 +123,7 @@ fun ScaledWindow(content: @Composable () -> Unit) {
     val scale = LocalUiScale.current
     CompositionLocalProvider(
         LocalDensity provides Density(base.density * scale, base.fontScale),
-        content = content,
-    )
+    ) { OutsideGrid(content) }
 }
 
 /**

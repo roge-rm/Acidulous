@@ -157,7 +157,7 @@ fun EditScreen(
     // the grid, keyboard machines on the roll.
     var steps by remember(trackIndex, kind) { mutableStateOf(kind == MachineKind.Drums) }
     val voices = MachineUi.voicesOf(track.machine)
-    var selectedPad by remember(trackIndex) { mutableStateOf(0) }
+    var selectedPad by AppState.selectedPad(track.id)
     // Only Reflux can switch views, between a roll and a step row. Drum
     // machines start on the grid (steps is true) and stay there.
     val hasSteps = track.machine.type == "Reflux"
@@ -984,8 +984,13 @@ fun EditScreen(
 
         // [grip] is the drag that moves the divider above the keys. Empty in
         // landscape, where there's no divider.
+        // With the second screen up, what it shows leaves this one: its keys or pads take the
+        // strip off, its machine panel takes the panel off, so the roll gets the height or width.
+        val companion = AppState.secondScreenShown.value && UiPrefs.secondScreen
+        val dropKeys = companion && UiPrefs.secondPageTrack == 0
+        val dropPanel = companion && UiPrefs.secondPageTrack == 1 && panel == 0
         val keysSlot: @Composable (Dp, Modifier) -> Unit = { height, grip ->
-            PlayStrip(
+            if (!dropKeys) PlayStrip(
                 song, track, trackIndex, editor, height,
                 selectedPad, { selectedPad = it },
                 onOpenModifier = { modifierSlot = it },
@@ -1022,7 +1027,7 @@ fun EditScreen(
                 // share is capped at an instrument's height, otherwise a third
                 // of a landscape tablet is a huge keyboard and the roll runs
                 // short of rows.
-                val keysH = if (kind == MachineKind.Audio) 0.dp
+                val keysH = if (kind == MachineKind.Audio || dropKeys) 0.dp
                             else if (keysFolded) foldedH
                             else if (large) (total * frac).coerceAtMost(LARGE_KEYS_LAND_MAX)
                             else total * frac
@@ -1039,7 +1044,7 @@ fun EditScreen(
                         // the mixer carry their own and are all body. It's
                         // never folded itself and holds the mark that folds the
                         // cards.
-                        if (panel == 0 && !barInStrip) Column(
+                        if (panel == 0 && !barInStrip && !dropPanel) Column(
                             Modifier.width(PATCH_W).fillMaxHeight(),
                         ) { panelSlot(true, false, FX_PANEL_MAX_H) }
                         Box(Modifier.weight(1f).fillMaxHeight()) {
@@ -1063,7 +1068,7 @@ fun EditScreen(
                         // keeps the fold mark.
                         //
                         // Two knobs wide on every screen size.
-                        if (!panelFolded || panel != 0) Column(
+                        if ((!panelFolded || panel != 0) && !dropPanel) Column(
                             Modifier.width(CONTROL_W).fillMaxHeight(),
                         ) { panelSlot(false, true, FX_PANEL_MAX_H) }
                     }
@@ -1085,7 +1090,7 @@ fun EditScreen(
             BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
                 val total = maxHeight
                 val keysFolded = UiPrefs.keysFolded
-                val keysShown = squareKeys && kind != MachineKind.Audio
+                val keysShown = (if (dropKeys) false else if (dropPanel) true else squareKeys) && kind != MachineKind.Audio
                 val keysH = if (keysFolded) {
                     if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H
                 } else {
@@ -1097,7 +1102,7 @@ fun EditScreen(
                     automationSlot(LaneH)
                     if (keysShown) {
                         keysSlot(keysH, Modifier)
-                    } else {
+                    } else if (!dropPanel) {
                         Box(Modifier.fillMaxWidth().heightIn(max = (total - SquareRollMin).coerceAtLeast(0.dp))) {
                             Column { panelSlot(true, true, FX_PANEL_MAX_H) }
                         }
@@ -1112,7 +1117,7 @@ fun EditScreen(
             // The fx slots take what the lanes and the roll's floor leave,
             // never less than they always had.
             val lanes = (if (noteFolded || kind == MachineKind.Audio) 24.dp else LaneH) + (if (autoFolded) 24.dp else LaneH)
-            val keysTaken = if (kind == MachineKind.Audio) 0.dp
+            val keysTaken = if (kind == MachineKind.Audio || dropKeys) 0.dp
                 else if (UiPrefs.keysFolded) (if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H)
                 else (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale * (if (large) LARGE_KEYS else 1f) * keysStretch
             val fxPanelMax = (maxHeight - lanes - keysTaken - FxRollMin).coerceAtLeast(FX_PANEL_MAX_H)
@@ -1120,7 +1125,7 @@ fun EditScreen(
                 gridSlot()
                 if (kind != MachineKind.Audio) noteLaneSlot(LaneH)
                 automationSlot(LaneH)
-                panelSlot(true, true, fxPanelMax)
+                if (!dropPanel) panelSlot(true, true, fxPanelMax)
                 // Upright the instrument can be dragged taller too, with the
                 // same handle as in landscape. The height comes from the roll,
                 // so the drag stops when the roll hits its floor. It's a
@@ -1131,7 +1136,7 @@ fun EditScreen(
                 // extra height, as taller rows. At 1.0 this changes nothing. A
                 // tablet's keys are 1.5x taller.
                 val keysBase = (if (kind == MachineKind.Drums) PADS_H else KEYS_H) / scale * (if (large) LARGE_KEYS else 1f)
-                val keysH = if (kind == MachineKind.Audio) 0.dp else keysBase * keysStretch
+                val keysH = if (kind == MachineKind.Audio || dropKeys) 0.dp else keysBase * keysStretch
                 keysSlot(
                     if (UiPrefs.keysFolded) {
                         if (kind == MachineKind.Drums) PADS_FOLDED_H else KEYS_FOLDED_H

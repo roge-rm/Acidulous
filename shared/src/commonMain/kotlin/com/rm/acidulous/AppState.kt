@@ -58,6 +58,14 @@ object AppState {
      */
     val secondScreenPresent: MutableState<Boolean> = mutableStateOf(false)
 
+    /** The companion is up and showing right now, so the main screen can hand things to it. */
+    val secondScreenShown: MutableState<Boolean> = mutableStateOf(false)
+
+    private val pads = HashMap<String, MutableState<Int>>()
+
+    /** The pad a track's panel shows, shared by the editor and the second screen. */
+    fun selectedPad(trackId: String): MutableState<Int> = pads.getOrPut(trackId) { mutableStateOf(0) }
+
     // What a track plays at, by track id, so the editor's keys and the second
     // screen's agree. Kept for the process, not saved with the song.
     private val octaves = HashMap<String, MutableState<Int>>()

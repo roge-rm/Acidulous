@@ -132,6 +132,8 @@
     <string name="second_mix">mix</string>
     <string name="second_panel">panel</string>
     <string name="second_grid">grid</string>
+    <string name="second_piano">piano</string>
+    <string name="second_sends">sends</string>
     <string name="second_in_key">in key</string>
     <string name="second_all_notes">all</string>
 </resources>

@@ -75,12 +75,16 @@ internal object SecondScreens {
                     startedOn = target
                     Log.i(TAG, "opened on display $target")
                 }
-                .onFailure { Log.w(TAG, "could not open on display $target", it) }
+                .onFailure {
+                    AppState.secondScreenShown.value = false
+                    Log.w(TAG, "could not open on display $target", it)
+                }
         }
     }
 
     /** Closes the second screen if it's open. */
     fun close() {
+        AppState.secondScreenShown.value = false
         if (startedOn != Display.INVALID_DISPLAY) Log.i(TAG, "closed on display $startedOn")
         startedOn = Display.INVALID_DISPLAY
         companion?.finish()
@@ -94,6 +98,7 @@ internal object SecondScreens {
             return
         }
         companion = null
+        AppState.secondScreenShown.value = false
         if (activity.isFinishing) startedOn = Display.INVALID_DISPLAY
     }
 }
@@ -145,6 +150,16 @@ class CompanionActivity : ComponentActivity() {
         super.onConfigurationChanged(newConfig)
         // A display that goes away hands its activities to the main one.
         if (displayIdNow == Display.DEFAULT_DISPLAY) finish()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (SecondScreens.companion === this) AppState.secondScreenShown.value = true
+    }
+
+    override fun onStop() {
+        if (SecondScreens.companion === this) AppState.secondScreenShown.value = false
+        super.onStop()
     }
 
     override fun onDestroy() {

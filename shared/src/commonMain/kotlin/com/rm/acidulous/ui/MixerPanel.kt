@@ -23,6 +23,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.heightIn
@@ -60,6 +61,7 @@ import com.rm.acidulous.model.withSendBypass
 import com.rm.acidulous.model.withSendParam
 import com.rm.acidulous.engine.NativeEngine
 import androidx.compose.runtime.Composable
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -113,6 +115,11 @@ fun MixerPanel(
      */
     openStrip: OpenStrip? = null,
     onOpenStrip: ((OpenStrip?) -> Unit)? = null,
+    /**
+     * The second screen's mixer: strips share the width and the height, pan
+     * and both sends are knobs, and the master shows its two send returns.
+     */
+    fill: Boolean = false,
 ) {
     val c = Acid.colors
     // The fader height comes from the room available, floored at a height you
@@ -127,6 +134,39 @@ fun MixerPanel(
     val room = if (constraints.hasBoundedHeight) maxHeight else Dp.Infinity
     // The output row only appears when the song has a group to route to.
     val groups = song.master.groups.map { it.name }
+    if (fill) {
+        val sendNames = List(SEND_SLOTS) { slot ->
+            song.master.sendAt(slot).type.lowercase().ifEmpty { stringResource(Res.string.mixer_send, slot + 1) }
+        }
+        val gap = 4.dp
+        // The master stays at the right edge and the rest scroll. The groups are a little wider, for their insert chips.
+        val extra = 14.dp
+        val others = song.tracks.size + song.master.groups.size + (if (song.master.groups.size < MAX_GROUPS) 1 else 0)
+        val avail = maxWidth - 12.dp - MASTER_W - 10.dp - gap * others - extra * song.master.groups.size
+        val stripW = (avail / others.coerceAtLeast(1)).coerceAtLeast(KNOB_STRIP_MIN)
+        val dial = (stripW - 16.dp).coerceIn(24.dp, 44.dp)
+        val tall = maxHeight - 12.dp
+        Row(
+            Modifier.fillMaxSize().background(c.panelAlt).padding(6.dp),
+            horizontalArrangement = Arrangement.spacedBy(gap),
+        ) {
+            Row(Modifier.weight(1f).fillMaxHeight().horizontalScrollWithBar(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                song.tracks.forEachIndexed { index, track ->
+                    val automated = remember(track) { automatedOf(track) }
+                    ChannelStrip(
+                        track, index, { rackPeaks().getOrElse(index) { 0f } }, editor, trackColour(index, track.colour), automated,
+                        sendNames = sendNames, groups = groups, stripW = stripW, knobDial = dial,
+                    )
+                }
+                song.master.groups.forEachIndexed { g, group ->
+                    GroupStrip(g, group, song, editor, FADER_H, Dp.Infinity, false, tall, stripW = stripW + extra, knobDial = dial)
+                }
+                if (song.master.groups.size < MAX_GROUPS) AddGroupStrip(editor, Dp.Infinity, tall)
+            }
+            MasterStrip(song, editor, masterPeak, clickOn, onClick, fullH = tall, stripW = MASTER_W + 10.dp, knobDial = dial)
+        }
+        return@BoxWithConstraints
+    }
     val chrome = STRIP_CHROME + if (groups.isEmpty()) 0.dp else OUTPUT_ROW
     // Wrap into rows where there's height for them, like the editor's column on
     // a tablet or desktop. When two rows fit at the shortest fader the strips
@@ -387,8 +427,12 @@ private fun MixerRow(
  * Tap the name to rename it, hold it to delete the group.
  */
 @Composable
-private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, faderH: Dp, room: Dp, tight: Boolean, fullH: Dp) {
+private fun GroupStrip(
+    g: Int, group: MixGroup, song: Song, editor: SongEditor, faderH: Dp, room: Dp, tight: Boolean, fullH: Dp,
+    stripW: Dp = STRIP_W, knobDial: Dp = Dp.Unspecified,
+) {
     val c = Acid.colors
+    val knobs = knobDial != Dp.Unspecified
     val n = g + 1
     var peak by remember { mutableStateOf(0f) }
     LaunchedEffect(g) {
@@ -426,7 +470,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
         ) { editingInsert = null }
     }
     Column(
-        Modifier.width(STRIP_W).then(
+        Modifier.width(stripW).then(
             if (fullH != Dp.Unspecified) Modifier.height(fullH)
             else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room),
         )
@@ -444,7 +488,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
             )
             Text("✕", color = c.textDim, fontSize = 11.sp, modifier = Modifier.clickable { deleting = true }.padding(horizontal = 3.dp))
         }
-        Row(Modifier.height(faderH), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(if (knobs) Modifier.weight(1f).heightIn(min = FADER_MIN) else Modifier.height(faderH), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Meter(peak, Modifier.width(8.dp).fillMaxHeight())
             VerticalFader(
                 value = EngineParams.volume01(group.volume),
@@ -459,7 +503,16 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
                 name = stringResource(Res.string.a11y_volume, group.name),
             )
         }
-        Labeled(stringResource(Res.string.mixer_pan)) {
+        if (knobs) Knob(
+            stringResource(Res.string.mixer_pan), EngineParams.pan01(group.pan), panShort(group.pan),
+            Modifier.mappable(MapTargets.param(0, "master", "g${n}pan")), size = knobDial, accent = c.accent,
+            onStart = { editor.beginSongGesture() },
+            onChange = { v ->
+                NativeEngine.setParam(0, "master", "g${n}pan", v)
+                editor.updateSongGesture { s -> s.withGroupPan(g, EngineParams.panFrom01(v)) }
+            },
+            onEnd = { editor.endSongGesture() },
+        ) else Labeled(stringResource(Res.string.mixer_pan)) {
             MiniSlider(
                 value = EngineParams.pan01(group.pan), centered = true,
                 name = stringResource(Res.string.a11y_pan, group.name),
@@ -481,7 +534,7 @@ private fun GroupStrip(g: Int, group: MixGroup, song: Song, editor: SongEditor, 
             maxLines = 4, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
         )
-        if (fullH != Dp.Unspecified) Spacer(Modifier.weight(1f))
+        if (fullH != Dp.Unspecified && !knobs) Spacer(Modifier.weight(1f))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             GridChip(stringResource(Res.string.mixer_mute_short), group.mute, c.red, Modifier.weight(1f), said = stringResource(Res.string.a11y_mute, group.name)) { editor.editSong { s -> s.withGroupMute(g, !group.mute) } }
             GridChip(stringResource(Res.string.mixer_solo_short), group.solo, c.accent, Modifier.weight(1f), said = stringResource(Res.string.a11y_solo, group.name)) { editor.editSong { s -> s.withGroupSolo(g, !group.solo) } }
@@ -538,8 +591,12 @@ private fun ChannelStrip(
     sendNames: List<String> = List(2) { stringResource(Res.string.mixer_send, it + 1) },
     /** The mixer's groups, which this track can be routed into. */
     groups: List<String> = emptyList(),
+    /** The strip's width, and the dial of its knobs when pan and the sends are knobs (the second screen's). */
+    stripW: Dp = STRIP_W,
+    knobDial: Dp = Dp.Unspecified,
 ) {
     val c = Acid.colors
+    val knobs = knobDial != Dp.Unspecified
     var askClear by remember { mutableStateOf(false) }
     val m = track.mixer
     fun live(name: String, v01: Float) = NativeEngine.setParam(index, "channel", name, v01)
@@ -559,7 +616,7 @@ private fun ChannelStrip(
      * The mixer leaves composition when closed, so reopening takes a fresh
      * copy.
      */
-    val opened = remember(index) { m }
+    val opened = remember(track.id) { m }
 
     /** Put one value back, in the document and in the engine. */
     fun back(name: String, v01: Float, update: (Mixer) -> Mixer) {
@@ -595,7 +652,7 @@ private fun ChannelStrip(
     }
 
     Column(
-        Modifier.width(STRIP_W).then(if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+        Modifier.width(stripW).then(if (knobs) Modifier.fillMaxHeight() else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
             .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
             .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
             .padding(4.dp).together(),
@@ -618,7 +675,7 @@ private fun ChannelStrip(
             }
         }
         Row(
-            Modifier.height(faderH),
+            if (knobs) Modifier.weight(1f).heightIn(min = FADER_MIN) else Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             LiveMeter(peak, Modifier.width(8.dp).fillMaxHeight())
@@ -633,7 +690,33 @@ private fun ChannelStrip(
                 name = stringResource(Res.string.a11y_volume, track.name),
             )
         }
-        Labeled(stringResource(Res.string.mixer_pan)) {
+        if (knobs) {
+            val sendA = sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }
+            val sendB = sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }
+            Knob(
+                stringResource(Res.string.mixer_pan), EngineParams.pan01(m.pan), panShort(m.pan), Modifier.mappable(map("pan")), size = knobDial,
+                accent = c.accent,
+                onStart = { editor.beginGesture(index) },
+                onChange = { v -> gesture("pan", v) { it.copy(pan = EngineParams.panFrom01(v)) } },
+                onEnd = { editor.endGesture() },
+                onReset = { back("pan", EngineParams.pan01(opened.pan)) { it.copy(pan = opened.pan) } },
+            )
+            Knob(
+                sendA, m.sendReverb, "${(m.sendReverb * 100).roundToInt()}", Modifier.mappable(map("sendreverb")), size = knobDial,
+                onStart = { editor.beginGesture(index) },
+                onChange = { v -> gesture("sendreverb", v) { it.copy(sendReverb = v) } },
+                onEnd = { editor.endGesture() },
+                onReset = { back("sendreverb", opened.sendReverb) { it.copy(sendReverb = opened.sendReverb) } },
+            )
+            Knob(
+                sendB, m.sendDelay, "${(m.sendDelay * 100).roundToInt()}", Modifier.mappable(map("senddelay")), size = knobDial,
+                onStart = { editor.beginGesture(index) },
+                onChange = { v -> gesture("senddelay", v) { it.copy(sendDelay = v) } },
+                onEnd = { editor.endGesture() },
+                onReset = { back("senddelay", opened.sendDelay) { it.copy(sendDelay = opened.sendDelay) } },
+            )
+        }
+        if (!knobs) Labeled(stringResource(Res.string.mixer_pan)) {
             MiniSlider(
                 value = EngineParams.pan01(m.pan), centered = true,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("pan")),
@@ -645,7 +728,7 @@ private fun ChannelStrip(
                 state = panSaid(m.pan),
             )
         }
-        Labeled(sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }) {
+        if (!knobs) Labeled(sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }) {
             MiniSlider(
                 value = m.sendReverb,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("sendreverb")),
@@ -656,7 +739,7 @@ private fun ChannelStrip(
                 name = stringResource(Res.string.a11y_send, track.name, sendNames.getOrElse(0) { stringResource(Res.string.mixer_send, 1) }),
             )
         }
-        Labeled(sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }) {
+        if (!knobs) Labeled(sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }) {
             MiniSlider(
                 value = m.sendDelay,
                 modifier = Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("senddelay")),
@@ -667,14 +750,17 @@ private fun ChannelStrip(
                 name = stringResource(Res.string.a11y_send, track.name, sendNames.getOrElse(1) { stringResource(Res.string.mixer_send, 2) }),
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (knobs) Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            GridChip(stringResource(Res.string.mixer_mute_short), m.mute, c.red, Modifier.weight(1f).mappable(map("mute")), said = stringResource(Res.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
+            GridChip(stringResource(Res.string.mixer_solo_short), m.solo, c.accent, Modifier.weight(1f).mappable(map("solo")), said = stringResource(Res.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
+        } else Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             ToggleChip(stringResource(Res.string.mixer_mute_short), m.mute, c.red, Modifier.mappable(map("mute")), said = stringResource(Res.string.a11y_mute, track.name)) { tap { it.copy(mute = !it.mute) } }
             ToggleChip(stringResource(Res.string.mixer_solo_short), m.solo, c.accent, Modifier.mappable(map("solo")), said = stringResource(Res.string.a11y_solo, track.name)) { tap { it.copy(solo = !it.solo) } }
         }
         // Where this track's notes go: off, both, or out only. At out only the
         // machine isn't run at all, which saves CPU when driving external gear.
         // The MIDI channel sits next to it.
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        if (!knobs) Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             val label = stringResource(when (m.midiMode) { 1 -> Res.string.mixer_midi_both; 2 -> Res.string.mixer_midi_out; else -> Res.string.mixer_midi_off })
             ToggleChip(label, m.midiMode != 0, c.teal, said = stringResource(Res.string.a11y_midi_out, track.name), state = label) {
                 tap { it.copy(midiMode = (it.midiMode + 1) % 3) }
@@ -689,7 +775,7 @@ private fun ChannelStrip(
         // steps through them.
         if (groups.isNotEmpty()) {
             val to = groups.getOrNull(m.output - 1)
-            ToggleChip(stringResource(Res.string.mixer_to, to ?: stringResource(Res.string.mixer_master)), to != null, c.teal, Modifier.width(STRIP_W - 8.dp).mappable(map("output")), padding = 3.dp,
+            ToggleChip(stringResource(Res.string.mixer_to, to ?: stringResource(Res.string.mixer_master)), to != null, c.teal, Modifier.width(stripW - 8.dp).mappable(map("output")), padding = 3.dp,
                 said = stringResource(Res.string.a11y_output, track.name), state = to ?: stringResource(Res.string.mixer_master)) {
                 tap { it.copy(output = if (it.output in 0 until groups.size) it.output + 1 else 0) }
             }
@@ -713,8 +799,11 @@ private fun MasterStrip(
     tight: Boolean = false,
     /** A channel strip's height to match, unspecified when there's none. */
     fullH: Dp = Dp.Unspecified,
+    stripW: Dp = MASTER_W,
+    knobDial: Dp = Dp.Unspecified,
 ) {
     val c = Acid.colors
+    val knobs = knobDial != Dp.Unspecified
     val master = song.master
     fun live(name: String, v01: Float) = NativeEngine.setParam(0, "master", name, v01)
     fun gesture(name: String, v01: Float, update: (Song) -> Song) {
@@ -738,7 +827,7 @@ private fun MasterStrip(
     }
 
     Column(
-        Modifier.width(MASTER_W).then(
+        Modifier.width(stripW).then(
             if (fullH != Dp.Unspecified) Modifier.height(fullH)
             else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room),
         )
@@ -760,7 +849,7 @@ private fun MasterStrip(
         }
         fun fmt(v: Float) = if (v <= -70f) "-" else "%.1f".format(v)
         Row(
-            Modifier.height(faderH),
+            if (knobs) Modifier.weight(1f).heightIn(min = FADER_MIN) else Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             LiveMeter(peak, Modifier.width(8.dp).fillMaxHeight())
@@ -774,7 +863,13 @@ private fun MasterStrip(
                 name = stringResource(Res.string.a11y_volume, stringResource(Res.string.a11y_master)),
             )
         }
-        Labeled(stringResource(Res.string.mixer_limit_drive)) {
+        if (knobs) Knob(
+            stringResource(Res.string.mixer_limit_drive), master.limiter.drive, "${(master.limiter.drive * 100).roundToInt()}",
+            Modifier.mappable(map("limiterdrive")), size = knobDial,
+            onStart = { editor.beginSongGesture() },
+            onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
+            onEnd = { editor.endSongGesture() },
+        ) else Labeled(stringResource(Res.string.mixer_limit_drive)) {
             MiniSlider(master.limiter.drive, Modifier.width(STRIP_W - 8.dp).height(20.dp).mappable(map("limiterdrive")),
                 onStart = { editor.beginSongGesture() },
                 onChange = { v -> gesture("limiterdrive", v) { s -> s.copy(master = s.master.copy(limiter = s.master.limiter.copy(drive = v))) } },
@@ -785,7 +880,7 @@ private fun MasterStrip(
         // lines up with every channel's. It takes the height left between the
         // limiter and the buttons, so the buttons always fit.
         Column(
-            Modifier.fillMaxWidth().then(if (fullH != Dp.Unspecified) Modifier.weight(1f) else Modifier)
+            Modifier.fillMaxWidth().then(if (fullH != Dp.Unspecified && !knobs) Modifier.weight(1f) else Modifier)
                 .clip(RoundedCornerShape(4.dp)).background(c.cardAlt)
                 .clickable { NativeEngine.resetLoudness() }.padding(horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -828,7 +923,7 @@ private fun MasterStrip(
             for (slot in 0 until SEND_SLOTS) {
                 val send = master.sendAt(slot)
                 GridChip(if (send.isEmpty) stringResource(Res.string.mixer_send_short, slot + 1) else shortFx(send.type), !send.isEmpty && !send.bypass, c.teal,
-                         Modifier.weight(1f).onLongPress { editing = slot }, height = 26.dp,
+                         Modifier.weight(1f).onLongPress { editing = slot }, height = if (knobs) 40.dp else 26.dp,
                          said = stringResource(Res.string.a11y_send_slot, slot + 1, send.type.ifEmpty { stringResource(Res.string.a11y_slot_empty) }),
                          actions = listOf(action(stringResource(Res.string.a11y_edit)) { editing = slot })) { sendTap(slot) }
             }
@@ -959,6 +1054,9 @@ private val PALETTE = listOf(
 )
 
 private val STRIP_W = 76.dp
+
+/** The narrowest a strip gets on the second screen before the row scrolls. */
+private val KNOB_STRIP_MIN = 54.dp
 /** Mute and solo, and the level under them, when the mixer is rows: big enough for a thumb. */
 private val ROW_CHIP_W = 32.dp
 private val ROW_CHIP_H = 30.dp
@@ -1175,6 +1273,12 @@ fun SongSlotDialog(
             }
         }
     }
+}
+
+/** A pan position in a knob's value line: C, or L or R and the amount. */
+private fun panShort(pan: Float): String {
+    val amount = kotlin.math.round(kotlin.math.abs(pan) * 100f).toInt()
+    return if (amount < 2) "C" else if (pan < 0f) "L$amount" else "R$amount"
 }
 
 /** A pan position as TalkBack says it: centre, or how far left or right. */
