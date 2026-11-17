@@ -258,6 +258,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         SecondScreens.mainResumed = true
+        SecondScreens.update(this)
     }
 
     override fun onPause() {

@@ -14,19 +14,31 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 
 @Composable
 actual fun rememberOpenDocument(onResult: (Doc?) -> Unit): (Array<String>) -> Unit {
+    val bottom = com.rm.acidulous.ui.LocalSecondScreen.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        pickDone(bottom)
         onResult(uri?.let { Doc(it) })
     }
-    return { types -> launcher.launch(types) }
+    return { types -> pickStarted(bottom); launcher.launch(types) }
 }
 
 @Composable
 actual fun rememberOpenDocuments(onResult: (List<Doc>) -> Unit): (Array<String>) -> Unit {
+    val bottom = com.rm.acidulous.ui.LocalSecondScreen.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+        pickDone(bottom)
         onResult(uris.orEmpty().map { Doc(it) })
     }
-    return { types -> launcher.launch(types) }
+    return { types -> pickStarted(bottom); launcher.launch(types) }
 }
+
+/**
+ * A picker started from the second screen's composition: that screen stays
+ * open until the result comes back, see [AppState.bottomPickPending].
+ */
+private fun pickStarted(bottom: Boolean) { if (bottom) AppState.bottomPickPending = true }
+
+private fun pickDone(bottom: Boolean) { if (bottom) AppState.bottomPickPending = false }
 
 /**
  * CreateDocument with the MIME type set on each launch. The contract is kept
@@ -42,19 +54,23 @@ private class CreateAnyDocument : ActivityResultContracts.CreateDocument("*/*") 
 @Composable
 actual fun rememberCreateDocument(onResult: (Doc?) -> Unit): (name: String, mime: String) -> Unit {
     val contract = remember { CreateAnyDocument() }
-    val launcher = rememberLauncherForActivityResult(contract) { uri -> onResult(uri?.let { Doc(it) }) }
+    val bottom = com.rm.acidulous.ui.LocalSecondScreen.current
+    val launcher = rememberLauncherForActivityResult(contract) { uri -> pickDone(bottom); onResult(uri?.let { Doc(it) }) }
     return { name, mime ->
         contract.mime = mime
+        pickStarted(bottom)
         launcher.launch(name)
     }
 }
 
 @Composable
 actual fun rememberOpenFolder(onResult: (Doc?) -> Unit): () -> Unit {
+    val bottom = com.rm.acidulous.ui.LocalSecondScreen.current
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { tree ->
+        pickDone(bottom)
         onResult(tree?.let { Doc(it) })
     }
-    return { launcher.launch(null) }
+    return { pickStarted(bottom); launcher.launch(null) }
 }
 
 @Composable

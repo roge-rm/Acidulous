@@ -51,6 +51,12 @@ import com.rm.acidulous.ui.theme.Acid
  */
 @Composable
 fun SecondScreenRoot() {
+    // Set before anything here makes a file picker, so they know they are on the second screen.
+    CompositionLocalProvider(LocalSecondScreen provides true) { SecondScreenContent() }
+}
+
+@Composable
+private fun SecondScreenContent() {
     val song by AppState.song
     // The bottom's own pickers, so the system's file window opens on this display.
     val sample = rememberOpenDocument { AppState.pickerResults?.sample?.invoke(it) }

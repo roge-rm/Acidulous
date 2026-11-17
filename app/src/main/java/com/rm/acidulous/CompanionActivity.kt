@@ -5,6 +5,7 @@ import android.app.ActivityOptions
 import android.content.Intent
 import android.hardware.display.DisplayManager
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Log
 import android.view.Display
 import androidx.activity.ComponentActivity
@@ -61,6 +62,14 @@ internal object SecondScreens {
 
     /** The display it was started on, or [Display.INVALID_DISPLAY]. */
     private var startedOn = Display.INVALID_DISPLAY
+
+    /** When [startedOn] was set, to tell a start that never came up. */
+    private var startedAt = 0L
+
+    /** How long a started companion has to reach onCreate before it counts as not opened. */
+    private const val START_WAIT_MS = 2000L
+
+    private val handler = android.os.Handler(android.os.Looper.getMainLooper())
 
     /** Display.getType()'s built-in panel, a hidden constant. */
     private const val TYPE_INTERNAL = 1
@@ -193,6 +202,16 @@ internal object SecondScreens {
         val target = chosen?.displayId?.takeIf { UiPrefs.secondScreen && !main.isFinishing }
             ?: Display.INVALID_DISPLAY
         if (startedOn != Display.INVALID_DISPLAY && startedOn != target) close()
+        // A start the system dropped (the app was in the background) never reaches onCreate; allow another try.
+        if (startedOn != Display.INVALID_DISPLAY && companion == null) {
+            if (SystemClock.uptimeMillis() - startedAt >= START_WAIT_MS) {
+                Log.w(TAG, "second screen did not come up on display $startedOn within ${START_WAIT_MS} ms (main resumed $mainResumed), trying again")
+                startedOn = Display.INVALID_DISPLAY
+            } else {
+                handler.removeCallbacksAndMessages(null)
+                handler.postDelayed({ if (!main.isFinishing && !main.isDestroyed) update(main) }, START_WAIT_MS)
+            }
+        }
         if (target != Display.INVALID_DISPLAY && startedOn == Display.INVALID_DISPLAY) {
             val intent = Intent(main, CompanionActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
@@ -200,7 +219,10 @@ internal object SecondScreens {
             runCatching { main.startActivity(intent, options.toBundle()) }
                 .onSuccess {
                     startedOn = target
+                    startedAt = SystemClock.uptimeMillis()
                     Log.i(TAG, "opened on display $target")
+                    handler.removeCallbacksAndMessages(null)
+                    handler.postDelayed({ if (!main.isFinishing && !main.isDestroyed) update(main) }, START_WAIT_MS)
                 }
                 .onFailure {
                     AppState.secondScreenShown.value = false
@@ -215,7 +237,7 @@ internal object SecondScreens {
         KeyHub.onSecond = false
         if (startedOn != Display.INVALID_DISPLAY) Log.i(TAG, "closed on display $startedOn")
         startedOn = Display.INVALID_DISPLAY
-        companion?.finish()
+        companion?.closeNow()
     }
 
     /** A companion is going. If it was the open one, it can be opened again. */
@@ -226,6 +248,7 @@ internal object SecondScreens {
             return
         }
         companion = null
+        AppState.bottomPickPending = false
         AppState.secondScreenShown.value = false
         KeyHub.onSecond = false
         KeyHub.otherScreen = null
@@ -247,7 +270,7 @@ class CompanionActivity : ComponentActivity() {
         override fun onDisplayAdded(displayId: Int) {}
         override fun onDisplayChanged(displayId: Int) {}
         override fun onDisplayRemoved(displayId: Int) {
-            if (displayId == shownOn) finish()
+            if (displayId == shownOn) closeNow()
         }
     }
     private var shownOn = Display.INVALID_DISPLAY
@@ -282,7 +305,17 @@ class CompanionActivity : ComponentActivity() {
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         // A display that goes away hands its activities to the main one.
-        if (displayIdNow == Display.DEFAULT_DISPLAY) finish()
+        if (displayIdNow == Display.DEFAULT_DISPLAY) closeNow()
+    }
+
+    /** Closes the screen, or once the file picker it started has answered. */
+    private var closeAfterPick = false
+
+    internal fun closeNow() {
+        if (AppState.bottomPickPending) {
+            Log.i(TAG, "closing after the file pick")
+            closeAfterPick = true
+        } else finish()
     }
 
     override fun onStart() {
@@ -388,6 +421,10 @@ class CompanionActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (closeAfterPick && !AppState.bottomPickPending) {
+            finish()
+            return
+        }
         handBack("resumed")
     }
 

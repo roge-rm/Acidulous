@@ -76,6 +76,13 @@ object AppState {
     /** The second screen's own file pickers, so a system picker opens on its display. Set while it is composed. */
     var bottomPickers: BottomPickers? = null
 
+    /**
+     * A file picker started from the second screen has not come back yet. The
+     * result goes to the activity that started it, so that screen stays alive
+     * until it does, even when it is being closed.
+     */
+    var bottomPickPending: Boolean = false
+
     /** What [App] does with a file chosen in either screen's picker. Set while [App] is composed. */
     var pickerResults: PickerResults? = null
 

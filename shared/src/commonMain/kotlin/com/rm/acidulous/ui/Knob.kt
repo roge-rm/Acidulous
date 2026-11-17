@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.first
 import kotlin.math.roundToInt
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
-import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
@@ -43,9 +42,10 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.AwaitPointerEventScope
-import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.positionChangeIgnoreConsumed
+import androidx.compose.ui.input.pointer.changedToUpIgnoreConsumed
 import kotlinx.coroutines.withTimeoutOrNull
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
@@ -169,7 +169,6 @@ fun Knob(
                     // the touch on, to a scrolling row say.
                     if (!laid.dial.contains(down.position)) return@awaitEachGesture
                     val startValue = current
-                    val startY = down.position.y
                     // Decide hold vs turn before starting the gesture. Nothing
                     // is opened (no onStart, no undo entry) until the finger
                     // moves past the slop or the timeout runs out, otherwise
@@ -182,15 +181,7 @@ fun Knob(
                         return@awaitEachGesture
                     }
                     cb.first()
-                    // Summed from each move after the first, so a layout change under the finger can't jump the value.
-                    var travel = 0f
-                    var first = true
-                    drag(down.id) { change ->
-                        travel += if (first) startY - change.position.y else -change.positionChangeIgnoreConsumed().y
-                        first = false
-                        change.consume()
-                        cb.second((startValue + travel / 200f).coerceIn(0f, 1f))
-                    }
+                    dragUp(down) { travel -> cb.second((startValue + travel / 200f).coerceIn(0f, 1f)) }
                     cb.third()
                 }
             }
@@ -337,5 +328,32 @@ internal fun CountKnob(
                 scroll.scrollTo((max * at).roundToInt())
             }
         }
+    }
+}
+
+
+/**
+ * Follows [down] until it lifts and reports how far it has gone up from where
+ * it went down, in px. Added up from each move, so a layout change under the
+ * finger can't jump it; the move that comes with the lift counts too.
+ */
+internal suspend fun androidx.compose.ui.input.pointer.AwaitPointerEventScope.dragUp(
+    down: PointerInputChange,
+    onTravel: (Float) -> Unit,
+) {
+    var travel = 0f
+    var first = true
+    while (true) {
+        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: return
+        val up = change.changedToUpIgnoreConsumed()
+        if (change.isConsumed && !up) return
+        val moved = if (first) down.position.y - change.position.y else -change.positionChangeIgnoreConsumed().y
+        if (moved != 0f) {
+            first = false
+            travel += moved
+            change.consume()
+            onTravel(travel)
+        }
+        if (up || !change.pressed) return
     }
 }
