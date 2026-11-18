@@ -2158,11 +2158,13 @@ void moltRoutes() {
         const auto routed = playHeld("Molt", {}, {60}, blocks, &r, Mt::MacroDestCount);
         ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Molt: a route to formant matches the knob", buf);
     }
-    // Start 0 of 0..1: a route of 0.3 starts the take 0.3 in.
+    // Start 0 of 0..1: a route of 0.25 starts the take 0.25 in. The amount
+    // is one a -1..1 knob stores exactly; 0.3 comes back 5e-8 short, which
+    // on a long take moves the start by part of a frame.
     {
         const auto plain = playHeld("Molt", {}, {60}, blocks);
-        const auto knob = playHeld("Molt", {{"start", 0.3f}}, {60}, blocks);
-        Route r{6, 4, Mt::McStart, 0.3f, 1.0f};
+        const auto knob = playHeld("Molt", {{"start", 0.25f}}, {60}, blocks);
+        Route r{6, 4, Mt::McStart, 0.25f, 1.0f};
         const auto routed = playHeld("Molt", {}, {60}, blocks, &r, Mt::MacroDestCount);
         ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, "Molt: a route to start matches the knob", buf);
     }
