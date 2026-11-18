@@ -56,6 +56,10 @@ Ils reproduisent le fonctionnement du vrai instrument, alors ils se jouent comme
 
 - [**Bias**](04-the-machines/bias.md) - un quatre-pistes pour les enregistrements, avec quatre couloirs par cellule. Un enregistrement fait sur le morceau est coupé aux lignes de scène. Ses sons sont des types de bande (cassette, bobine, téléphone, etc.) qui colorent le son à la sortie.
 
+## Volume
+
+**volume** sur chaque machine se lit en dB. 0 dB est sa position dans une nouvelle piste, et tout en bas c’est coupé.
+
 ## Vélocité
 
 Chaque machine joue moins fort quand vous jouez doucement. Une note à mi-vélocité

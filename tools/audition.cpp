@@ -1937,8 +1937,8 @@ void printTrack(const std::vector<float> &stereo, float f0, int note) {
 }
 
 void printHeader() {
-    std::printf("  %-22s %6s %6s %8s %6s %7s %5s %5s %6s %7s %6s %6s %6s %5s %6s\n",
-                "patch", "loud", "peak", "centroid", "hollow", "tune", "part", "harm", "ring",
+    std::printf("  %-22s %7s %6s %6s %8s %6s %7s %5s %5s %6s %7s %6s %6s %6s %5s %6s\n",
+                "patch", "loud", "note", "peak", "centroid", "hollow", "tune", "part", "harm", "ring",
                 "speaks", "click", "chiff", "tail", "mono", "low");
 }
 
@@ -1947,8 +1947,8 @@ void printRow(const std::string &name, const Measured &m, int note) {
     if (m.tuned) std::snprintf(tune, sizeof(tune), "%+.0fc", static_cast<double>(m.tuneCents));
     if (m.partialRatio > 0.0f) std::snprintf(part, sizeof(part), "%.2f", static_cast<double>(m.partialRatio));
     if (m.ringSeconds > 0.0f) std::snprintf(ring, sizeof(ring), "%.2fs", static_cast<double>(m.ringSeconds));
-    std::printf("  %-22s %+6.1f %+6.1f %6.0fHz %+6.0f %7s %5s %5.2f %6s %5.0fms %5.1fx %5.1fx %4.2f%s %+5.1f %+6.0f%s\n",
-                name.c_str(),
+    std::printf("  %-22s %+6.1f%s %+6.1f %+6.1f %6.0fHz %+6.0f %7s %5s %5.2f %6s %5.0fms %5.1fx %5.1fx %4.2f%s %+5.1f %+6.0f%s\n",
+                name.c_str(), static_cast<double>(m.phraseDb), m.phraseMomentary ? "m" : " ",
                 static_cast<double>(m.loudnessDb), static_cast<double>(m.peakDb),
                 static_cast<double>(m.centroidHz), static_cast<double>(m.evenOddDb),
                 tune, part, static_cast<double>(m.harmonicity), ring,
@@ -2042,6 +2042,7 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
     Take take;
     int measuredNote = 0;
     bool measuredAlready = false;
+    bool oneHits = false; // a drum phrase, measured by its loudest 400 ms
     std::vector<VoiceRow> voices;
 
     if (bank.isEffect()) {
@@ -2171,6 +2172,10 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         if (kit != nullptr && (listenKind == "note" || listenKind.empty())) listenKind = "beat";
         // A slicer's demo is its loop.
         if (bank.unit == "Dice" && listenKind == "beat") listenKind = "loop";
+        // Kits, drum patterns and hand drums are hits with gaps between, so
+        // their level is the loudest moment, not the gated average.
+        oneHits = kit != nullptr || listenKind == "beat" || listenKind == "loop" || listenKind == "mallets" ||
+                  listenKind == "voices" || bank.unit == "Palm";
         if (listenKind == measureKind) {
             take = measureTake;
         } else {
@@ -2198,6 +2203,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
                        ? measure(take.stereo, take.offAt, 0, take.offAt + static_cast<int64_t>(kSr * 0.05f))
                        : measure(take.stereo, take.offAt, 0);
     }
+    measured.phraseMomentary = oneHits;
+    measured.phraseDb = phraseLoudness(take.stereo, oneHits);
     gLastTake = take;
     if (opt.quiet) return true;
     // Named "<family>-<patch>.wav" so a folder sorts by family, with all the
@@ -2233,17 +2240,22 @@ int cmdBank(const std::string &unit, const Options &opt) {
     std::printf("%s - %zu patches\n\n", bank.unit.c_str(), bank.patches.size());
     printHeader();
     std::vector<float> rms;
+    int momentary = 0;
     for (const BankPatch &p : bank.patches) {
         Measured m;
         if (!auditionOne(bank, p, opt, m)) continue;
-        if (m.loudnessDb > -190.0f) rms.push_back(m.loudnessDb);
+        if (m.phraseDb > -190.0f) rms.push_back(m.phraseDb);
+        if (m.phraseMomentary) ++momentary;
     }
     if (rms.size() > 1) {
-        const float lo = *std::min_element(rms.begin(), rms.end());
-        const float hi = *std::max_element(rms.begin(), rms.end());
+        std::sort(rms.begin(), rms.end());
+        const float lo = rms.front(), hi = rms.back(), mid = rms[rms.size() / 2];
         // Patches far apart in loudness are a common bank fault and hard to
-        // hear one patch at a time.
-        std::printf("\n  loudness spread %.1f dB%s\n", static_cast<double>(hi - lo),
+        // hear one patch at a time. The figure is the `loud` column: the demo
+        // phrase, integrated, or its loudest 400 ms on rows marked m.
+        std::printf("\n  loudness spread %.1f dB, %+.1f to %+.1f LUFS, median %+.1f%s%s\n",
+                    static_cast<double>(hi - lo), static_cast<double>(lo), static_cast<double>(hi),
+                    static_cast<double>(mid), momentary > 0 ? " (m: loudest 400 ms)" : "",
                     hi - lo > 12.0f ? "   <- wide; level these against each other" : "");
     }
     return 0;
@@ -2750,7 +2762,29 @@ int main(int argc, char **argv) {
         // is 2 cents, well under the 10+ cents of a real tuning fault.
         const float worst = trackSelfTest(true);
         std::printf("  worst error %.2f cents: %s\n", static_cast<double>(worst), worst < 2.0f ? "ok" : "FAILED");
-        return worst < 2.0f ? 0 : 1;
+        // The loud column against EBU Tech 3341: a 1 kHz sine at -23 dBFS in
+        // both channels is -23 LUFS, and 20 s of it with 10 s at -36 either
+        // side still reads -23 (the quiet part is under the relative gate).
+        const auto sine = [](std::vector<float> &out, float dbfs, float seconds) {
+            const float a = std::pow(10.0f, dbfs / 20.0f);
+            const auto n = static_cast<size_t>(seconds * kSr);
+            for (size_t i = 0; i < n; ++i) {
+                const float x = a * static_cast<float>(std::sin(6.283185307179586 * 1000.0 * i / kSr));
+                out.push_back(x);
+                out.push_back(x);
+            }
+        };
+        std::vector<float> one, three;
+        sine(one, -23.0f, 20.0f);
+        sine(three, -36.0f, 10.0f);
+        sine(three, -23.0f, 20.0f);
+        sine(three, -36.0f, 10.0f);
+        const float a = phraseLoudness(one, false), b = phraseLoudness(three, false),
+                    c = phraseLoudness(three, true);
+        const bool loudOk = std::fabs(a + 23.0f) < 0.1f && std::fabs(b + 23.0f) < 0.1f && std::fabs(c + 23.0f) < 0.1f;
+        std::printf("  loud: %.2f, gated %.2f, loudest 400 ms %.2f LUFS (want -23): %s\n", static_cast<double>(a),
+                    static_cast<double>(b), static_cast<double>(c), loudOk ? "ok" : "FAILED");
+        return worst < 2.0f && loudOk ? 0 : 1;
     }
     if (cmd == "emit") {
         return cmdEmit(positional.size() >= 2

@@ -278,7 +278,7 @@ void lifecycle() {
         g.play(1.5);
         bool finite = true;
         for (float v : g.out) finite = finite && std::isfinite(v);
-        check(finite && g.peakAbs() < 6.0, fmt("song %d, every knob up, stays bounded", song).c_str(), fmt("peak %.2f", g.peakAbs()));
+        check(finite && g.peakAbs() < 6.0 * Aviary::kHouseTrim, fmt("song %d, every knob up, stays bounded", song).c_str(), fmt("peak %.2f", g.peakAbs()));
     }
 }
 

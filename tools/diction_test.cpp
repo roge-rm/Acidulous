@@ -53,6 +53,8 @@ std::unique_ptr<Machine> singer(std::initializer_list<std::pair<int32_t, float>>
     set(Diction::Drift, 0.0f);
     set(Diction::Breath, 0.0f);
     set(Diction::Glide, 0.0f);
+    // The level the checks were tuned at: the takes add a room at a fixed level.
+    set(Diction::Volume, 0.8f / Diction::kHouseTrim);
     for (const auto &k : knobs) set(k.first, k.second);
     m->params().jumpAll();
     m->reset();

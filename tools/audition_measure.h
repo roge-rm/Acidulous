@@ -251,6 +251,12 @@ struct Measured {
     // The perceived level of a note: its loudest 400 ms. Unlike peak or rms,
     // this levels plucked and bowed notes against each other properly.
     float loudnessDb = -200.0f;
+    // The `loud` column: the demo phrase's loudness in LUFS, set by audition
+    // after the listen render. Integrated and gated (BS.1770) for anything
+    // that holds or plays a line; the loudest 400 ms for drums and other
+    // one-hit phrases, which the gate would otherwise judge by their gaps.
+    float phraseDb = -200.0f;
+    bool phraseMomentary = false;
     float tailSeconds = 0.0f; // note-off to -60 dB
     bool tailRanOut = false;  // it was still going when the render stopped
     float monoLossDb = 0.0f;  // how much is lost by summing to mono
@@ -268,6 +274,61 @@ struct Measured {
     float dcDb = -200.0f;
     bool finite = true;
 };
+
+/**
+ * A whole render's loudness in LUFS, the ITU-R BS.1770 way: each channel
+ * K-weighted, the two summed, 400 ms blocks every 100 ms. Integrated drops
+ * blocks under -70 LUFS and then those more than 10 LU under the mean of the
+ * rest. [loudestBlock] returns the loudest block instead (the momentary
+ * maximum). A render shorter than a block is measured whole.
+ */
+inline float phraseLoudness(const std::vector<float> &stereo, bool loudestBlock) {
+    static_assert(static_cast<int>(kSr) == 48000, "the weighting coefficients are 48 kHz ones");
+    const size_t frames = stereo.size() / 2;
+    if (frames == 0) return -200.0f;
+    const double b1[3] = {1.53512485958697, -2.69169618940638, 1.19839281085285};
+    const double a1[3] = {1.0, -1.69065929318241, 0.73248077421585};
+    const double a2[3] = {1.0, -1.99004745483398, 0.99007225036621};
+    const size_t hop = static_cast<size_t>(kSr * 0.1f);
+    std::vector<double> hops((frames + hop - 1) / hop, 0.0);
+    for (int ch = 0; ch < 2; ++ch) {
+        double x1 = 0, x2 = 0, y1 = 0, y2 = 0, u1 = 0, u2 = 0, w1 = 0, w2 = 0;
+        for (size_t i = 0; i < frames; ++i) {
+            const double x = stereo[i * 2 + static_cast<size_t>(ch)];
+            const double y = b1[0] * x + b1[1] * x1 + b1[2] * x2 - a1[1] * y1 - a1[2] * y2;
+            x2 = x1; x1 = x; y2 = y1; y1 = y;
+            const double w = y - 2.0 * u1 + u2 - a2[1] * w1 - a2[2] * w2;
+            u2 = u1; u1 = y; w2 = w1; w1 = w;
+            hops[i / hop] += w * w;
+        }
+    }
+    const auto lufs = [](double meanSquare) {
+        return meanSquare > 1e-20 ? static_cast<float>(-0.691 + 10.0 * std::log10(meanSquare)) : -200.0f;
+    };
+    if (frames < hop * 4) {
+        double sum = 0.0;
+        for (double h : hops) sum += h;
+        return lufs(sum / static_cast<double>(frames));
+    }
+    // Only whole blocks; a last part-filled hop is left out.
+    const size_t whole = frames / hop;
+    std::vector<double> blocks;
+    for (size_t b = 0; b + 4 <= whole; ++b) {
+        blocks.push_back((hops[b] + hops[b + 1] + hops[b + 2] + hops[b + 3]) / static_cast<double>(hop * 4));
+    }
+    if (loudestBlock) return lufs(*std::max_element(blocks.begin(), blocks.end()));
+    const auto gatedMean = [&](float gate) {
+        double sum = 0.0;
+        size_t n = 0;
+        for (double e : blocks) {
+            if (lufs(e) > gate) { sum += e; ++n; }
+        }
+        return n > 0 ? sum / static_cast<double>(n) : 0.0;
+    };
+    const double absolute = gatedMean(-70.0f);
+    if (absolute <= 0.0) return -200.0f;
+    return lufs(gatedMean(lufs(absolute) - 10.0f));
+}
 
 /**
  * [stereo] is interleaved. [offAt] is the frame the last note was released

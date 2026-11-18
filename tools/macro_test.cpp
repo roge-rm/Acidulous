@@ -130,6 +130,16 @@ std::vector<float> play(const Route *r) {
     Machine *m = MachineRegistry::create(gType);
     m->prepare(kRate);
     ParamSet &p = m->params();
+    // The checks' level ratios are worked out from these volumes, which were the defaults.
+    static const std::pair<const char *, float> kVolumes[] = {
+        {"Aviary", 0.7f}, {"Brazen", 0.8f}, {"Chanter", 0.7f}, {"Cumulus", 1.07f}, {"Dice", 0.9f}, {"Diction", 0.8f},
+        {"Divisi", 0.7f}, {"Draw", 0.7f}, {"Fathom", 0.7f}, {"Filament", 0.8f}, {"Forage", 0.9f}, {"Formulate", 0.8f},
+        {"Fret", 0.7f}, {"Genesis", 0.9f}, {"Hammer", 1.0f}, {"Hexbeat", 0.9f}, {"Manual", 0.1875f}, {"Molt", 0.8f}, {"Mosaic", 0.8f},
+        {"Nexus", 0.8f}, {"Palm", 0.7f}, {"Pollen", 0.8f}, {"Ratio", 0.7f}, {"Reflux", 0.8f}, {"Resonance", 0.5f},
+        {"Sympath", 0.7f}, {"Timber", 0.8f}, {"Tine", 0.7f}, {"Tongue", 0.7f}, {"Trinity", 0.7f},
+    };
+    for (const auto &[type, volume] : kVolumes)
+        if (std::strcmp(gType, type) == 0) p.set(p.indexOf("volume"), p.def(p.indexOf("volume")).unmap(volume));
     if (r != nullptr) {
         const std::string k = "mac" + std::to_string(r->macro);
         setNorm(p, k, r->knob);

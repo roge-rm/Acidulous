@@ -2,7 +2,9 @@ package com.rm.acidulous.engine
 
 import com.rm.acidulous.util.format
 
+import kotlin.math.abs
 import kotlin.math.floor
+import kotlin.math.log10
 import kotlin.math.ln
 import kotlin.math.pow
 
@@ -33,6 +35,40 @@ data class ParamInfo(
 
     val defaultNormalized: Float get() = unmap(def)
 
+    /**
+     * A level knob on a dB dial: 0 dB is the default, the top is the max, the
+     * bottom is off and the rest of the travel runs down to [DB_FLOOR]. Only the
+     * dial and its text use it; the stored value is still [map]'s.
+     */
+    val dbDial: Boolean get() = curve == 0 && def > 0f && max > def && min >= 0f
+
+    private val dbTop: Float get() = 20f * log10(max / def)
+
+    /** The stored 0..1 value -> where the dial points. */
+    fun toDial(v01: Float): Float {
+        val g = map(v01)
+        if (g <= 0f) return 0f
+        val db = (20f * log10(g / def)).coerceIn(DB_FLOOR, dbTop)
+        return ((db - DB_FLOOR) / (dbTop - DB_FLOOR)).coerceIn(0f, 1f)
+    }
+
+    /** Where the dial points -> the stored 0..1 value. */
+    fun fromDial(p: Float): Float {
+        if (p <= DB_OFF) return unmap(0f)
+        if (p >= 1f) return 1f
+        val db = DB_FLOOR + p * (dbTop - DB_FLOOR)
+        return unmap(def * 10f.pow(db / 20f))
+    }
+
+    /** "+6.0 dB", "0.0 dB", "-12.0 dB", or "-inf" at silence. */
+    fun formatDb(v01: Float): String {
+        val g = map(v01)
+        if (g <= 0f) return "-inf"
+        val db = 20f * log10(g / def)
+        if (db < -99.95f) return "-inf"
+        return (if (abs(db) < 0.05f) "0.0" else "%+.1f".format(db)) + " dB"
+    }
+
     fun format(v01: Float): String {
         val v = map(v01)
         return when {
@@ -62,6 +98,9 @@ data class ParamInfo(
     }
 
     companion object {
+        const val DB_FLOOR = -60f
+        private const val DB_OFF = 0.004f
+
         fun parse(s: String): ParamInfo {
             val f = s.split('|')
             return ParamInfo(f[0], f[1].toFloat(), f[2].toFloat(), f[3].toFloat(), f[4].toInt(), f[5].toInt(), f.getOrElse(6) { "" })

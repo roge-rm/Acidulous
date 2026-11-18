@@ -449,7 +449,7 @@ void playersKeepTheirSeatsInATail() {
     printf("- a note played into a room's tail doesn't move the players' reads of it\n");
     const std::vector<Setting> s = {{Divisi::Cello, 0.8f}, {Divisi::Viola, 0.5f}, {Divisi::Players, 3.0f},
                                     {Divisi::Scatter, 60.0f}, {Divisi::Room, 0.6f}, {Divisi::Attack, 2.0f},
-                                    {Divisi::Release, 0.05f}, {Divisi::VelocityAmount, 1.0f},
+                                    {Divisi::Release, 0.05f}, {Divisi::Volume, 0.7f}, {Divisi::VelocityAmount, 1.0f},
                                     {Divisi::Mode, static_cast<float>(Divisi::Poly)}};
     auto a = fresh(s), b = fresh(s);
     std::vector<float> xa, xb;

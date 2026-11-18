@@ -34,4 +34,18 @@ class ParamInfoFormatTest {
     fun ratio() {
         assertEquals("1.50x", read("x", 1.5f, 4f))
     }
+
+    @Test
+    fun volumeDial() {
+        val p = ParamInfo("volume", 0f, 1.5f, 0.29f, 0, 0, "")
+        assertEquals("-inf", p.formatDb(0f))
+        assertEquals("0.0 dB", p.formatDb(p.defaultNormalized))
+        assertEquals("+14.3 dB", p.formatDb(1f))
+        assertEquals(0f, p.toDial(0f))
+        assertEquals(1f, p.toDial(1f))
+        val at = p.toDial(p.defaultNormalized)
+        assertEquals(0.808f, at, 0.005f)
+        assertEquals(p.defaultNormalized, p.fromDial(at), 1e-4f)
+        assertEquals(0f, p.fromDial(0f))
+    }
 }

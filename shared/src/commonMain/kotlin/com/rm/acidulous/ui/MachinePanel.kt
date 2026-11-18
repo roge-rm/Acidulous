@@ -829,12 +829,15 @@ internal fun com.rm.acidulous.model.Clip.withLane(key: String, lane: com.rm.acid
 @Composable
 internal fun PanelKnob(b: ParamBinding, name: String, label: String = name, accent: Color = PanelTeal, display: String? = null) {
     val key = com.rm.acidulous.model.laneKey(b.unit, name)
+    // A machine's volume reads in dB from its default, on a dB dial.
+    val db = if (name == "volume" && b.unit == "machine") b.infoOf(name)?.takeIf { it.dbDial } else null
     Knob(
-        label = panelWord(label), value = b.value(name), display = display ?: b.display(name), accent = accent,
+        label = panelWord(label), value = b.value(name).let { if (db != null) db.toDial(it) else it },
+        display = display ?: if (db != null) db.formatDb(b.value(name)) else b.display(name), accent = accent,
         automated = key in AutomationMarks.lanes && key !in AutomationMarks.locks,
         locked = key in AutomationMarks.locks,
         modifier = Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)).then(panelKnobWidth()),
-        onStart = { b.start(name) }, onChange = { v -> b.change(name, v) }, onEnd = { b.end() },
+        onStart = { b.start(name) }, onChange = { v -> b.change(name, if (db != null) db.fromDial(v) else v) }, onEnd = { b.end() },
         onReset = { b.reset(name) },
     )
 }

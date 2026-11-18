@@ -56,6 +56,10 @@ These copy how the real instrument works, so they play like one.
 
 - [**Bias**](04-the-machines/bias.md) - a four-track for recordings, with four lanes per cell. A recording made over the song is cut at the scene lines. Its patches are tape types (cassette, reel, telephone, etc.) that colour the sound on the way out.
 
+## Volume
+
+**volume** on each machine reads in dB. 0 dB is where it sits in a new track, and all the way down is off.
+
 ## Velocity
 
 Every machine plays quieter the softer you play. A note at half velocity is

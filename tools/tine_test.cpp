@@ -320,7 +320,7 @@ void lifecycle() {
         g.play(2.0);
         bool finite = true;
         for (float v : g.out) finite = finite && std::isfinite(v);
-        check(finite && g.peakAbs() < 12.0, fmt("kind %d, every knob up, stays bounded", kind).c_str(), fmt("peak %.2f", g.peakAbs()));
+        check(finite && g.peakAbs() < 12.0 * machine::Tine::kHouseTrim, fmt("kind %d, every knob up, stays bounded", kind).c_str(), fmt("peak %.2f", g.peakAbs()));
     }
 }
 
