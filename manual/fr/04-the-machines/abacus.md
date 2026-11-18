@@ -1,0 +1,91 @@
+# Abacus
+
+> Un synthé additif : chaque note est une rangée d’au plus 64 partiels
+> sinusoïdaux, chacun avec son propre niveau.
+
+Abacus construit une note avec des sinusoïdes. Chacune est un partiel, et vous
+réglez le niveau de chacun avec une forme : une pente, un pic, une voyelle, un
+peigne. Les boules de la page montrent les partiels tels qu’ils sont, une tige
+chacun, plus haut quand c’est plus fort. L’image est faite pour un do central
+et ne suit ni l’enveloppe ni le scintillement.
+
+## Spectre
+
+- **spectre** : **pente** est la vitesse à laquelle les partiels
+  s’affaiblissent, en dB par octave. -6 donne une dent de scie, 0 est brillant
+  et bourdonnant, -24 est presque une sinusoïde. **impair/pair** va des seuls
+  partiels pairs, en passant par tous, aux seuls partiels impairs (un carré).
+  **partiels** : 16, 32 ou 64. Moins, c’est plus léger pour le processeur.
+- **crête** : une bosse autour du **centre**, de **gain** dB, de **largeur**
+  en octaves.
+- **voyelle** : **a e i o u** choisit la voyelle et **intensité** la dose. Elle
+  met deux pics là où la voix les a.
+- **peigne** : retire un partiel sur n, de **prof.** 1 sur un partiel
+  sur 3 donne une impulsion au tiers.
+- **bout lointain** : un deuxième spectre. Ses boutons sont des écarts par
+  rapport au premier. **morph** va de l’un à l’autre.
+
+## Partiels
+
+- **loi** : où se placent les partiels : **harmonique**, une **corde**
+  raide, une **barre** libre, une **cloche** ou une **plaque** carrée. Les
+  trois dernières ne sont pas des multiples entiers de la note : elles
+  sonnent comme des objets frappés.
+- **étirer** : écarte la loi d’elle-même. En harmonique et en corde, c’est
+  un léger étirement, comme celui d’un piano. En barre, cloche et plaque, -1
+  donne l’harmonique et 1 deux fois plus loin que la loi.
+- **amorti** : **amortir** et **déclin**. Chaque partiel s’éteint. **déclin**
+  est le temps du premier partiel, 30 s tient. **amortir** fait mourir les
+  aigus plus vite.
+- **écart** : **largeur** place les partiels dans le champ stéréo. **mode** :
+  **impair/pair** (les impairs d’un côté, les pairs de l’autre), **épars**
+  ou **grave-aigu**. À 0, c’est mono.
+- **miroitement** : chaque partiel dérive seul en niveau et en hauteur, de
+  **intensité** et de **vitesse**.
+
+## Mouvement
+
+- **env. morph** : **prof.** et **temps** : une note part du bout
+  lointain et revient vers le proche (négatif, dans l’autre sens). Un temps
+  court donne une attaque brillante.
+- **lfo 1** : **onde**, **vitesse**, **horloge** (libre ou calée sur le
+  morceau), puis de combien il bouge la hauteur (**→ hauteur**) et le morph
+  (**→ morph**).
+- **lfo 2** : pareil, pour l’éclat (**→ brill.**, la pente) et le pano
+  (**→ pano**).
+- **voix** : **brill. vél.** (de combien une touche plus dure ouvre la
+  pente), **porta.**, **bend**, **glissé** et **pression** (ce que fait un
+  doigt MPE).
+- **accordage** : **octave**, **demi-tons** et **précis**.
+
+## Jeu
+
+La page **jeu** a les huit boutons macro, l’enveloppe d’amplitude (**A**,
+**D**, **S**, **R**), la **vélocité**, le **volume** et le **pano**. La
+pression ouvre la pente et relève le niveau. Suit l’accord du morceau, et en
+MPE chaque doigt plie et éclaircit sa propre note.
+
+## Macros
+
+Les patchs nomment leurs macros d’après ce qu’elles font : Bright, Hollow,
+Morph, Fade, Shimmer, Wide, Slow et Comb sur les patchs classiques, de cordes
+et d’orgue (l’orgue a Click et Vibrato à la place de Fade et Slow), Vowel et
+Voice sur les voix, Strike, Ring, Damp et Bar sur les lames, Stretch et Swell
+sur les cloches. Elles sont à zéro au chargement d’un patch.
+
+La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
+destination (**vers**) et une quantité (**prof.**, de -1 à 1). Tourner le bouton
+déplace la destination de bouton fois quantité, sur toute l’étendue du
+réglage à 1. La hauteur déplace toutes les notes, de 24 demi-tons à 1. Les
+partiels, l’espacement du peigne, la loi, le mode d’étalement, les formes et
+horloges des LFO, le bend, l’octave et les demi-tons ne sont pas
+accessibles. Touchez le nom d’une macro pour la renommer.
+
+## Conseils
+
+- Un patch qui tient n’a pas de chute, donc **amorti** ne fait rien tant que
+  vous ne baissez pas **chute**. La macro Fade fait les deux.
+- Pour un son frappé, montez **enveloppe morph** avec un **temps** court et
+  donnez au **bout lointain** une pente plus brillante.
+- Les patchs forment six familles : classic, organ, vocal, strings, mallets
+  et bells.

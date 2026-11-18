@@ -273,6 +273,7 @@ fun MachinePanel(
             "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
             "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
             "Divisi" -> DivisiPanel(binding, track, trackIndex, editor)
+            "Abacus" -> AbacusPanel(binding, track, trackIndex, editor)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -5640,6 +5641,157 @@ private fun DivisiPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 }
                 Group("out") {
                     PanelKnob(b, "volume", "volume", PanelAmber)
+                }
+            }
+        }
+    }
+    if (renaming > 0) MacroNameDialog(
+        macroNames[renaming - 1], onDismiss = { renaming = 0 },
+        onName = { name ->
+            val k = renaming
+            renaming = 0
+            editor.edit(trackIndex) { t -> t.withSetting("macro$k", name.ifBlank { null }) }
+        },
+    )
+}
+
+/** Where an Abacus macro route goes, in the engine's MacroDest order. */
+val ABACUS_MACRO_DESTS = listOf(
+    "off", "slope", "odd/even", "peak", "peak gain", "peak width", "vowel", "vowel amt", "comb", "stretch",
+    "far slope", "far odd", "far peak", "far comb", "morph", "morph env", "morph time",
+    "damp", "decay", "attack", "env decay", "sustain", "release", "velocity", "vel bright",
+    "spread", "shimmer", "shimmer rate",
+    "lfo1 rate", "lfo1 pitch", "lfo1 morph", "lfo2 rate", "lfo2 bright", "lfo2 pan",
+    "glide", "fine", "slide", "pressure", "volume", "pan",
+    "pitch",
+)
+
+private val ABACUS_PARTIALS = listOf("16", "32", "64")
+private val ABACUS_LAWS = listOf("harmonic", "string", "bar", "bell", "plate")
+private val ABACUS_SPREADS = listOf("odd/even", "scatter", "low-high")
+
+/** Abacus: the macros and envelope, the spectrum, the partials' law and decay, and the motion. */
+@Composable
+private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+    var section by rememberSaveable { mutableStateOf(0) }
+    var renaming by remember { mutableStateOf(0) }
+    val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    PanelSections(
+        listOf("play", "spectrum", "partials", "motion", "macros"), section, { section = it },
+        above = { sec ->
+            // The square layout has no room for it above the knobs.
+            if ((sec == 1 || sec == 2) && screenShape() != ScreenShape.Square) BeadFrame(b, Modifier.padding(bottom = 4.dp))
+        },
+    ) { sec ->
+        when (sec) {
+            0 -> {
+                Group("macros") {
+                    for (k in 1..8) PanelKnob(b, "mac$k", macroNames[k - 1].ifBlank { "macro $k" }, PanelAmber)
+                }
+                Group("amp") {
+                    PanelKnob(b, "attack", "A")
+                    PanelKnob(b, "decay2", "D")
+                    PanelKnob(b, "sustain", "S")
+                    PanelKnob(b, "release", "R")
+                }
+                Group("out") {
+                    PanelKnob(b, "velocity", "velocity")
+                    PanelKnob(b, "volume", "volume")
+                    PanelKnob(b, "pan", "pan")
+                }
+            }
+            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+                TextButton(onClick = { renaming = k }) {
+                    Text(
+                        macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
+                        color = if (macroNames[k - 1].isBlank()) Acid.colors.textDim else PanelAmber,
+                        fontSize = 12.sp, maxLines = 1,
+                    )
+                }
+                val p = "mac${k}_"
+                PanelStepKnob(b, p + "d1", ABACUS_MACRO_DESTS, "to 1", PanelAmber)
+                PanelKnob(b, p + "a1", "by 1")
+                PanelStepKnob(b, p + "d2", ABACUS_MACRO_DESTS, "to 2", PanelAmber)
+                PanelKnob(b, p + "a2", "by 2")
+                PanelStepKnob(b, p + "d3", ABACUS_MACRO_DESTS, "to 3", PanelAmber)
+                PanelKnob(b, p + "a3", "by 3")
+                PanelStepKnob(b, p + "d4", ABACUS_MACRO_DESTS, "to 4", PanelAmber)
+                PanelKnob(b, p + "a4", "by 4")
+            } }
+            1 -> {
+                Group("spectrum") {
+                    PanelKnob(b, "slope", "slope", PanelAmber)
+                    PanelKnob(b, "odd", "odd/even", PanelAmber)
+                    PanelStepKnob(b, "partials", ABACUS_PARTIALS, "partials")
+                }
+                Group("peak") {
+                    PanelKnob(b, "peak", "centre", PanelAmber)
+                    PanelKnob(b, "peakgain", "gain")
+                    PanelKnob(b, "peakwidth", "width")
+                }
+                Group("vowel") {
+                    PanelKnob(b, "vowel", "a e i o u", PanelAmber)
+                    PanelKnob(b, "vowelamt", "amount")
+                }
+                Group("comb") {
+                    PanelKnob(b, "comb", "depth", PanelAmber)
+                    PanelStepKnob(b, "combn", (2..16).map { "$it" }, "every")
+                }
+                Group("far end") {
+                    PanelKnob(b, "bslope", "slope", PanelAmber)
+                    PanelKnob(b, "bodd", "odd/even")
+                    PanelKnob(b, "bpeak", "peak")
+                    PanelKnob(b, "bcomb", "comb")
+                    PanelKnob(b, "morph", "morph", PanelPink)
+                }
+            }
+            2 -> {
+                Group("law") {
+                    PanelStepKnob(b, "law", ABACUS_LAWS, "law", PanelAmber)
+                    PanelKnob(b, "stretch", "stretch", PanelAmber)
+                }
+                Group("damping") {
+                    PanelKnob(b, "damp", "damp", PanelAmber)
+                    PanelKnob(b, "decay", "decay")
+                }
+                Group("spread") {
+                    PanelKnob(b, "spread", "width", PanelAmber)
+                    PanelStepKnob(b, "spreadmode", ABACUS_SPREADS, "mode")
+                }
+                Group("shimmer") {
+                    PanelKnob(b, "shimmer", "amount", PanelAmber)
+                    PanelKnob(b, "shrate", "rate")
+                }
+            }
+            else -> {
+                Group("morph env") {
+                    PanelKnob(b, "menv", "depth", PanelAmber)
+                    PanelKnob(b, "mtime", "time")
+                }
+                Group("lfo 1") {
+                    PanelStepKnob(b, "lfo1wave", CUMULUS_LFO, "wave")
+                    PanelKnob(b, "lfo1rate", "rate", PanelAmber)
+                    PanelSwitch(b, "lfo1sync", listOf("free", "sync"), "clock")
+                    PanelKnob(b, "lfo1pitch", "→ pitch")
+                    PanelKnob(b, "lfo1morph", "→ morph", PanelAmber)
+                }
+                Group("lfo 2") {
+                    PanelStepKnob(b, "lfo2wave", CUMULUS_LFO, "wave")
+                    PanelKnob(b, "lfo2rate", "rate", PanelAmber)
+                    PanelSwitch(b, "lfo2sync", listOf("free", "sync"), "clock")
+                    PanelKnob(b, "lfo2bright", "→ bright", PanelAmber)
+                    PanelKnob(b, "lfo2pan", "→ pan")
+                }
+                Group("voice") {
+                    PanelKnob(b, "velbright", "vel bright")
+                    PanelKnob(b, "glide", "glide")
+                    PanelStepKnob(b, "bendrange", (0..24).map { "$it" }, "bend")
+                    PanelKnob(b, "mpetimbre", "slide"); PanelKnob(b, "mpepressure", "press")
+                }
+                Group("tune") {
+                    PanelStepKnob(b, "octave", (-3..3).map { "$it" }, "octave")
+                    PanelStepKnob(b, "transpose", (-12..12).map { "$it" }, "semis")
+                    PanelKnob(b, "fine", "fine")
                 }
             }
         }

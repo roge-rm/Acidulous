@@ -9,6 +9,7 @@ Each track holds one machine and you can use multiple of the same machine.
 
 ## Keys and pads
 
+- [**Abacus**](04-the-machines/abacus.md) - an additive synth: up to 64 sine partials a note, shaped as a slope, a peak, a vowel or a comb, with organ, vowel, bar and bell spectra.
 - [**Cumulus**](04-the-machines/cumulus.md) - big, smooth pads built from a spectrum of partials.
 - [**Divisi**](04-the-machines/divisi.md) - a string ensemble: violins to contrabass, a choir and brass, through a thick chorus.
 - [**Manual**](04-the-machines/manual.md) - an organ with two manuals, pedals, four models and a rotary cabinet.

@@ -232,7 +232,38 @@ object Manual {
         ManualBlock(ManualKind.Para, "Windows fit the screen there too, without scrolling. The few that wouldn't fit are split into pages. The arp is in three (**time · feel**, **pattern**, **chance · run**), and the tempo window's key and the Sound window's input each have a tab of their own.", ""),
     ))
 
-    private fun en3_0() = ManualSection("Cumulus", "Pads built from a spectrum of partials.", listOf(
+    private fun en3_0() = ManualSection("Abacus", "An additive synth: every note is a row of up to 64 sine partials, each with its own level.", listOf(
+        ManualBlock(ManualKind.Para, "Abacus builds a note out of sine waves. Each one is a partial, and you set how loud each is with a shape: a slope, a peak, a vowel, a comb. The beads on the page show the partials as they stand, one rod each, higher up when louder. The picture is for a middle C and doesn't move with the envelope or the shimmer."),
+        ManualBlock(ManualKind.Heading, "Spectrum"),
+        ManualBlock(ManualKind.Bullet, "**spectrum** - **slope** is how fast the partials fall away, in dB an octave. -6 is a saw, 0 is bright and buzzy, -24 is nearly a sine. **odd/even** runs from only the even partials, through all, to only the odd ones (a square). **partials** - 16, 32 or 64. Fewer is lighter on the processor."),
+        ManualBlock(ManualKind.Bullet, "**peak** - a boost around **centre**, by **gain** dB, **width** in octaves."),
+        ManualBlock(ManualKind.Bullet, "**vowel** - **a e i o u** picks the vowel and **amount** blends it in. It puts two peaks where the voice has them."),
+        ManualBlock(ManualKind.Bullet, "**comb** - takes out every nth partial, by **depth**. 1 at every 3rd gives a third pulse."),
+        ManualBlock(ManualKind.Bullet, "**far end** - a second spectrum. Its knobs are offsets from the first. **morph** moves from one to the other."),
+        ManualBlock(ManualKind.Heading, "Partials"),
+        ManualBlock(ManualKind.Bullet, "**law** - where the partials sit: **harmonic**, a stiff **string**, a free **bar**, a **bell** or a square **plate**. The last three aren't whole multiples of the note, so they sound like struck things."),
+        ManualBlock(ManualKind.Bullet, "**stretch** - pulls the law out of tune with itself. On harmonic and string it's a slight stretch like a piano's. On bar, bell and plate -1 is harmonic and 1 is twice as far away as the law."),
+        ManualBlock(ManualKind.Bullet, "**damp** and **decay** - each partial dies away. **decay** is the first partial's time, 30 s holds. **damp** makes the high ones die faster."),
+        ManualBlock(ManualKind.Bullet, "**spread** - **width** places the partials across the stereo field. **mode** is **odd/even** (odd on one side, even on the other), **scatter** or **low-high**. At 0 it's mono."),
+        ManualBlock(ManualKind.Bullet, "**shimmer** - each partial drifts on its own in level and pitch, by **amount** and **rate**."),
+        ManualBlock(ManualKind.Heading, "Motion"),
+        ManualBlock(ManualKind.Bullet, "**morph env** - **depth** and **time**: a note starts at the far end and falls back to the near one (negative goes the other way). A short time gives a bright strike."),
+        ManualBlock(ManualKind.Bullet, "**lfo 1** - **wave**, **rate**, **clock** (free or synced to the song), then how far it moves **pitch** and **morph**."),
+        ManualBlock(ManualKind.Bullet, "**lfo 2** - the same, moving **bright** (the slope) and **pan**."),
+        ManualBlock(ManualKind.Bullet, "**voice** - **vel bright** (how much a harder key opens the slope), **glide**, **bend**, **slide** and **press** (what an MPE finger does)."),
+        ManualBlock(ManualKind.Bullet, "**tune** - **octave**, **semis** and **fine**."),
+        ManualBlock(ManualKind.Heading, "Play"),
+        ManualBlock(ManualKind.Para, "The **play** page has the eight macro knobs, the amp envelope (**A**, **D**, **S**, **R**), **velocity**, **volume** and **pan**. Pressure opens the slope and lifts the level. Takes the song's tuning, and with MPE each finger bends and brightens its own note."),
+        ManualBlock(ManualKind.Heading, "Macros"),
+        ManualBlock(ManualKind.Para, "The patches name their macros after what they do: Bright, Hollow, Morph, Fade, Shimmer, Wide, Slow and Comb on the classic, string and organ patches (organ has Click and Vibrato in place of Fade and Slow), Vowel and Voice on the vocal ones, Strike, Ring, Damp and Bar on the mallets, Stretch and Swell on the bells. They sit at zero when a patch loads."),
+        ManualBlock(ManualKind.Para, "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves every note, 24 semitones at 1. The partials, the comb's spacing, the law, the spread mode, the LFO waves and clocks, bend, octave and semis can't be reached. Tap a macro's name to rename it.", "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves every note, 24 semitones at 1. The partials, the comb's spacing, the law, the spread mode, the LFO waves and clocks, bend, octave and semis can't be reached. Click a macro's name to rename it."),
+        ManualBlock(ManualKind.Heading, "Tips"),
+        ManualBlock(ManualKind.Bullet, "A patch that holds has no decay, so **damp** does nothing until you bring **decay** down. The Fade macro does both."),
+        ManualBlock(ManualKind.Bullet, "For a struck sound turn **morph env** up with a short **time** and give **far end** a brighter slope."),
+        ManualBlock(ManualKind.Bullet, "The patches come in six families: classic, organ, vocal, strings, mallets and bells."),
+    ))
+
+    private fun en3_1() = ManualSection("Cumulus", "Pads built from a spectrum of partials.", listOf(
         ManualBlock(ManualKind.Para, "Cumulus doesn't use normal oscillators. You describe a spectrum (which partials, how loud, how wide), it builds a wavetable from that and plays it. It's for pads, drones and huge sounds."),
         ManualBlock(ManualKind.Heading, "How it works"),
         ManualBlock(ManualKind.Para, "Each partial has a width instead of being a single frequency, which makes it lush without needing a chorus."),
@@ -255,7 +286,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Move **morph** while playing instead of the spectrum controls, since morph changes straight away."),
     ))
 
-    private fun en3_1() = ManualSection("Divisi", "A string ensemble: violins down to contrabass, a choir and brass, all through a thick chorus and a phaser.", listOf(
+    private fun en3_2() = ManualSection("Divisi", "A string ensemble: violins down to contrabass, a choir and brass, all through a thick chorus and a phaser.", listOf(
         ManualBlock(ManualKind.Para, "Divisi plays like the old string machines. Twelve oscillators, one for each note name, are divided down in octaves, so every C on the keyboard comes from the same oscillator and they all stay in step. Each key you hold switches its note into six registers, and each register has its own level."),
         ManualBlock(ManualKind.Para, "By default one envelope swells the whole sound. A key you press while others are held joins the sound as it is, and the release only starts once every key is up. Switch **mode** to **poly** to give every note its own attack and release."),
         ManualBlock(ManualKind.Heading, "Registers"),
@@ -314,7 +345,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The patches come in seven families: strings, stage (the sections seated), low, choir, brass, motion and worn (an old chorus, some on tape). Most bring their own hall, plate, wooden body or tape as inserts."),
     ))
 
-    private fun en3_2() = ManualSection("Formulate", "An 8-bit chip synth, and a waveform you can type in as a formula.", listOf(
+    private fun en3_3() = ManualSection("Formulate", "An 8-bit chip synth, and a waveform you can type in as a formula.", listOf(
         ManualBlock(ManualKind.Para, "Formulate is a chip synth with pulse, triangle and noise, like the old game consoles. It can also play a waveform you write as a formula."),
         ManualBlock(ManualKind.Heading, "The chip"),
         ManualBlock(ManualKind.Bullet, "**wave** - pulse, triangle, saw, noise or off."),
@@ -337,7 +368,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The tracker tables make a big difference. A plain patch with a good volume table often beats a clever formula without one."),
     ))
 
-    private fun en3_3() = ManualSection("Ratio", "Six-operator FM, with a knob that morphs between two algorithms.", listOf(
+    private fun en3_4() = ManualSection("Ratio", "Six-operator FM, with a knob that morphs between two algorithms.", listOf(
         ManualBlock(ManualKind.Para, "Ratio is the FM synth. It has six operators, each a sine wave that's either a carrier (you hear it) or a modulator (it changes the sound of another). How they're connected is the algorithm."),
         ManualBlock(ManualKind.Heading, "Morphing algorithms"),
         ManualBlock(ManualKind.Para, "You pick two algorithms, `algoa` and `algob`, and **morph** blends between them. The in-between settings aren't on any standard algorithm list, and you can automate the morph, so a pad can open up from two operators to six over a few bars."),
@@ -360,7 +391,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Feedback on the top operator of a stack is the cheapest way to add brightness."),
     ))
 
-    private fun en3_4() = ManualSection("Reflux", "Acid bass: one oscillator, one filter that screams, and lines you play in.", listOf(
+    private fun en3_5() = ManualSection("Reflux", "Acid bass: one oscillator, one filter that screams, and lines you play in.", listOf(
         ManualBlock(ManualKind.Para, "Reflux is one oscillator, one filter and one envelope, set up so you can play a bassline in instead of building it step by step."),
         ManualBlock(ManualKind.Heading, "Accent and slide"),
         ManualBlock(ManualKind.Para, "Acid basslines come from accent and slide, and Reflux gets them from how you play:"),
@@ -384,7 +415,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "*Reflux was called Subvert in earlier versions, and songs and patches from then open as Reflux.*"),
     ))
 
-    private fun en3_5() = ManualSection("Trinity", "Three oscillators, wavetables, two filters and a mod matrix: the all-rounder.", listOf(
+    private fun en3_6() = ManualSection("Trinity", "Three oscillators, wavetables, two filters and a mod matrix: the all-rounder.", listOf(
         ManualBlock(ManualKind.Para, "Trinity is the general-purpose poly synth, three oscillators into two filters with a modulation matrix on top."),
         ManualBlock(ManualKind.Heading, "Oscillators"),
         ManualBlock(ManualKind.Para, "Each oscillator plays a wavetable, a row of waveshapes that **pos** moves through. Automate **pos** to sweep the tone."),
@@ -409,7 +440,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "High density costs the most CPU. If a song is struggling, freeze the Trinity clip with the biggest stack."),
     ))
 
-    private fun en3_6() = ManualSection("Dice", "A loop slicer with chance on every slice.", listOf(
+    private fun en3_7() = ManualSection("Dice", "A loop slicer with chance on every slice.", listOf(
         ManualBlock(ManualKind.Para, "Dice cuts a loop into slices and plays them back, with a chance of something different happening on each one. It's good for breaks."),
         ManualBlock(ManualKind.Heading, "Slicing"),
         ManualBlock(ManualKind.Para, "**slices** sets how many pieces, and **cut** sets where they fall, from even divisions to the loop's own hits. Each slice has its own **level**, **pan**, **pitch**, **decay** and **dir**."),
@@ -437,7 +468,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The seed makes it repeatable, so an export sounds like what you arranged."),
     ))
 
-    private fun en3_7() = ManualSection("Forage", "A sample drum machine: thirteen pads for your own sounds.", listOf(
+    private fun en3_8() = ManualSection("Forage", "A sample drum machine: thirteen pads for your own sounds.", listOf(
         ManualBlock(ManualKind.Para, "Forage plays your own samples on thirteen pads, each with some processing to help it fit."),
         ManualBlock(ManualKind.Heading, "A pad"),
         ManualBlock(ManualKind.Bullet, "**level**, **pan**, **pitch** and **decay**."),
@@ -459,7 +490,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The sound library warns you before deleting a file a track still uses."),
     ))
 
-    private fun en3_8() = ManualSection("Genesis", "The big drum box, with a bus compressor the kick ducks.", listOf(
+    private fun en3_9() = ManualSection("Genesis", "The big drum box, with a bus compressor the kick ducks.", listOf(
         ManualBlock(ManualKind.Para, "Genesis is the big drum machine, in the style of the boxes house and techno were made on. It has twelve voices, more weight than Hexbeat and two extras."),
         ManualBlock(ManualKind.Heading, "Drift"),
         ManualBlock(ManualKind.Para, "Real analogue drum machines are never exactly the same twice, and **drift** adds a bit of that variation from hit to hit."),
@@ -480,7 +511,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Keep drift low, enough that bars differ but not so much that the hats sound broken."),
     ))
 
-    private fun en3_9() = ManualSection("Hexbeat", "Synthesized drums in the style of the classic small boxes, with a bigger kit.", listOf(
+    private fun en3_10() = ManualSection("Hexbeat", "Synthesized drums in the style of the classic small boxes, with a bigger kit.", listOf(
         ManualBlock(ManualKind.Para, "Hexbeat makes its drums with synthesis instead of samples. It has thirteen voices in the style of the small classic drum machines, punchy, dry and easy to sit in a mix."),
         ManualBlock(ManualKind.Heading, "The kit"),
         ManualBlock(ManualKind.Para, "Kick, rim, snare, clap, three toms, closed and open hat, crash, ride, cowbell and clave."),
@@ -503,7 +534,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For drums from your own samples see Forage, and for a bigger, heavier kit see Genesis."),
     ))
 
-    private fun en3_10() = ManualSection("Palm", "Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.", listOf(
+    private fun en3_11() = ManualSection("Palm", "Modelled hand drums: tabla and bayan, djembe, cajón, frame drum, talking drum, congas, bongos, darbuka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu and cuíca, played with open, slap, muted, bass and rim strokes.", listOf(
         ManualBlock(ManualKind.Para, "Palm doesn't play recordings. Each note is a drum head tuned to the note. A plain head rings at the uneven ratios of a stretched circle, which is why most drums have no clear pitch; a tabla's head is loaded with a paste in the middle that pulls its overtones into a harmonic series, so it sings a note."),
         ManualBlock(ManualKind.Para, "The hand decides the rest: where it lands (the middle sounds the low modes, the edge the high ones), how long it stays on the head, and whether it stays there to damp it."),
         ManualBlock(ManualKind.Heading, "Drum"),
@@ -548,7 +579,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The **cycles** presets play a pattern from one held note. **Conga Pair** and **Tabla Theka** want two."),
     ))
 
-    private fun en3_11() = ManualSection("Resonance", "Eight struck objects that ring into each other.", listOf(
+    private fun en3_12() = ManualSection("Resonance", "Eight struck objects that ring into each other.", listOf(
         ManualBlock(ManualKind.Para, "Resonance is modal percussion. Each of its eight pads is an object (a drum, a bar, a bell, etc.) that rings at a set of frequencies, and playing a pad strikes it. Nothing is sampled."),
         ManualBlock(ManualKind.Heading, "A pad"),
         ManualBlock(ManualKind.Bullet, "**modes** - how many partials it has. Few sounds like a woodblock, many like a bell."),
@@ -570,7 +601,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "With long decays you can play melodies on the pads."),
     ))
 
-    private fun en3_12() = ManualSection("Hammer", "Modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.", listOf(
+    private fun en3_13() = ManualSection("Hammer", "Modelled pianos and their relatives: hammers striking strings and bars, heard through a soundboard or pickups.", listOf(
         ManualBlock(ManualKind.Para, "Hammer doesn't play recordings. A felt hammer is thrown at real strings that ring through a soundboard, so it plays like a piano: harder is brighter as well as louder, the low notes ring for a long time, and the strings of one key beat against each other as they fade."),
         ManualBlock(ManualKind.Para, "Each key was measured against a recorded concert grand, and **Init** is that grand."),
         ManualBlock(ManualKind.Heading, "Instrument"),
@@ -647,7 +678,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For a tine piano that growls, turn **near** up and play hard."),
     ))
 
-    private fun en3_13() = ManualSection("Manual", "The organ: two manuals and pedals, four models and a rotary cabinet.", listOf(
+    private fun en3_14() = ManualSection("Manual", "The organ: two manuals and pedals, four models and a rotary cabinet.", listOf(
         ManualBlock(ManualKind.Para, "Manual is an organ with two keyboards and a pedalboard. They all share one set of 91 tonewheels like the real thing, so the same wheel plays the fifth of one note and the octave of another, which is why organ chords shimmer and beat a little."),
         ManualBlock(ManualKind.Heading, "Drawbars"),
         ManualBlock(ManualKind.Para, "Nine per manual, and they're most of the patch. Each one adds one harmonic of the note, as loud as you pull it."),
@@ -678,7 +709,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Percussion takes over the last drawbar when it's on, like the originals. It's usually best left that way."),
     ))
 
-    private fun en3_14() = ManualSection("Tine", "Modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle, and notes that melt from one into another.", listOf(
+    private fun en3_15() = ManualSection("Tine", "Modelled bars, tines and pans: marimba, vibraphone, xylophone, glockenspiel, thumb piano, music box, steel pan, handpan, tongue drum, chimes, crotales, gamelan, gong, singing bowl, slit drum, temple blocks, cowbell and triangle, and notes that melt from one into another.", listOf(
         ManualBlock(ManualKind.Para, "Tine doesn't play recordings. Each note is a handful of resonances tuned the way the thing struck is tuned. A marimba bar is carved away underneath so its first overtone sits two octaves up and the next two octaves and a third; a xylophone's is carved to a twelfth; a glockenspiel's steel bar is left as it is, its overtones far from any chord. A thumb piano's tine is held at one end, which puts its overtones higher still, and a pan's note is hammered until it rings its octave and twelfth."),
         ManualBlock(ManualKind.Para, "A soft mallet stays on the bar for a few milliseconds and can only set the note going; a hard one is gone before the overtones start, so they ring out."),
         ManualBlock(ManualKind.Heading, "Bar"),
@@ -718,7 +749,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "The **melt** patches are best held. **Vibes Breathing**, **Handpan Tide** and **Sinking Bowl** go back and forth; on **Hot Crotales** and **Wood to Metal** a hard hit melts fast and a soft one slowly. Their first macro, **Melt**, melts by hand."),
     ))
 
-    private fun en3_15() = ManualSection("Filament", "Modelled strings: plucked, picked, struck, bowed or blown.", listOf(
+    private fun en3_16() = ManualSection("Filament", "Modelled strings: plucked, picked, struck, bowed or blown.", listOf(
         ManualBlock(ManualKind.Para, "Filament doesn't play a recording. It simulates a vibrating string, so it reacts the way a real one does."),
         ManualBlock(ManualKind.Heading, "The exciter"),
         ManualBlock(ManualKind.Para, "**exciter** is what sets the string going: pluck, pick, hammer, bow, breath or **the live input**, so you can play a string with a microphone."),
@@ -747,7 +778,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "If a note rings too long, shorten the decay instead of turning things down."),
     ))
 
-    private fun en3_16() = ManualSection("Fret", "Modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.", listOf(
+    private fun en3_17() = ManualSection("Fret", "Modelled electric guitars and basses: strings, pickups, a player's hands and an amp loud enough to feed back.", listOf(
         ManualBlock(ManualKind.Para, "Fret doesn't play recordings. Each note is a string, plucked by a pick, a finger or a slapping thumb, and heard the way an electric guitar hears it, through a magnet sitting under the string. A pickup hears the string where it sits. Near the neck it hears a round, full note; by the bridge, a thin bright one; and a quarter of the way along it can't hear the 4th harmonic at all."),
         ManualBlock(ManualKind.Heading, "Guitar"),
         ManualBlock(ManualKind.Bullet, "**model** - **guitar**, **12-string** (the low four courses with an octave string, the top two doubled), **baritone** (a longer neck, tuned down), **hollowbody** (a jazz archtop, warm and shorter), **steel** (a lap or pedal steel, long and pure: use the slide), **bass**, **5-string** and **fretless** bass."),
@@ -784,7 +815,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Put Fret through the **Amp** effect for a bigger amp and cabinet than its own."),
     ))
 
-    private fun en3_17() = ManualSection("Sympath", "Modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.", listOf(
+    private fun en3_18() = ManualSection("Sympath", "Modelled sitar, tanpura, veena, shamisen and their relatives, plucked or bowed: strings over a buzzing bridge, with strings ringing in sympathy.", listOf(
         ManualBlock(ManualKind.Para, "Sympath doesn't play recordings. Each note is a string lying over a wide, curved bridge. Once the string swings far enough towards the bridge it strikes it, harder the further it swings, and every strike sets the bridge ringing: the bright buzz on every cycle that goes on as long as the string swings wide enough to reach, and fades as the note dies down."),
         ManualBlock(ManualKind.Para, "Under the played strings lie sympathetic strings that are never touched. They're tuned to the scale of the piece, so any note that lands on one of theirs sets it ringing, and it rings on after the note has gone."),
         ManualBlock(ManualKind.Para, "The rest of the song can ring them too. Pick another track and its sound shakes the sympathetic and drone strings, so they ring under whatever that track plays, even with nothing played on Sympath. Turn up **listen** and they retune themselves to the notes that track plays."),
@@ -825,7 +856,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Sitar** has one voice: play legato for meend, and press harder to pull a note up."),
     ))
 
-    private fun en3_18() = ManualSection("Brazen", "Modelled brass, from trumpet to tuba, or a whole section.", listOf(
+    private fun en3_19() = ManualSection("Brazen", "Modelled brass, from trumpet to tuba, or a whole section.", listOf(
         ManualBlock(ManualKind.Para, "Brazen is a model of a brass instrument: lips buzzing against a tube with a bell on the end."),
         ManualBlock(ManualKind.Heading, "Blowing"),
         ManualBlock(ManualKind.Bullet, "**pressure** - how hard you blow. It's the main control, and it isn't a volume knob. Too little and nothing sounds, more and the note starts, more again and it gets brighter until it overblows."),
@@ -853,7 +884,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Start from a patch and change **size** first."),
     ))
 
-    private fun en3_19() = ManualSection("Chanter", "Modelled bagpipes and hurdy-gurdy: drones that go on between notes and can follow the song's bass, a bag that runs out, grace notes, and a wheel whose loose bridge buzzes in time.", listOf(
+    private fun en3_20() = ManualSection("Chanter", "Modelled bagpipes and hurdy-gurdy: drones that go on between notes and can follow the song's bass, a bag that runs out, grace notes, and a wheel whose loose bridge buzzes in time.", listOf(
         ManualBlock(ManualKind.Para, "Chanter doesn't play recordings. A bagpipe here is a chanter, a conical pipe with a double reed (the same model as Timber's), and drones, narrow pipes with single reeds, all blown from a bag. The bag keeps the pressure up, so the drones carry on between notes and for a while after the last one. A chanter can't be tongued, so pipers set notes apart with grace notes: a quick, high note before each one."),
         ManualBlock(ManualKind.Para, "A hurdy-gurdy is a rosined wheel that bows its strings for as long as it turns: melody strings stopped by the keys, drone strings tuned to the key, and the trompette, whose bridge (the dog) sits loose, so once the wheel turns fast enough it hops and buzzes against the soundboard. Players push the wheel on the beat to make it buzz in rhythm."),
         ManualBlock(ManualKind.Heading, "Pipes"),
@@ -894,7 +925,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "On **Hurdy-Gurdy**, lean on a key or push the mod wheel to buzz."),
     ))
 
-    private fun en3_20() = ManualSection("Draw", "Modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.", listOf(
+    private fun en3_21() = ManualSection("Draw", "Modelled free reeds: harmonicas, accordions, melodica, harmonium and the reeds that sound through pipes.", listOf(
         ManualBlock(ManualKind.Para, "Draw doesn't play recordings. Each note is a reed, a thin tongue of metal in a slot, blown by the air pressing on it. It starts slowly, settles on its note and stops when the air does, the way a real reed does. Blow harder and it gets brighter and louder while the pitch hardly moves."),
         ManualBlock(ManualKind.Para, "The accordion, harmonium, melodica and harmonicas were fitted to recordings of real ones, and the bandoneon to the one recording there was."),
         ManualBlock(ManualKind.Heading, "Reeds"),
@@ -944,7 +975,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model, the register, the switches and stepped choices and the tuning can't be reached. A change to the attack, release, velocity, **set**, **chamber** or **detune** is heard from the next note. Tap a macro's name to rename it.", "The **macros** page sets what each one does. A macro has four routes, a destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning the knob moves the destination by knob times amount, across that control's whole range at 1. Pitch moves the whole instrument, 24 semitones at 1. The model, the register, the switches and stepped choices and the tuning can't be reached. A change to the attack, release, velocity, **set**, **chamber** or **detune** is heard from the next note. Click a macro's name to rename it."),
     ))
 
-    private fun en3_21() = ManualSection("Timber", "Modelled woodwinds: reeds and flutes.", listOf(
+    private fun en3_22() = ManualSection("Timber", "Modelled woodwinds: reeds and flutes.", listOf(
         ManualBlock(ManualKind.Para, "Timber is the woodwind version of Brazen: a reed vibrating against a mouthpiece, or a jet of air blown across an edge, feeding a tube with holes in it."),
         ManualBlock(ManualKind.Heading, "The family"),
         ManualBlock(ManualKind.Para, "**family** picks the kind of instrument:"),
@@ -972,7 +1003,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Use **tongue** between notes so a phrase doesn't sound like one long note."),
     ))
 
-    private fun en3_22() = ManualSection("Tongue", "A modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.", listOf(
+    private fun en3_23() = ManualSection("Tongue", "A modelled jaw harp: a reed ringing through a slot, and a mouth that picks out its harmonics.", listOf(
         ManualBlock(ManualKind.Para, "Tongue doesn't play recordings. A steel reed is plucked and swings through a slot in its frame, and each time it passes through it pushes a puff of air. That's the buzz, with every harmonic in it at much the same level. Your mouth is in front of it, and as it changes shape it brings one harmonic forward and then another: that's the tune, over a drone that stays on the note you play."),
         ManualBlock(ManualKind.Para, "There are ten kinds of harp, and the metal ones were fitted to recordings of real ones. A harp can have up to five reeds, tuned as a chord."),
         ManualBlock(ManualKind.Para, "The mod wheel moves the mouth, so you can play the drone with one hand and the tune with the other. Or put **play** on **mouth**, and the keys play the tune the way a player does, over a drone that stays put. Pressure is breath."),
@@ -1037,7 +1068,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For a sound that never stops, turn **breath** and **sustain** up."),
     ))
 
-    private fun en3_23() = ManualSection("Aviary", "Modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles, calls, coos and caws in time with the song.", listOf(
+    private fun en3_24() = ManualSection("Aviary", "Modelled birdsong: a syrinx with two voices, a throat and a beak, singing whistles, chirps, trills, warbles, calls, coos and caws in time with the song.", listOf(
         ManualBlock(ManualKind.Para, "Aviary doesn't play recordings. A bird sings from its syrinx, deep in its chest: two sources, one in each branch of its airway, each a pair of folds that start to swing once the air pressure passes a threshold and settle at a size set by how far past it the pressure goes. The two can sing at once, so one bird can sing two notes. Above them are a short trachea, a throat the bird tunes to the note it's singing, and the beak, opened wider for higher notes."),
         ManualBlock(ManualKind.Para, "Hold a note and a bird sings a song around it, two octaves up, in time with the tempo. Let go and it stops."),
         ManualBlock(ManualKind.Heading, "Song"),
@@ -1074,7 +1105,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "With more than one bird, the others in a coo or caw come in a phrase later, one after another."),
     ))
 
-    private fun en3_24() = ManualSection("Fathom", "Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.", listOf(
+    private fun en3_25() = ManualSection("Fathom", "Modelled water and weather: bubbles, drips, rain, streams, surf, wind, fire, thunder, hail, waterfalls, sizzling, ice, snow, splashes, the deep and a rainstick, played from the keys.", listOf(
         ManualBlock(ManualKind.Para, "Fathom doesn't play recordings. Most of the sound of water is bubbles: a pocket of air caught under the surface rings like a spring, at a pitch set by its size (the smaller, the higher), and rises in pitch as it nears the top. A drip is a bubble and the tap of the drop; rain is many drips, and the sound of what they land on; a stream is a dense cloud of small bubbles and a few big ones. Surf is the rush of a wave rising and falling back. Wind is air rushing past things in gusts, whistling where it's caught in a gap; fire is crackles, hiss and roar.", "Fathom doesn't play recordings. Most of the sound of water is bubbles: a pocket of air caught under the surface rings like a spring, at a pitch set by its size (the smaller, the higher), and rises in pitch as it nears the top. A drip is a bubble and the click of the drop; rain is many drips, and the sound of what they land on; a stream is a dense cloud of small bubbles and a few big ones. Surf is the rush of a wave rising and falling back. Wind is air rushing past things in gusts, whistling where it's caught in a gap; fire is crackles, hiss and roar."),
         ManualBlock(ManualKind.Para, "Hold a note to keep it going. The note sets the size of the bubbles, or the note the wind whistles; the velocity sets how much."),
         ManualBlock(ManualKind.Heading, "Water"),
@@ -1115,7 +1146,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Bubble Chords**, **Tuned Drips** and **Rain in the Key** follow the chord you hold, and **Pentatonic Brook** a scale: set its key to the song's."),
     ))
 
-    private fun en3_25() = ManualSection("Molt", "Sing a take in, and the piano roll tunes it.", listOf(
+    private fun en3_26() = ManualSection("Molt", "Sing a take in, and the piano roll tunes it.", listOf(
         ManualBlock(ManualKind.Para, "Molt turns a sung recording into an instrument. It finds the separate pulses of the voice and spaces them out again to change the pitch, so the voice keeps its character instead of going chipmunk."),
         ManualBlock(ManualKind.Heading, "The roll does the tuning"),
         ManualBlock(ManualKind.Para, "Draw the notes you want in the piano roll, sing anything, and the take is pulled onto those notes."),
@@ -1137,7 +1168,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Singing roughly and letting the roll fix it works fine."),
     ))
 
-    private fun en3_26() = ManualSection("Mosaic", "A multisample player: zones across the keyboard and velocity, plus grain clouds.", listOf(
+    private fun en3_27() = ManualSection("Mosaic", "A multisample player: zones across the keyboard and velocity, plus grain clouds.", listOf(
         ManualBlock(ManualKind.Para, "Mosaic plays maps of samples. Each sample (a zone) covers a range of keys and velocities, so together they make a playable instrument."),
         ManualBlock(ManualKind.Heading, "The map"),
         ManualBlock(ManualKind.Para, "A **zone** is a file, a key range, a velocity range, a root note and a tuning. Build zones by hand from your own recordings, or load a **SoundFont** to get a whole map at once."),
@@ -1156,7 +1187,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Big maps use a lot of memory. The sound library shows what a song is using before you delete anything."),
     ))
 
-    private fun en3_27() = ManualSection("Pollen", "Granular clouds from a file or the live input, whose grains can spawn more grains.", listOf(
+    private fun en3_28() = ManualSection("Pollen", "Granular clouds from a file or the live input, whose grains can spawn more grains.", listOf(
         ManualBlock(ManualKind.Para, "Pollen plays a sound as a cloud of short grains. The source is a file you load or the live input, recorded into a loop as you play."),
         ManualBlock(ManualKind.Heading, "The cloud"),
         ManualBlock(ManualKind.Bullet, "**size** and **sizespread** - how long each grain is, and how much that varies."),
@@ -1179,7 +1210,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "On lean quality (Settings) the cloud uses half as many grains."),
     ))
 
-    private fun en3_28() = ManualSection("Bias", "A four-track: recordings arranged along the song, four lanes at a time.", listOf(
+    private fun en3_29() = ManualSection("Bias", "A four-track: recordings arranged along the song, four lanes at a time.", listOf(
         ManualBlock(ManualKind.Para, "Bias is the audio track. Instead of notes, each of its cells plays recordings, four lanes of them at once. Mute two takes to pick the third, or unmute a second lane to double a vocal."),
         ManualBlock(ManualKind.Heading, "How it fits the song"),
         ManualBlock(ManualKind.Para, "A Bias cell is a normal clip, so there's no separate timeline. A take recorded across four scenes becomes four cells that all point at the same file, each starting at a different place. Nothing is copied, and it works the same in the arranger and the clip launcher."),
@@ -1236,7 +1267,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Takes can be long. Anything over two minutes is converted once in the background and streamed from storage, so a full-length vocal costs about the same as a short one."),
     ))
 
-    private fun en3_29() = ManualSection("Cipher", "A vocoder, where you can rearrange which bands drive which.", listOf(
+    private fun en3_30() = ManualSection("Cipher", "A vocoder, where you can rearrange which bands drive which.", listOf(
         ManualBlock(ManualKind.Para, "Cipher is a vocoder. It splits one sound into frequency bands and puts that shape onto another sound. You can also change which band controls which, and that's where the unusual sounds come from."),
         ManualBlock(ManualKind.Heading, "The two sides"),
         ManualBlock(ManualKind.Para, "The **modulator** is the sound being analysed, usually a voice from the live input. The **carrier** is the sound being shaped. Cipher has its own carrier built in (an oscillator with **detune**, **pw**, **sub**, **noise** and **cardrive**), so you don't need a second track."),
@@ -1262,7 +1293,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Use fewer bands than you'd think. Sixteen usually beats forty for words."),
     ))
 
-    private fun en3_30() = ManualSection("Diction", "A vocal synthesizer trained on your voice and taken to the next level.", listOf(
+    private fun en3_31() = ManualSection("Diction", "A vocal synthesizer trained on your voice and taken to the next level.", listOf(
         ManualBlock(ManualKind.Para, "Diction sings. It's one singer, so it plays one note at a time, and it slides from note to note while you hold them. Give its notes words and it sings them. A note without words sings the **vowel** knob's vowel. Turn on **harmony** and it sings chords, and **singers** makes it a choir."),
         ManualBlock(ManualKind.Heading, "Words"),
         ManualBlock(ManualKind.Para, "Open the lane under the grid and pick **words**. Each note gets a box there, under it and as wide as it, showing its syllable. Tap a box to type that note's syllable. Type more than one and they carry on over the notes after it, a syllable a note. Clear the box to clear the note. When notes are close together a box only shows what fits, and a tap picks the nearest note.", "Open the lane under the grid and pick **words**. Each note gets a box there, under it and as wide as it, showing its syllable. Click a box to type that note's syllable. Type more than one and they carry on over the notes after it, a syllable a note. Clear the box to clear the note. When notes are close together a box only shows what fits, and a click picks the nearest note."),
@@ -1311,7 +1342,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "For a different vowel on each note, lock **vowel** on the steps."),
     ))
 
-    private fun en3_31() = ManualSection("Nexus", "A modular synth whose modules are the other machines.", listOf(
+    private fun en3_32() = ManualSection("Nexus", "A modular synth whose modules are the other machines.", listOf(
         ManualBlock(ManualKind.Para, "Nexus lets you build your own machine. Its modules are the app's own instruments, so you can wire a Reflux filter, a Trinity oscillator and a Resonance mode bank together."),
         ManualBlock(ManualKind.Heading, "The patch is text"),
         ManualBlock(ManualKind.Para, "A Nexus patch is a list of modules and connections written out as text, so you can read it, copy it and send it to someone. It has its own screen, since a patch needs room."),
@@ -1356,6 +1387,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Trinity** - the all-round poly synth, with three wavetable oscillators, two filters and a mod matrix."),
         ManualBlock(ManualKind.Bullet, "**Ratio** - six-operator FM, with a knob that morphs between two algorithms."),
         ManualBlock(ManualKind.Heading, "Keys and pads"),
+        ManualBlock(ManualKind.Bullet, "**Abacus** - an additive synth: up to 64 sine partials a note, shaped as a slope, a peak, a vowel or a comb, with organ, vowel, bar and bell spectra."),
         ManualBlock(ManualKind.Bullet, "**Cumulus** - big, smooth pads built from a spectrum of partials."),
         ManualBlock(ManualKind.Bullet, "**Divisi** - a string ensemble: violins to contrabass, a choir and brass, through a thick chorus."),
         ManualBlock(ManualKind.Bullet, "**Manual** - an organ with two manuals, pedals, four models and a rotary cabinet."),
@@ -1438,6 +1470,7 @@ object Manual {
         en3_29(),
         en3_30(),
         en3_31(),
+        en3_32(),
     ))
 
     private fun en4_0() = ManualSection("Acid", "Reflux's filter on any track, swept by the track's hits or a pattern.", listOf(
@@ -2721,7 +2754,38 @@ object Manual {
         ManualBlock(ManualKind.Para, "Les fenêtres tiennent dans l’écran là aussi, sans défilement. Les quelques-unes qui n’y tiendraient pas sont coupées en pages. L’arpège en a trois (**temps · toucher**, **motif**, **proba · marche**), et la tonalité de la fenêtre du tempo et l’entrée de la fenêtre Son ont chacune leur propre onglet.", ""),
     ))
 
-    private fun fr3_0() = ManualSection("Cumulus", "Des nappes bâties à partir d’un spectre de partiels.", listOf(
+    private fun fr3_0() = ManualSection("Abacus", "Un synthé additif : chaque note est une rangée d’au plus 64 partiels sinusoïdaux, chacun avec son propre niveau.", listOf(
+        ManualBlock(ManualKind.Para, "Abacus construit une note avec des sinusoïdes. Chacune est un partiel, et vous réglez le niveau de chacun avec une forme : une pente, un pic, une voyelle, un peigne. Les boules de la page montrent les partiels tels qu’ils sont, une tige chacun, plus haut quand c’est plus fort. L’image est faite pour un do central et ne suit ni l’enveloppe ni le scintillement."),
+        ManualBlock(ManualKind.Heading, "Spectre"),
+        ManualBlock(ManualKind.Bullet, "**spectre** : **pente** est la vitesse à laquelle les partiels s’affaiblissent, en dB par octave. -6 donne une dent de scie, 0 est brillant et bourdonnant, -24 est presque une sinusoïde. **impair/pair** va des seuls partiels pairs, en passant par tous, aux seuls partiels impairs (un carré). **partiels** : 16, 32 ou 64. Moins, c’est plus léger pour le processeur."),
+        ManualBlock(ManualKind.Bullet, "**crête** : une bosse autour du **centre**, de **gain** dB, de **largeur** en octaves."),
+        ManualBlock(ManualKind.Bullet, "**voyelle** : **a e i o u** choisit la voyelle et **intensité** la dose. Elle met deux pics là où la voix les a."),
+        ManualBlock(ManualKind.Bullet, "**peigne** : retire un partiel sur n, de **prof.** 1 sur un partiel sur 3 donne une impulsion au tiers."),
+        ManualBlock(ManualKind.Bullet, "**bout lointain** : un deuxième spectre. Ses boutons sont des écarts par rapport au premier. **morph** va de l’un à l’autre."),
+        ManualBlock(ManualKind.Heading, "Partiels"),
+        ManualBlock(ManualKind.Bullet, "**loi** : où se placent les partiels : **harmonique**, une **corde** raide, une **barre** libre, une **cloche** ou une **plaque** carrée. Les trois dernières ne sont pas des multiples entiers de la note : elles sonnent comme des objets frappés."),
+        ManualBlock(ManualKind.Bullet, "**étirer** : écarte la loi d’elle-même. En harmonique et en corde, c’est un léger étirement, comme celui d’un piano. En barre, cloche et plaque, -1 donne l’harmonique et 1 deux fois plus loin que la loi."),
+        ManualBlock(ManualKind.Bullet, "**amorti** : **amortir** et **déclin**. Chaque partiel s’éteint. **déclin** est le temps du premier partiel, 30 s tient. **amortir** fait mourir les aigus plus vite."),
+        ManualBlock(ManualKind.Bullet, "**écart** : **largeur** place les partiels dans le champ stéréo. **mode** : **impair/pair** (les impairs d’un côté, les pairs de l’autre), **épars** ou **grave-aigu**. À 0, c’est mono."),
+        ManualBlock(ManualKind.Bullet, "**miroitement** : chaque partiel dérive seul en niveau et en hauteur, de **intensité** et de **vitesse**."),
+        ManualBlock(ManualKind.Heading, "Mouvement"),
+        ManualBlock(ManualKind.Bullet, "**env. morph** : **prof.** et **temps** : une note part du bout lointain et revient vers le proche (négatif, dans l’autre sens). Un temps court donne une attaque brillante."),
+        ManualBlock(ManualKind.Bullet, "**lfo 1** : **onde**, **vitesse**, **horloge** (libre ou calée sur le morceau), puis de combien il bouge la hauteur (**→ hauteur**) et le morph (**→ morph**)."),
+        ManualBlock(ManualKind.Bullet, "**lfo 2** : pareil, pour l’éclat (**→ brill.**, la pente) et le pano (**→ pano**)."),
+        ManualBlock(ManualKind.Bullet, "**voix** : **brill. vél.** (de combien une touche plus dure ouvre la pente), **porta.**, **bend**, **glissé** et **pression** (ce que fait un doigt MPE)."),
+        ManualBlock(ManualKind.Bullet, "**accordage** : **octave**, **demi-tons** et **précis**."),
+        ManualBlock(ManualKind.Heading, "Jeu"),
+        ManualBlock(ManualKind.Para, "La page **jeu** a les huit boutons macro, l’enveloppe d’amplitude (**A**, **D**, **S**, **R**), la **vélocité**, le **volume** et le **pano**. La pression ouvre la pente et relève le niveau. Suit l’accord du morceau, et en MPE chaque doigt plie et éclaircit sa propre note."),
+        ManualBlock(ManualKind.Heading, "Macros"),
+        ManualBlock(ManualKind.Para, "Les patchs nomment leurs macros d’après ce qu’elles font : Bright, Hollow, Morph, Fade, Shimmer, Wide, Slow et Comb sur les patchs classiques, de cordes et d’orgue (l’orgue a Click et Vibrato à la place de Fade et Slow), Vowel et Voice sur les voix, Strike, Ring, Damp et Bar sur les lames, Stretch et Swell sur les cloches. Elles sont à zéro au chargement d’un patch."),
+        ManualBlock(ManualKind.Para, "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1). Tourner le bouton déplace la destination de bouton fois quantité, sur toute l’étendue du réglage à 1. La hauteur déplace toutes les notes, de 24 demi-tons à 1. Les partiels, l’espacement du peigne, la loi, le mode d’étalement, les formes et horloges des LFO, le bend, l’octave et les demi-tons ne sont pas accessibles. Touchez le nom d’une macro pour la renommer.", "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1). Tourner le bouton déplace la destination de bouton fois quantité, sur toute l’étendue du réglage à 1. La hauteur déplace toutes les notes, de 24 demi-tons à 1. Les partiels, l’espacement du peigne, la loi, le mode d’étalement, les formes et horloges des LFO, le bend, l’octave et les demi-tons ne sont pas accessibles. Cliquez le nom d’une macro pour la renommer."),
+        ManualBlock(ManualKind.Heading, "Conseils"),
+        ManualBlock(ManualKind.Bullet, "Un patch qui tient n’a pas de chute, donc **amorti** ne fait rien tant que vous ne baissez pas **chute**. La macro Fade fait les deux."),
+        ManualBlock(ManualKind.Bullet, "Pour un son frappé, montez **enveloppe morph** avec un **temps** court et donnez au **bout lointain** une pente plus brillante."),
+        ManualBlock(ManualKind.Bullet, "Les patchs forment six familles : classic, organ, vocal, strings, mallets et bells."),
+    ))
+
+    private fun fr3_1() = ManualSection("Cumulus", "Des nappes bâties à partir d’un spectre de partiels.", listOf(
         ManualBlock(ManualKind.Para, "Cumulus n’utilise pas d’oscillateurs normaux. Vous décrivez un spectre (quels partiels, à quel volume, de quelle largeur), il en bâtit une table d’ondes et la joue. C’est pour les nappes, les bourdons et les sons immenses."),
         ManualBlock(ManualKind.Heading, "Comment ça marche"),
         ManualBlock(ManualKind.Para, "Chaque partiel a une largeur au lieu d’être une seule fréquence, ce qui le rend riche sans avoir besoin d’un chorus."),
@@ -2744,7 +2808,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Bougez **morph** pendant que vous jouez plutôt que les commandes du spectre, car le morph change tout de suite."),
     ))
 
-    private fun fr3_1() = ManualSection("Divisi", "Un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, le tout dans un chorus épais et un phaser.", listOf(
+    private fun fr3_2() = ManualSection("Divisi", "Un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, le tout dans un chorus épais et un phaser.", listOf(
         ManualBlock(ManualKind.Para, "Divisi se joue comme les vieilles machines à cordes. Douze oscillateurs, un pour chaque nom de note, sont divisés par octaves : tous les do du clavier viennent du même oscillateur et restent en phase. Chaque touche tenue envoie sa note dans six registres, et chaque registre a son propre niveau."),
         ManualBlock(ManualKind.Para, "Par défaut, une seule enveloppe fait monter tout le son. Une touche jouée pendant que d’autres sont tenues rejoint le son tel qu’il est, et la relâche ne commence qu’une fois toutes les touches levées. Mettez **mode** sur **poly** pour donner à chaque note sa propre attaque et sa propre relâche."),
         ManualBlock(ManualKind.Heading, "Registres"),
@@ -2803,7 +2867,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les patchs sont rangés en sept familles : **strings**, **stage** (les pupitres assis), **low**, **choir**, **brass**, **motion** et **worn** (un vieux chorus, parfois sur bande). La plupart apportent leur salle, leur plaque, leur caisse de bois ou leur bande en inserts."),
     ))
 
-    private fun fr3_2() = ManualSection("Formulate", "Un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.", listOf(
+    private fun fr3_3() = ManualSection("Formulate", "Un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.", listOf(
         ManualBlock(ManualKind.Para, "Formulate est un synthé de puce sonore avec impulsion, triangle et bruit, comme les vieilles consoles de jeu. Il peut aussi jouer une forme d’onde que vous écrivez comme une formule."),
         ManualBlock(ManualKind.Heading, "La puce"),
         ManualBlock(ManualKind.Bullet, "**onde** - impulsion, triangle, dent de scie, bruit ou rien."),
@@ -2826,7 +2890,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les tables de tracker changent beaucoup de choses. Un son simple avec une bonne table de volume bat souvent une formule astucieuse sans table."),
     ))
 
-    private fun fr3_3() = ManualSection("Ratio", "La FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.", listOf(
+    private fun fr3_4() = ManualSection("Ratio", "La FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre.", listOf(
         ManualBlock(ManualKind.Para, "Ratio est le synthé FM. Il a six opérateurs, chacun une onde sinus qui est soit une porteuse (vous l’entendez), soit un modulateur (il change le son d’un autre). La façon dont ils sont reliés est l’algorithme."),
         ManualBlock(ManualKind.Heading, "Les algorithmes qui se transforment"),
         ManualBlock(ManualKind.Para, "Vous choisissez deux algorithmes, `algoa` et `algob`, et **morph** passe de l’un à l’autre. Les réglages intermédiaires ne sont dans aucune liste d’algorithmes standard, et vous pouvez automatiser le morph : une nappe peut ainsi s’ouvrir de deux opérateurs à six en quelques mesures."),
@@ -2849,7 +2913,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La réinjection sur l’opérateur du haut d’une pile est la façon la moins coûteuse d’ajouter de la brillance."),
     ))
 
-    private fun fr3_4() = ManualSection("Reflux", "La basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.", listOf(
+    private fun fr3_5() = ManualSection("Reflux", "La basse acid : un oscillateur, un filtre qui hurle, et des lignes que vous jouez.", listOf(
         ManualBlock(ManualKind.Para, "Reflux, c’est un oscillateur, un filtre et une enveloppe, réglés pour que vous puissiez jouer une ligne de basse au lieu de la construire pas à pas."),
         ManualBlock(ManualKind.Heading, "L’accent et le glissé"),
         ManualBlock(ManualKind.Para, "Les lignes de basse acid viennent de l’accent et du glissé, et Reflux les tire de votre jeu :"),
@@ -2873,7 +2937,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "*Reflux s’appelait Subvert dans les versions antérieures, et les morceaux et sons de cette époque s’ouvrent en Reflux.*"),
     ))
 
-    private fun fr3_5() = ManualSection("Trinity", "Trois oscillateurs, des tables d’ondes, deux filtres et une matrice de modulation : le polyvalent.", listOf(
+    private fun fr3_6() = ManualSection("Trinity", "Trois oscillateurs, des tables d’ondes, deux filtres et une matrice de modulation : le polyvalent.", listOf(
         ManualBlock(ManualKind.Para, "Trinity est le synthé polyphonique à tout faire, trois oscillateurs dans deux filtres avec une matrice de modulation par-dessus."),
         ManualBlock(ManualKind.Heading, "Les oscillateurs"),
         ManualBlock(ManualKind.Para, "Chaque oscillateur joue une table d’ondes, une rangée de formes d’onde que **pos** parcourt. Automatisez **pos** pour balayer le timbre."),
@@ -2898,7 +2962,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Une forte densité coûte le plus de CPU. Si un morceau peine, figez le clip de Trinity qui a la plus grosse pile."),
     ))
 
-    private fun fr3_6() = ManualSection("Dice", "Un découpeur de boucles avec du hasard sur chaque tranche.", listOf(
+    private fun fr3_7() = ManualSection("Dice", "Un découpeur de boucles avec du hasard sur chaque tranche.", listOf(
         ManualBlock(ManualKind.Para, "Dice coupe une boucle en tranches et les rejoue, avec une chance que quelque chose de différent arrive sur chacune. C’est bon pour les breaks."),
         ManualBlock(ManualKind.Heading, "Découper"),
         ManualBlock(ManualKind.Para, "**combien** règle le nombre de morceaux, et **selon** règle où ils tombent, des divisions égales jusqu’aux coups de la boucle elle-même. Chaque tranche a ses propres **niveau**, **pano**, **hauteur**, **déclin** et **jeu**."),
@@ -2926,7 +2990,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La graine le rend répétable, alors un export sonne comme ce que vous avez arrangé."),
     ))
 
-    private fun fr3_7() = ManualSection("Forage", "Une boîte à rythmes à échantillons : treize pads pour vos propres sons.", listOf(
+    private fun fr3_8() = ManualSection("Forage", "Une boîte à rythmes à échantillons : treize pads pour vos propres sons.", listOf(
         ManualBlock(ManualKind.Para, "Forage joue vos propres échantillons sur treize pads, chacun avec un peu de traitement pour l’aider à trouver sa place."),
         ManualBlock(ManualKind.Heading, "Un pad"),
         ManualBlock(ManualKind.Bullet, "**niveau**, **pano**, **hauteur** et **déclin**."),
@@ -2948,7 +3012,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La bibliothèque de sons vous avertit avant de supprimer un fichier qu’une piste utilise encore."),
     ))
 
-    private fun fr3_8() = ManualSection("Genesis", "La grosse boîte à rythmes, avec un compresseur de bus que la grosse caisse fait plier.", listOf(
+    private fun fr3_9() = ManualSection("Genesis", "La grosse boîte à rythmes, avec un compresseur de bus que la grosse caisse fait plier.", listOf(
         ManualBlock(ManualKind.Para, "Genesis est la grosse boîte à rythmes, dans le style des boîtes qui ont servi à faire la house et la techno. Elle a douze voix, plus de poids que Hexbeat et deux extras."),
         ManualBlock(ManualKind.Heading, "La dérive"),
         ManualBlock(ManualKind.Para, "Les vraies boîtes à rythmes analogiques ne sonnent jamais deux fois pareil, et **dérive** ajoute un peu de cette variation d’un coup à l’autre."),
@@ -2969,7 +3033,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Gardez la dérive basse : assez pour que les mesures diffèrent, sans que les charleys sonnent brisés."),
     ))
 
-    private fun fr3_9() = ManualSection("Hexbeat", "Des percussions synthétisées dans le style des petites boîtes classiques, avec un plus grand kit.", listOf(
+    private fun fr3_10() = ManualSection("Hexbeat", "Des percussions synthétisées dans le style des petites boîtes classiques, avec un plus grand kit.", listOf(
         ManualBlock(ManualKind.Para, "Hexbeat fait ses percussions par synthèse plutôt qu’avec des échantillons. Il a treize voix dans le style des petites boîtes à rythmes classiques, percutantes, sèches et faciles à placer dans un mixage."),
         ManualBlock(ManualKind.Heading, "Le kit"),
         ManualBlock(ManualKind.Para, "Grosse caisse, cercle, caisse claire, clap, trois toms, charley fermé et ouvert, crash, ride, cloche et claves."),
@@ -2992,7 +3056,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour des percussions faites de vos propres échantillons, voyez Forage, et pour un kit plus gros et plus lourd, voyez Genesis."),
     ))
 
-    private fun fr3_10() = ManualSection("Palm", "Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.", listOf(
+    private fun fr3_11() = ManualSection("Palm", "Percussions à main modélisées : tabla et bayan, djembé, cajón, tambour sur cadre, tambour d’aisselle, congas, bongos, darbouka, riq, tar, bendir, kanjira, batá, mridangam, dholak, ashiko, udu et cuíca, joués en frappes ouverte, claquée, étouffée, basse et sur le bord.", listOf(
         ManualBlock(ManualKind.Para, "Palm ne joue pas d’enregistrements. Chaque note est une peau accordée sur la note. Une peau ordinaire vibre selon les rapports inégaux d’un cercle tendu, d’où l’absence de hauteur nette de la plupart des tambours; celle d’un tabla est chargée en son centre d’une pâte qui ramène ses harmoniques vers une série harmonique, et il chante une note."),
         ManualBlock(ManualKind.Para, "La main fait le reste : où elle tombe (le centre fait sonner les modes graves, le bord les aigus), combien de temps elle reste sur la peau, et si elle y reste pour l’étouffer."),
         ManualBlock(ManualKind.Heading, "Tambour"),
@@ -3037,7 +3101,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les présélections **cycles** jouent un motif depuis une seule note tenue. **Conga Pair** et **Tabla Theka** en veulent deux."),
     ))
 
-    private fun fr3_11() = ManualSection("Resonance", "Huit objets frappés qui résonnent les uns dans les autres.", listOf(
+    private fun fr3_12() = ManualSection("Resonance", "Huit objets frappés qui résonnent les uns dans les autres.", listOf(
         ManualBlock(ManualKind.Para, "Resonance fait des percussions modales. Chacun de ses huit pads est un objet (un tambour, une barre, une cloche, etc.) qui résonne sur un ensemble de fréquences, et jouer un pad le frappe. Rien n’est échantillonné."),
         ManualBlock(ManualKind.Heading, "Un pad"),
         ManualBlock(ManualKind.Bullet, "**modes** - combien de partiels il a. Peu sonne comme un wood-block, beaucoup comme une cloche."),
@@ -3059,7 +3123,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Avec de longs déclins, vous pouvez jouer des mélodies sur les pads."),
     ))
 
-    private fun fr3_12() = ManualSection("Hammer", "Des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.", listOf(
+    private fun fr3_13() = ManualSection("Hammer", "Des pianos modélisés et leurs cousins : des marteaux qui frappent des cordes et des barres, entendus par une table d’harmonie ou des capteurs.", listOf(
         ManualBlock(ManualKind.Para, "Hammer ne joue pas d’enregistrements. Un marteau de feutre est lancé sur de vraies cordes qui résonnent par une table d’harmonie, et il se joue donc comme un piano : plus fort, c’est plus brillant en plus d’être plus fort, les notes graves résonnent longtemps, et les cordes d’une même touche battent entre elles en s’éteignant."),
         ManualBlock(ManualKind.Para, "Chaque touche a été mesurée sur un enregistrement de piano de concert, et **Init** est ce piano."),
         ManualBlock(ManualKind.Heading, "L’instrument"),
@@ -3136,7 +3200,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour un piano à tiges qui grogne, montez **proche** et jouez fort."),
     ))
 
-    private fun fr3_13() = ManualSection("Manual", "L’orgue : deux claviers et un pédalier, quatre modèles et un baffle rotatif.", listOf(
+    private fun fr3_14() = ManualSection("Manual", "L’orgue : deux claviers et un pédalier, quatre modèles et un baffle rotatif.", listOf(
         ManualBlock(ManualKind.Para, "Manual est un orgue à deux claviers et un pédalier. Ils partagent tous un même jeu de 91 roues phoniques, comme le vrai : la même roue joue la quinte d’une note et l’octave d’une autre, et c’est pourquoi les accords d’orgue scintillent et battent un peu."),
         ManualBlock(ManualKind.Heading, "Les tirettes"),
         ManualBlock(ManualKind.Para, "Neuf par clavier, et elles font l’essentiel du son. Chacune ajoute une harmonique de la note, aussi fort que vous la tirez."),
@@ -3167,7 +3231,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "La percussion prend la dernière tirette quand elle est active, comme sur les originaux. C’est d’habitude mieux de la laisser ainsi."),
     ))
 
-    private fun fr3_14() = ManualSection("Tine", "Lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle, et des notes qui fondent de l’un en l’autre.", listOf(
+    private fun fr3_15() = ManualSection("Tine", "Lames, languettes et tambours d’acier modélisés : marimba, vibraphone, xylophone, glockenspiel, piano à pouces, boîte à musique, steelpan, handpan, tambour à languettes, cloches tubulaires, crotales, gamelan, gong, bol chantant, tambour à fente, temple blocks, cloche à vache et triangle, et des notes qui fondent de l’un en l’autre.", listOf(
         ManualBlock(ManualKind.Para, "Tine ne joue pas d’enregistrements. Chaque note est une poignée de résonances accordées comme l’objet frappé. Une lame de marimba est creusée en dessous pour que sa première harmonique sonne deux octaves plus haut et la suivante deux octaves et une tierce; celle d’un xylophone est creusée à la douzième; la lame d’acier d’un glockenspiel est laissée telle quelle, ses harmoniques loin de tout accord. La languette d’un piano à pouces est tenue par un bout, ce qui place ses harmoniques plus haut encore, et la note d’un steelpan est martelée jusqu’à sonner son octave et sa douzième."),
         ManualBlock(ManualKind.Para, "Une mailloche douce reste quelques millisecondes sur la lame et ne peut que lancer la note; une dure est repartie avant que les harmoniques démarrent, et elles sonnent."),
         ManualBlock(ManualKind.Heading, "Barre"),
@@ -3207,7 +3271,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les patchs **melt** se jouent tenus. **Vibes Breathing**, **Handpan Tide** et **Sinking Bowl** font l’aller-retour; sur **Hot Crotales** et **Wood to Metal**, une frappe forte fond vite et une douce lentement. Leur première macro, **Melt**, fait fondre à la main."),
     ))
 
-    private fun fr3_15() = ManualSection("Filament", "Des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.", listOf(
+    private fun fr3_16() = ManualSection("Filament", "Des cordes modélisées : pincées, au médiator, frappées, frottées ou soufflées.", listOf(
         ManualBlock(ManualKind.Para, "Filament ne joue pas d’enregistrement. Il simule une corde qui vibre, alors il réagit comme une vraie."),
         ManualBlock(ManualKind.Heading, "L’excitateur"),
         ManualBlock(ManualKind.Para, "**excitateur** est ce qui met la corde en mouvement : pincer, médiator, marteau, archet, souffle ou **entrée**, l’entrée en direct, alors vous pouvez jouer une corde avec un micro."),
@@ -3236,7 +3300,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Si une note résonne trop longtemps, raccourcissez le déclin plutôt que de baisser les choses."),
     ))
 
-    private fun fr3_16() = ManualSection("Fret", "Guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.", listOf(
+    private fun fr3_17() = ManualSection("Fret", "Guitares et basses électriques modélisées : des cordes, des micros, les mains du musicien et un ampli assez fort pour larsener.", listOf(
         ManualBlock(ManualKind.Para, "Fret ne joue pas d’enregistrements. Chaque note est une corde, pincée au médiator, au doigt ou claquée du pouce, et entendue comme une guitare électrique l’entend, par un aimant posé sous la corde. Un micro entend la corde là où il se trouve. Près du manche, il entend une note ronde et pleine; près du chevalet, une note fine et brillante; et au quart de la longueur, il n’entend plus du tout le 4e harmonique."),
         ManualBlock(ManualKind.Heading, "Guitare"),
         ManualBlock(ManualKind.Bullet, "**modèle** : **guitare**, **12 cordes** (les quatre chœurs graves avec une corde à l’octave, les deux aigus doublés), **baryton** (un manche plus long, accordé plus bas), **demi-caisse** (une archtop de jazz, chaude et plus courte), **steel** (une lap ou pedal steel, longue et pure : servez-vous du glissé), **basse**, basse **5 cordes** et basse **fretless**."),
@@ -3273,7 +3337,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Passez Fret dans l’effet **Amp** pour un ampli et un baffle plus gros que le sien."),
     ))
 
-    private fun fr3_17() = ManualSection("Sympath", "Sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.", listOf(
+    private fun fr3_18() = ManualSection("Sympath", "Sitar, tanpura, veena, shamisen et leurs parents modélisés, pincés ou frottés : des cordes sur un chevalet qui grésille, et des cordes qui vibrent par sympathie.", listOf(
         ManualBlock(ManualKind.Para, "Sympath ne joue pas d’enregistrements. Chaque note est une corde posée sur un chevalet large et bombé. Quand la corde oscille assez loin vers le chevalet, elle le frappe, d’autant plus fort qu’elle va loin, et chaque choc fait sonner le chevalet : ce grésillement brillant, à chaque oscillation, qui dure tant que la corde va assez loin pour l’atteindre et s’éteint avec la note."),
         ManualBlock(ManualKind.Para, "Sous les cordes jouées se trouvent des cordes sympathiques qu’on ne touche jamais. Elles sont accordées sur la gamme du morceau : toute note qui tombe sur l’une d’elles la fait sonner, et elle sonne encore après la note."),
         ManualBlock(ManualKind.Para, "Le reste du morceau peut aussi les faire sonner. Choisissez une autre piste et son son secoue les cordes sympathiques et de bourdon : elles sonnent sous tout ce que joue cette piste, même sans rien jouer sur Sympath. Montez **écouter** et elles se réaccordent d’elles-mêmes sur les notes de cette piste."),
@@ -3314,7 +3378,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Sitar** n’a qu’une voix : jouez lié pour le meend, et appuyez plus fort pour tirer une note vers le haut."),
     ))
 
-    private fun fr3_18() = ManualSection("Brazen", "Des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.", listOf(
+    private fun fr3_19() = ManualSection("Brazen", "Des cuivres modélisés, de la trompette au tuba, ou tout un pupitre.", listOf(
         ManualBlock(ManualKind.Para, "Brazen est un modèle d’instrument de cuivre : des lèvres qui vibrent contre un tube terminé par un pavillon."),
         ManualBlock(ManualKind.Heading, "Souffler"),
         ManualBlock(ManualKind.Bullet, "**pression** - la force du souffle. C’est la commande principale, et ce n’est pas un bouton de volume. Trop peu et rien ne sonne, plus et la note part, plus encore et elle devient plus brillante jusqu’à l’octaviation."),
@@ -3342,7 +3406,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Partez d’un son et changez **tuba→trp.** d’abord."),
     ))
 
-    private fun fr3_19() = ManualSection("Chanter", "Cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes et peuvent suivre la basse du morceau, une poche qui se vide, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.", listOf(
+    private fun fr3_20() = ManualSection("Chanter", "Cornemuses et vielle à roue modélisées : des bourdons qui continuent entre les notes et peuvent suivre la basse du morceau, une poche qui se vide, des notes d’agrément, et une roue dont le chevalet libre grésille en rythme.", listOf(
         ManualBlock(ManualKind.Para, "Chanter ne joue pas d’enregistrements. Une cornemuse, ici, c’est un chalumeau, un tuyau conique à anche double (le même modèle que celui de Timber), et des bourdons, des tuyaux étroits à anche simple, tous soufflés depuis une poche. La poche garde la pression : les bourdons continuent entre les notes, et encore un moment après la dernière. On ne peut pas détacher les notes au chalumeau : les sonneurs les séparent par des notes d’agrément, une note aiguë et brève avant chacune."),
         ManualBlock(ManualKind.Para, "Une vielle à roue, c’est une roue enduite de colophane qui frotte ses cordes tant qu’elle tourne : les chanterelles, arrêtées par les touches, les bourdons accordés sur la tonalité, et la trompette, dont le chevalet (le chien) est libre : quand la roue tourne assez vite, il saute et grésille contre la table. Les vielleux poussent la roue sur le temps pour le faire grésiller en rythme."),
         ManualBlock(ManualKind.Heading, "Tuyaux"),
@@ -3383,7 +3447,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Sur **Hurdy-Gurdy**, appuyez sur une touche ou poussez la molette pour faire grésiller le chien."),
     ))
 
-    private fun fr3_20() = ManualSection("Draw", "Des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.", listOf(
+    private fun fr3_21() = ManualSection("Draw", "Des anches libres modélisées : harmonicas, accordéons, melodica, harmonium et les anches qui sonnent dans des tuyaux.", listOf(
         ManualBlock(ManualKind.Para, "Draw ne joue pas d’enregistrements. Chaque note est une anche, une mince languette de métal dans une fente, mise en vibration par l’air qui la pousse. Elle démarre lentement, se pose sur sa note et s’arrête quand l’air s’arrête, comme une vraie anche. Soufflez plus fort et elle devient plus brillante et plus forte, alors que la hauteur bouge à peine."),
         ManualBlock(ManualKind.Para, "L’accordéon, l’harmonium, le melodica et les harmonicas ont été ajustés sur des enregistrements de vrais instruments, et le bandonéon sur le seul enregistrement qu’il y avait."),
         ManualBlock(ManualKind.Heading, "Anches"),
@@ -3433,7 +3497,7 @@ object Manual {
         ManualBlock(ManualKind.Para, "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune. Tourner le bouton déplace la destination de bouton fois quantité, sur toute la course de cette commande à 1. La hauteur déplace tout l’instrument, 24 demi-tons à 1. Le modèle, le registre, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement d’attaque, de relâchement, de vélocité, d’**assise**, de **chambre** ou de **désaccord** s’entend à la note suivante. Touchez le nom d’une macro pour la renommer.", "La page **macros** règle ce que fait chacune. Une macro a quatre routes, une destination (**vers**) et une quantité (**prof.**, de -1 à 1) pour chacune. Tourner le bouton déplace la destination de bouton fois quantité, sur toute la course de cette commande à 1. La hauteur déplace tout l’instrument, 24 demi-tons à 1. Le modèle, le registre, les interrupteurs et les choix par pas, et l’accordage ne sont pas accessibles. Un changement d’attaque, de relâchement, de vélocité, d’**assise**, de **chambre** ou de **désaccord** s’entend à la note suivante. Cliquez le nom d’une macro pour la renommer."),
     ))
 
-    private fun fr3_21() = ManualSection("Timber", "Des bois modélisés : anches et flûtes.", listOf(
+    private fun fr3_22() = ManualSection("Timber", "Des bois modélisés : anches et flûtes.", listOf(
         ManualBlock(ManualKind.Para, "Timber est la version bois de Brazen : une anche qui vibre contre un bec, ou un jet d’air soufflé sur un biseau, qui alimente un tube percé de trous."),
         ManualBlock(ManualKind.Heading, "La famille"),
         ManualBlock(ManualKind.Para, "**excité par** choisit le genre d’instrument :"),
@@ -3461,7 +3525,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Utilisez **langue** entre les notes pour qu’une phrase ne sonne pas comme une seule longue note."),
     ))
 
-    private fun fr3_22() = ManualSection("Tongue", "Une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.", listOf(
+    private fun fr3_23() = ManualSection("Tongue", "Une guimbarde modélisée : une lame qui vibre dans une fente, et une bouche qui en fait ressortir les harmoniques.", listOf(
         ManualBlock(ManualKind.Para, "Tongue ne joue pas d’enregistrements. Une lame d’acier est pincée et passe et repasse dans une fente de son cadre, et chaque passage pousse une bouffée d’air. C’est le bourdonnement, avec toutes ses harmoniques à peu près au même niveau. Votre bouche est devant, et en changeant de forme elle fait ressortir une harmonique puis une autre : c’est la mélodie, par-dessus un bourdon qui reste sur la note jouée."),
         ManualBlock(ManualKind.Para, "Il y a dix genres de guimbarde, et celles en métal ont été ajustées sur des enregistrements de vraies guimbardes. Une guimbarde peut avoir jusqu’à cinq lames, accordées en accord."),
         ManualBlock(ManualKind.Para, "La molette de modulation bouge la bouche : vous pouvez jouer le bourdon d’une main et la mélodie de l’autre. Ou mettez **jeu** sur **bouche**, et les touches jouent la mélodie comme le fait un joueur, par-dessus un bourdon qui ne bouge pas. La pression, c’est le souffle."),
@@ -3526,7 +3590,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour un son qui ne s’arrête jamais, montez **souffle** et **maintien**."),
     ))
 
-    private fun fr3_23() = ManualSection("Aviary", "Chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils, appels, roucoulements et croassements en mesure.", listOf(
+    private fun fr3_24() = ManualSection("Aviary", "Chants d’oiseaux modélisés : un syrinx à deux voix, une gorge et un bec, qui chantent sifflements, gazouillis, trilles, babils, appels, roucoulements et croassements en mesure.", listOf(
         ManualBlock(ManualKind.Para, "Aviary ne joue pas d’enregistrements. Un oiseau chante par son syrinx, au fond de la poitrine : deux sources, une dans chaque branche des voies respiratoires, chacune une paire de replis qui se mettent à vibrer quand la pression de l’air passe un seuil, et dont l’amplitude dépend de combien on le dépasse. Les deux peuvent chanter ensemble : un seul oiseau peut chanter deux notes. Au-dessus viennent une courte trachée, une gorge que l’oiseau accorde sur la note qu’il chante, et le bec, ouvert plus grand pour les notes aiguës."),
         ManualBlock(ManualKind.Para, "Tenez une note et un oiseau chante autour d’elle, deux octaves plus haut, en mesure. Lâchez-la et il s’arrête."),
         ManualBlock(ManualKind.Heading, "Chant"),
@@ -3563,7 +3627,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Avec plusieurs oiseaux, dans un roucoulement ou un croassement, les autres entrent une phrase plus tard, l’un après l’autre."),
     ))
 
-    private fun fr3_24() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.", listOf(
+    private fun fr3_25() = ManualSection("Fathom", "L’eau et le temps qu’il fait, modélisés : bulles, gouttes, pluie, ruisseaux, ressac, vent, feu, tonnerre, grêle, cascades, grésillements, glace, neige, éclaboussures, profondeurs et bâton de pluie, joués au clavier.", listOf(
         ManualBlock(ManualKind.Para, "Fathom ne joue pas d’enregistrements. L’essentiel du son de l’eau, ce sont des bulles : une poche d’air prise sous la surface vibre comme un ressort, à une hauteur fixée par sa taille (plus elle est petite, plus elle est aiguë), et monte quand elle approche de la surface. Une goutte, c’est une bulle et le choc de la goutte; la pluie, beaucoup de gouttes, et le son de ce sur quoi elles tombent; un ruisseau, un nuage dense de petites bulles et quelques grosses. Le ressac, c’est le grondement d’une vague qui monte et retombe. Le vent, c’est de l’air qui file en rafales et siffle là où il se prend dans une fente; le feu, des crépitements, un sifflement et un grondement."),
         ManualBlock(ManualKind.Para, "Tenez une note pour que ça continue. La note fixe la taille des bulles, ou la note que siffle le vent; la vélocité, la quantité."),
         ManualBlock(ManualKind.Heading, "Eau"),
@@ -3604,7 +3668,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Bubble Chords**, **Tuned Drips** et **Rain in the Key** suivent l’accord tenu, et **Pentatonic Brook** une gamme : réglez sa tonalité sur celle de la chanson."),
     ))
 
-    private fun fr3_25() = ManualSection("Molt", "Chantez une prise, et la grille de notes l’accorde.", listOf(
+    private fun fr3_26() = ManualSection("Molt", "Chantez une prise, et la grille de notes l’accorde.", listOf(
         ManualBlock(ManualKind.Para, "Molt fait d’un enregistrement chanté un instrument. Il trouve les impulsions séparées de la voix et les espace autrement pour changer la hauteur, ce qui garde le caractère de la voix au lieu de la rendre nasillarde comme un écureuil."),
         ManualBlock(ManualKind.Heading, "La grille accorde"),
         ManualBlock(ManualKind.Para, "Dessinez les notes voulues dans la grille de notes, chantez n’importe quoi, et la prise est tirée vers ces notes."),
@@ -3626,7 +3690,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Chanter approximativement et laisser la grille corriger marche très bien."),
     ))
 
-    private fun fr3_26() = ManualSection("Mosaic", "Un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.", listOf(
+    private fun fr3_27() = ManualSection("Mosaic", "Un lecteur multi-échantillons : des zones sur le clavier et la vélocité, plus des nuages de grains.", listOf(
         ManualBlock(ManualKind.Para, "Mosaic joue des cartes d’échantillons. Chaque échantillon (une zone) couvre une plage de touches et de vélocités, et ensemble ils forment un instrument jouable."),
         ManualBlock(ManualKind.Heading, "La carte"),
         ManualBlock(ManualKind.Para, "Une **zone** est un fichier, une plage de touches, une plage de vélocités, une note de base et un accordage. Construisez les zones à la main avec vos propres enregistrements, ou chargez une **soundfont…** pour obtenir toute une carte d’un coup."),
@@ -3645,7 +3709,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les grosses cartes prennent beaucoup de mémoire. La bibliothèque de sons montre ce qu’un morceau utilise avant que vous supprimiez quoi que ce soit."),
     ))
 
-    private fun fr3_27() = ManualSection("Pollen", "Des nuages granulaires tirés d’un fichier ou de l’entrée en direct, dont les grains peuvent en faire naître d’autres.", listOf(
+    private fun fr3_28() = ManualSection("Pollen", "Des nuages granulaires tirés d’un fichier ou de l’entrée en direct, dont les grains peuvent en faire naître d’autres.", listOf(
         ManualBlock(ManualKind.Para, "Pollen joue un son comme un nuage de grains courts. La source est un fichier que vous chargez ou l’entrée en direct, enregistrée dans une boucle pendant que vous jouez."),
         ManualBlock(ManualKind.Heading, "Le nuage"),
         ManualBlock(ManualKind.Bullet, "**taille** et **· écart** - la durée de chaque grain, et combien elle varie."),
@@ -3668,7 +3732,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "En qualité **légère** (**Réglages**), le nuage utilise deux fois moins de grains."),
     ))
 
-    private fun fr3_28() = ManualSection("Bias", "Un quatre-pistes : des enregistrements placés le long du morceau, quatre couloirs à la fois.", listOf(
+    private fun fr3_29() = ManualSection("Bias", "Un quatre-pistes : des enregistrements placés le long du morceau, quatre couloirs à la fois.", listOf(
         ManualBlock(ManualKind.Para, "Bias est la piste audio. Au lieu de notes, chacune de ses cellules joue des enregistrements, quatre couloirs à la fois. Rendez deux prises muettes pour choisir la troisième, ou réactivez un deuxième couloir pour doubler une voix."),
         ManualBlock(ManualKind.Heading, "Sa place dans le morceau"),
         ManualBlock(ManualKind.Para, "Une cellule Bias est un clip normal, alors il n’y a pas de ligne de temps à part. Une prise enregistrée sur quatre scènes devient quatre cellules qui pointent toutes vers le même fichier, chacune à partir d’un endroit différent. Rien n’est copié, et ça marche pareil dans l’arrangeur et dans le lanceur de clips."),
@@ -3725,7 +3789,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Les prises peuvent être longues. Tout ce qui dépasse deux minutes est converti une fois en arrière-plan et lu depuis le stockage, alors une voix complète coûte à peu près autant qu’une courte."),
     ))
 
-    private fun fr3_29() = ManualSection("Cipher", "Un vocodeur où vous pouvez réarranger quelle bande commande quelle autre.", listOf(
+    private fun fr3_30() = ManualSection("Cipher", "Un vocodeur où vous pouvez réarranger quelle bande commande quelle autre.", listOf(
         ManualBlock(ManualKind.Para, "Cipher est un vocodeur. Il découpe un son en bandes de fréquences et met cette forme sur un autre son. Vous pouvez aussi changer quelle bande commande laquelle, et c’est de là que viennent les sons inhabituels."),
         ManualBlock(ManualKind.Heading, "Les deux côtés"),
         ManualBlock(ManualKind.Para, "La **modulante** est le son analysé, en général une voix venant de l’entrée en direct. La **porteuse** est le son façonné. Cipher a sa propre porteuse intégrée (un oscillateur avec **désaccord**, **largeur**, **sub**, **bruit** et **satur.**), alors vous n’avez pas besoin d’une deuxième piste."),
@@ -3751,7 +3815,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Utilisez moins de bandes que vous pensez. Seize bat souvent quarante pour les mots."),
     ))
 
-    private fun fr3_30() = ManualSection("Diction", "Un synthé vocal entraîné sur votre voix et poussé plus loin.", listOf(
+    private fun fr3_31() = ManualSection("Diction", "Un synthé vocal entraîné sur votre voix et poussé plus loin.", listOf(
         ManualBlock(ManualKind.Para, "Diction chante. C’est un seul chanteur, alors il joue une note à la fois, et il glisse d’une note à l’autre pendant que vous les tenez. Donnez des paroles à ses notes et il les chante. Une note sans paroles chante la voyelle du bouton **voyelle**. Activez **harmonie** et il chante des accords, et **chanteurs** en fait un chœur."),
         ManualBlock(ManualKind.Heading, "Paroles"),
         ManualBlock(ManualKind.Para, "Ouvrez le couloir sous la grille et choisissez **paroles**. Chaque note y a sa case, sous elle et de sa largeur, qui montre sa syllabe. Touchez une case pour taper la syllabe de cette note. Si vous en tapez plus d’une, elles continuent sur les notes suivantes, une syllabe par note. Videz la case pour vider la note. Quand les notes sont proches, la case montre ce qui y entre, et un toucher choisit la note la plus proche. Les paroles se tapent ainsi :", "Ouvrez le couloir sous la grille et choisissez **paroles**. Chaque note y a sa case, sous elle et de sa largeur, qui montre sa syllabe. Cliquez une case pour taper la syllabe de cette note. Si vous en tapez plus d’une, elles continuent sur les notes suivantes, une syllabe par note. Videz la case pour vider la note. Quand les notes sont proches, la case montre ce qui y entre, et un cliquer choisit la note la plus proche. Les paroles se tapent ainsi :"),
@@ -3800,7 +3864,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "Pour une voyelle différente sur chaque note, verrouillez **voyelle** sur les pas."),
     ))
 
-    private fun fr3_31() = ManualSection("Nexus", "Un synthé modulaire dont les modules sont les autres machines.", listOf(
+    private fun fr3_32() = ManualSection("Nexus", "Un synthé modulaire dont les modules sont les autres machines.", listOf(
         ManualBlock(ManualKind.Para, "Nexus vous laisse construire votre propre machine. Ses modules sont les instruments de l’application, et vous pouvez relier un filtre de Reflux, un oscillateur de Trinity et une banque de modes de Resonance."),
         ManualBlock(ManualKind.Heading, "Le patch est du texte"),
         ManualBlock(ManualKind.Para, "Un patch Nexus est une liste de modules et de connexions écrite en texte, que vous pouvez lire, copier et envoyer à quelqu’un. Il a son propre écran, car un patch demande de la place."),
@@ -3845,6 +3909,7 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**Trinity** - le synthé polyphonique à tout faire, avec trois oscillateurs à tables d’ondes, deux filtres et une matrice de modulation."),
         ManualBlock(ManualKind.Bullet, "**Ratio** - FM à six opérateurs, avec un bouton qui passe d’un algorithme à un autre."),
         ManualBlock(ManualKind.Heading, "Claviers et nappes"),
+        ManualBlock(ManualKind.Bullet, "**Abacus** - un synthé additif : jusqu’à 64 partiels sinus par note, formés par une pente, un pic, une voyelle ou un peigne, avec des spectres d’orgue, de voyelle, de lame et de cloche."),
         ManualBlock(ManualKind.Bullet, "**Cumulus** - de grandes nappes douces bâties à partir d’un spectre de partiels."),
         ManualBlock(ManualKind.Bullet, "**Divisi** - un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, dans un chorus épais."),
         ManualBlock(ManualKind.Bullet, "**Manual** - un orgue à deux claviers, pédalier, quatre modèles et cabine rotative."),
@@ -3927,6 +3992,7 @@ object Manual {
         fr3_29(),
         fr3_30(),
         fr3_31(),
+        fr3_32(),
     ))
 
     private fun fr4_0() = ManualSection("Acid", "Le filtre de Reflux sur n’importe quelle piste, balayé par ses coups ou par un motif.", listOf(

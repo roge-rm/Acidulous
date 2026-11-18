@@ -222,6 +222,7 @@
     <string name="pw_celesta">celesta</string>
     <string name="pw_cello">cello</string>
     <string name="pw_central">central</string>
+    <string name="pw_centre">centre</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chamber</string>
     <string name="pw_chance">chance</string>
@@ -473,6 +474,11 @@
     <string name="pw_fall">fall</string>
     <string name="pw_fan">fan</string>
     <string name="pw_fan_3_3">fan 3 / 3</string>
+    <string name="pw_far_comb">far comb</string>
+    <string name="pw_far_end">far end</string>
+    <string name="pw_far_odd">far odd</string>
+    <string name="pw_far_peak">far peak</string>
+    <string name="pw_far_slope">far slope</string>
     <string name="pw_fast">fast</string>
     <string name="pw_fb">fb</string>
     <string name="pw_fb_tone">fb tone</string>
@@ -746,6 +752,7 @@
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">lattice</string>
     <string name="pw_launeddas">launeddas</string>
+    <string name="pw_law">law</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">leakage</string>
     <string name="pw_learn">learn</string>
@@ -772,8 +779,10 @@
     <string name="pw_lfo1">lfo1</string>
     <string name="pw_lfo1_depth">lfo1 depth</string>
     <string name="pw_lfo1_morph">lfo1 morph</string>
+    <string name="pw_lfo1_pitch">lfo1 pitch</string>
     <string name="pw_lfo1_rate">lfo1 rate</string>
     <string name="pw_lfo2">lfo2</string>
+    <string name="pw_lfo2_bright">lfo2 bright</string>
     <string name="pw_lfo2_cut">lfo2 cut</string>
     <string name="pw_lfo2_depth">lfo2 depth</string>
     <string name="pw_lfo2_pan">lfo2 pan</string>
@@ -803,6 +812,7 @@
     <string name="pw_low_cut">low cut</string>
     <string name="pw_low_pass">low pass</string>
     <string name="pw_low_tom">Low Tom</string>
+    <string name="pw_low_high">low-high</string>
     <string name="pw_lowcut">lowcut</string>
     <string name="pw_lowdepth">lowdepth</string>
     <string name="pw_lowduck">lowduck</string>
@@ -854,6 +864,7 @@
     <string name="pw_major">major</string>
     <string name="pw_makeup">makeup</string>
     <string name="pw_mallet">mallet</string>
+    <string name="pw_mallets">mallets</string>
     <string name="pw_mangle">mangle</string>
     <string name="pw_manuals">manuals</string>
     <string name="pw_map">map</string>
@@ -916,6 +927,8 @@
     <string name="pw_more">more</string>
     <string name="pw_morph">morph</string>
     <string name="pw_morph_amt">morph amt</string>
+    <string name="pw_morph_env">morph env</string>
+    <string name="pw_morph_time">morph time</string>
     <string name="pw_morph_to">morph to</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">motion</string>
@@ -989,6 +1002,7 @@
     <string name="pw_open_hat">Open Hat</string>
     <string name="pw_order">order</string>
     <string name="pw_organ">Organ</string>
+    <string name="pw_organ_1c5ce0">organ</string>
     <string name="pw_osc">osc</string>
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillator</string>
@@ -1015,6 +1029,8 @@
     <string name="pw_patch">patch</string>
     <string name="pw_pattern">pattern</string>
     <string name="pw_peak">peak</string>
+    <string name="pw_peak_gain">peak gain</string>
+    <string name="pw_peak_width">peak width</string>
     <string name="pw_peaks">peaks</string>
     <string name="pw_ped">ped</string>
     <string name="pw_ped_sus">ped sus</string>
@@ -1273,6 +1289,7 @@
     <string name="pw_shift">shift</string>
     <string name="pw_shifter">Shifter</string>
     <string name="pw_shimmer">shimmer</string>
+    <string name="pw_shimmer_rate">shimmer rate</string>
     <string name="pw_short">short</string>
     <string name="pw_shuffle">shuffle</string>
     <string name="pw_shutters">shutters</string>
@@ -1582,6 +1599,7 @@
     <string name="pw_valve">valve</string>
     <string name="pw_veena">veena</string>
     <string name="pw_vel">vel</string>
+    <string name="pw_vel_bright">vel bright</string>
     <string name="pw_vel_to_filter">vel to filter</string>
     <string name="pw_vel_xf">vel xf</string>
     <string name="pw_velmode">velmode</string>
@@ -1600,6 +1618,7 @@
     <string name="pw_vibrato">vibrato</string>
     <string name="pw_viola">viola</string>
     <string name="pw_violin">violin</string>
+    <string name="pw_vocal">vocal</string>
     <string name="pw_voice">voice</string>
     <string name="pw_voices">voices</string>
     <string name="pw_voicing">voicing</string>
@@ -1607,6 +1626,7 @@
     <string name="pw_volume">volume</string>
     <string name="pw_vowel">Vowel</string>
     <string name="pw_vowel_f2d494">vowel</string>
+    <string name="pw_vowel_amt">vowel amt</string>
     <string name="pw_vspread">vspread</string>
     <string name="pw_w">w</string>
     <string name="pw_wah">wah</string>
@@ -1673,6 +1693,7 @@
     <string name="pw_tone_c716f1">· tone</string>
     <string name="pw_up_the_series">· up the series</string>
     <string name="pw_from_2ccfd3">× from</string>
+    <string name="pw_bright_b45d0d">→ bright</string>
     <string name="pw_cutoff_720c81">→ cutoff</string>
     <string name="pw_morph_173ffb">→ morph</string>
     <string name="pw_pan_c55c68">→ pan</string>

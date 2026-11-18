@@ -5,6 +5,7 @@
 2. [La grille du morceau](02-the-song-grid.md)
 3. [L’éditeur](03-the-editor.md)
 4. [Les machines](04-the-machines.md)
+    - [Abacus](04-the-machines/abacus.md) : un synthé additif : chaque note est une rangée d’au plus 64 partiels sinusoïdaux, chacun avec son propre niveau.
     - [Cumulus](04-the-machines/cumulus.md) : des nappes bâties à partir d’un spectre de partiels.
     - [Divisi](04-the-machines/divisi.md) : un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, le tout dans un chorus épais et un phaser.
     - [Formulate](04-the-machines/formulate.md) : un synthé 8 bits, et une forme d’onde que vous tapez comme une formule.

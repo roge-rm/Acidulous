@@ -1,4 +1,4 @@
-// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Divisi, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
+// Checks the macro routes of Trinity, Ratio, Reflux, Cumulus, Formulate, Hexbeat, Genesis, Resonance, Filament, Timber, Brazen, Manual, Hammer, Draw, Fret, Tine, Palm, Fathom, Aviary, Tongue, Sympath, Chanter, Divisi, Abacus, Pollen, Mosaic, Diction, Molt, Cipher, Dice and Forage move the destinations they name.
 //
 // A macro at zero must leave the sound alone, bit for bit. At full, a route
 // to amplitude with a known depth must scale the level by a known amount, for
@@ -29,6 +29,7 @@
 #include <engine/machine/sympath/Sympath.h>
 #include <engine/machine/chanter/Chanter.h>
 #include <engine/machine/divisi/Divisi.h>
+#include <engine/machine/abacus/Abacus.h>
 #include <engine/machine/pollen/Pollen.h>
 #include <engine/machine/mosaic/Mosaic.h>
 #include <engine/machine/diction/Diction.h>
@@ -132,7 +133,7 @@ std::vector<float> play(const Route *r) {
     ParamSet &p = m->params();
     // The checks' level ratios are worked out from these volumes, which were the defaults.
     static const std::pair<const char *, float> kVolumes[] = {
-        {"Aviary", 0.7f}, {"Brazen", 0.8f}, {"Chanter", 0.7f}, {"Cumulus", 1.07f}, {"Dice", 0.9f}, {"Diction", 0.8f},
+        {"Abacus", 0.7f}, {"Aviary", 0.7f}, {"Brazen", 0.8f}, {"Chanter", 0.7f}, {"Cumulus", 1.07f}, {"Dice", 0.9f}, {"Diction", 0.8f},
         {"Divisi", 0.7f}, {"Draw", 0.7f}, {"Fathom", 0.7f}, {"Filament", 0.8f}, {"Forage", 0.9f}, {"Formulate", 0.8f},
         {"Fret", 0.7f}, {"Genesis", 0.9f}, {"Hammer", 1.0f}, {"Hexbeat", 0.9f}, {"Manual", 0.1875f}, {"Molt", 0.8f}, {"Mosaic", 0.8f},
         {"Nexus", 0.8f}, {"Palm", 0.7f}, {"Pollen", 0.8f}, {"Ratio", 0.7f}, {"Reflux", 0.8f}, {"Resonance", 0.5f},
@@ -2039,6 +2040,39 @@ void divisiRoutes() {
     }
 }
 
+// Abacus: routes to the slope, morph, damping, spread and shimmer match their knobs.
+void abacusRoutes() {
+    using Ab = acidulous::machine::Abacus;
+    const int32_t blocks = 750; // a second
+    char buf[96];
+    struct Case {
+        const char *what, *name;
+        int dest;
+        float add, knob;
+        std::vector<std::pair<std::string, float>> base;
+    };
+    const Case cases[] = {
+        // slope -6 of -24..6: 0.2 more is 0.
+        {"the slope", "slope", Ab::McSlope, 0.2f, 0.0f, {}},
+        {"the morph", "morph", Ab::McMorph, 0.5f, 0.5f, {{"bslope", 12.0f}}},
+        {"damping", "damp", Ab::McDamp, 0.5f, 0.5f, {{"decay", 2.0f}}},
+        {"spread", "spread", Ab::McSpread, 0.6f, 0.6f, {}},
+        {"shimmer", "shimmer", Ab::McShimmer, 0.5f, 0.5f, {}},
+    };
+    int n = 1;
+    for (const Case &c : cases) {
+        const auto plain = playHeld("Abacus", c.base, {48, 55}, blocks);
+        auto set = c.base;
+        set.push_back({c.name, c.knob});
+        const auto knob = playHeld("Abacus", set, {48, 55}, blocks);
+        Route r{n, 1, c.dest, c.add, 1.0f};
+        n = n % 8 + 1;
+        const auto routed = playHeld("Abacus", c.base, {48, 55}, blocks, &r, Ab::MacroDestCount);
+        const std::string what = std::string("Abacus: a route to ") + c.what + " matches the knob";
+        ok2(sameAs(knob, routed, buf, sizeof(buf)) && routed != plain, what.c_str(), buf);
+    }
+}
+
 // Pollen: routes to density, size, cutoff and bits match their knobs.
 void pollenRoutes() {
     using Po = acidulous::machine::Pollen;
@@ -2394,6 +2428,12 @@ int main() {
     basics("Divisi", Dv::MacroDestCount, Dv::McVolume, Dv::McPitch, Dv::McOff, Dv::kMacros);
     gUnits.clear();
     divisiRoutes();
+    using Ab = acidulous::machine::Abacus;
+    // Nearly a sine, so the zero crossings count the note.
+    gUnits = {{"slope", -24.0f}};
+    basics("Abacus", Ab::MacroDestCount, Ab::McVolume, Ab::McPitch, Ab::McOff, Ab::kMacros);
+    gUnits.clear();
+    abacusRoutes();
     using Po = acidulous::machine::Pollen;
     // Volume 0.8 of 1.5: a route of -0.5 leaves 0.05, and half of it 0.425.
     basics("Pollen", Po::MacroDestCount, Po::McVolume, Po::McPitch, Po::McOff, Po::kMacros, 0.05 / 0.8, 0.425 / 0.8);

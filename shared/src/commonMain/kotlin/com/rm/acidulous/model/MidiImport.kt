@@ -39,6 +39,8 @@ object MidiImport {
         if (program == 122 || program == 96) return "Fathom"
         // String ensembles, choir aahs and synth brass to the string machine.
         if (program != null && (program in 48..53 || program == 62 || program == 63)) return "Divisi"
+        // Tubular bells and the tinkle bell to the additive bells.
+        if (program == 14 || program == 112) return "Abacus"
         return when (program?.let { it / 8 }) {
             2 -> "Manual"                  // organ
             3, 5 -> "Filament"             // acoustic guitar, strings

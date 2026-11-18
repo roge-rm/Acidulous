@@ -5,6 +5,7 @@
 2. [The song grid](02-the-song-grid.md)
 3. [The editor](03-the-editor.md)
 4. [The machines](04-the-machines.md)
+    - [Abacus](04-the-machines/abacus.md) - an additive synth: every note is a row of up to 64 sine partials, each with its own level.
     - [Cumulus](04-the-machines/cumulus.md) - pads built from a spectrum of partials.
     - [Divisi](04-the-machines/divisi.md) - a string ensemble: violins down to contrabass, a choir and brass, all through a thick chorus and a phaser.
     - [Formulate](04-the-machines/formulate.md) - an 8-bit chip synth, and a waveform you can type in as a formula.

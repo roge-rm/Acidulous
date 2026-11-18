@@ -169,6 +169,7 @@
     <string name="pw_celesta">célesta</string>
     <string name="pw_cello">violoncelle</string>
     <string name="pw_central">centre</string>
+    <string name="pw_centre">centre</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chambre</string>
     <string name="pw_chance">proba</string>
@@ -382,6 +383,11 @@
     <string name="pw_fall">descente</string>
     <string name="pw_fan">éventail</string>
     <string name="pw_fan_3_3">éventail 3 / 3</string>
+    <string name="pw_far_comb">peigne lointain</string>
+    <string name="pw_far_end">bout lointain</string>
+    <string name="pw_far_odd">impair lointain</string>
+    <string name="pw_far_peak">crête lointaine</string>
+    <string name="pw_far_slope">pente lointaine</string>
     <string name="pw_fast">rapide</string>
     <string name="pw_fb">réinj.</string>
     <string name="pw_fb_tone">ton réinj.</string>
@@ -619,6 +625,7 @@
     <string name="pw_latin">latin</string>
     <string name="pw_lattice">treillis</string>
     <string name="pw_launeddas">launeddas</string>
+    <string name="pw_law">loi</string>
     <string name="pw_lead">lead</string>
     <string name="pw_leakage">fuite</string>
     <string name="pw_learn">apprendre</string>
@@ -694,6 +701,7 @@
     <string name="pw_macros">macros</string>
     <string name="pw_magneto">Magneto</string>
     <string name="pw_mallet">mailloche</string>
+    <string name="pw_mallets">lames</string>
     <string name="pw_mangle">broyé</string>
     <string name="pw_major">majeur</string>
     <string name="pw_makeup">compens.</string>
@@ -746,6 +754,8 @@
     <string name="pw_mono">mono</string>
     <string name="pw_more">plus</string>
     <string name="pw_morph">morph</string>
+    <string name="pw_morph_env">env. morph</string>
+    <string name="pw_morph_time">temps morph</string>
     <string name="pw_morph_to">fondu vers</string>
     <string name="pw_morsing">morsing</string>
     <string name="pw_motion">mouvement</string>
@@ -795,6 +805,8 @@
     <string name="pw_object_n">Objet %d</string>
     <string name="pw_oboe">hautbois</string>
     <string name="pw_pa">pa</string>
+    <string name="pw_peak_gain">gain crête</string>
+    <string name="pw_peak_width">largeur crête</string>
     <string name="pw_peaks">crêtes</string>
     <string name="pw_oct">oct.</string>
     <string name="pw_octave">octave</string>
@@ -818,6 +830,7 @@
     <string name="pw_open_hat">Charl. ouvert</string>
     <string name="pw_order">ordre</string>
     <string name="pw_organ">Orgue</string>
+    <string name="pw_organ_1c5ce0">orgue</string>
     <string name="pw_osc">osc</string>
     <string name="pw_osc_n">osc %d</string>
     <string name="pw_oscillator">oscillateur</string>
@@ -1065,6 +1078,7 @@
     <string name="pw_shift">décalage</string>
     <string name="pw_shifter">Shifter</string>
     <string name="pw_shimmer">miroitement</string>
+    <string name="pw_shimmer_rate">vit. miroitement</string>
     <string name="pw_short">court</string>
     <string name="pw_shuffle">mélanger</string>
     <string name="pw_sh_8177c9">shō</string>
@@ -1321,6 +1335,7 @@
     <string name="pw_vibrato">vibrato</string>
     <string name="pw_viola">alto</string>
     <string name="pw_violin">violon</string>
+    <string name="pw_vocal">voix chantées</string>
     <string name="pw_voice">voix</string>
     <string name="pw_voices">voix</string>
     <string name="pw_voicing">disposition</string>
@@ -1328,6 +1343,7 @@
     <string name="pw_volume">volume</string>
     <string name="pw_vowel">Voyelle</string>
     <string name="pw_vowel_f2d494">voyelle</string>
+    <string name="pw_vowel_amt">qté voyelle</string>
     <string name="pw_vspread">écart vél.</string>
     <string name="pw_w">w</string>
     <string name="pw_wah">wah-wah</string>
@@ -1391,6 +1407,7 @@
     <string name="pw_tone_c716f1">· ton</string>
     <string name="pw_up_the_series">· vers l’aigu</string>
     <string name="pw_from_2ccfd3">× de</string>
+    <string name="pw_bright_b45d0d">→ brill.</string>
     <string name="pw_cutoff_720c81">→ coupure</string>
     <string name="pw_morph_173ffb">→ morph</string>
     <string name="pw_pan_c55c68">→ pano</string>
@@ -1434,9 +1451,11 @@
     <string name="pw_macro_n">macro %d</string>
     <string name="pw_filter_drive">satur. filtre</string>
     <string name="pw_filt_decay">déclin filtre</string>
+    <string name="pw_lfo1_pitch">lfo1 haut.</string>
     <string name="pw_lfo1_rate">lfo1 vit.</string>
     <string name="pw_lfo1_morph">lfo1 morph</string>
     <string name="pw_lfo2_rate">lfo2 vit.</string>
+    <string name="pw_lfo2_bright">lfo2 brill.</string>
     <string name="pw_lfo2_cut">lfo2 coup.</string>
     <string name="pw_lfo2_pan">lfo2 pan</string>
     <string name="pw_pwm_rate">vit. pwm</string>
@@ -1633,6 +1652,7 @@
     <string name="pw_mod_7">mod 7</string>
     <string name="pw_mod_8">mod 8</string>
     <string name="pw_scan_amount">intensité balayage</string>
+    <string name="pw_vel_bright">brill. vél.</string>
     <string name="pw_vel_to_filter">vél. vers filtre</string>
     <string name="pw_all_start">début (tous)</string>
     <string name="pw_all_end">fin (tous)</string>
@@ -1646,6 +1666,7 @@
     <string name="pw_cutoff_n">coupure %d</string>
     <string name="pw_highcut">coupe-haut</string>
     <string name="pw_impulse">impulsion</string>
+    <string name="pw_low_high">grave-aigu</string>
     <string name="pw_lowcut">coupe-bas</string>
     <string name="pw_venue">Venue</string>
     <string name="pw_ring_body">résonance</string>

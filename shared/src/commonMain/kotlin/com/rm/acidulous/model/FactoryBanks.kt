@@ -39,6 +39,7 @@ internal object FactoryBanks {
         "Aviary" -> aviary
         "Fathom" -> fathom
         "Divisi" -> divisi
+        "Abacus" -> abacus
         "fx.Delay" -> fx_delay
         "fx.Reverb" -> fx_reverb
         "fx.Eq" -> fx_eq
@@ -14531,6 +14532,168 @@ internal object FactoryBanks {
         low = 36, high = 84)
 
     private val divisi: List<Patch> by lazy { listOf(divisi0(), divisi1(), divisi2(), divisi3(), divisi4(), divisi5(), divisi6(), divisi7(), divisi8(), divisi9(), divisi10(), divisi11(), divisi12(), divisi13(), divisi14(), divisi15(), divisi16(), divisi17(), divisi18(), divisi19(), divisi20(), divisi21(), divisi22(), divisi23(), divisi24(), divisi25(), divisi26(), divisi27(), divisi28(), divisi29(), divisi30(), divisi31(), divisi32(), divisi33(), divisi34(), divisi35(), divisi36(), divisi37(), divisi38(), divisi39(), divisi40(), divisi41(), divisi42(), divisi43(), divisi44(), divisi45(), divisi46(), divisi47(), divisi48(), divisi49(), divisi50(), divisi51(), divisi52(), divisi53(), divisi54(), divisi55(), divisi56(), divisi57(), divisi58(), divisi59(), divisi60(), divisi61(), divisi62(), divisi63()) }
+
+    private fun abacus0() = Patch("Abacus", "Init", emptyMap(),
+        family = "classic",
+        low = 36, high = 84)
+
+    private fun abacus1() = Patch("Abacus", "Saw Stack",
+        mapOf("bslope" to 0.291666657f, "bcomb" to 0.7f, "attack" to 0.3333333f, "release" to 0.591679f, "spread" to 0.35f, "shimmer" to 0.2f, "shrate" to 0.389075637f, "lfo1pitch" to 0.12f, "volume" to 0.1719f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4406f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5198f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.61555f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Comb"),
+        family = "classic",
+        low = 36, high = 84)
+
+    private fun abacus2() = Patch("Abacus", "Square Reed",
+        mapOf("slope" to 0.6333333f, "odd" to 0.975f, "peak" to 0.705391049f, "peakgain" to 0.208333328f, "peakwidth" to 0.52680254f, "bslope" to 0.333333343f, "bodd" to 0.199999988f, "attack" to 0.256207228f, "release" to 0.5026224f, "shimmer" to 0.08f, "volume" to 0.1779f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4373f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5488f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.6269f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Comb"),
+        family = "classic",
+        low = 36, high = 84)
+
+    private fun abacus3() = Patch("Abacus", "Quarter Pulse",
+        mapOf("comb" to 0.9f, "combn" to 0.142857149f, "bcomb" to 0.0500000119f, "spread" to 0.2f, "lfo1rate" to 0.447472841f, "lfo1morph" to 0.8f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.43655f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.621f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Comb"),
+        family = "classic",
+        low = 36, high = 84)
+
+    private fun abacus4() = Patch("Abacus", "Soft Triangle",
+        mapOf("partials" to 0.5f, "slope" to 0.4f, "odd" to 1f, "bslope" to 0.6666667f, "attack" to 0.3784492f, "release" to 0.61510396f, "velbright" to 0.45f, "shimmer" to 0.05f, "volume" to 0.2139f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.47235f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.482f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.6217f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Comb"),
+        family = "classic",
+        low = 36, high = 84)
+
+    private fun abacus5() = Patch("Abacus", "Full Drawbars",
+        mapOf("partials" to 0f, "slope" to 0.75f, "peak" to 0.776169956f, "peakgain" to 0.166666672f, "peakwidth" to 0.7305976f, "bslope" to 0.375f, "bcomb" to 0.75f, "attack" to 0.154252142f, "release" to 0.319264442f, "velocity" to 0.15f, "velbright" to 0f, "spread" to 0.4f, "lfo1rate" to 0.845915258f, "lfo1pitch" to 0.16f, "volume" to 0.0403f, "mac1_d1" to 0.025f, "mac1_a1" to 0.65f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5393f, "mac4_d1" to 0.475f, "mac4_d2" to 0.6f, "mac4_d3" to 0.95f, "mac4_a1" to 0.4f, "mac4_a2" to 0.75f, "mac4_a3" to 0.509f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.725f, "mac7_a1" to 0.7f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Click", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Vibrato", "macro8" to "Comb"),
+        family = "organ",
+        low = 36, high = 84)
+
+    private fun abacus6() = Patch("Abacus", "Jazz Tones",
+        mapOf("partials" to 0f, "slope" to 0.5f, "odd" to 0.625f, "peak" to 0.367281646f, "peakgain" to 0.25f, "peakwidth" to 0.6769925f, "bslope" to 0.625f, "bcomb" to 0.8f, "attack" to 0.154252142f, "release" to 0.2958395f, "velocity" to 0.2f, "velbright" to 0f, "spread" to 0.2f, "lfo1rate" to 0.8580682f, "lfo1pitch" to 0.1f, "volume" to 0.0934f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.47415f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.48675f, "mac4_d1" to 0.475f, "mac4_d2" to 0.6f, "mac4_a1" to 0.4f, "mac4_a2" to 0.75f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.725f, "mac7_a1" to 0.7f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Click", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Vibrato", "macro8" to "Comb"),
+        family = "organ",
+        low = 36, high = 84)
+
+    private fun abacus7() = Patch("Abacus", "Church Pipes",
+        mapOf("partials" to 0.5f, "slope" to 0.6333333f, "odd" to 0.65f, "vowel" to 0.75f, "vowelamt" to 0.35f, "bslope" to 0.333333343f, "bodd" to 0.35f, "attack" to 0.487585485f, "release" to 0.6671987f, "velocity" to 0.4f, "spread" to 0.5f, "shimmer" to 0.25f, "shrate" to 0.349485f, "volume" to 0.155f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4424f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5541f, "mac4_d1" to 0.475f, "mac4_d2" to 0.6f, "mac4_a1" to 0.4f, "mac4_a2" to 0.75f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.725f, "mac7_a1" to 0.7f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Click", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Vibrato", "macro8" to "Comb"),
+        family = "organ",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus8() = Patch("Abacus", "Reed Organ",
+        mapOf("partials" to 0.5f, "slope" to 0.6666667f, "odd" to 0.85f, "peak" to 0.585334f, "peakgain" to 0.375f, "peakwidth" to 0.47319746f, "bslope" to 0.375f, "bodd" to 0.25f, "attack" to 0.435288459f, "release" to 0.473952621f, "velocity" to 0.3f, "shimmer" to 0.15f, "lfo1rate" to 0.8037529f, "lfo1pitch" to 0.24f, "volume" to 0.1012f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.468649983f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5394f, "mac4_d1" to 0.475f, "mac4_d2" to 0.6f, "mac4_d3" to 0.95f, "mac4_a1" to 0.4f, "mac4_a2" to 0.75f, "mac4_a3" to 0.51165f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.725f, "mac7_a1" to 0.7f, "mac8_d1" to 0.2f, "mac8_a1" to 0.75f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Click", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Vibrato", "macro8" to "Comb"),
+        family = "organ",
+        low = 36, high = 84)
+
+    private fun abacus9() = Patch("Abacus", "Choir Ah",
+        mapOf("slope" to 0.733333349f, "vowelamt" to 1f, "bslope" to 0.375f, "bpeak" to 0.625f, "attack" to 0.6797723f, "release" to 0.6807356f, "velocity" to 0.7f, "spread" to 0.6f, "spreadmode" to 0.5f, "shimmer" to 0.35f, "shrate" to 0.5f, "lfo1pitch" to 0.2f, "volume" to 0.1951f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.42665f, "mac2_d1" to 0.15f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.60625f, "mac4_d1" to 0.175f, "mac4_a1" to 0.75f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_d3" to 0.95f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac7_a3" to 0.54025f, "mac8_d1" to 0.1f, "mac8_d2" to 0.95f, "mac8_a1" to 0.7f, "mac8_a2" to 0.44915f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Morph", "macro4" to "Voice", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Peak"),
+        family = "vocal",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus10() = Patch("Abacus", "Choir Oo",
+        mapOf("slope" to 0.766666651f, "vowel" to 1f, "vowelamt" to 1f, "bslope" to 0.416666657f, "bpeak" to 0.5625f, "attack" to 0.6914957f, "release" to 0.7041605f, "velocity" to 0.7f, "spread" to 0.5f, "spreadmode" to 0.5f, "shimmer" to 0.3f, "lfo1rate" to 0.8122438f, "lfo1pitch" to 0.16f, "volume" to 0.2164f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4152f, "mac2_d1" to 0.15f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5328f, "mac4_d1" to 0.175f, "mac4_a1" to 0.75f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_d3" to 0.95f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac7_a3" to 0.55185f, "mac8_d1" to 0.1f, "mac8_d2" to 0.95f, "mac8_a1" to 0.7f, "mac8_a2" to 0.45625f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Morph", "macro4" to "Voice", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Peak"),
+        family = "vocal",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus11() = Patch("Abacus", "Bright Ee",
+        mapOf("peak" to 0.776169956f, "peakgain" to 0.25f, "peakwidth" to 0.47319746f, "vowel" to 0.5f, "vowelamt" to 1f, "bslope" to 0.375f, "bpeak" to 0.4375f, "attack" to 0.5575304f, "release" to 0.61510396f, "spread" to 0.35f, "spreadmode" to 0.5f, "shimmer" to 0.2f, "lfo1rate" to 0.8301538f, "lfo1pitch" to 0.4f, "volume" to 0.3893f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.33445f, "mac2_d1" to 0.15f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.175f, "mac4_a1" to 0.75f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.1f, "mac8_d2" to 0.95f, "mac8_a1" to 0.7f, "mac8_a2" to 0.47295f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Morph", "macro4" to "Voice", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Peak"),
+        family = "vocal",
+        low = 36, high = 84)
+
+    private fun abacus12() = Patch("Abacus", "Sweep Voice",
+        mapOf("slope" to 0.533333361f, "peak" to 0.367281646f, "peakgain" to 0.5833333f, "peakwidth" to 0.47319746f, "vowelamt" to 0.5f, "bslope" to 0.458333343f, "bpeak" to 0.8125f, "menv" to 1f, "mtime" to 0.806060851f, "attack" to 0.487585485f, "release" to 0.61510396f, "spread" to 0.3f, "volume" to 0.1842f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.43945f, "mac2_d1" to 0.15f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.56795f, "mac4_d1" to 0.175f, "mac4_d2" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.5212f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.1f, "mac8_d2" to 0.95f, "mac8_a1" to 0.7f, "mac8_a2" to 0.46805f),
+        mapOf("macro1" to "Bright", "macro2" to "Vowel", "macro3" to "Morph", "macro4" to "Voice", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Peak"),
+        family = "vocal",
+        low = 36, high = 84)
+
+    private fun abacus13() = Patch("Abacus", "Slow Bow",
+        mapOf("slope" to 0.566666663f, "bslope" to 0.333333343f, "bpeak" to 0.5625f, "attack" to 0.7117825f, "release" to 0.723966f, "velbright" to 0.5f, "spread" to 0.5f, "spreadmode" to 1f, "shimmer" to 0.35f, "shrate" to 0.349485f, "lfo1rate" to 0.3941285f, "lfo1pitch" to 0.12f, "lfo1morph" to 0.35f, "volume" to 0.1951f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4309f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.662f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_d3" to 0.95f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac7_a3" to 0.54675f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Stiff"),
+        family = "strings",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus14() = Patch("Abacus", "Warm Section",
+        mapOf("slope" to 0.5f, "odd" to 0.425f, "peak" to 0.444066226f, "peakgain" to 0.166666672f, "peakwidth" to 0.6769925f, "bslope" to 0.375f, "bcomb" to 0.65f, "attack" to 0.6518087f, "release" to 0.6671987f, "spread" to 0.7f, "spreadmode" to 0.5f, "shimmer" to 0.5f, "shrate" to 0.422549f, "lfo1rate" to 0.8227745f, "lfo1pitch" to 0.16f, "volume" to 0.1929f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.43235f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.64305f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_d3" to 0.95f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac7_a3" to 0.52495f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Stiff"),
+        family = "strings",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus15() = Patch("Abacus", "Stiff Strings",
+        mapOf("slope" to 0.533333361f, "law" to 0.25f, "stretch" to 0.7f, "bslope" to 0.625f, "menv" to 0.75f, "mtime" to 0.5895406f, "damp" to 0.45f, "decay" to 0.719903231f, "attack" to 0.256207228f, "release" to 0.652065754f, "spread" to 0.3f, "shimmer" to 0.1f, "volume" to 0.2853f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4619f, "mac2_d1" to 0.05f, "mac2_a1" to 0.7f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.45835f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.645249963f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Stiff"),
+        family = "strings",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "mix" to 0.18f, "model" to 0.09090909f))))
+
+    private fun abacus16() = Patch("Abacus", "Glass Bow",
+        mapOf("slope" to 0.6666667f, "peak" to 0.8113479f, "peakgain" to 0.333333343f, "peakwidth" to 0.47319746f, "comb" to 0.4f, "combn" to 0.214285716f, "bslope" to 0.333333343f, "bcomb" to 0.3f, "attack" to 0.614369631f, "release" to 0.6671987f, "spread" to 0.8f, "spreadmode" to 0.5f, "shimmer" to 0.45f, "shrate" to 0.60205996f, "lfo1rate" to 0.8301538f, "lfo1pitch" to 0.12f, "volume" to 0.1203f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4664f, "mac2_d1" to 0.05f, "mac2_d2" to 0.95f, "mac2_a1" to 0.7f, "mac2_a2" to 0.51555f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.5444f, "mac4_d1" to 0.425f, "mac4_d2" to 0.45f, "mac4_d3" to 0.95f, "mac4_a1" to 0.75f, "mac4_a2" to 0.25f, "mac4_a3" to 0.646f, "mac5_d1" to 0.65f, "mac5_a1" to 0.8f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.475f, "mac7_d2" to 0.55f, "mac7_a1" to 0.65f, "mac7_a2" to 0.6f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Hollow", "macro3" to "Morph", "macro4" to "Fade", "macro5" to "Shimmer", "macro6" to "Wide", "macro7" to "Slow", "macro8" to "Stiff"),
+        family = "strings",
+        low = 36, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "mix" to 0.18f, "model" to 0.09090909f))))
+
+    private fun abacus17() = Patch("Abacus", "Wood Bars",
+        mapOf("partials" to 0f, "slope" to 0.533333361f, "law" to 0.5f, "stretch" to 0.6f, "bslope" to 0.7083333f, "menv" to 1f, "mtime" to 0.455575258f, "damp" to 0.8f, "decay" to 0.412550628f, "attack" to 0f, "release" to 0.436990827f, "velbright" to 0.5f, "volume" to 0.4318f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.6263f, "mac2_d1" to 0.375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.45f, "mac4_d2" to 0.95f, "mac4_a1" to 0.65f, "mac4_a2" to 0.45365f, "mac5_d1" to 0.425f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.65f, "mac7_a1" to 0.8f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Strike", "macro3" to "Morph", "macro4" to "Ring", "macro5" to "Damp", "macro6" to "Wide", "macro7" to "Shimmer", "macro8" to "Bar"),
+        family = "mallets",
+        low = 48, high = 96)
+
+    private fun abacus18() = Patch("Abacus", "Vibe Bars",
+        mapOf("partials" to 0.5f, "slope" to 0.466666669f, "law" to 0.5f, "stretch" to 0.35f, "bslope" to 0.7083333f, "menv" to 1f, "mtime" to 0.5124145f, "damp" to 0.5f, "decay" to 0.664145947f, "attack" to 0f, "release" to 0.591679f, "velbright" to 0.5f, "shimmer" to 0.1f, "lfo2rate" to 0.8176145f, "lfo2bright" to 0.3f, "volume" to 0.3313f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.42965f, "mac2_d1" to 0.375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_d2" to 0.95f, "mac3_a1" to 1f, "mac3_a2" to 0.453f, "mac4_d1" to 0.45f, "mac4_a1" to 0.65f, "mac5_d1" to 0.425f, "mac5_d2" to 0.95f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5335f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.65f, "mac7_a1" to 0.8f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Strike", "macro3" to "Morph", "macro4" to "Ring", "macro5" to "Damp", "macro6" to "Wide", "macro7" to "Shimmer", "macro8" to "Bar"),
+        family = "mallets",
+        low = 48, high = 96,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "mix" to 0.18f, "model" to 0.09090909f))))
+
+    private fun abacus19() = Patch("Abacus", "Glock Bars",
+        mapOf("partials" to 0.5f, "slope" to 0.7f, "peak" to 0.8418204f, "peakgain" to 0.25f, "law" to 0.5f, "stretch" to 0.25f, "bslope" to 0.75f, "menv" to 1f, "mtime" to 0.5327013f, "damp" to 0.4f, "decay" to 0.5766641f, "attack" to 0f, "release" to 0.5630092f, "velbright" to 0.4f, "volume" to 0.1515f, "mac1_d1" to 0.025f, "mac1_a1" to 0.65f, "mac2_d1" to 0.375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.45f, "mac4_d2" to 0.95f, "mac4_a1" to 0.65f, "mac4_a2" to 0.48305f, "mac5_d1" to 0.425f, "mac5_d2" to 0.95f, "mac5_a1" to 0.75f, "mac5_a2" to 0.5807f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.65f, "mac7_a1" to 0.8f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Strike", "macro3" to "Morph", "macro4" to "Ring", "macro5" to "Damp", "macro6" to "Wide", "macro7" to "Shimmer", "macro8" to "Bar"),
+        family = "mallets",
+        low = 60, high = 96)
+
+    private fun abacus20() = Patch("Abacus", "Slab Bars",
+        mapOf("partials" to 0f, "slope" to 0.333333343f, "law" to 0.5f, "stretch" to 0.8f, "bslope" to 0.75f, "menv" to 1f, "mtime" to 0.487585485f, "damp" to 1f, "decay" to 0.496809244f, "attack" to 0f, "release" to 0.473952621f, "velbright" to 0.5f, "volume" to 0.4789f, "mac1_d1" to 0.025f, "mac1_a1" to 0.65f, "mac2_d1" to 0.375f, "mac2_a1" to 0.75f, "mac3_d1" to 0.35f, "mac3_a1" to 1f, "mac4_d1" to 0.45f, "mac4_a1" to 0.65f, "mac5_d1" to 0.425f, "mac5_a1" to 0.75f, "mac6_d1" to 0.625f, "mac6_a1" to 0.85f, "mac7_d1" to 0.65f, "mac7_a1" to 0.8f, "mac8_d1" to 0.225f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Strike", "macro3" to "Morph", "macro4" to "Ring", "macro5" to "Damp", "macro6" to "Wide", "macro7" to "Shimmer", "macro8" to "Bar"),
+        family = "mallets",
+        low = 36, high = 72)
+
+    private fun abacus21() = Patch("Abacus", "Church Bell",
+        mapOf("slope" to 0.533333361f, "law" to 0.75f, "bslope" to 0.6666667f, "menv" to 0.75f, "mtime" to 0.6666667f, "damp" to 0.5f, "decay" to 0.7933765f, "attack" to 0f, "release" to 0.8218869f, "velbright" to 0.4f, "spread" to 0.4f, "shimmer" to 0.05f, "volume" to 0.2788f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.43375f, "mac2_d1" to 0.35f, "mac2_d2" to 0.95f, "mac2_a1" to 1f, "mac2_a2" to 0.4273f, "mac3_d1" to 0.45f, "mac3_a1" to 0.65f, "mac4_d1" to 0.425f, "mac4_a1" to 0.75f, "mac5_d1" to 0.225f, "mac5_a1" to 0.7f, "mac6_d1" to 0.65f, "mac6_a1" to 0.8f, "mac7_d1" to 0.625f, "mac7_a1" to 0.85f, "mac8_d1" to 0.475f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Morph", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Stretch", "macro6" to "Shimmer", "macro7" to "Wide", "macro8" to "Swell"),
+        family = "bells",
+        low = 48, high = 84,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private fun abacus22() = Patch("Abacus", "Hand Bell",
+        mapOf("slope" to 0.6333333f, "peak" to 0.776169956f, "peakgain" to 0.166666672f, "law" to 0.75f, "stretch" to 0.35f, "bslope" to 0.6666667f, "menv" to 0.75f, "damp" to 0.6f, "decay" to 0.664145947f, "attack" to 0f, "release" to 0.7328303f, "velbright" to 0.4f, "spread" to 0.3f, "volume" to 0.1623f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.5164f, "mac2_d1" to 0.35f, "mac2_a1" to 1f, "mac3_d1" to 0.45f, "mac3_a1" to 0.65f, "mac4_d1" to 0.425f, "mac4_a1" to 0.75f, "mac5_d1" to 0.225f, "mac5_a1" to 0.7f, "mac6_d1" to 0.65f, "mac6_a1" to 0.8f, "mac7_d1" to 0.625f, "mac7_a1" to 0.85f, "mac8_d1" to 0.475f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Morph", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Stretch", "macro6" to "Shimmer", "macro7" to "Wide", "macro8" to "Swell"),
+        family = "bells",
+        low = 60, high = 96,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "mix" to 0.18f, "model" to 0.09090909f))))
+
+    private fun abacus23() = Patch("Abacus", "Plate Chime",
+        mapOf("law" to 1f, "bslope" to 0.6666667f, "menv" to 0.75f, "damp" to 0.35f, "decay" to 0.719903231f, "attack" to 0f, "release" to 0.76979214f, "velbright" to 0.4f, "spread" to 0.5f, "spreadmode" to 0.5f, "shimmer" to 0.1f, "volume" to 0.2373f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4422f, "mac2_d1" to 0.35f, "mac2_d2" to 0.95f, "mac2_a1" to 1f, "mac2_a2" to 0.4415f, "mac3_d1" to 0.45f, "mac3_a1" to 0.65f, "mac4_d1" to 0.425f, "mac4_a1" to 0.75f, "mac5_d1" to 0.225f, "mac5_a1" to 0.7f, "mac6_d1" to 0.65f, "mac6_a1" to 0.8f, "mac7_d1" to 0.625f, "mac7_a1" to 0.85f, "mac8_d1" to 0.475f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Morph", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Stretch", "macro6" to "Shimmer", "macro7" to "Wide", "macro8" to "Swell"),
+        family = "bells",
+        low = 60, high = 96,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.6f, "mix" to 0.18f, "model" to 0.09090909f))))
+
+    private fun abacus24() = Patch("Abacus", "Shimmer Chimes",
+        mapOf("slope" to 0.566666663f, "law" to 0.75f, "stretch" to 0.75f, "bslope" to 0.6666667f, "menv" to 0.75f, "mtime" to 0.6914957f, "damp" to 0.3f, "decay" to 0.8282594f, "attack" to 0.07712607f, "release" to 0.8218869f, "velbright" to 0.4f, "spread" to 0.8f, "spreadmode" to 0.5f, "shimmer" to 0.5f, "shrate" to 0.5395906f, "volume" to 0.202f, "mac1_d1" to 0.025f, "mac1_d2" to 0.95f, "mac1_a1" to 0.65f, "mac1_a2" to 0.4526f, "mac2_d1" to 0.35f, "mac2_d2" to 0.95f, "mac2_a1" to 1f, "mac2_a2" to 0.4526f, "mac3_d1" to 0.45f, "mac3_a1" to 0.65f, "mac4_d1" to 0.425f, "mac4_a1" to 0.75f, "mac5_d1" to 0.225f, "mac5_a1" to 0.7f, "mac6_d1" to 0.65f, "mac6_a1" to 0.8f, "mac7_d1" to 0.625f, "mac7_a1" to 0.85f, "mac8_d1" to 0.475f, "mac8_a1" to 0.7f),
+        mapOf("macro1" to "Bright", "macro2" to "Morph", "macro3" to "Ring", "macro4" to "Damp", "macro5" to "Stretch", "macro6" to "Shimmer", "macro7" to "Wide", "macro8" to "Swell"),
+        family = "bells",
+        low = 60, high = 100,
+        inserts = listOf(UnitSlot("Reverb", mapOf("size" to 0.75f, "damp" to 0.5f, "tone" to 0.715762734f, "predelay" to 0.125f, "mix" to 0.2f, "model" to 0.181818187f))))
+
+    private val abacus: List<Patch> by lazy { listOf(abacus0(), abacus1(), abacus2(), abacus3(), abacus4(), abacus5(), abacus6(), abacus7(), abacus8(), abacus9(), abacus10(), abacus11(), abacus12(), abacus13(), abacus14(), abacus15(), abacus16(), abacus17(), abacus18(), abacus19(), abacus20(), abacus21(), abacus22(), abacus23(), abacus24()) }
 
     private fun fx_delay0() = Patch("fx.Delay", "Init", emptyMap(),
         family = "short")

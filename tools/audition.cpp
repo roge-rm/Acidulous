@@ -2175,7 +2175,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         // Kits, drum patterns and hand drums are hits with gaps between, so
         // their level is the loudest moment, not the gated average.
         oneHits = kit != nullptr || listenKind == "beat" || listenKind == "loop" || listenKind == "mallets" ||
-                  listenKind == "voices" || bank.unit == "Palm";
+                  listenKind == "voices" || bank.unit == "Palm" ||
+                  (bank.unit == "Abacus" && (patch.family == "mallets" || patch.family == "bells"));
         if (listenKind == measureKind) {
             take = measureTake;
         } else {

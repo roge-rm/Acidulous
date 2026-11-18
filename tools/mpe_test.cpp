@@ -267,6 +267,8 @@ int main() {
     check("Fathom", true, false);
     // Pressure swells the note; a bent key gets a divider chain of its own.
     check("Divisi", true, false);
+    // Pressure brightens and lifts the note; slide moves a morph Init leaves flat.
+    check("Abacus", true, false);
     organ();
     std::printf("\nReflux is monophonic and implements no pitch bend at all, so there is\n"
                 "nothing here for it to answer. Dice is a slicer and Manual is 91 wheels on\n"

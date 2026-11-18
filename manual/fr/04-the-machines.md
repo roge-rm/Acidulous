@@ -9,6 +9,7 @@ Chaque piste contient une machine, et vous pouvez utiliser plusieurs fois la mê
 
 ## Claviers et nappes
 
+- [**Abacus**](04-the-machines/abacus.md) - un synthé additif : jusqu’à 64 partiels sinus par note, formés par une pente, un pic, une voyelle ou un peigne, avec des spectres d’orgue, de voyelle, de lame et de cloche.
 - [**Cumulus**](04-the-machines/cumulus.md) - de grandes nappes douces bâties à partir d’un spectre de partiels.
 - [**Divisi**](04-the-machines/divisi.md) - un ensemble de cordes : des violons à la contrebasse, un chœur et des cuivres, dans un chorus épais.
 - [**Manual**](04-the-machines/manual.md) - un orgue à deux claviers, pédalier, quatre modèles et cabine rotative.

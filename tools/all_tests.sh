@@ -90,6 +90,7 @@ echo "--- chanter"; "$ROOT/tools/chanter_test.sh" | tail -2 || fail=1
 echo "--- timber"; "$ROOT/tools/timber_test.sh" | tail -2 || fail=1
 echo "--- aviary"; "$ROOT/tools/aviary_test.sh" | tail -2 || fail=1
 echo "--- fathom"; "$ROOT/tools/fathom_test.sh" | tail -2 || fail=1
+echo "--- abacus"; "$ROOT/tools/abacus_test.sh" | tail -2 || fail=1
 echo "--- overwrite"; "$ROOT/tools/overwrite_test.sh" | tail -2 || fail=1
 # Link takes about half a minute, mostly two sessions finding each other over
 # the local network.

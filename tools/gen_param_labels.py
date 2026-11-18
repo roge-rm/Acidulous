@@ -30,6 +30,7 @@ PANELS = {
     "AviaryPanel": "Aviary",
     "FathomPanel": "Fathom",
     "DivisiPanel": "Divisi",
+    "AbacusPanel": "Abacus",
 }
 # Some panels name every control for the selected pad, so one panel covers
 # all the pads' parameters.

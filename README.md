@@ -34,10 +34,11 @@ All six are the demo song, Squelch.
 
 ### Machines and effects
 
-There are 32 machines. Each has patches to start from and a [manual page](manual/04-the-machines.md).
+There are 33 machines. Each has patches to start from and a [manual page](manual/04-the-machines.md).
 
 | Machine | What it does |
 |---|---|
+| Abacus | Additive synth with up to 64 partials a note. |
 | Cumulus | Pads built from a spectrum of partials. |
 | Divisi | String ensemble with choir and brass. |
 | Formulate | An 8-bit chip synth with tables and formula waveforms. |
