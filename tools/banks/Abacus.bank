@@ -9,16 +9,18 @@
 # `shimmer` drifts each partial's level and pitch on its own, `spread` places
 # them across the stage.
 #
-# 25 patches in six families, plainest first: classic (saw, square, pulse and
+# 31 patches in seven families, plainest first: classic (saw, square, pulse and
 # triangle), organ (a few drawbar sets, pipes and reeds), vocal (vowels),
-# strings (slow, wide, stiff), mallets (bars) and bells (bell and plate laws).
-# Classic, organ, vocal and strings play `pad`, mallets `tune` and bells
-# `bell`.
+# strings (slow, wide, stiff), mallets (bars), bells (bell and plate laws) and
+# count (the partials playing in rhythm, one patch a pattern). Classic, organ,
+# vocal, strings and count play `pad`, mallets `tune` and bells `bell`.
 #
 # Values are in each parameter's own units; `audition params Abacus` lists
 # them. Every patch but Init names every parameter. `partials` is 0, 1 or 2
 # for 16, 32 or 64; `law` 0 to 4 for harmonic, string, bar, bell, plate;
-# `spreadmode` 0 to 2 for odd/even, scatter, low-high; the LFO waves are
+# `spreadmode` 0 to 2 for odd/even, scatter, low-high; `count` 0 to 6 for off, up,
+# down, up-down, odd/even, fifths, random; `crate` 0 to 9 for 1/32T, 1/32, 1/16T,
+# 1/16, 1/8T, 1/8, 1/4T, 1/4, 1/2, bar (from the song's tick, swing followed); the LFO waves are
 # sine, tri, saw up, saw down, square, s&h, smooth, 8 step, 16 step.
 #
 # Levels: pads and strings sit at -27.5 on `loud`, within 1 dB, Init included.
@@ -35,7 +37,7 @@
 # velbright, #25 spread, #26 shimmer, #27 shrate, #28 lfo1rate, #29 lfo1pitch,
 # #30 lfo1morph, #31 lfo2rate, #32 lfo2bright, #33 lfo2pan, #34 glide, #35
 # fine, #36 mpetimbre, #37 mpepressure, #38 volume, #39 pan, #40 pitch (24
-# semitones a unit).
+# semitones a unit), #41 cdepth, #42 cglide.
 #
 # Each family has its own eight. Classic and strings: Bright, Hollow, Morph,
 # Fade, Shimmer, Wide, Slow and Comb (strings end on Stiff). Organ swaps Fade
@@ -139,6 +141,13 @@ patch "Saw Stack" family=classic note=60 range=36..84
   mpepressure    0.5
   volume         0.1719
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Square Reed" family=classic note=60 range=36..84
   # Odd partials only with a peak at 2 kHz. Morph rounds it off.
@@ -226,6 +235,13 @@ patch "Square Reed" family=classic note=60 range=36..84
   mpepressure    0.5
   volume         0.1779
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Quarter Pulse" family=classic note=60 range=36..84
   # Every fourth partial taken out. The slow LFO opens the comb to a saw and back.
@@ -311,6 +327,13 @@ patch "Quarter Pulse" family=classic note=60 range=36..84
   mpepressure    0.5
   volume         0.18
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Soft Triangle" family=classic note=60 range=36..84
   # Odd partials falling at 12 dB an octave. Harder keys open it up.
@@ -398,6 +421,13 @@ patch "Soft Triangle" family=classic note=60 range=36..84
   mpepressure    0.5
   volume         0.2139
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 
 # --- organ -----------------------------------------------------------------
@@ -484,6 +514,13 @@ patch "Full Drawbars" family=organ note=60 range=36..84
   mpepressure    0.5
   volume         0.0403
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Jazz Tones" family=organ note=60 range=36..84
   # Mostly under 600 Hz, the low partials forward.
@@ -567,6 +604,13 @@ patch "Jazz Tones" family=organ note=60 range=36..84
   mpepressure    0.5
   volume         0.0934
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Church Pipes" family=organ note=60 range=36..84
   # A pipe rank with a touch of an o in it, a slow wind-up and a long hall.
@@ -650,6 +694,13 @@ patch "Church Pipes" family=organ note=60 range=36..84
   mpepressure    0.5
   volume         0.155
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -742,6 +793,13 @@ patch "Reed Organ" family=organ note=60 range=36..84
   mpepressure    0.5
   volume         0.1012
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 
 # --- vocal -----------------------------------------------------------------
@@ -832,6 +890,13 @@ patch "Choir Ah" family=vocal note=60 range=36..84
   mpepressure    0.5
   volume         0.1951
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -926,6 +991,13 @@ patch "Choir Oo" family=vocal note=60 range=36..84
   mpepressure    0.5
   volume         0.2164
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -1016,6 +1088,13 @@ patch "Bright Ee" family=vocal note=60 range=36..84
   mpepressure    0.5
   volume         0.3893
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Sweep Voice" family=vocal note=60 range=36..84
   # A vowel peak that starts high and falls to 500 Hz over a second and a half at every note.
@@ -1103,6 +1182,13 @@ patch "Sweep Voice" family=vocal note=60 range=36..84
   mpepressure    0.5
   volume         0.1842
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 
 # --- strings ---------------------------------------------------------------
@@ -1193,6 +1279,13 @@ patch "Slow Bow" family=strings note=60 range=36..84
   mpepressure    0.5
   volume         0.1951
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -1287,6 +1380,13 @@ patch "Warm Section" family=strings note=60 range=36..84
   mpepressure    0.5
   volume         0.1929
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -1381,6 +1481,13 @@ patch "Stiff Strings" family=strings note=60 range=36..84
   mpepressure    0.5
   volume         0.2853
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #1
     size         0.6
@@ -1477,6 +1584,13 @@ patch "Glass Bow" family=strings note=60 range=36..84
   mpepressure    0.5
   volume         0.1203
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #1
     size         0.6
@@ -1568,6 +1682,13 @@ patch "Wood Bars" family=mallets note=60 range=48..96 role=tune
   mpepressure    0.5
   volume         0.4318
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Vibe Bars" family=mallets note=60 range=48..96 role=tune
   # Long ringing metal bars with a motor that opens and closes the top.
@@ -1651,6 +1772,13 @@ patch "Vibe Bars" family=mallets note=60 range=48..96 role=tune
   mpepressure    0.5
   volume         0.3313
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #1
     size         0.6
@@ -1739,6 +1867,13 @@ patch "Glock Bars" family=mallets note=72 range=60..96 role=tune
   mpepressure    0.5
   volume         0.1515
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 patch "Slab Bars" family=mallets note=48 range=36..72 role=tune
   # Big low slabs: dull, hollow and gone in a second.
@@ -1816,6 +1951,13 @@ patch "Slab Bars" family=mallets note=48 range=36..72 role=tune
   mpepressure    0.5
   volume         0.4789
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
 
 
 # --- bells -----------------------------------------------------------------
@@ -1900,6 +2042,13 @@ patch "Church Bell" family=bells note=60 range=48..84 role=bell
   mpepressure    0.5
   volume         0.2788
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -1986,6 +2135,13 @@ patch "Hand Bell" family=bells note=72 range=60..96 role=bell
   mpepressure    0.5
   volume         0.1623
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #1
     size         0.6
@@ -2074,6 +2230,13 @@ patch "Plate Chime" family=bells note=72 range=60..96 role=bell
   mpepressure    0.5
   volume         0.2373
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #1
     size         0.6
@@ -2162,6 +2325,13 @@ patch "Shimmer Chimes" family=bells note=76 range=60..100 role=bell
   mpepressure    0.5
   volume         0.202
   pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
   insert Reverb
     model        #2
     size         0.75
@@ -2170,3 +2340,520 @@ patch "Shimmer Chimes" family=bells note=76 range=60..100 role=bell
     predelay     25 ms
     mix          0.2
 
+# --- count ---------------------------------------------------------------
+
+patch "Climb" family=count note=60 range=36..84
+  # Each step lights the next two partials up from the third, a little blurred into each other.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -6 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.1886
+  pan            0
+  count          1
+  crate          3
+  csteps         8
+  cfrom          3
+  cwidth         2
+  cdepth         1
+  cglide         0.3
+
+patch "Descend" family=count note=60 range=36..84
+  # The same walk downward, slower, three partials at a time.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -5 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.1719
+  pan            0
+  count          2
+  crate          5
+  csteps         8
+  cfrom          4
+  cwidth         3
+  cdepth         0.9
+  cglide         0.5
+
+patch "Rise and Fall" family=count note=60 range=36..84
+  # Up and back down over twelve steps, with a bump of body around 1 kHz.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -6 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       6 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.2092
+  pan            0
+  count          3
+  crate          3
+  csteps         12
+  cfrom          2
+  cwidth         1
+  cdepth         1
+  cglide         0.25
+
+patch "Split Halves" family=count note=60 range=36..84
+  # Low half and high half in turn, in triplets.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -5 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.168
+  pan            0
+  count          4
+  crate          4
+  csteps         8
+  cfrom          5
+  cwidth         2
+  cdepth         0.8
+  cglide         0.2
+
+patch "Fifths Ladder" family=count note=60 range=36..84
+  # Each step a fifth above the last, folded into two octaves.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -4 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.1764
+  pan            0
+  count          5
+  crate          5
+  csteps         16
+  cfrom          3
+  cwidth         1
+  cdepth         1
+  cglide         0.35
+
+patch "Dice Roll" family=count note=60 range=36..84
+  # A new random line every bar, one partial or two on each sixteenth.
+  set macro1 "Bright"
+  set macro2 "Depth"
+  set macro3 "Glide"
+  set macro4 "Morph"
+  set macro5 "Shimmer"
+  set macro6 "Wide"
+  set macro7 "Slow"
+  set macro8 "Comb"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #41
+  mac2_a1  -0.8
+  mac3_d1  #42
+  mac3_a1  0.7
+  mac4_d1  #14
+  mac4_a1  1
+  mac5_d1  #26
+  mac5_a1  0.6
+  mac6_d1  #25
+  mac6_a1  0.7
+  mac7_d1  #19
+  mac7_a1  0.3
+  mac7_d2  #22
+  mac7_a2  0.2
+  mac8_d1  #8
+  mac8_a1  0.5
+  partials       2
+  slope          -6 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.02 s
+  decay2         1 s
+  sustain        1
+  release        0.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.3
+  spreadmode     0
+  shimmer        0.1
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.184
+  pan            0
+  count          6
+  crate          3
+  csteps         16
+  cfrom          4
+  cwidth         2
+  cdepth         1
+  cglide         0.1

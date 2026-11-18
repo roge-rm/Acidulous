@@ -271,6 +271,10 @@
     <string name="pw_delay_ab464f">délai</string>
     <string name="pw_delay_send">envoi Delay</string>
     <string name="pw_density">densité</string>
+    <string name="pw_counting">comptage</string>
+    <string name="pw_count_depth">prof. du compte</string>
+    <string name="pw_count_glide">porta. du compte</string>
+    <string name="pw_lit">allumés</string>
     <string name="pw_depth">prof.</string>
     <string name="pw_depth_a">prof. A</string>
     <string name="pw_depth_b">prof. B</string>

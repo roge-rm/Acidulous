@@ -25,8 +25,15 @@ private fun labels0(): Map<String, String> = mapOf(
     "Abacus:bodd" to "far end|odd/even",
     "Abacus:bpeak" to "far end|peak",
     "Abacus:bslope" to "far end|slope",
+    "Abacus:cdepth" to "lit|depth",
+    "Abacus:cfrom" to "lit|from",
+    "Abacus:cglide" to "lit|glide",
     "Abacus:comb" to "comb|depth",
     "Abacus:combn" to "comb|every",
+    "Abacus:count" to "pattern|counting",
+    "Abacus:crate" to "pattern|rate",
+    "Abacus:csteps" to "pattern|steps",
+    "Abacus:cwidth" to "lit|width",
     "Abacus:damp" to "damping|damp",
     "Abacus:decay" to "damping|decay",
     "Abacus:decay2" to "amp|D",
@@ -812,6 +819,9 @@ private fun labels0(): Map<String, String> = mapOf(
     "Dice:mac3_d2" to "macro 3|to 2",
     "Dice:mac3_d3" to "macro 3|to 3",
     "Dice:mac3_d4" to "macro 3|to 4",
+)
+
+private fun labels1(): Map<String, String> = mapOf(
     "Dice:mac4" to "macros|macro 4",
     "Dice:mac4_a1" to "macro 4|by 1",
     "Dice:mac4_a2" to "macro 4|by 2",
@@ -819,9 +829,6 @@ private fun labels0(): Map<String, String> = mapOf(
     "Dice:mac4_a4" to "macro 4|by 4",
     "Dice:mac4_d1" to "macro 4|to 1",
     "Dice:mac4_d2" to "macro 4|to 2",
-)
-
-private fun labels1(): Map<String, String> = mapOf(
     "Dice:mac4_d3" to "macro 4|to 3",
     "Dice:mac4_d4" to "macro 4|to 4",
     "Dice:mac5" to "macros|macro 5",
@@ -1615,6 +1622,9 @@ private fun labels1(): Map<String, String> = mapOf(
     "Forage:mac7_d3" to "macro 7|to 3",
     "Forage:mac7_d4" to "macro 7|to 4",
     "Forage:mac8" to "macros|macro 8",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Forage:mac8_a1" to "macro 8|by 1",
     "Forage:mac8_a2" to "macro 8|by 2",
     "Forage:mac8_a3" to "macro 8|by 3",
@@ -1622,9 +1632,6 @@ private fun labels1(): Map<String, String> = mapOf(
     "Forage:mac8_d1" to "macro 8|to 1",
     "Forage:mac8_d2" to "macro 8|to 2",
     "Forage:mac8_d3" to "macro 8|to 3",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Forage:mac8_d4" to "macro 8|to 4",
     "Forage:p00_choke" to "pad 1|amp|choke",
     "Forage:p00_crush" to "pad 1|tone|crush",
@@ -2418,6 +2425,9 @@ private fun labels2(): Map<String, String> = mapOf(
     "Manual:eg1sus" to "eg 1|sustain",
     "Manual:eg2atk" to "eg 2|attack",
     "Manual:eg2dec" to "eg 2|decay",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Manual:eg2rel" to "eg 2|release",
     "Manual:eg2sus" to "eg 2|sustain",
     "Manual:express" to "touch|swell",
@@ -2425,9 +2435,6 @@ private fun labels2(): Map<String, String> = mapOf(
     "Manual:flute" to "pipes|flute",
     "Manual:hornfast" to "horn|fast",
     "Manual:hornslow" to "horn|slow",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Manual:hum" to "generator|hum",
     "Manual:leakage" to "generator|leakage",
     "Manual:lfo1depth" to "lfo 1|depth",
@@ -3221,6 +3228,9 @@ private fun labels3(): Map<String, String> = mapOf(
     "Ratio:mac4_d3" to "macro 4|to 3",
     "Ratio:mac4_d4" to "macro 4|to 4",
     "Ratio:mac5" to "play|macro 5",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Ratio:mac5_a1" to "macro 5|by 1",
     "Ratio:mac5_a2" to "macro 5|by 2",
     "Ratio:mac5_a3" to "macro 5|by 3",
@@ -3228,9 +3238,6 @@ private fun labels3(): Map<String, String> = mapOf(
     "Ratio:mac5_d1" to "macro 5|to 1",
     "Ratio:mac5_d2" to "macro 5|to 2",
     "Ratio:mac5_d3" to "macro 5|to 3",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Ratio:mac5_d4" to "macro 5|to 4",
     "Ratio:mac6" to "play|macro 6",
     "Ratio:mac6_a1" to "macro 6|by 1",
@@ -4024,6 +4031,9 @@ private fun labels4(): Map<String, String> = mapOf(
     "Tongue:mac7_d1" to "macro 7|to 1",
     "Tongue:mac7_d2" to "macro 7|to 2",
     "Tongue:mac7_d3" to "macro 7|to 3",
+)
+
+private fun labels5(): Map<String, String> = mapOf(
     "Tongue:mac7_d4" to "macro 7|to 4",
     "Tongue:mac8" to "macros|macro 8",
     "Tongue:mac8_a1" to "macro 8|by 1",
@@ -4031,9 +4041,6 @@ private fun labels4(): Map<String, String> = mapOf(
     "Tongue:mac8_a3" to "macro 8|by 3",
     "Tongue:mac8_a4" to "macro 8|by 4",
     "Tongue:mac8_d1" to "macro 8|to 1",
-)
-
-private fun labels5(): Map<String, String> = mapOf(
     "Tongue:mac8_d2" to "macro 8|to 2",
     "Tongue:mac8_d3" to "macro 8|to 3",
     "Tongue:mac8_d4" to "macro 8|to 4",
@@ -4288,8 +4295,15 @@ private fun short0(): Map<String, String> = mapOf(
     "Abacus:bodd" to "odd/even",
     "Abacus:bpeak" to "peak",
     "Abacus:bslope" to "slope",
+    "Abacus:cdepth" to "depth",
+    "Abacus:cfrom" to "from",
+    "Abacus:cglide" to "glide",
     "Abacus:comb" to "depth",
     "Abacus:combn" to "every",
+    "Abacus:count" to "counting",
+    "Abacus:crate" to "rate",
+    "Abacus:csteps" to "steps",
+    "Abacus:cwidth" to "width",
     "Abacus:damp" to "damp",
     "Abacus:decay" to "decay",
     "Abacus:decay2" to "D",
@@ -5075,6 +5089,9 @@ private fun short0(): Map<String, String> = mapOf(
     "Dice:mac4_d3" to "to 3",
     "Dice:mac4_d4" to "to 4",
     "Dice:mac5" to "macro 5",
+)
+
+private fun short1(): Map<String, String> = mapOf(
     "Dice:mac5_a1" to "by 1",
     "Dice:mac5_a2" to "by 2",
     "Dice:mac5_a3" to "by 3",
@@ -5082,9 +5099,6 @@ private fun short0(): Map<String, String> = mapOf(
     "Dice:mac5_d1" to "to 1",
     "Dice:mac5_d2" to "to 2",
     "Dice:mac5_d3" to "to 3",
-)
-
-private fun short1(): Map<String, String> = mapOf(
     "Dice:mac5_d4" to "to 4",
     "Dice:mac6" to "macro 6",
     "Dice:mac6_a1" to "by 1",
@@ -5878,6 +5892,9 @@ private fun short1(): Map<String, String> = mapOf(
     "Forage:p01_reverse" to "reverse",
     "Forage:p01_start" to "start",
     "Forage:p02_choke" to "choke",
+)
+
+private fun short2(): Map<String, String> = mapOf(
     "Forage:p02_crush" to "crush",
     "Forage:p02_cutoff" to "cutoff",
     "Forage:p02_decay" to "decay",
@@ -5885,9 +5902,6 @@ private fun short1(): Map<String, String> = mapOf(
     "Forage:p02_level" to "level",
     "Forage:p02_mode" to "mode",
     "Forage:p02_pan" to "pan",
-)
-
-private fun short2(): Map<String, String> = mapOf(
     "Forage:p02_pdecay" to "decay",
     "Forage:p02_penv" to "pitch env",
     "Forage:p02_pitch" to "pitch",
@@ -6681,6 +6695,9 @@ private fun short2(): Map<String, String> = mapOf(
     "Manual:m8_amt" to "amount",
     "Manual:m8_dst" to "to",
     "Manual:m8_src" to "from",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Manual:mac1" to "macro 1",
     "Manual:mac1_a1" to "by 1",
     "Manual:mac1_a2" to "by 2",
@@ -6688,9 +6705,6 @@ private fun short2(): Map<String, String> = mapOf(
     "Manual:mac1_a4" to "by 4",
     "Manual:mac1_d1" to "to 1",
     "Manual:mac1_d2" to "to 2",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Manual:mac1_d3" to "to 3",
     "Manual:mac1_d4" to "to 4",
     "Manual:mac2" to "macro 2",
@@ -7484,6 +7498,9 @@ private fun short3(): Map<String, String> = mapOf(
     "Ratio:o1_release" to "release",
     "Ratio:o1_sustain" to "sustain",
     "Ratio:o1_vel" to "vel",
+)
+
+private fun short4(): Map<String, String> = mapOf(
     "Ratio:o1_wave" to "wave",
     "Ratio:o2_attack" to "attack",
     "Ratio:o2_decay" to "decay",
@@ -7491,9 +7508,6 @@ private fun short3(): Map<String, String> = mapOf(
     "Ratio:o2_fine" to "fine",
     "Ratio:o2_fixed" to "pitch",
     "Ratio:o2_key" to "key",
-)
-
-private fun short4(): Map<String, String> = mapOf(
     "Ratio:o2_level" to "level",
     "Ratio:o2_mode" to "mode",
     "Ratio:o2_pan" to "pan",
@@ -8287,6 +8301,9 @@ private fun short4(): Map<String, String> = mapOf(
     "Trinity:l1_oneshot" to "run",
     "Trinity:l1_phase" to "phase",
     "Trinity:l1_rate" to "rate",
+)
+
+private fun short5(): Map<String, String> = mapOf(
     "Trinity:l1_slew" to "slew",
     "Trinity:l1_sync" to "sync",
     "Trinity:l1_wave" to "wave",
@@ -8294,9 +8311,6 @@ private fun short4(): Map<String, String> = mapOf(
     "Trinity:l2_keysync" to "trig",
     "Trinity:l2_oneshot" to "run",
     "Trinity:l2_phase" to "phase",
-)
-
-private fun short5(): Map<String, String> = mapOf(
     "Trinity:l2_rate" to "rate",
     "Trinity:l2_slew" to "slew",
     "Trinity:l2_sync" to "sync",

@@ -51,6 +51,25 @@ the shimmer.
   **glide**, **bend**, **slide** and **press** (what an MPE finger does).
 - **tune** - **octave**, **semis** and **fine**.
 
+## Counting
+
+The partials can play in rhythm, from the song's clock, so bar 5 sounds the
+same whether you start at bar 1 or at bar 5. **counting** is the pattern:
+**off**, **up**, **down**, **up-down**, **odd/even** (low half and high half
+in turn), **fifths** (each step a fifth up, folded into two octaves) or
+**random** (new every bar, the same every time you play it).
+
+- **pattern** - **counting**, **rate** (1/32T to a bar; it follows the track's
+  swing) and **steps**, how many steps before the pattern starts over.
+- **lit** - **from** is the lowest partial the pattern plays on. The ones
+  under it always sound, so the note keeps its pitch. **width** is how many
+  partials are lit on a step. **depth** is how far the others drop, 0 is no
+  change and 1 is silent. **glide** is how much of a step is spent fading
+  from the last step's partials.
+
+With the song stopped it keeps counting at the tempo. **count depth** and **count glide** can be macro
+destinations.
+
 ## Play
 
 The **play** page has the eight macro knobs, the amp envelope (**A**, **D**,
@@ -71,7 +90,8 @@ destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning
 the knob moves the destination by knob times amount, across that control's
 whole range at 1. Pitch moves every note, 24 semitones at 1. The partials,
 the comb's spacing, the law, the spread mode, the LFO waves and clocks, bend,
-octave and semis can't be reached. Tap a macro's name to rename it.
+octave and semis, and the count's pattern, rate, steps, from and width,
+can't be reached. Tap a macro's name to rename it.
 
 ## Tips
 

@@ -80,6 +80,22 @@ struct Play {
     }
 };
 
+/** [blocks] blocks driven the way the engine does: the song's tick, the bar and the transport, from [startTick]. */
+void playSong(Play &p, int blocks, double startTick, float swing = 50.0f, int64_t pair = 0, int *noteAtBlock = nullptr, int note = 48) {
+    float L[kBlock], R[kBlock];
+    const double tps = 120.0 * 240.0 / 60.0 / kRate; // ticks a frame at 120 bpm, 240 to the quarter
+    for (int b = 0; b < blocks; ++b) {
+        if (noteAtBlock != nullptr && b == *noteAtBlock) p.a->noteOn(static_cast<uint8_t>(note), 100);
+        p.a->onTransport(true, 0);
+        p.a->onBar(0, 960, swing, pair);
+        p.a->onSongTick(startTick + b * kBlock * tps);
+        p.a->onBlock(0, 0, 120.0f);
+        p.a->render(L, R, kBlock);
+        p.left.insert(p.left.end(), L, L + kBlock);
+        p.right.insert(p.right.end(), R, R + kBlock);
+    }
+}
+
 /** The Hann-windowed level at [hz] over [from, to) seconds of [x], dB of a full-scale sine. */
 double level(const std::vector<float> &x, double hz, double from, double to) {
     const auto a = static_cast<size_t>(from * kRate), b = std::min(x.size(), static_cast<size_t>(to * kRate));
@@ -384,6 +400,158 @@ void sleep() {
     check(q.a->activeVoices() == 0, "a held note that has decayed away retires", fmt("%d voices", q.a->activeVoices()));
 }
 
+void count() {
+    std::printf("count\n");
+    const char *kinds[] = {"off", "up", "down", "up-down", "odd-even", "fifths", "random"};
+    const double f0 = noteHz(48);
+    // 1/8 notes at 120 bpm: 0.25 s a step. Flat spectrum, a hard step, from partial 4.
+    for (int kind = 1; kind <= 6; ++kind) {
+        Play p({{"slope", 0.0f}, {"count", float(kind)}, {"crate", 5.0f}, {"csteps", 8.0f}, {"cfrom", 4.0f},
+                {"cwidth", 1.0f}, {"cdepth", 1.0f}, {"cglide", 0.0f}});
+        p.a->noteOn(48, 100);
+        p.play(2.3);
+        int bad = 0;
+        double worstLit = 0.0, worstOff = -200.0, worstLow = 0.0;
+        for (int k = 0; k < 8; ++k) {
+            const double from = 0.25 * k + 0.08, to = 0.25 * k + 0.2;
+            const int lit = Abacus::litStart(kind, k, 8, 4, 64, k * 0 / 8);
+            const double ref = level(p.left, f0 * 2, from, to); // below cfrom: always there
+            worstLow = std::min(worstLow, ref);
+            for (int h : {4, 5, 7, 9, 12, 20}) {
+                const double l = level(p.left, f0 * h, from, to);
+                if (h == lit) worstLit = std::min(worstLit, l - ref);
+                else if (h != lit) {
+                    worstOff = std::max(worstOff, l - ref);
+                    if (l - ref > -40.0) ++bad;
+                }
+            }
+            if (level(p.left, f0 * lit, from, to) - ref < -4.0) ++bad;
+        }
+        check(bad == 0, fmt("%s: the lit partial is the pattern's, on its step", kinds[kind]),
+              fmt("worst unlit %.0f dB under the 2nd, %d wrong", worstOff, bad));
+    }
+    // The first partials below cfrom always sound, at the level they had.
+    {
+        Play off({{"slope", 0.0f}});
+        off.a->noteOn(48, 100);
+        off.play(1.0);
+        Play on({{"slope", 0.0f}, {"count", 1.0f}, {"crate", 5.0f}, {"cfrom", 4.0f}, {"cglide", 0.0f}});
+        on.a->noteOn(48, 100);
+        on.play(1.0);
+        double worst = 0.0;
+        for (int h = 1; h <= 3; ++h) worst = std::max(worst, std::fabs(level(on.left, f0 * h, 0.3, 0.9) - level(off.left, f0 * h, 0.3, 0.9)));
+        check(worst < 0.01, "partials under cfrom sound as with count off", fmt("worst %.4f dB", worst));
+    }
+    // cdepth 0 changes nothing, to the sample.
+    {
+        Play off({{"slope", -6.0f}});
+        off.a->noteOn(48, 100);
+        off.play(0.8);
+        Play on({{"slope", -6.0f}, {"count", 4.0f}, {"cdepth", 0.0f}});
+        on.a->noteOn(48, 100);
+        on.play(0.8);
+        double worst = 0.0;
+        for (size_t i = 0; i < off.left.size(); ++i) worst = std::max(worst, double(std::fabs(off.left[i] - on.left[i])));
+        check(worst == 0.0, "cdepth 0 is the same signal as count off", fmt("worst %.3g", worst));
+    }
+    // Width: a step lights cwidth partials.
+    {
+        Play p({{"slope", 0.0f}, {"count", 1.0f}, {"crate", 7.0f}, {"cfrom", 4.0f}, {"cwidth", 3.0f}, {"cglide", 0.0f}});
+        p.a->noteOn(48, 100);
+        p.play(0.45);
+        const double ref = level(p.left, f0 * 2, 0.15, 0.4);
+        const double a = level(p.left, f0 * 4, 0.15, 0.4) - ref, c = level(p.left, f0 * 6, 0.15, 0.4) - ref,
+                     d = level(p.left, f0 * 7, 0.15, 0.4) - ref;
+        check(a > -3.0 && c > -3.0 && d < -40.0, "cwidth 3 lights partials 4 to 6", fmt("4th %.1f, 6th %.1f, 7th %.1f dB", a, c, d));
+    }
+    // Glide: with cglide 1 a step is a crossfade, so between steps both partials sound part way.
+    {
+        Play p({{"slope", 0.0f}, {"count", 1.0f}, {"crate", 7.0f}, {"cfrom", 4.0f}, {"cglide", 1.0f}});
+        p.a->noteOn(48, 100);
+        p.play(1.0);
+        // Step 1 (0.5 to 1 s) is partial 5, rising across it; at the middle it is half way in power.
+        const double ref = level(p.left, f0 * 2, 0.6, 0.9);
+        const double early = level(p.left, f0 * 5, 0.5, 0.56) - ref, late = level(p.left, f0 * 5, 0.94, 1.0) - ref;
+        const double prevEarly = level(p.left, f0 * 4, 0.5, 0.56) - ref;
+        check(late > early + 6.0 && prevEarly > early - 3.0, "cglide crossfades from the last step's partial", fmt("5th early %.1f late %.1f, 4th early %.1f dB", early, late, prevEarly));
+    }
+    // Repeats: a fresh machine, and the same one after reset().
+    {
+        auto run = [](Play &p) {
+            p.a->noteOn(48, 100);
+            p.play(1.5);
+        };
+        Play a({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}}), b({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}});
+        run(a);
+        run(b);
+        Play c({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}});
+        c.a->noteOn(60, 100);
+        c.play(0.7);
+        c.a->reset();
+        c.left.clear();
+        c.right.clear();
+        run(c);
+        check(a.left == b.left && a.right == b.right, "rendering twice repeats, to the sample");
+        check(a.left == c.left && a.right == c.right, "after reset() it repeats too");
+    }
+    // Bar N from bar 1 or from bar N.
+    {
+        const int barBlocks = 1500; // 2 s, a bar at 120 bpm
+        auto build = [](Play &p) {};
+        (void)build;
+        Play one({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}, {"cglide", 0.4f}});
+        int at = 3 * barBlocks;
+        playSong(one, 4 * barBlocks, 0.0, 50.0f, 0, &at);
+        Play two({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}, {"cglide", 0.4f}});
+        int zero = 0;
+        playSong(two, barBlocks, 3.0 * 960.0, 50.0f, 0, &zero);
+        double worst = 0.0;
+        for (int i = 0; i < barBlocks * kBlock; ++i)
+            worst = std::max(worst, double(std::fabs(one.left[size_t(3 * barBlocks * kBlock + i)] - two.left[size_t(i)])));
+        check(worst < 1e-5, "random bar 4 sounds the same from bar 1 and from bar 4", fmt("worst %.3g", worst));
+        // And it differs from bar 1's, which has its own seed.
+        Play three({{"count", 6.0f}, {"crate", 3.0f}, {"slope", -3.0f}, {"cglide", 0.4f}});
+        playSong(three, barBlocks, 0.0, 50.0f, 0, &zero);
+        double diff = 0.0;
+        for (int i = 0; i < barBlocks * kBlock; ++i) diff = std::max(diff, double(std::fabs(three.left[size_t(i)] - two.left[size_t(i)])));
+        check(diff > 0.01, "random bars differ", fmt("max difference %.3g", diff));
+        // The same for an up pattern whose steps do not divide the bar.
+        Play u1({{"count", 1.0f}, {"crate", 3.0f}, {"csteps", 7.0f}, {"slope", -3.0f}});
+        playSong(u1, 4 * barBlocks, 0.0, 50.0f, 0, &at);
+        Play u2({{"count", 1.0f}, {"crate", 3.0f}, {"csteps", 7.0f}, {"slope", -3.0f}});
+        playSong(u2, barBlocks, 3.0 * 960.0, 50.0f, 0, &zero);
+        worst = 0.0;
+        for (int i = 0; i < barBlocks * kBlock; ++i)
+            worst = std::max(worst, double(std::fabs(u1.left[size_t(3 * barBlocks * kBlock + i)] - u2.left[size_t(i)])));
+        check(worst < 1e-5, "up, 7 steps: bar 4 sounds the same from bar 1 and from bar 4", fmt("worst %.3g", worst));
+    }
+    // Swing: the second sixteenth's step arrives at the swung tick, 80 not 60 (0.167 s, not 0.125 s).
+    {
+        auto run = [](float swing) {
+            Play p({{"slope", 0.0f}, {"count", 1.0f}, {"crate", 3.0f}, {"cfrom", 4.0f}, {"cglide", 0.0f}});
+            int zero = 0;
+            playSong(p, 150, 0.0, swing, swing > 50.0f ? 120 : 0, &zero);
+            return p;
+        };
+        const double f0b = noteHz(48);
+        Play s = run(66.667f), st = run(50.0f);
+        const double midS = level(s.left, f0b * 5, 0.135, 0.158) - level(s.left, f0b * 4, 0.135, 0.158);
+        const double midSt = level(st.left, f0b * 5, 0.135, 0.158) - level(st.left, f0b * 4, 0.135, 0.158);
+        const double lateS = level(s.left, f0b * 5, 0.175, 0.2) - level(s.left, f0b * 4, 0.175, 0.2);
+        check(midSt > 20.0 && midS < -20.0 && lateS > 20.0, "swung, the 2nd step arrives late",
+              fmt("at 0.135-0.158 s: straight 5th-4th %.0f dB, swung %.0f dB; swung at 0.175-0.2 s %.0f dB", midSt, midS, lateS));
+    }
+    // Stepped crate through to a bar and the fastest rate: partial 4 and 5 swap on the rate.
+    {
+        Play p({{"slope", 0.0f}, {"count", 1.0f}, {"crate", 0.0f}, {"cfrom", 4.0f}, {"cglide", 0.0f}});
+        p.a->noteOn(48, 100);
+        p.play(0.3);
+        // 1/32 triplets are 20 ticks, 41.7 ms: step 5 (208 to 250 ms) lights partial 9.
+        const double a = level(p.left, f0 * 9, 0.219, 0.239), c = level(p.left, f0 * 5, 0.219, 0.239);
+        check(a - c > 20.0, "the fastest rate alternates steps within a few frames", fmt("%.1f vs %.1f dB", a, c));
+    }
+}
+
 } // namespace
 
 int main() {
@@ -394,6 +562,7 @@ int main() {
     damping();
     spread();
     sleep();
+    count();
     std::printf("\n%d of %d checks passed\n", checks - failures, checks);
     if (failures == 0) std::printf("abacus: all passed\n");
     return failures == 0 ? 0 : 1;

@@ -291,6 +291,9 @@
     <string name="pw_copies">copies</string>
     <string name="pw_cornemuse">cornemuse</string>
     <string name="pw_count">count</string>
+    <string name="pw_count_depth">count depth</string>
+    <string name="pw_count_glide">count glide</string>
+    <string name="pw_counting">counting</string>
     <string name="pw_coup">coup</string>
     <string name="pw_couple">couple</string>
     <string name="pw_coupling">coupling</string>
@@ -798,6 +801,7 @@
     <string name="pw_listen">listen</string>
     <string name="pw_listening">listening</string>
     <string name="pw_listens">listens</string>
+    <string name="pw_lit">lit</string>
     <string name="pw_live">live</string>
     <string name="pw_lo">lo</string>
     <string name="pw_lo_fi">lo-fi</string>

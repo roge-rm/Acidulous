@@ -58,6 +58,26 @@ et ne suit ni l’enveloppe ni le scintillement.
   doigt MPE).
 - **accordage** : **octave**, **demi-tons** et **précis**.
 
+## Comptage
+
+Les partiels peuvent jouer en rythme, sur l’horloge du morceau : la mesure 5
+sonne pareil qu’on parte de la mesure 1 ou de la mesure 5. **comptage** est
+le motif : **off**, **up**, **down**, **up-down**, **impair/pair** (la moitié
+grave et la moitié aiguë tour à tour), **quintes** (chaque pas une quinte plus
+haut, replié sur deux octaves) ou **aléatoire** (nouveau à chaque mesure, le
+même à chaque lecture).
+
+- **motif** : **comptage**, **vitesse** (de 1/32T à une mesure ; elle suit le
+  swing de la piste) et **pas**, le nombre de pas avant que le motif reparte.
+- **allumés** : **de** est le plus bas partiel que joue le motif. Ceux
+  du dessous sonnent toujours, donc la note garde sa hauteur. **largeur** est
+  le nombre de partiels allumés à chaque pas. **prof.** est de combien les
+  autres baissent, 0 ne change rien et 1 les rend muets. **porta.** est la
+  part du pas passée à fondre depuis les partiels du pas précédent.
+
+Morceau arrêté, il continue de compter au tempo. **prof. du compte** et
+**porta. du compte** peuvent être des destinations de macro.
+
 ## Jeu
 
 La page **jeu** a les huit boutons macro, l’enveloppe d’amplitude (**A**,
@@ -78,8 +98,8 @@ destination (**vers**) et une quantité (**prof.**, de -1 à 1). Tourner le bout
 déplace la destination de bouton fois quantité, sur toute l’étendue du
 réglage à 1. La hauteur déplace toutes les notes, de 24 demi-tons à 1. Les
 partiels, l’espacement du peigne, la loi, le mode d’étalement, les formes et
-horloges des LFO, le bend, l’octave et les demi-tons ne sont pas
-accessibles. Touchez le nom d’une macro pour la renommer.
+horloges des LFO, le bend, l’octave et les demi-tons, et le motif, la vitesse, les pas, le
+départ et la largeur du comptage, ne sont pas accessibles. Touchez le nom d’une macro pour la renommer.
 
 ## Conseils
 

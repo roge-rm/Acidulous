@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <engine/core/Constants.h>
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/LfoGen.h>
 #include <engine/machine/Machine.h>
@@ -55,6 +56,8 @@ class Abacus final : public Machine {
         Glide, BendRange, Octave, Transpose, Fine,
         MpeTimbre, MpePressure,
         Volume, Pan,
+        // --- count: the partials play in rhythm ---
+        Pattern, CRate, CSteps, CFrom, CWidth, CDepth, CGlide,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -73,12 +76,16 @@ class Abacus final : public Machine {
         McSpread, McShimmer, McShimmerRate,
         McLfo1Rate, McLfo1Pitch, McLfo1Morph, McLfo2Rate, McLfo2Bright, McLfo2Pan,
         McGlide, McFine, McMpeTimbre, McMpePressure, McVolume, McPan, McPitch,
+        McCDepth, McCGlide,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
     static_assert(Count <= kMaxParams, "too many parameters");
 
     enum LawKind : int32_t { Harmonic = 0, String, Bar, Bell, Plate, LawCount };
+    /** The count patterns, and the rates in ticks (a bar is the song's own). */
+    enum CountKind : int32_t { CountOff = 0, CountUp, CountDown, CountUpDown, CountOddEven, CountFifths, CountRandom, CountKinds };
+    static constexpr int kRates = 10;
     enum SpreadKind : int32_t { OddEven = 0, Scatter, LowHigh, SpreadCount };
 
     Abacus();
@@ -88,6 +95,16 @@ class Abacus final : public Machine {
     void prepare(int32_t sampleRate) override;
     void reset() override;
     void onBlock(int64_t tickStart, int64_t tickEnd, float bpm) override;
+    void onSongTick(double tick) override {
+        songTick = tick;
+        songFresh = true;
+    }
+    void onTransport(bool rolling, int64_t) override { rolling_ = rolling; }
+    void onBar(int64_t, int32_t ticksPerBar, float swing, int64_t swingPair) override {
+        barTicks = ticksPerBar > 0 ? ticksPerBar : 4 * kPPQN;
+        swingPercent = swing;
+        swingPairTicks = swingPair;
+    }
     void noteOn(uint8_t note, uint8_t velocity) override;
     void noteOff(uint8_t note) override;
     void allNotesOff() override;
@@ -98,6 +115,8 @@ class Abacus final : public Machine {
     void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
 
+    /** Partial [h] (1 is the note) lit on step [k] of a [kind] pattern of [steps] from partial [from], [width] wide, in bar [bar]; the first partial lit. For tests. */
+    static int litStart(int kind, int k, int steps, int from, int count, int bar);
     /** Voices sounding, for tests. */
     int activeVoices() const;
     /** Partial [n]'s ratio to the note under [law] and [stretch], as the machine works it out. For tests. */
@@ -173,6 +192,15 @@ class Abacus final : public Machine {
     float lfoValue[2] = {0.0f, 0.0f};
     float bpm = 120.0f;
     float bend = 0.0f, pressure_ = 0.0f;
+    /** The song's tick at the block's start, set by onSongTick() and used once; else the count runs from reset(). */
+    double songTick = 0.0, freeTick = 0.0;
+    bool songFresh = false, songLocked = false, rolling_ = false;
+    int32_t barTicks = 4 * kPPQN;
+    float swingPercent = 50.0f;
+    int64_t swingPairTicks = 0;
+    /** Each partial's count weight this chunk, 1 when it plays in full. */
+    alignas(16) float cw[kPartials] = {};
+    void countWeights(double tick, int count);
     float mac_[MacroDestCount]{}, macGoal_[MacroDestCount]{};
 
     /** The law's ratios and their log2, and the damping's speed per partial in log2 of gain per second before decay divides it. */
@@ -200,6 +228,8 @@ class Abacus final : public Machine {
         float tune = 0.0f, bendSemis = 0.0f, glide = 0.0f;
         float lfo1Pitch = 0.0f, lfo1Morph = 0.0f, lfo2Bright = 0.0f;
         float mpeTimbre = 0.5f, mpePressure = 0.5f;
+        int countKind = 0, cSteps = 8, cFrom = 4, cWidth = 1, cRateTicks = 60;
+        float cDepth = 1.0f, cGlide = 0.2f;
         float ampA = 0.005f, ampD = 1.0f, ampS = 1.0f, ampR = 0.3f;
     } blk;
 

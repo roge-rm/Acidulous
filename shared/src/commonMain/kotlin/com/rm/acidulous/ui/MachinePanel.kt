@@ -5663,9 +5663,11 @@ val ABACUS_MACRO_DESTS = listOf(
     "spread", "shimmer", "shimmer rate",
     "lfo1 rate", "lfo1 pitch", "lfo1 morph", "lfo2 rate", "lfo2 bright", "lfo2 pan",
     "glide", "fine", "slide", "pressure", "volume", "pan",
-    "pitch",
+    "pitch", "count depth", "count glide",
 )
 
+private val ABACUS_COUNTS = listOf("off", "up", "down", "up-down", "odd/even", "fifths", "random")
+private val ABACUS_RATES = listOf("1/32T", "1/32", "1/16T", "1/16", "1/8T", "1/8", "1/4T", "1/4", "1/2", "bar")
 private val ABACUS_PARTIALS = listOf("16", "32", "64")
 private val ABACUS_LAWS = listOf("harmonic", "string", "bar", "bell", "plate")
 private val ABACUS_SPREADS = listOf("odd/even", "scatter", "low-high")
@@ -5677,7 +5679,7 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
     var renaming by remember { mutableStateOf(0) }
     val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
     PanelSections(
-        listOf("play", "spectrum", "partials", "motion", "macros"), section, { section = it },
+        listOf("play", "spectrum", "partials", "motion", "counting", "macros"), section, { section = it },
         above = { sec ->
             // The square layout has no room for it above the knobs.
             if ((sec == 1 || sec == 2) && screenShape() != ScreenShape.Square) BeadFrame(b, Modifier.padding(bottom = 4.dp))
@@ -5700,7 +5702,7 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "pan", "pan")
                 }
             }
-            4 -> for (k in 1..8) key(k) { Group("macro $k") {
+            5 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
@@ -5761,6 +5763,19 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 Group("shimmer") {
                     PanelKnob(b, "shimmer", "amount", PanelAmber)
                     PanelKnob(b, "shrate", "rate")
+                }
+            }
+            4 -> {
+                Group("pattern") {
+                    PanelStepKnob(b, "count", ABACUS_COUNTS, "counting", PanelAmber)
+                    PanelStepKnob(b, "crate", ABACUS_RATES, "rate")
+                    PanelStepKnob(b, "csteps", (1..16).map { "$it" }, "steps")
+                }
+                Group("lit") {
+                    PanelStepKnob(b, "cfrom", (1..32).map { "$it" }, "from")
+                    PanelStepKnob(b, "cwidth", (1..8).map { "$it" }, "width")
+                    PanelKnob(b, "cdepth", "depth", PanelAmber)
+                    PanelKnob(b, "cglide", "glide", PanelPink)
                 }
             }
             else -> {

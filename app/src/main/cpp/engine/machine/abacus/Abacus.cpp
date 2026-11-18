@@ -3,6 +3,7 @@
 #include <cmath>
 #include <cstdio>
 #include <engine/dsp/Math.h>
+#include <sequencer/Swing.h>
 #include <engine/machine/Voices.h>
 
 namespace acidulous::machine {
@@ -83,6 +84,14 @@ const ParamDef kBase[Abacus::MacroBase] = {
         {"mpepressure", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
         {"volume", 0.0f, 1.0f, 0.18f, Curve::Linear, 0, ""}, // 15 dB under the top
         {"pan", -1.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        // --- count -----------------------------------------------------
+        {"count", 0.0f, 6.0f, 0.0f, Curve::Stepped, 7, ""}, // off, up, down, up-down, odd-even, fifths, random
+        {"crate", 0.0f, 9.0f, 3.0f, Curve::Stepped, 10, ""}, // 1/32T, 1/32, 1/16T, 1/16, 1/8T, 1/8, 1/4T, 1/4, 1/2, bar
+        {"csteps", 1.0f, 16.0f, 8.0f, Curve::Stepped, 16, ""},
+        {"cfrom", 1.0f, 32.0f, 4.0f, Curve::Stepped, 32, ""},
+        {"cwidth", 1.0f, 8.0f, 1.0f, Curve::Stepped, 8, ""},
+        {"cdepth", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
+        {"cglide", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
 };
 
 // The base table plus the macros' knobs and routes.
@@ -120,7 +129,7 @@ constexpr int32_t kDestParam[Abacus::MacroDestCount] = {
     Abacus::Sustain, Abacus::Release, Abacus::VelocityAmount, Abacus::VelBright, Abacus::Spread, Abacus::Shimmer,
     Abacus::ShimmerRate, Abacus::Lfo1Rate, Abacus::Lfo1Pitch, Abacus::Lfo1Morph, Abacus::Lfo2Rate, Abacus::Lfo2Bright,
     Abacus::Lfo2Pan, Abacus::Glide, Abacus::Fine, Abacus::MpeTimbre, Abacus::MpePressure, Abacus::Volume, Abacus::Pan,
-    -1,
+    -1, Abacus::CDepth, Abacus::CGlide,
 };
 
 /** The other way: each param's macro destination, or 0 for none. */
@@ -164,7 +173,96 @@ double plateRatio(int n) {
     return table[n];
 }
 
+/** The count's step lengths in ticks, fastest first; 0 is a bar. */
+constexpr int32_t kRateTicks[Abacus::kRates] = {kPPQN / 12, kPPQN / 8, kPPQN / 6, kPPQN / 4, kPPQN / 3,
+                                               kPPQN / 2,  kPPQN * 2 / 3, kPPQN, kPPQN * 2, 0};
+
+uint32_t mixHash(uint32_t x) {
+    x ^= x >> 16;
+    x *= 0x7feb352du;
+    x ^= x >> 15;
+    x *= 0x846ca68bu;
+    x ^= x >> 16;
+    return x;
+}
+
 } // namespace
+
+int Abacus::litStart(int kind, int k, int steps, int from, int count, int bar) {
+    steps = std::max(1, steps);
+    int p = 0;
+    switch (kind) {
+    case CountDown: p = steps - 1 - k; break;
+    case CountUpDown: {
+        const int half = steps / 2;
+        const int tri = k <= half ? k : steps - k;
+        p = half > 0 ? (tri * (steps - 1) + half / 2) / half : 0;
+        break;
+    }
+    case CountOddEven: p = (k & 1) ? (steps + 1) / 2 + k / 2 : k / 2; break;
+    case CountFifths: {
+        // Each step a fifth up (a ratio of 3/2), folded into two octaves from the first.
+        const double o = std::fmod(static_cast<double>(k) * 0.5849625007, 2.0);
+        return std::min(count, static_cast<int>(std::lround(from * std::exp2(o))));
+    }
+    case CountRandom:
+        p = static_cast<int>(mixHash(kSeed ^ (static_cast<uint32_t>(bar) * 0x9e3779b1u) ^
+                                     (static_cast<uint32_t>(k) * 0x85ebca6bu)) %
+                             static_cast<uint32_t>(steps));
+        break;
+    default: p = k; break;
+    }
+    return std::min(count, from + p);
+}
+
+void Abacus::countWeights(double tick, int count) {
+    const Block &b = blk;
+    const bool swung = rolling_ && songLocked && !seq::Swing::straight(swingPercent) && swingPairTicks >= 2;
+    double t = tick;
+    if (swung) {
+        // The swung tick back to straight time, the inverse of seq::Swing::at in floats.
+        const double pair = static_cast<double>(swingPairTicks);
+        const double base = std::floor(t / pair) * pair;
+        const double pos = t - base;
+        const double pct = std::clamp(static_cast<double>(swingPercent), 50.0, 75.0);
+        const double guard = pair / 20.0 + 1.0;
+        const double mid = std::clamp(pair * pct * 0.01, guard, pair - guard);
+        const double half = pair * 0.5;
+        t = base + (pos < mid ? pos * half / mid : half + (pos - mid) * (pair - half) / (pair - mid));
+    }
+    const double stepTicks = static_cast<double>(b.cRateTicks > 0 ? b.cRateTicks : barTicks);
+    const double stepsDone = std::floor(t / stepTicks);
+    const double frac = t / stepTicks - stepsDone;
+    const int64_t n = static_cast<int64_t>(stepsDone);
+    const int steps = std::max(1, b.cSteps);
+    const int width = std::max(1, b.cWidth);
+    const float floorGain = 1.0f - b.cDepth;
+    auto startOf = [&](int64_t step) {
+        const int64_t ts = static_cast<int64_t>(static_cast<double>(step) * stepTicks);
+        const int64_t bar = ts >= 0 ? ts / barTicks : -1 - (-ts - 1) / barTicks;
+        const int64_t j = b.cRateTicks > 0 ? (ts - bar * barTicks) / b.cRateTicks : 0;
+        const int64_t kk = b.countKind == CountRandom ? j : step;
+        const int k = static_cast<int>(((kk % steps) + steps) % steps);
+        const int s = litStart(b.countKind, k, steps, b.cFrom, count, static_cast<int>(bar));
+        return std::min(s, std::max(1, count - width + 1));
+    };
+    const int cur = startOf(n), prev = startOf(n - 1);
+    float a = 1.0f;
+    if (b.cGlide > 0.0f) {
+        const float x = std::min(1.0f, static_cast<float>(frac) / b.cGlide);
+        a = x * x * (3.0f - 2.0f * x);
+    }
+    for (int i = 0; i < count; ++i) {
+        const int h = i + 1;
+        if (h < b.cFrom) {
+            cw[i] = 1.0f;
+            continue;
+        }
+        const float wc = (h >= cur && h < cur + width) ? 1.0f : floorGain;
+        const float wp = (h >= prev && h < prev + width) ? 1.0f : floorGain;
+        cw[i] = wp + (wc - wp) * a;
+    }
+}
 
 Abacus::Abacus() {
     initParams();
@@ -285,6 +383,9 @@ void Abacus::reset() {
     for (float &a : accR) a = 0.0f;
     outL = outR = 0.0f;
     outSet = false;
+    freeTick = 0.0;
+    songFresh = songLocked = false;
+    for (float &w : cw) w = 1.0f;
 }
 
 int Abacus::activeVoices() const {
@@ -553,6 +654,16 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
         total *= k;
     }
 
+    // The count: each partial's share this step, applied to the targets the
+    // gains ramp to, after the totals above so a dropped spectrum doesn't
+    // retire the voice.
+    if (b.countKind != CountOff) {
+        for (int n = 0; n < b.count; ++n) {
+            tl[n] *= cw[n];
+            tr[n] *= cw[n];
+        }
+    }
+
     // Retire on what the voice can still put out: the sum of its gains is a
     // bound on its level. Two silent blocks, released or fully damped.
     float was = 0.0f;
@@ -585,6 +696,14 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
     lfoValue[0] = lfo[0].advance(steppedOf(Lfo1Wave), paramOf(Lfo1Rate) * sync1, dt * frames, 0.0f, false);
     const float sync2 = steppedOf(Lfo2Sync) != 0 ? bpm / 60.0f : 1.0f;
     lfoValue[1] = lfo[1].advance(steppedOf(Lfo2Wave), paramOf(Lfo2Rate) * sync2, dt * frames, 0.0f, false);
+
+    // The count's clock: the song's tick, or while nothing sets it, one
+    // counted from reset() at the tempo.
+    const double ticksPerFrame = static_cast<double>(bpm) * kPPQN / (60.0 * static_cast<double>(sampleRate));
+    songLocked = songFresh;
+    const double tickAt = songLocked ? songTick : freeTick;
+    songFresh = false;
+    freeTick += ticksPerFrame * frames;
 
     bool any = false;
     for (const auto &v : voices) any = any || v.used;
@@ -638,6 +757,13 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
     b.lfo2Bright = paramOf(Lfo2Bright);
     b.mpeTimbre = paramOf(MpeTimbre);
     b.mpePressure = paramOf(MpePressure);
+    b.countKind = std::clamp(steppedOf(Pattern), 0, CountKinds - 1);
+    b.cRateTicks = kRateTicks[std::clamp(steppedOf(CRate), 0, kRates - 1)];
+    b.cSteps = std::clamp(steppedOf(CSteps), 1, 16);
+    b.cFrom = std::clamp(steppedOf(CFrom), 1, 32);
+    b.cWidth = std::clamp(steppedOf(CWidth), 1, 8);
+    b.cDepth = std::clamp(paramOf(CDepth), 0.0f, 1.0f);
+    b.cGlide = std::clamp(paramOf(CGlide), 0.0f, 1.0f);
     b.ampA = paramOf(Attack);
     b.ampD = paramOf(Decay2);
     b.ampS = paramOf(Sustain);
@@ -662,6 +788,8 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
         b.morphFall = std::exp(-sec / mtime);
         b.shimmerStep = shRate * sec;
         for (int32_t i = 0; i < n * 4; ++i) accL[i] = accR[i] = 0.0f;
+        // The gains ramp to where the pattern is at the chunk's end.
+        if (b.countKind != CountOff) countWeights(tickAt + ticksPerFrame * (at + n), b.count);
         for (auto &v : voices)
             if (v.used) renderVoice(v, n);
         // Sum the lanes and ramp the output gains across the chunk.

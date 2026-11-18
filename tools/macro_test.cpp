@@ -2040,7 +2040,7 @@ void divisiRoutes() {
     }
 }
 
-// Abacus: routes to the slope, morph, damping, spread and shimmer match their knobs.
+// Abacus: routes to the slope, morph, damping, spread, shimmer and the count's depth and glide match their knobs.
 void abacusRoutes() {
     using Ab = acidulous::machine::Abacus;
     const int32_t blocks = 750; // a second
@@ -2058,6 +2058,9 @@ void abacusRoutes() {
         {"damping", "damp", Ab::McDamp, 0.5f, 0.5f, {{"decay", 2.0f}}},
         {"spread", "spread", Ab::McSpread, 0.6f, 0.6f, {}},
         {"shimmer", "shimmer", Ab::McShimmer, 0.5f, 0.5f, {}},
+        // cdepth 1 by default: -0.5 is 0.5. cglide 0.2: +0.3 is 0.5.
+        {"count depth", "cdepth", Ab::McCDepth, -0.5f, 0.5f, {{"count", 1.0f}, {"crate", 5.0f}, {"cglide", 0.0f}}},
+        {"count glide", "cglide", Ab::McCGlide, 0.3f, 0.5f, {{"count", 3.0f}, {"crate", 5.0f}}},
     };
     int n = 1;
     for (const Case &c : cases) {
