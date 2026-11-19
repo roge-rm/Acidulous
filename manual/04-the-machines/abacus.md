@@ -132,7 +132,10 @@ The patches name their macros after what they do: Bright, Hollow, Morph, Fade,
 Shimmer, Wide, Slow and Comb on the classic, string and organ patches (organ
 has Click and Vibrato in place of Fade and Slow), Vowel and Voice on the vocal
 ones, Strike, Ring, Damp and Bar on the mallets, Stretch and Swell on the
-bells. They sit at zero when a patch loads.
+bells, Depth and Glide on the count patches, Amount, Smooth, Place and Scan
+on the borrow ones, and Slide, Spread and Strum on the slide ones. A lead has
+Glide for its pitch and a bass has Release. They sit at zero when a patch
+loads, and where one changes the level it also turns the volume to make up.
 
 The **macros** page sets what each one does. A macro has four routes, a
 destination (**to**) and an amount (**by**, from -1 to 1) for each. Turning

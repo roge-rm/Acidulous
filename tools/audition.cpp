@@ -2243,11 +2243,13 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         // A slicer's demo is its loop.
         if (bank.unit == "Dice" && listenKind == "beat") listenKind = "loop";
         // Kits, drum patterns and hand drums are hits with gaps between, so
-        // their level is the loudest moment, not the gated average.
+        // their level is the loudest moment, not the gated average. Abacus's
+        // struck patches count as hits too, a bell played as a pad does not.
         oneHits = kit != nullptr || listenKind == "beat" || listenKind == "loop" || listenKind == "mallets" ||
                   listenKind == "voices" || bank.unit == "Palm" ||
-                  (bank.unit == "Abacus" && (patch.family == "mallets" || patch.family == "bells" ||
-                                     (patch.family == "slide" && (listenKind == "tune" || listenKind == "bell"))));
+                  (bank.unit == "Abacus" && (patch.family == "mallets" || (patch.family == "bells" && listenKind != "pad") ||
+                                     ((patch.family == "slide" || patch.family == "borrow") &&
+                                      (listenKind == "tune" || listenKind == "bell"))));
         if (listenKind == measureKind) {
             take = measureTake;
         } else {

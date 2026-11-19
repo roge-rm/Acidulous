@@ -142,7 +142,11 @@ Les patchs nomment leurs macros d’après ce qu’elles font : Bright, Hollow,
 Morph, Fade, Shimmer, Wide, Slow et Comb sur les patchs classiques, de cordes
 et d’orgue (l’orgue a Click et Vibrato à la place de Fade et Slow), Vowel et
 Voice sur les voix, Strike, Ring, Damp et Bar sur les lames, Stretch et Swell
-sur les cloches. Elles sont à zéro au chargement d’un patch.
+sur les cloches, Depth et Glide sur les patchs count, Amount, Smooth, Place et
+Scan sur les patchs borrow, et Slide, Spread et Strum sur les patchs slide. Un
+lead a Glide pour sa hauteur et une basse a Release. Elles sont à zéro au
+chargement d’un patch, et quand l’une change le niveau, elle tourne aussi le
+volume pour compenser.
 
 La page **macros** règle ce que fait chacune. Une macro a quatre routes, une
 destination (**vers**) et une quantité (**prof.**, de -1 à 1). Tourner le bouton
