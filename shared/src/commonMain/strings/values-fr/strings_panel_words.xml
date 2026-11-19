@@ -173,6 +173,7 @@
     <string name="pw_cello">violoncelle</string>
     <string name="pw_central">centre</string>
     <string name="pw_centre">centre</string>
+    <string name="pw_centre_out">du centre</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chambre</string>
     <string name="pw_chance">proba</string>
@@ -531,6 +532,7 @@
     <string name="pw_hi">aigu</string>
     <string name="pw_hi_tom">Tom aigu</string>
     <string name="pw_high">aigu</string>
+    <string name="pw_high_first">aigus d’abord</string>
     <string name="pw_high_cut">coupe-haut</string>
     <string name="pw_high_pass">passe-haut</string>
     <string name="pw_highdepth">prof. aigu</string>
@@ -641,6 +643,7 @@
     <string name="pw_leaves">feuilles</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
+    <string name="pw_legato_only">legato seul</string>
     <string name="pw_length">longueur</string>
     <string name="pw_let_go">au relâché</string>
     <string name="pw_level">niveau</string>
@@ -677,6 +680,7 @@
     <string name="pw_loss">perte</string>
     <string name="pw_loud">fort</string>
     <string name="pw_low">grave</string>
+    <string name="pw_low_first">graves d’abord</string>
     <string name="pw_low_bits_from_the_clock">bits bas venus du compteur</string>
     <string name="pw_low_cut">coupe-bas</string>
     <string name="pw_low_pass">passe-bas</string>
@@ -1117,6 +1121,8 @@
     <string name="pw_slices">tranches</string>
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slide">glissé</string>
+    <string name="pw_slide_spread">écart du glissé</string>
+    <string name="pw_slide_time">durée du glissé</string>
     <string name="pw_slides">glissés</string>
     <string name="pw_slit_drum">tambour à fente</string>
     <string name="pw_slope">pente</string>
@@ -1382,6 +1388,7 @@
     <string name="pw_wheel">molette</string>
     <string name="pw_wheel_organ">roue</string>
     <string name="pw_where">où</string>
+    <string name="pw_when">quand</string>
     <string name="pw_whisper">chuchoter</string>
     <string name="pw_whistle">sifflement</string>
     <string name="pw_white">blanches</string>

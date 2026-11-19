@@ -70,6 +70,28 @@ in turn), **fifths** (each step a fifth up, folded into two octaves) or
 With the song stopped it keeps counting at the tempo. **count depth** and **count glide** can be macro
 destinations.
 
+## Slide
+
+Each partial can travel to its pitch on its own time. Play a note while
+another is held, or just let go of one, and the new note's partials start at
+the old note's pitch and arrive one after another, so a chord of partials
+rolls into place instead of gliding as one.
+
+- **slide** - **time** is the longest a partial takes, up to 4 s; the bottom
+  of the knob is off. **spread** is how far apart the times are: at 0 every
+  partial takes the whole time, at 1 the first takes a tenth of it. **order**
+  is who arrives first: **low first**, **high first**, **scatter** (a new
+  order for every note, the same every time you play it) or **centre out**.
+  **when** is **always** or **legato only**, which slides only when the last
+  key is still down, or was let go of a moment ago.
+- **strum** - at the start of a note the partials come in one by one, in the
+  **order** above, over this long. 0 is off.
+
+The first note after a rest has nothing to slide from. **glide** is left out
+on a note that slides. Per-note bends, count and borrow all work while it
+slides. **slide time**, **slide spread** and **strum** can be macro
+destinations. The slide's time and order are taken when the note starts.
+
 ## Borrow
 
 The partials can take their levels from another sound as it plays: another
@@ -126,7 +148,7 @@ can't be reached. Tap a macro's name to rename it.
   **decay** down. The Fade macro does both.
 - For a struck sound turn **morph env** up with a short **time** and give
   **far end** a brighter slope.
-- The patches come in eight families: classic, organ, vocal, strings,
-  mallets, bells, count and borrow.
+- The patches come in nine families: classic, organ, vocal, strings,
+  mallets, bells, count, borrow and slide.
 - The borrow patches that read a track have no track chosen: pick one on the
   **borrow** page, a drum loop or a vocal works well.

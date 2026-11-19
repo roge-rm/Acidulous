@@ -424,6 +424,20 @@ Phrase buildPhrase(const std::string &kind, int note, int velocity, float bpm, c
         };
         for (const Step &st : kLine) p.lastOff = hit(p, st.at, st.len, note + st.step, st.vel);
         p.frames = p.lastOff + secondsToFrames(3.0f);
+    } else if (kind == "slur") {
+        // A slow line, each note with a fifth above, every one still held when the
+        // next starts, so a machine that slides between held notes does on every one.
+        struct Step { float at; float len; int step; int vel; };
+        static const Step kSlur[] = {
+            {0.0f, 2.6f,  0, 100}, {2.2f, 2.6f,  7,  96}, {4.4f, 2.6f,  3, 100}, {6.6f, 2.6f, 10,  98},
+            {8.8f, 2.6f,  5,  96}, {11.0f, 2.6f, 12, 102}, {13.2f, 2.6f,  7,  98}, {15.4f, 4.0f,  0, 100},
+        };
+        for (const Step &st : kSlur) {
+            p.lastOff = hit(p, st.at, st.len, note + st.step, st.vel);
+            // A fifth above, so the line is a pad and both voices slide.
+            p.lastOff = std::max(p.lastOff, hit(p, st.at + 0.03f, st.len, note + st.step + 7, st.vel - 10));
+        }
+        p.frames = p.lastOff + secondsToFrames(3.0f);
     } else if (kind == "piano") {
         // A piano played as one: a left hand and chords under a tune, the
         // pedal changed at each bar (up just before, down just after the
@@ -2232,7 +2246,8 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
         // their level is the loudest moment, not the gated average.
         oneHits = kit != nullptr || listenKind == "beat" || listenKind == "loop" || listenKind == "mallets" ||
                   listenKind == "voices" || bank.unit == "Palm" ||
-                  (bank.unit == "Abacus" && (patch.family == "mallets" || patch.family == "bells"));
+                  (bank.unit == "Abacus" && (patch.family == "mallets" || patch.family == "bells" ||
+                                     (patch.family == "slide" && (listenKind == "tune" || listenKind == "bell"))));
         if (listenKind == measureKind) {
             take = measureTake;
         } else {
@@ -2735,7 +2750,7 @@ void usage() {
         "  audition seed   [dump.txt]                what ships today, as bank files\n"
         "  audition emit   [out.kt]                  the banks, as the Kotlin that ships\n"
         "  audition selftest                         the pitch tracker against known tones\n\n"
-        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
+        "  --phrase note|tune|bass|acid|chord|arp|pad|lead|slur|keys|piano|bell|melt|hold|scene|jaw|harmonics\n"
         "          |chip|drone|sequence|ostinato|mallets|gospel|chorale|combo|swell|chromatic|squeeze|stage|held\n"
         "          |chug|funk|tap\n"
         "          |velocity|beat|voices\n"

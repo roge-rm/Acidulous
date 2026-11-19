@@ -61,6 +61,8 @@ class Abacus final : public Machine {
         Pattern, CRate, CSteps, CFrom, CWidth, CDepth, CGlide,
         // --- borrow: the partials' levels from another track or a file ---
         Borrow, Sidechain, BMode, BAmount, BSmooth, BFreeze, BPos, BScan,
+        // --- slide: each partial travels at its own speed; strum: they enter in turn ---
+        Slide, SOrder, SSpread, SLegato, Strum,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -81,6 +83,7 @@ class Abacus final : public Machine {
         McGlide, McFine, McMpeTimbre, McMpePressure, McVolume, McPan, McPitch,
         McCDepth, McCGlide,
         McBAmount, McBSmooth, McBPos, McBScan,
+        McSlide, McSSpread, McStrum,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
@@ -93,6 +96,13 @@ class Abacus final : public Machine {
     enum SpreadKind : int32_t { OddEven = 0, Scatter, LowHigh, SpreadCount };
     enum BorrowKind : int32_t { BorrowOff = 0, BorrowTrack, BorrowFile };
     enum BorrowMode : int32_t { BorrowEnvelope = 0, BorrowPartials };
+    enum SlideOrder : int32_t { LowFirst = 0, HighFirst, ScatterOrder, CentreOut, SlideOrders };
+    /** The slide knob's bottom is off. */
+    static constexpr float kSlideMin = 0.02f;
+    /** The slide time of a partial at [rank] (0 first to 1 last) under [slide] seconds and [spread], seconds. For tests. */
+    static float slideTime(float slide, float spread, float rank) { return slide * (1.0f - 0.9f * spread * (1.0f - rank)); }
+    /** Partial [n]'s place in the order, 0 first to 1 last; [place] is its seeded value for scatter. */
+    static float rankOf(int order, int n, int count, float place);
 
     Abacus();
     /** Deletes the mounted file's table. */
@@ -195,6 +205,15 @@ class Abacus final : public Machine {
         uint32_t ownLaw = 0;
         alignas(16) float peakLg[kPartials] = {};
         alignas(16) float vowelLg[kPartials] = {};
+        /**
+         * Slide and strum: seconds since note-on (counted only while either
+         * runs), the slide's start in octaves under the new pitch and its
+         * length, the strum's length, and each partial's 1 / slide time and
+         * strum delay.
+         */
+        float sTime = 0.0f, sFrom = 0.0f, sEnd = 0.0f, strumEnd = 0.0f;
+        alignas(16) float sInv[kPartials] = {};
+        alignas(16) float sDly[kPartials] = {};
     };
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -231,6 +250,9 @@ class Abacus final : public Machine {
     uint32_t rng = kSeed;
     /** The last note started, for glide; -1 before any. */
     float lastPitch = -1.0f;
+    /** Seconds since a note was released, and whether a key was held when the note being started came in. */
+    float offAge = 1.0f;
+    bool legatoNow = false;
 
     dsp::LfoGen lfo[2];
     float lfoValue[2] = {0.0f, 0.0f};

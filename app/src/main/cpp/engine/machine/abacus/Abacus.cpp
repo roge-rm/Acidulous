@@ -102,6 +102,12 @@ const ParamDef kBase[Abacus::MacroBase] = {
         {"bfreeze", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
         {"bpos", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
         {"bscan", -2.0f, 2.0f, 0.0f, Curve::Linear, 0, ""},
+        // --- slide and strum -------------------------------------------
+        {"slide", Abacus::kSlideMin, 4.0f, Abacus::kSlideMin, Curve::Exponential, 0, "s"}, // the bottom is off
+        {"sorder", 0.0f, 3.0f, 0.0f, Curve::Stepped, 4, ""}, // low first, high first, scatter, centre out
+        {"sspread", 0.0f, 1.0f, 0.5f, Curve::Linear, 0, ""},
+        {"slegato", 0.0f, 1.0f, 1.0f, Curve::Stepped, 2, ""}, // always, legato only
+        {"strum", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, "s"},
 };
 
 // The base table plus the macros' knobs and routes.
@@ -140,6 +146,7 @@ constexpr int32_t kDestParam[Abacus::MacroDestCount] = {
     Abacus::ShimmerRate, Abacus::Lfo1Rate, Abacus::Lfo1Pitch, Abacus::Lfo1Morph, Abacus::Lfo2Rate, Abacus::Lfo2Bright,
     Abacus::Lfo2Pan, Abacus::Glide, Abacus::Fine, Abacus::MpeTimbre, Abacus::MpePressure, Abacus::Volume, Abacus::Pan,
     -1, Abacus::CDepth, Abacus::CGlide, Abacus::BAmount, Abacus::BSmooth, Abacus::BPos, Abacus::BScan,
+    Abacus::Slide, Abacus::SSpread, Abacus::Strum,
 };
 
 /** The other way: each param's macro destination, or 0 for none. */
@@ -334,6 +341,16 @@ void Abacus::updateLaw(int law, float stretch, float damp) {
     }
 }
 
+float Abacus::rankOf(int order, int n, int count, float place) {
+    const float last = static_cast<float>(std::max(1, count - 1));
+    switch (order) {
+    case HighFirst: return 1.0f - static_cast<float>(n) / last;
+    case ScatterOrder: return static_cast<float>(mixHash(static_cast<uint32_t>(std::lround((place + 1.0f) * 8388608.0f))) >> 8) * (1.0f / 16777216.0f);
+    case CentreOut: return std::fabs(static_cast<float>(n) - 0.5f * last) / (0.5f * last);
+    default: return static_cast<float>(n) / last;
+    }
+}
+
 float Abacus::val(int32_t p, bool goal) const {
     const float v = goal ? params_.target(p) : params_.get(p);
     const int d = p < MacroBase ? kDestOf.of[p] : 0;
@@ -397,6 +414,8 @@ void Abacus::reset() {
     for (float &a : accR) a = 0.0f;
     outL = outR = 0.0f;
     outSet = false;
+    offAge = 1.0f;
+    legatoNow = false;
     freeTick = 0.0;
     songFresh = songLocked = false;
     for (float &w : cw) w = 1.0f;
@@ -446,7 +465,13 @@ void Abacus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
     }
     const float glide = goalOf(Glide);
     const float target = static_cast<float>(note);
-    const bool gliding = glide > 0.001f && lastPitch >= 0.0f;
+    // Slide takes over from glide on a note it moves; the partials leave the last note's pitch.
+    const float prevPitch = lastPitch;
+    const float slideT = goalOf(Slide);
+    const float strumT = goalOf(Strum);
+    const bool sliding = slideT > kSlideMin * 1.01f && lastPitch >= 0.0f && lastPitch != target &&
+                         (steppedTargetOf(SLegato) == 0 || legatoNow);
+    const bool gliding = glide > 0.001f && lastPitch >= 0.0f && !sliding;
     v.glideFrom = gliding ? lastPitch : target;
     v.glidePos = gliding ? 0.0f : 1.0f;
     v.pitch = v.glideFrom;
@@ -476,6 +501,22 @@ void Abacus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         v.shP0[n] = nextRand(v.rng) * 2.0f - 1.0f;
         v.shP1[n] = nextRand(v.rng) * 2.0f - 1.0f;
     }
+    v.sTime = v.sFrom = v.sEnd = v.strumEnd = 0.0f;
+    if (sliding || strumT > 0.0f) {
+        const int order = std::clamp(steppedTargetOf(SOrder), 0, SlideOrders - 1);
+        const int count = 16 << std::clamp(steppedTargetOf(Partials), 0, 2);
+        const float spreadK = std::clamp(goalOf(SSpread), 0.0f, 1.0f);
+        if (sliding) {
+            v.sFrom = std::log2(noteHz(prevPitch) / noteHz(target));
+            v.sEnd = slideT;
+        }
+        v.strumEnd = strumT;
+        for (int n = 0; n < kPartials; ++n) {
+            const float r = rankOf(order, n, count, v.place[n]);
+            v.sInv[n] = sliding ? 1.0f / std::max(1e-4f, slideTime(slideT, spreadK, r)) : 0.0f;
+            v.sDly[n] = strumT * r;
+        }
+    }
     v.panFor = -1.0f;
     v.scan = 0.0f;
     v.borSet = false;
@@ -485,6 +526,9 @@ void Abacus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
 }
 
 void Abacus::noteOn(uint8_t note, uint8_t velocity) {
+    // Legato: a key is still down, or one came up a moment ago.
+    legatoNow = offAge < 0.02f;
+    for (const auto &o : voices) legatoNow = legatoNow || (o.used && o.gate);
     Voice *v = allocate();
     if (v == nullptr) return;
     startVoice(*v, note, velocity);
@@ -495,6 +539,7 @@ void Abacus::noteOff(uint8_t note) {
         if (v.used && v.gate && v.note == note) {
             v.gate = false;
             v.amp.release();
+            offAge = 0.0f;
         }
     }
 }
@@ -504,6 +549,7 @@ void Abacus::allNotesOff() {
         if (!v.used) continue;
         v.gate = false;
         v.amp.release();
+        offAge = 0.0f;
     }
 }
 
@@ -721,6 +767,13 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
     const bool borrowing = b.borrow != BorrowOff;
     if (borrowing) borrowFor(v, log2f0, sec);
 
+    // Slide and strum run on the time since note-on, only while either has
+    // time left.
+    const bool timed = v.sTime < std::max(v.sEnd, v.strumEnd);
+    const bool sliding = timed && v.sTime < v.sEnd;
+    const bool strumming = timed && v.sTime < v.strumEnd;
+    if (timed) v.sTime += sec;
+
     // Every partial's target gain and rotation, four at a time with no
     // branches: masks zero what is silent, over the cutoff or past the count.
     using abacus::F4;
@@ -741,6 +794,7 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
     // Index 0 is the first partial, odd; the lanes go odd, even, odd, even.
     const F4 parity = {oddMul, evenMul, oddMul, evenMul};
     const F4 vBase = splat(base);
+    const F4 vSlideFrom = splat(v.sFrom), vSlideT = splat(v.sTime);
     const F4 vAmount = splat(b.bAmount);
     const bool mixing = borrowing && b.bAmount > 0.0f, whole = b.bAmount >= 1.0f;
     auto logOf = [](float x) { return x == 1.0f ? 0.0f : (x > 7.8886e-31f ? std::log2(x) : -100.0f); };
@@ -761,6 +815,12 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
             const F4 l0 = load4(v.shL0 + n), p0 = load4(v.shP0 + n);
             lg += vshL * (l0 + (load4(v.shL1 + n) - l0) * sm);
             hz *= splat(1.0f) + vshP * (p0 + (load4(v.shP1 + n) - p0) * sm);
+        }
+        if (sliding) {
+            // Each partial's offset under its pitch eases to 0 over its own time, in log frequency.
+            F4 p = vSlideT * load4(v.sInv + n);
+            p = pick(p > splat(1.0f), splat(1.0f), p);
+            hz *= abacus::exp2v(vSlideFrom * (splat(1.0f) - p * p * (splat(3.0f) - splat(2.0f) * p)));
         }
         const F4 lf = vlog2f0 + l2;
         if (peakLog2Gain > 0.0f && !mixing) {
@@ -833,6 +893,18 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
         }
     }
 
+    // The strum: a partial fades in over 25 ms, on a smooth curve, once its delay has passed.
+    if (strumming) {
+        const F4 vT = splat(v.sTime), vInv = splat(1.0f / 0.025f), one = splat(1.0f);
+        for (int n = 0; n < b.count; n += 4) {
+            F4 e = (vT - load4(v.sDly + n)) * vInv;
+            e = pick(e < zero, zero, pick(e > one, one, e));
+            e = e * e * (splat(3.0f) - splat(2.0f) * e);
+            store4(tl + n, load4(tl + n) * e);
+            store4(tr + n, load4(tr + n) * e);
+        }
+    }
+
     // Retire on what the voice can still put out: the sum of its gains is a
     // bound on its level. Two silent blocks, released or fully damped.
     float was = 0.0f;
@@ -859,6 +931,7 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
     params_.tick();
     updateMacros();
     const float dt = 1.0f / sampleRate;
+    offAge = std::min(offAge + dt * static_cast<float>(frames), 1.0f);
 
     // The LFOs belong to the machine and turn whether or not anything sounds.
     const float sync1 = steppedOf(Lfo1Sync) != 0 ? bpm / 60.0f : 1.0f;

@@ -257,6 +257,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**pattern** - **counting**, **rate** (1/32T to a bar; it follows the track's swing) and **steps**, how many steps before the pattern starts over."),
         ManualBlock(ManualKind.Bullet, "**lit** - **from** is the lowest partial the pattern plays on. The ones under it always sound, so the note keeps its pitch. **width** is how many partials are lit on a step. **depth** is how far the others drop, 0 is no change and 1 is silent. **glide** is how much of a step is spent fading from the last step's partials."),
         ManualBlock(ManualKind.Para, "With the song stopped it keeps counting at the tempo. **count depth** and **count glide** can be macro destinations."),
+        ManualBlock(ManualKind.Heading, "Slide"),
+        ManualBlock(ManualKind.Para, "Each partial can travel to its pitch on its own time. Play a note while another is held, or just let go of one, and the new note's partials start at the old note's pitch and arrive one after another, so a chord of partials rolls into place instead of gliding as one."),
+        ManualBlock(ManualKind.Bullet, "**slide** - **time** is the longest a partial takes, up to 4 s; the bottom of the knob is off. **spread** is how far apart the times are: at 0 every partial takes the whole time, at 1 the first takes a tenth of it. **order** is who arrives first: **low first**, **high first**, **scatter** (a new order for every note, the same every time you play it) or **centre out**. **when** is **always** or **legato only**, which slides only when the last key is still down, or was let go of a moment ago."),
+        ManualBlock(ManualKind.Bullet, "**strum** - at the start of a note the partials come in one by one, in the **order** above, over this long. 0 is off."),
+        ManualBlock(ManualKind.Para, "The first note after a rest has nothing to slide from. **glide** is left out on a note that slides. Per-note bends, count and borrow all work while it slides. **slide time**, **slide spread** and **strum** can be macro destinations. The slide's time and order are taken when the note starts."),
         ManualBlock(ManualKind.Heading, "Borrow"),
         ManualBlock(ManualKind.Para, "The partials can take their levels from another sound as it plays: another track, or a file. Your notes keep their pitch and the other sound gives them its colour and its loudness, so a pad can talk with a vocal or breathe with a drum track."),
         ManualBlock(ManualKind.Bullet, "**borrow** - **from** is **off**, **track** or **file**. **read** is how the sound is read. **envelope** takes its overall colour, its formants and its brightness, and lays it over your partials by frequency. **partials** follows its pitch and takes its harmonics by number, its 3rd onto your 3rd, which needs a sound with one clear pitch. **amount** blends from the partials' own levels to the borrowed ones."),
@@ -272,7 +277,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "A patch that holds has no decay, so **damp** does nothing until you bring **decay** down. The Fade macro does both."),
         ManualBlock(ManualKind.Bullet, "For a struck sound turn **morph env** up with a short **time** and give **far end** a brighter slope."),
-        ManualBlock(ManualKind.Bullet, "The patches come in eight families: classic, organ, vocal, strings, mallets, bells, count and borrow."),
+        ManualBlock(ManualKind.Bullet, "The patches come in nine families: classic, organ, vocal, strings, mallets, bells, count, borrow and slide."),
         ManualBlock(ManualKind.Bullet, "The borrow patches that read a track have no track chosen: pick one on the **borrow** page, a drum loop or a vocal works well."),
     ))
 
@@ -2792,6 +2797,11 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**motif** : **comptage**, **vitesse** (de 1/32T à une mesure ; elle suit le swing de la piste) et **pas**, le nombre de pas avant que le motif reparte."),
         ManualBlock(ManualKind.Bullet, "**allumés** : **de** est le plus bas partiel que joue le motif. Ceux du dessous sonnent toujours, donc la note garde sa hauteur. **largeur** est le nombre de partiels allumés à chaque pas. **prof.** est de combien les autres baissent, 0 ne change rien et 1 les rend muets. **porta.** est la part du pas passée à fondre depuis les partiels du pas précédent."),
         ManualBlock(ManualKind.Para, "Morceau arrêté, il continue de compter au tempo. **prof. du compte** et **porta. du compte** peuvent être des destinations de macro."),
+        ManualBlock(ManualKind.Heading, "Glissé"),
+        ManualBlock(ManualKind.Para, "Chaque partiel peut rejoindre sa hauteur à son propre rythme. Jouez une note pendant qu’une autre est tenue, ou relâchez-en une, et les partiels de la nouvelle note partent de la hauteur de l’ancienne et arrivent l’un après l’autre : ils se mettent en place en roulant, au lieu de glisser d’un bloc."),
+        ManualBlock(ManualKind.Bullet, "**glissé** - **durée** est le temps du plus lent, jusqu’à 4 s ; le bas du bouton est à zéro. **écart** est la distance entre les temps : à 0 tous prennent toute la durée, à 1 le premier en prend un dixième. **ordre** dit qui arrive d’abord : **graves d’abord**, **aigus d’abord**, **épars** (un nouvel ordre à chaque note, le même à chaque lecture) ou **du centre**. **quand** est **toujours** ou **legato seul**, qui ne glisse que si la touche précédente est encore enfoncée, ou vient d’être relâchée."),
+        ManualBlock(ManualKind.Bullet, "**gratter** - au début d’une note les partiels entrent un par un, dans l’ **ordre** ci-dessus, pendant ce temps. 0 : sans effet."),
+        ManualBlock(ManualKind.Para, "La première note après un silence n’a rien d’où glisser. Le **porta.** est laissé de côté sur une note qui glisse. Les bends par note, le comptage et l’emprunt fonctionnent pendant le glissé. **durée du glissé**, **écart du glissé** et **gratter** peuvent être des destinations de macro. La durée et l’ordre sont pris au début de la note."),
         ManualBlock(ManualKind.Heading, "Emprunt"),
         ManualBlock(ManualKind.Para, "Les partiels peuvent prendre leurs niveaux à un autre son pendant qu’il joue : une autre piste, ou un fichier. Vos notes gardent leur hauteur et l’autre son leur donne sa couleur et son volume, donc une nappe peut parler avec une voix ou respirer avec une piste de batterie."),
         ManualBlock(ManualKind.Bullet, "**emprunt** : **de** vaut **non**, **piste** ou **fichier**. **lecture** est la façon de lire le son. **enveloppe** prend sa couleur d’ensemble, ses formants et sa brillance, et la pose sur vos partiels par fréquence. **partiels** suit sa hauteur et prend ses harmoniques par numéro, son 3e sur votre 3e, ce qui demande un son à une seule hauteur claire. **intensité** passe des niveaux propres des partiels aux niveaux empruntés."),
@@ -2807,7 +2817,7 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Conseils"),
         ManualBlock(ManualKind.Bullet, "Un patch qui tient n’a pas de chute, donc **amorti** ne fait rien tant que vous ne baissez pas **chute**. La macro Fade fait les deux."),
         ManualBlock(ManualKind.Bullet, "Pour un son frappé, montez **enveloppe morph** avec un **temps** court et donnez au **bout lointain** une pente plus brillante."),
-        ManualBlock(ManualKind.Bullet, "Les patchs forment huit familles : classic, organ, vocal, strings, mallets, bells, count et borrow."),
+        ManualBlock(ManualKind.Bullet, "Les patchs forment neuf familles : classic, organ, vocal, strings, mallets, bells, count, borrow et slide."),
         ManualBlock(ManualKind.Bullet, "Les patchs borrow qui lisent une piste n’ont pas de piste choisie : choisissez en une sur la page **emprunt**, une boucle de batterie ou une voix marche bien."),
     ))
 

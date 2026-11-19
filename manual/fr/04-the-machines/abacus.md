@@ -78,6 +78,28 @@ même à chaque lecture).
 Morceau arrêté, il continue de compter au tempo. **prof. du compte** et
 **porta. du compte** peuvent être des destinations de macro.
 
+## Glissé
+
+Chaque partiel peut rejoindre sa hauteur à son propre rythme. Jouez une note
+pendant qu’une autre est tenue, ou relâchez-en une, et les partiels de la
+nouvelle note partent de la hauteur de l’ancienne et arrivent l’un après
+l’autre : ils se mettent en place en roulant, au lieu de glisser d’un bloc.
+
+- **glissé** - **durée** est le temps du plus lent, jusqu’à 4 s ; le bas du
+  bouton est à zéro. **écart** est la distance entre les temps : à 0 tous
+  prennent toute la durée, à 1 le premier en prend un dixième. **ordre** dit
+  qui arrive d’abord : **graves d’abord**, **aigus d’abord**, **épars** (un
+  nouvel ordre à chaque note, le même à chaque lecture) ou **du centre**.
+  **quand** est **toujours** ou **legato seul**, qui ne glisse que si la
+  touche précédente est encore enfoncée, ou vient d’être relâchée.
+- **gratter** - au début d’une note les partiels entrent un par un, dans l’
+  **ordre** ci-dessus, pendant ce temps. 0 : sans effet.
+
+La première note après un silence n’a rien d’où glisser. Le **porta.** est
+laissé de côté sur une note qui glisse. Les bends par note, le comptage et
+l’emprunt fonctionnent pendant le glissé. **durée du glissé**, **écart du
+glissé** et **gratter** peuvent être des destinations de macro. La durée et l’ordre sont pris au début de la note.
+
 ## Emprunt
 
 Les partiels peuvent prendre leurs niveaux à un autre son pendant qu’il joue :
@@ -136,7 +158,7 @@ départ et la largeur du comptage, ne sont pas accessibles. Touchez le nom d’u
   vous ne baissez pas **chute**. La macro Fade fait les deux.
 - Pour un son frappé, montez **enveloppe morph** avec un **temps** court et
   donnez au **bout lointain** une pente plus brillante.
-- Les patchs forment huit familles : classic, organ, vocal, strings, mallets,
-  bells, count et borrow.
+- Les patchs forment neuf familles : classic, organ, vocal, strings, mallets,
+  bells, count, borrow et slide.
 - Les patchs borrow qui lisent une piste n’ont pas de piste choisie : choisissez
   en une sur la page **emprunt**, une boucle de batterie ou une voix marche bien.

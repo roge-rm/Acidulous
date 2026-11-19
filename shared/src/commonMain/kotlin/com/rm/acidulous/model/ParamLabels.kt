@@ -145,10 +145,15 @@ private fun labels0(): Map<String, String> = mapOf(
     "Abacus:shimmer" to "shimmer|amount",
     "Abacus:shrate" to "shimmer|rate",
     "Abacus:sidechain" to "track",
+    "Abacus:slegato" to "slide|when",
+    "Abacus:slide" to "slide|time",
     "Abacus:slope" to "spectrum|slope",
+    "Abacus:sorder" to "slide|order",
     "Abacus:spread" to "spread|width",
     "Abacus:spreadmode" to "spread|mode",
+    "Abacus:sspread" to "slide|spread",
     "Abacus:stretch" to "law|stretch",
+    "Abacus:strum" to "strum",
     "Abacus:sustain" to "amp|S",
     "Abacus:transpose" to "tune|semis",
     "Abacus:velbright" to "voice|vel bright",
@@ -814,14 +819,14 @@ private fun labels0(): Map<String, String> = mapOf(
     "Dice:mac2_a2" to "macro 2|by 2",
     "Dice:mac2_a3" to "macro 2|by 3",
     "Dice:mac2_a4" to "macro 2|by 4",
+)
+
+private fun labels1(): Map<String, String> = mapOf(
     "Dice:mac2_d1" to "macro 2|to 1",
     "Dice:mac2_d2" to "macro 2|to 2",
     "Dice:mac2_d3" to "macro 2|to 3",
     "Dice:mac2_d4" to "macro 2|to 4",
     "Dice:mac3" to "macros|macro 3",
-)
-
-private fun labels1(): Map<String, String> = mapOf(
     "Dice:mac3_a1" to "macro 3|by 1",
     "Dice:mac3_a2" to "macro 3|by 2",
     "Dice:mac3_a3" to "macro 3|by 3",
@@ -1617,14 +1622,14 @@ private fun labels1(): Map<String, String> = mapOf(
     "Forage:mac6_a3" to "macro 6|by 3",
     "Forage:mac6_a4" to "macro 6|by 4",
     "Forage:mac6_d1" to "macro 6|to 1",
+)
+
+private fun labels2(): Map<String, String> = mapOf(
     "Forage:mac6_d2" to "macro 6|to 2",
     "Forage:mac6_d3" to "macro 6|to 3",
     "Forage:mac6_d4" to "macro 6|to 4",
     "Forage:mac7" to "macros|macro 7",
     "Forage:mac7_a1" to "macro 7|by 1",
-)
-
-private fun labels2(): Map<String, String> = mapOf(
     "Forage:mac7_a2" to "macro 7|by 2",
     "Forage:mac7_a3" to "macro 7|by 3",
     "Forage:mac7_a4" to "macro 7|by 4",
@@ -2420,14 +2425,14 @@ private fun labels2(): Map<String, String> = mapOf(
     "Manual:buzz" to "reeds|buzz",
     "Manual:chiff" to "pipes|chiff",
     "Manual:click" to "click|on",
+)
+
+private fun labels3(): Map<String, String> = mapOf(
     "Manual:clickoff" to "click|off",
     "Manual:comboatk" to "combo|attack",
     "Manual:combowave" to "combo|wave",
     "Manual:contacts" to "click|spread",
     "Manual:drive" to "amp|drive",
-)
-
-private fun labels3(): Map<String, String> = mapOf(
     "Manual:drumfast" to "drum|fast",
     "Manual:drumslow" to "drum|slow",
     "Manual:eg1atk" to "eg 1|attack",
@@ -3223,14 +3228,14 @@ private fun labels3(): Map<String, String> = mapOf(
     "Ratio:mac3_a3" to "macro 3|by 3",
     "Ratio:mac3_a4" to "macro 3|by 4",
     "Ratio:mac3_d1" to "macro 3|to 1",
+)
+
+private fun labels4(): Map<String, String> = mapOf(
     "Ratio:mac3_d2" to "macro 3|to 2",
     "Ratio:mac3_d3" to "macro 3|to 3",
     "Ratio:mac3_d4" to "macro 3|to 4",
     "Ratio:mac4" to "play|macro 4",
     "Ratio:mac4_a1" to "macro 4|by 1",
-)
-
-private fun labels4(): Map<String, String> = mapOf(
     "Ratio:mac4_a2" to "macro 4|by 2",
     "Ratio:mac4_a3" to "macro 4|by 3",
     "Ratio:mac4_a4" to "macro 4|by 4",
@@ -4026,14 +4031,14 @@ private fun labels4(): Map<String, String> = mapOf(
     "Tongue:mac6_a1" to "macro 6|by 1",
     "Tongue:mac6_a2" to "macro 6|by 2",
     "Tongue:mac6_a3" to "macro 6|by 3",
+)
+
+private fun labels5(): Map<String, String> = mapOf(
     "Tongue:mac6_a4" to "macro 6|by 4",
     "Tongue:mac6_d1" to "macro 6|to 1",
     "Tongue:mac6_d2" to "macro 6|to 2",
     "Tongue:mac6_d3" to "macro 6|to 3",
     "Tongue:mac6_d4" to "macro 6|to 4",
-)
-
-private fun labels5(): Map<String, String> = mapOf(
     "Tongue:mac7" to "macros|macro 7",
     "Tongue:mac7_a1" to "macro 7|by 1",
     "Tongue:mac7_a2" to "macro 7|by 2",
@@ -4421,9 +4426,13 @@ private fun short0(): Map<String, String> = mapOf(
     "Abacus:release" to "R",
     "Abacus:shimmer" to "amount",
     "Abacus:shrate" to "rate",
+    "Abacus:slegato" to "when",
+    "Abacus:slide" to "time",
     "Abacus:slope" to "slope",
+    "Abacus:sorder" to "order",
     "Abacus:spread" to "width",
     "Abacus:spreadmode" to "mode",
+    "Abacus:sspread" to "spread",
     "Abacus:stretch" to "stretch",
     "Abacus:sustain" to "S",
     "Abacus:transpose" to "semis",
@@ -5093,13 +5102,13 @@ private fun short0(): Map<String, String> = mapOf(
     "Dice:mac3_d1" to "to 1",
     "Dice:mac3_d2" to "to 2",
     "Dice:mac3_d3" to "to 3",
+)
+
+private fun short1(): Map<String, String> = mapOf(
     "Dice:mac3_d4" to "to 4",
     "Dice:mac4" to "macro 4",
     "Dice:mac4_a1" to "by 1",
     "Dice:mac4_a2" to "by 2",
-)
-
-private fun short1(): Map<String, String> = mapOf(
     "Dice:mac4_a3" to "by 3",
     "Dice:mac4_a4" to "by 4",
     "Dice:mac4_d1" to "to 1",
@@ -5896,13 +5905,13 @@ private fun short1(): Map<String, String> = mapOf(
     "Forage:p01_cutoff" to "cutoff",
     "Forage:p01_decay" to "decay",
     "Forage:p01_end" to "end",
+)
+
+private fun short2(): Map<String, String> = mapOf(
     "Forage:p01_level" to "level",
     "Forage:p01_mode" to "mode",
     "Forage:p01_pan" to "pan",
     "Forage:p01_pdecay" to "decay",
-)
-
-private fun short2(): Map<String, String> = mapOf(
     "Forage:p01_penv" to "pitch env",
     "Forage:p01_pitch" to "pitch",
     "Forage:p01_play" to "play",
@@ -6699,13 +6708,13 @@ private fun short2(): Map<String, String> = mapOf(
     "Manual:m4_dst" to "to",
     "Manual:m4_src" to "from",
     "Manual:m5_amt" to "amount",
+)
+
+private fun short3(): Map<String, String> = mapOf(
     "Manual:m5_dst" to "to",
     "Manual:m5_src" to "from",
     "Manual:m6_amt" to "amount",
     "Manual:m6_dst" to "to",
-)
-
-private fun short3(): Map<String, String> = mapOf(
     "Manual:m6_src" to "from",
     "Manual:m7_amt" to "amount",
     "Manual:m7_dst" to "to",
@@ -7502,13 +7511,13 @@ private fun short3(): Map<String, String> = mapOf(
     "Ratio:mpetimbre" to "slide",
     "Ratio:o1_attack" to "attack",
     "Ratio:o1_decay" to "decay",
+)
+
+private fun short4(): Map<String, String> = mapOf(
     "Ratio:o1_fb" to "fb",
     "Ratio:o1_fine" to "fine",
     "Ratio:o1_fixed" to "pitch",
     "Ratio:o1_key" to "key",
-)
-
-private fun short4(): Map<String, String> = mapOf(
     "Ratio:o1_level" to "level",
     "Ratio:o1_mode" to "mode",
     "Ratio:o1_pan" to "pan",
@@ -8305,13 +8314,13 @@ private fun short4(): Map<String, String> = mapOf(
     "Trinity:f2_env" to "envmod",
     "Trinity:f2_freq" to "freq",
     "Trinity:f2_key" to "key",
+)
+
+private fun short5(): Map<String, String> = mapOf(
     "Trinity:f2_res" to "reso",
     "Trinity:f2_type" to "type",
     "Trinity:fm21" to "2→1",
     "Trinity:fm32" to "3→2",
-)
-
-private fun short5(): Map<String, String> = mapOf(
     "Trinity:glide" to "glide",
     "Trinity:glidemode" to "glide on",
     "Trinity:l1_delay" to "delay",

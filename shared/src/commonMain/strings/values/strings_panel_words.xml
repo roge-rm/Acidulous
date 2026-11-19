@@ -226,6 +226,7 @@
     <string name="pw_cello">cello</string>
     <string name="pw_central">central</string>
     <string name="pw_centre">centre</string>
+    <string name="pw_centre_out">centre out</string>
     <string name="pw_ch">ch</string>
     <string name="pw_chamber">chamber</string>
     <string name="pw_chance">chance</string>
@@ -643,6 +644,7 @@
     <string name="pw_hi_tom">Hi Tom</string>
     <string name="pw_high">high</string>
     <string name="pw_high_cut">high cut</string>
+    <string name="pw_high_first">high first</string>
     <string name="pw_high_pass">high pass</string>
     <string name="pw_highcut">highcut</string>
     <string name="pw_highdepth">highdepth</string>
@@ -768,6 +770,7 @@
     <string name="pw_left_hand">left hand</string>
     <string name="pw_leg">leg</string>
     <string name="pw_legato">legato</string>
+    <string name="pw_legato_only">legato only</string>
     <string name="pw_length">length</string>
     <string name="pw_let_go">let go</string>
     <string name="pw_level">level</string>
@@ -819,6 +822,7 @@
     <string name="pw_low">low</string>
     <string name="pw_low_bits_from_the_clock">low bits from the clock</string>
     <string name="pw_low_cut">low cut</string>
+    <string name="pw_low_first">low first</string>
     <string name="pw_low_pass">low pass</string>
     <string name="pw_low_tom">Low Tom</string>
     <string name="pw_low_high">low-high</string>
@@ -1330,6 +1334,8 @@
     <string name="pw_slicer">Slicer</string>
     <string name="pw_slices">slices</string>
     <string name="pw_slide">slide</string>
+    <string name="pw_slide_spread">slide spread</string>
+    <string name="pw_slide_time">slide time</string>
     <string name="pw_slides">slides</string>
     <string name="pw_slit_drum">slit drum</string>
     <string name="pw_slope">slope</string>
@@ -1664,6 +1670,7 @@
     <string name="pw_what_changes">what changes</string>
     <string name="pw_wheel">wheel</string>
     <string name="pw_wheel_organ">wheel</string>
+    <string name="pw_when">when</string>
     <string name="pw_where">where</string>
     <string name="pw_whisper">whisper</string>
     <string name="pw_whistle">whistle</string>

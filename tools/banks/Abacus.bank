@@ -9,12 +9,14 @@
 # `shimmer` drifts each partial's level and pitch on its own, `spread` places
 # them across the stage.
 #
-# 37 patches in eight families, plainest first: classic (saw, square, pulse and
+# 43 patches in nine families, plainest first: classic (saw, square, pulse and
 # triangle), organ (a few drawbar sets, pipes and reeds), vocal (vowels),
 # strings (slow, wide, stiff), mallets (bars), bells (bell and plate laws),
 # count (the partials playing in rhythm, one patch a pattern) and borrow (the
-# partials' levels from another track or a file). Classic, organ, vocal,
-# strings, count and borrow play `pad`, mallets `tune` and bells `bell`.
+# partials' levels from another track or a file) and slide (each partial
+# arriving at the next note on its own time). Classic, organ, vocal, strings,
+# count and borrow play `pad`, mallets `tune` and bells `bell`; the slide
+# patches play `slur`, a line of overlapping notes, or `tune` and `bell`.
 #
 # Borrow: `borrow` 0 to 2 for off, track, file; `sidechain` the track (left
 # at 0 here, the player picks it; the harness puts the patch's `input=` on
@@ -22,6 +24,12 @@
 # `bsmooth` how fast the borrowed levels follow; `bfreeze` holds them; `bpos`
 # and `bscan` where in the file and how fast it moves. The file patches name
 # our sung line, `factory:voice` (files/borrow-voice.wav).
+#
+# Slide: `slide` 0.02 to 4 s is the longest a partial takes to reach the new
+# note (the bottom is off); `sorder` 0 to 3 for low first, high first,
+# scatter, centre out; `sspread` how far apart the times are; `slegato` 0
+# always, 1 legato only (a key still held or just let go); `strum` 0 to 1 s
+# is how long the partials take to come in at a note's start.
 #
 # Values are in each parameter's own units; `audition params Abacus` lists
 # them. Every patch but Init names every parameter. `partials` is 0, 1 or 2
@@ -32,7 +40,7 @@
 # sine, tri, saw up, saw down, square, s&h, smooth, 8 step, 16 step.
 #
 # Levels: pads and strings sit at -27.5 on `loud`, within 1 dB, Init included.
-# Mallets and bells sit at -25.8 on the loudest 400 ms (the rows ending in
+# The slide pads are on the `slur` line. Mallets and bells sit at -25.8 on the loudest 400 ms (the rows ending in
 # `m`). Init gets there through the machine's house trim, with `volume` at its
 # default of 0.18, 15 dB under the top. The patches are levelled by `volume`,
 # never higher than 6 dB under the top.
@@ -46,7 +54,7 @@
 # #30 lfo1morph, #31 lfo2rate, #32 lfo2bright, #33 lfo2pan, #34 glide, #35
 # fine, #36 mpetimbre, #37 mpepressure, #38 volume, #39 pan, #40 pitch (24
 # semitones a unit), #41 cdepth, #42 cglide, #43 bamount, #44 bsmooth, #45
-# bpos, #46 bscan.
+# bpos, #46 bscan, #47 slide, #48 sspread, #49 strum.
 #
 # Each family has its own eight. Classic and strings: Bright, Hollow, Morph,
 # Fade, Shimmer, Wide, Slow and Comb (strings end on Stiff). Organ swaps Fade
@@ -54,7 +62,9 @@
 # Shimmer, Wide, Slow and Peak. Mallets have Bright, Strike, Morph, Ring,
 # Damp, Wide, Shimmer and Bar. Bells have Bright, Morph, Ring, Damp, Stretch,
 # Shimmer, Wide and Swell. Borrow has Amount, Smooth, then Hold, Peak, Vowel or
-# (from a file) Place and Scan, Bright, Morph, Shimmer, Wide and Slow. Fade and Damp need a patch whose partials decay;
+# (from a file) Place and Scan, Bright, Morph, Shimmer, Wide and Slow. Slide has Bright, Slide, Spread, Strum, then Morph
+# (Vowel on one), Shimmer, Wide and Slow; the two struck ones end Morph, Ring,
+# Wide and Damp. Fade and Damp need a patch whose partials decay;
 # on a held one Fade shortens the note's partials as well.
 
 machine Abacus
@@ -166,6 +176,11 @@ patch "Saw Stack" family=classic note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Square Reed" family=classic note=60 range=36..84
   # Odd partials only with a peak at 2 kHz. Morph rounds it off.
@@ -268,6 +283,11 @@ patch "Square Reed" family=classic note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Quarter Pulse" family=classic note=60 range=36..84
   # Every fourth partial taken out. The slow LFO opens the comb to a saw and back.
@@ -368,6 +388,11 @@ patch "Quarter Pulse" family=classic note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Soft Triangle" family=classic note=60 range=36..84
   # Odd partials falling at 12 dB an octave. Harder keys open it up.
@@ -470,6 +495,11 @@ patch "Soft Triangle" family=classic note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 
 # --- organ -----------------------------------------------------------------
@@ -571,6 +601,11 @@ patch "Full Drawbars" family=organ note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Jazz Tones" family=organ note=60 range=36..84
   # Mostly under 600 Hz, the low partials forward.
@@ -669,6 +704,11 @@ patch "Jazz Tones" family=organ note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Church Pipes" family=organ note=60 range=36..84
   # A pipe rank with a touch of an o in it, a slow wind-up and a long hall.
@@ -767,6 +807,11 @@ patch "Church Pipes" family=organ note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -874,6 +919,11 @@ patch "Reed Organ" family=organ note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 
 # --- vocal -----------------------------------------------------------------
@@ -979,6 +1029,11 @@ patch "Choir Ah" family=vocal note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -1088,6 +1143,11 @@ patch "Choir Oo" family=vocal note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -1193,6 +1253,11 @@ patch "Bright Ee" family=vocal note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Sweep Voice" family=vocal note=60 range=36..84
   # A vowel peak that starts high and falls to 500 Hz over a second and a half at every note.
@@ -1295,6 +1360,11 @@ patch "Sweep Voice" family=vocal note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 
 # --- strings ---------------------------------------------------------------
@@ -1400,6 +1470,11 @@ patch "Slow Bow" family=strings note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -1509,6 +1584,11 @@ patch "Warm Section" family=strings note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -1618,6 +1698,11 @@ patch "Stiff Strings" family=strings note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #1
     size         0.6
@@ -1729,6 +1814,11 @@ patch "Glass Bow" family=strings note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #1
     size         0.6
@@ -1835,6 +1925,11 @@ patch "Wood Bars" family=mallets note=60 range=48..96 role=tune
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Vibe Bars" family=mallets note=60 range=48..96 role=tune
   # Long ringing metal bars with a motor that opens and closes the top.
@@ -1933,6 +2028,11 @@ patch "Vibe Bars" family=mallets note=60 range=48..96 role=tune
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #1
     size         0.6
@@ -2036,6 +2136,11 @@ patch "Glock Bars" family=mallets note=72 range=60..96 role=tune
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Slab Bars" family=mallets note=48 range=36..72 role=tune
   # Big low slabs: dull, hollow and gone in a second.
@@ -2128,6 +2233,11 @@ patch "Slab Bars" family=mallets note=48 range=36..72 role=tune
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 
 # --- bells -----------------------------------------------------------------
@@ -2227,6 +2337,11 @@ patch "Church Bell" family=bells note=60 range=48..84 role=bell
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -2328,6 +2443,11 @@ patch "Hand Bell" family=bells note=72 range=60..96 role=bell
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #1
     size         0.6
@@ -2431,6 +2551,11 @@ patch "Plate Chime" family=bells note=72 range=60..96 role=bell
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #1
     size         0.6
@@ -2534,6 +2659,11 @@ patch "Shimmer Chimes" family=bells note=76 range=60..100 role=bell
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
   insert Reverb
     model        #2
     size         0.75
@@ -2637,6 +2767,11 @@ patch "Climb" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Descend" family=count note=60 range=36..84
   # The same walk downward, slower, three partials at a time.
@@ -2731,6 +2866,11 @@ patch "Descend" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Rise and Fall" family=count note=60 range=36..84
   # Up and back down over twelve steps, with a bump of body around 1 kHz.
@@ -2825,6 +2965,11 @@ patch "Rise and Fall" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Split Halves" family=count note=60 range=36..84
   # Low half and high half in turn, in triplets.
@@ -2919,6 +3064,11 @@ patch "Split Halves" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Fifths Ladder" family=count note=60 range=36..84
   # Each step a fifth above the last, folded into two octaves.
@@ -3013,6 +3163,11 @@ patch "Fifths Ladder" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Dice Roll" family=count note=60 range=36..84
   # A new random line every bar, one partial or two on each sixteenth.
@@ -3107,6 +3262,11 @@ patch "Dice Roll" family=count note=60 range=36..84
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 
 # --- borrow ----------------------------------------------------------------
@@ -3204,6 +3364,11 @@ patch "Drum Breath" family=borrow note=48 range=36..72 input=break
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Talking Pad" family=borrow note=48 range=36..72 input=speech
   # The colour of a spoken line read onto a saw pad: your notes, its vowels.
@@ -3298,6 +3463,11 @@ patch "Talking Pad" family=borrow note=48 range=36..72 input=speech
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Borrowed Choir" family=borrow note=48 range=36..72 input=speech
   # The voice's own harmonics by number, from its pitch, played at yours.
@@ -3392,6 +3562,11 @@ patch "Borrowed Choir" family=borrow note=48 range=36..72 input=speech
   bfreeze        0
   bpos           0
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Voice Scan" family=borrow note=48 range=36..72 material=borrow:voice
   # Our sung line scanned at half speed from the top, its vowels passing through a held chord.
@@ -3485,6 +3660,11 @@ patch "Voice Scan" family=borrow note=48 range=36..72 material=borrow:voice
   bfreeze        0
   bpos           0
   bscan          0.5
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Held Vowel" family=borrow note=48 range=36..72 material=borrow:voice
   # One place in the sung line, held: the ee, frozen onto a saw. Place moves through the vowels.
@@ -3578,6 +3758,11 @@ patch "Held Vowel" family=borrow note=48 range=36..72 material=borrow:voice
   bfreeze        0
   bpos           0.47
   bscan          0
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
 
 patch "Line Partials" family=borrow note=48 range=36..72 material=borrow:voice
   # The sung line's harmonics by number at its own speed, looping: a voice's timbre without its tune.
@@ -3671,3 +3856,601 @@ patch "Line Partials" family=borrow note=48 range=36..72 material=borrow:voice
   bfreeze        0
   bpos           0
   bscan          1
+  slide          0.02 s
+  sorder         0
+  sspread        0.5
+  slegato        1
+  strum          0 s
+
+# --- slide ----------------------------------------------------------------
+
+patch "Rolling Pad" family=slide note=60 range=36..84 role=slur
+  # A saw pad. Each note's partials roll up from the last note, the low ones first, over a second and a half.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Morph"
+  set macro6 "Shimmer"
+  set macro7 "Wide"
+  set macro8 "Slow"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #14
+  mac5_a1  1
+  mac6_d1  #26
+  mac6_a1  0.6
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #19
+  mac8_a1  0.3
+  mac8_d2  #22
+  mac8_a2  0.2
+  partials       2
+  slope          -8 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -8 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.35 s
+  decay2         1 s
+  sustain        1
+  release        1.2 s
+  velocity       1
+  velbright      0.3
+  spread         0.35
+  spreadmode     0
+  shimmer        0.15
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.31
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          1.5 s
+  sorder         0
+  sspread        0.8
+  slegato        1
+  strum          0 s
+
+patch "Falling Rain" family=slide note=60 range=36..84 role=slur
+  # Odd partials only, a hollow tone; the high ones land first and the low ones follow, two seconds long.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Morph"
+  set macro6 "Shimmer"
+  set macro7 "Wide"
+  set macro8 "Slow"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #14
+  mac5_a1  1
+  mac6_d1  #26
+  mac6_a1  0.6
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #19
+  mac8_a1  0.3
+  mac8_d2  #22
+  mac8_a2  0.2
+  partials       2
+  slope          -9 dB/oct
+  odd            0.8
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -8 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.4 s
+  decay2         1 s
+  sustain        1
+  release        1.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.5
+  spreadmode     2
+  shimmer        0.2
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.335
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          2.2 s
+  sorder         1
+  sspread        1
+  slegato        1
+  strum          0 s
+
+patch "Scatter Bloom" family=slide note=60 range=36..84 role=slur
+  # Every partial arrives in its own order, a new one for each note; a vowel sits in the middle.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Vowel"
+  set macro6 "Shimmer"
+  set macro7 "Wide"
+  set macro8 "Slow"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #6
+  mac5_a1  0.8
+  mac6_d1  #26
+  mac6_a1  0.6
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #19
+  mac8_a1  0.3
+  mac8_d2  #22
+  mac8_a2  0.2
+  partials       2
+  slope          -10 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          3
+  vowelamt       0.6
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -6 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.5 s
+  decay2         1 s
+  sustain        1
+  release        1.6 s
+  velocity       1
+  velbright      0.3
+  spread         0.7
+  spreadmode     1
+  shimmer        0.25
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.424
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          1.8 s
+  sorder         2
+  sspread        1
+  slegato        1
+  strum          0 s
+
+patch "Centre Opening" family=slide note=60 range=36..84 role=slur
+  # Strings that take the middle partials first and the ends last; always slides, even after a gap.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Morph"
+  set macro6 "Shimmer"
+  set macro7 "Wide"
+  set macro8 "Slow"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #14
+  mac5_a1  1
+  mac6_d1  #26
+  mac6_a1  0.6
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #19
+  mac8_a1  0.3
+  mac8_d2  #22
+  mac8_a2  0.2
+  partials       2
+  slope          -9 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            1
+  stretch        0.3
+  bslope         -10 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0
+  decay          30 s
+  attack         0.6 s
+  decay2         1 s
+  sustain        1
+  release        1.4 s
+  velocity       1
+  velbright      0.3
+  spread         0.5
+  spreadmode     0
+  shimmer        0.15
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.328
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          1.2 s
+  sorder         3
+  sspread        0.9
+  slegato        0
+  strum          0 s
+
+patch "Harp Strum" family=slide note=60 range=48..96 role=tune
+  # Plucked partials that come in low to high over a third of a second, then slide to the next note.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Morph"
+  set macro6 "Ring"
+  set macro7 "Wide"
+  set macro8 "Damp"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #14
+  mac5_a1  1
+  mac6_d1  #18
+  mac6_a1  0.7
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #17
+  mac8_a1  0.7
+  partials       2
+  slope          -7 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            0
+  stretch        0
+  bslope         -8 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0.45
+  decay          2.5 s
+  attack         0.003 s
+  decay2         1.5 s
+  sustain        0.3
+  release        0.8 s
+  velocity       1
+  velbright      0.3
+  spread         0.5
+  spreadmode     0
+  shimmer        0.05
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.449
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          0.35 s
+  sorder         0
+  sspread        0.6
+  slegato        0
+  strum          0.3 s
+
+patch "Bell Skid" family=slide note=72 range=60..96 role=bell
+  # A bell's partials slide in from the last note, high ones first; every note slides.
+  set macro1 "Bright"
+  set macro2 "Slide"
+  set macro3 "Spread"
+  set macro4 "Strum"
+  set macro5 "Morph"
+  set macro6 "Ring"
+  set macro7 "Wide"
+  set macro8 "Damp"
+  mac1_d1  #1
+  mac1_a1  0.3
+  mac2_d1  #47
+  mac2_a1  0.8
+  mac3_d1  #48
+  mac3_a1  0.7
+  mac4_d1  #49
+  mac4_a1  0.8
+  mac5_d1  #14
+  mac5_a1  1
+  mac6_d1  #18
+  mac6_a1  0.7
+  mac7_d1  #25
+  mac7_a1  0.7
+  mac8_d1  #17
+  mac8_a1  0.7
+  partials       2
+  slope          -6 dB/oct
+  odd            0
+  peak           1000 Hz
+  peakgain       0 dB
+  peakwidth      0.7 oct
+  vowel          0
+  vowelamt       0
+  comb           0
+  combn          3
+  law            3
+  stretch        0
+  bslope         -8 dB/oct
+  bodd           0
+  bpeak          0 oct
+  bcomb          0.4
+  morph          0
+  menv           0
+  mtime          0.3 s
+  damp           0.5
+  decay          6 s
+  attack         0.002 s
+  decay2         3 s
+  sustain        0.2
+  release        1.5 s
+  velocity       1
+  velbright      0.3
+  spread         0.6
+  spreadmode     1
+  shimmer        0.05
+  shrate         0.3 Hz
+  lfo1wave       0
+  lfo1rate       5 Hz
+  lfo1sync       0
+  lfo1pitch      5 cents
+  lfo1morph      0
+  lfo2wave       0
+  lfo2rate       0.3 Hz
+  lfo2sync       0
+  lfo2bright     0
+  lfo2pan        0
+  glide          0 s
+  bendrange      2
+  octave         0
+  transpose      0
+  fine           0 cents
+  mpetimbre      0.5
+  mpepressure    0.5
+  volume         0.325
+  pan            0
+  count          0
+  crate          3
+  csteps         8
+  cfrom          4
+  cwidth         1
+  cdepth         1
+  cglide         0.2
+  borrow         0
+  sidechain      0
+  bmode          0
+  bamount        1
+  bsmooth        0.05 s
+  bfreeze        0
+  bpos           0
+  bscan          0
+  slide          0.6 s
+  sorder         1
+  sspread        0.8
+  slegato        0
+  strum          0 s
+

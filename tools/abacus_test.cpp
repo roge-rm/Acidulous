@@ -794,6 +794,195 @@ void borrow() {
 
 } // namespace
 
+/** Seconds into [x] at which partial [n] of [note], peak-picked in 20 ms windows every 5 ms near the band [lo, hi] Hz, first goes past the middle (in log frequency) of its slide; -1 if never. */
+double crossing(const std::vector<float> &x, double lo, double hi, double upTo) {
+    const double mid = std::sqrt(lo * hi), cents = 1200.0 * std::log2(hi / lo) * 0.5 + 30.0;
+    const bool up = hi > lo;
+    for (double t = 0.0; t + 0.02 < upTo; t += 0.005) {
+        const double f = peakNear(x, mid, std::fabs(cents), t, t + 0.02);
+        if (up ? f > mid : f < mid) return t + 0.01;
+    }
+    return -1.0;
+}
+
+/** Seconds at which the level at [hz] in 10 ms windows first comes within 25 dB of its level over [from, to]; -1 if never. */
+double entry(const std::vector<float> &x, double hz, double from, double to) {
+    const double top = level(x, hz, from, to);
+    for (double t = 0.0; t + 0.01 < to; t += 0.0025)
+        if (level(x, hz, t, t + 0.01) > top - 25.0) return t + 0.005;
+    return -1.0;
+}
+
+void slide() {
+    std::printf("slide and strum\n");
+    // Odd partials only, so partial 1, 3, 5 and 7 each slide in a band of their own.
+    // A note released and the next one a whole 0.1 s later: slegato always, so it slides anyway.
+    auto legato = [&](float order, float spread, float seconds, int bend) {
+        auto p = std::make_unique<Play>(std::initializer_list<std::pair<const char *, float>>{
+            {"odd", 1}, {"partials", 0}, {"slide", seconds}, {"sorder", order}, {"sspread", spread}, {"slegato", 0},
+            {"release", 0.005f}, {"velbright", 0}, {"spread", 0}});
+        p->a->noteOn(67, 100);
+        p->play(0.2);
+        p->a->noteOff(67);
+        p->play(0.1);
+        p->a->noteOn(72, 100);
+        if (bend != 0) p->a->noteBend(72, static_cast<float>(bend));
+        p->play(1.2);
+        return p;
+    };
+    const double f67 = noteHz(67), f72 = noteHz(72);
+    const double start = 0.3;
+    // The crossing times against the slide's own formula, for each order.
+    const char *orders[] = {"low first", "high first", "centre out"};
+    const int kinds[] = {0, 1, 3};
+    for (int o = 0; o < 3; ++o) {
+        auto p = legato(static_cast<float>(kinds[o]), 1.0f, 1.0f, 0);
+        const int ns[] = {1, 3, 5, 7};
+        double got[4], want[4];
+        double worst = 0.0;
+        for (int i = 0; i < 4; ++i) {
+            const int n = ns[i];
+            const float rank = Abacus::rankOf(kinds[o], n - 1, 16, 0.0f);
+            want[i] = 0.5 * Abacus::slideTime(1.0f, 1.0f, rank);
+            const double c = crossing(p->left, f67 * n, f72 * n, start + 1.0);
+            got[i] = c < 0.0 ? -1.0 : c - start;
+            worst = std::max(worst, std::fabs(got[i] - want[i]));
+        }
+        bool inOrder = true;
+        for (int i = 0; i < 4; ++i)
+            for (int j = 0; j < 4; ++j)
+                if (want[i] + 0.04 < want[j] && !(got[i] < got[j])) inOrder = false;
+        check(inOrder && worst < 0.03, fmt("%s: the partials cross in order, near their times", orders[o]),
+              fmt("worst %.0f ms; got %.2f %.2f %.2f %.2f s", worst * 1000.0, got[0], got[1], got[2], got[3]));
+    }
+    // Where they end up: the new note's partials, to a few cents.
+    {
+        auto p = legato(0.0f, 0.5f, 0.5f, 0);
+        double worst = 0.0;
+        for (int n : {1, 3, 5}) worst = std::max(worst, std::fabs(centsOff(peakNear(p->left, f72 * n, 40.0, 1.0, 1.3), f72 * n)));
+        check(worst < 4.0, "after the slide the partials sit on the new note", fmt("worst %.2f cents", worst));
+    }
+    // sspread 0: they all take the same time.
+    {
+        auto p = legato(0.0f, 0.0f, 1.0f, 0);
+        const double c1 = crossing(p->left, f67, f72, start + 1.0), c7 = crossing(p->left, f67 * 7, f72 * 7, start + 1.0);
+        check(c1 > 0.0 && std::fabs(c1 - c7) < 0.02 && std::fabs(c1 - start - 0.5) < 0.03, "sspread 0: every partial takes the whole slide",
+              fmt("crossings %.3f and %.3f s after the note", c1 - start, c7 - start));
+    }
+    // Scatter: the same seed gives the same slide, and the next note another.
+    {
+        auto a = legato(2.0f, 1.0f, 1.0f, 0), b = legato(2.0f, 1.0f, 1.0f, 0);
+        check(a->left == b->left && a->right == b->right, "scatter repeats, to the sample");
+        Play p({{"odd", 1}, {"partials", 0}, {"slide", 1.0f}, {"sorder", 2}, {"sspread", 1.0f}, {"slegato", 0}, {"release", 0.005f}});
+        p.a->noteOn(67, 100);
+        p.play(0.1);
+        p.a->noteOff(67);
+        p.a->noteOn(72, 100);
+        p.play(0.4);
+        p.a->noteOff(72);
+        p.play(0.1);
+        p.a->noteOn(67, 100);
+        p.play(0.4);
+        std::vector<float> first(p.left.begin() + static_cast<long>(0.1 * kRate), p.left.begin() + static_cast<long>(0.5 * kRate));
+        std::vector<float> third(p.left.begin() + static_cast<long>(0.6 * kRate), p.left.begin() + static_cast<long>(1.0 * kRate));
+        const double a1 = crossing(first, f67, f72, 0.4), a2 = crossing(third, f72, f67, 0.4);
+        check(a1 >= 0.0 && a2 >= 0.0, "scatter slides again on the next note", fmt("%.3f, %.3f s", a1, a2));
+    }
+    // Legato only: a note after a gap doesn't slide; one over a held key does.
+    {
+        Play p({{"odd", 1}, {"partials", 0}, {"slide", 1.0f}, {"slegato", 1}, {"release", 0.005f}, {"velbright", 0}});
+        p.a->noteOn(67, 100);
+        p.play(0.2);
+        p.a->noteOff(67);
+        p.play(0.1);
+        p.a->noteOn(72, 100);
+        p.play(0.3);
+        const double gap = centsOff(peakNear(p.left, f72, 60.0, 0.4, 0.5), f72);
+        Play q({{"odd", 1}, {"partials", 0}, {"slide", 1.0f}, {"slegato", 1}, {"release", 0.005f}, {"velbright", 0}});
+        q.a->noteOn(67, 100);
+        q.play(0.2);
+        q.a->noteOn(72, 100);
+        q.a->noteOff(67);
+        q.play(0.3);
+        const double held = centsOff(peakNear(q.left, f72, 1200.0, 0.25, 0.35), f72);
+        check(std::fabs(gap) < 4.0 && held < -50.0, "legato only: a gap plays plain, a held key slides", fmt("gap %.1f cents, held %.1f cents", gap, held));
+    }
+    // The first note of a phrase never slides.
+    {
+        Play p({{"odd", 1}, {"partials", 0}, {"slide", 1.0f}, {"slegato", 0}, {"velbright", 0}});
+        p.a->noteOn(72, 100);
+        p.play(0.3);
+        check(std::fabs(centsOff(peakNear(p.left, f72, 60.0, 0.1, 0.2), f72)) < 4.0, "the first note plays on pitch");
+    }
+    // Per-note bend rides on a sliding partial: it ends a semitone up.
+    {
+        auto p = legato(0.0f, 0.5f, 0.5f, 1);
+        const double want = f72 * std::pow(2.0, 1.0 / 12.0);
+        const double got = centsOff(peakNear(p->left, want, 40.0, 1.0, 1.3), want);
+        check(std::fabs(got) < 4.0, "slide with a per-note bend ends on the bent pitch", fmt("%.2f cents", got));
+    }
+    // With count and with borrow a file on, the slide still moves the lit partials.
+    {
+        std::vector<float> noise(static_cast<size_t>(kRate));
+        uint32_t s = 7;
+        for (auto &v : noise) { s = s * 1664525u + 1013904223u; v = 0.2f * (static_cast<float>(s >> 8) / 8388608.0f - 1.0f); }
+        for (int mode = 0; mode < 2; ++mode) {
+            Play p(mode == 0 ? std::initializer_list<std::pair<const char *, float>>{{"count", 1}, {"cfrom", 1}, {"cwidth", 8}, {"cdepth", 0}, {"slide", 0.6f}, {"slegato", 0}, {"partials", 1}, {"release", 0.005f}}
+                             : std::initializer_list<std::pair<const char *, float>>{{"borrow", 2}, {"bamount", 0.5f}, {"slide", 0.6f}, {"slegato", 0}, {"partials", 1}, {"release", 0.005f}});
+            if (mode == 1) delete static_cast<machine::abacus::Spectra *>(p.a->swapObject(0, machine::abacus::Spectra::analyse(noise.data(), static_cast<int32_t>(noise.size()), kRate).release()));
+            p.a->noteOn(67, 100);
+            p.play(0.2);
+            p.a->noteOff(67);
+            p.play(0.1);
+            p.a->noteOn(72, 100);
+            p.play(1.0);
+            bool finite = true;
+            for (float v : p.left) finite = finite && std::isfinite(v);
+            const double early = peakNear(p.left, f67 * 1.5, 1200.0, 0.32, 0.36), late = peakNear(p.left, f72, 80.0, 1.1, 1.3);
+            check(finite && std::fabs(centsOff(late, f72)) < 6.0 && early < f72 * 0.97, mode == 0 ? "slide with count on" : "slide with borrow on",
+                  fmt("early %.1f Hz, late %.1f cents out", early, centsOff(late, f72)));
+        }
+    }
+    // The strum: partials enter in sorder over the strum time.
+    {
+        for (int o = 0; o < 4; ++o) {
+            if (o == 2) continue;
+            Play p({{"partials", 0}, {"strum", 0.6f}, {"sorder", static_cast<float>(o)}, {"velbright", 0}, {"attack", 0.001f}});
+            p.a->noteOn(72, 100);
+            p.play(1.0);
+            double worst = 0.0;
+            double t[4];
+            const int ns[] = {1, 4, 8, 13};
+            for (int i = 0; i < 4; ++i) {
+                const float r = Abacus::rankOf(o, ns[i] - 1, 16, 0.0f);
+                t[i] = entry(p.left, noteHz(72) * ns[i], 0.8, 1.0);
+                worst = std::max(worst, std::fabs(t[i] - 0.6 * r));
+            }
+            const char *names[] = {"low first", "high first", "scatter", "centre out"};
+            check(worst < 0.02, fmt("strum %s: partials enter at their delay", names[o]), fmt("worst %.0f ms; %.2f %.2f %.2f %.2f s", worst * 1000.0, t[0], t[1], t[2], t[3]));
+        }
+        auto run = [&]() {
+            auto p = std::make_unique<Play>(std::initializer_list<std::pair<const char *, float>>{{"strum", 0.5f}, {"sorder", 2}});
+            p->a->noteOn(60, 100);
+            p->play(0.8);
+            return p;
+        };
+        auto a = run(), b = run();
+        check(a->left == b->left, "a scatter strum repeats, to the sample");
+    }
+    // Both at zero is the plain machine.
+    {
+        Play a({}), b({{"slide", Abacus::kSlideMin}, {"strum", 0.0f}, {"sorder", 3}, {"sspread", 1.0f}, {"slegato", 0}});
+        for (Play *p : {&a, &b}) {
+            p->a->noteOn(60, 100);
+            p->play(0.2);
+            p->a->noteOn(67, 100);
+            p->play(0.3);
+        }
+        check(a.left == b.left && a.right == b.right, "slide and strum off: nothing changes, bit for bit");
+    }
+}
+
 int main() {
     pitch();
     laws();
@@ -804,6 +993,7 @@ int main() {
     sleep();
     count();
     borrow();
+    slide();
     std::printf("\n%d of %d checks passed\n", checks - failures, checks);
     if (failures == 0) std::printf("abacus: all passed\n");
     return failures == 0 ? 0 : 1;

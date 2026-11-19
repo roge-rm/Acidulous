@@ -2211,7 +2211,7 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
             } }
-            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
@@ -5666,6 +5666,7 @@ val ABACUS_MACRO_DESTS = listOf(
     "glide", "fine", "slide", "pressure", "volume", "pan",
     "pitch", "count depth", "count glide",
     "borrow amt", "borrow smooth", "file place", "file scan",
+    "slide time", "slide spread", "strum",
 )
 
 private val ABACUS_COUNTS = listOf("off", "up", "down", "up-down", "odd/even", "fifths", "random")
@@ -5674,6 +5675,7 @@ private val ABACUS_PARTIALS = listOf("16", "32", "64")
 private val ABACUS_LAWS = listOf("harmonic", "string", "bar", "bell", "plate")
 private val ABACUS_SPREADS = listOf("odd/even", "scatter", "low-high")
 private val ABACUS_BORROWS = listOf("off", "track", "file")
+private val ABACUS_SLIDE_ORDERS = listOf("low first", "high first", "scatter", "centre out")
 
 /** Abacus: the macros and envelope, the spectrum, the partials' law and decay, the motion, counting and borrow. */
 @Composable
@@ -5685,7 +5687,7 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
     val c = Acid.colors
     val sample = track.machine.settings["sample"].orEmpty()
     PanelSections(
-        listOf("play", "spectrum", "partials", "motion", "counting", "borrow", "macros"), section, { section = it },
+        listOf("play", "spectrum", "partials", "motion", "counting", "slide", "borrow", "macros"), section, { section = it },
         above = { sec ->
             // The square layout has no room for it above the knobs.
             if ((sec == 1 || sec == 2) && screenShape() != ScreenShape.Square) BeadFrame(b, Modifier.padding(bottom = 4.dp))
@@ -5709,6 +5711,18 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                 }
             }
             5 -> {
+                Group("slide") {
+                    // The knob's bottom is off.
+                    PanelKnob(b, "slide", "time", PanelAmber, display = if (b.value("slide") < 0.001f) panelWord("off") else null)
+                    PanelKnob(b, "sspread", "spread", PanelAmber)
+                    PanelStepKnob(b, "sorder", ABACUS_SLIDE_ORDERS, "order")
+                    PanelSwitch(b, "slegato", listOf("always", "legato only"), "when")
+                }
+                Group("strum") {
+                    PanelKnob(b, "strum", "strum", PanelAmber)
+                }
+            }
+            6 -> {
                 Group("borrow") {
                     PanelSwitch(b, "borrow", ABACUS_BORROWS, "from")
                     PanelSwitch(b, "bmode", listOf("envelope", "partials"), "read")
