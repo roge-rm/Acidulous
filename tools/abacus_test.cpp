@@ -677,6 +677,19 @@ void borrow() {
         c.a->noteOn(57, 100);
         c.play(0.5);
         check(c.left == b.left, "borrow track with no track chosen is its own spectrum");
+        // A held note keeps through a silent stretch of the track it borrows from.
+        Play h({{"borrow", 1}, {"sidechain", 1}, {"decay", 5.0f}, {"velbright", 0}});
+        long ht = 0;
+        h.a->noteOn(57, 100);
+        playKeyed(h, 0.5, sine(880.0f, 0.06f), &ht);
+        playKeyed(h, 1.0, [](long) { return 0.0f; }, &ht);
+        const size_t quietFrom = h.left.size();
+        const bool kept = h.a->activeVoices() == 1;
+        playKeyed(h, 0.5, sine(880.0f, 0.06f), &ht);
+        float back = 0.0f;
+        for (size_t i = quietFrom; i < h.left.size(); ++i) back = std::max(back, std::fabs(h.left[i]));
+        check(kept && back > 1e-4f, "a held borrowing note sounds again when the track does",
+              fmt("%d voices after 1 s of silence, peak %.3g after", kept ? 1 : 0, back));
     }
     // A file: a sine at 440 Hz for 1 s, then 1760 Hz for 1 s. bpos picks the
     // place and bscan moves through it.

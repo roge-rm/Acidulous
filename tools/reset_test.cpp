@@ -116,10 +116,6 @@ audio::Reel *compedReel() {
     return reel;
 }
 
-/**
- * Publishes one block of the voice, read from [frame]. Both passes of the
- * performance read the same frames; the prelude reads others.
- */
 /** Hands [m] one block of the voice from [frame] as its sidechain key. */
 void feedKey(Machine *m, int64_t frame) {
     static float key[kBlock];
@@ -129,6 +125,10 @@ void feedKey(Machine *m, int64_t frame) {
     m->setKey(key);
 }
 
+/**
+ * Publishes one block of the voice, read from [frame]. Both passes of the
+ * performance read the same frames; the prelude reads others.
+ */
 void feedInput(int64_t frame) {
     static float block[kBlock * 2];
     if (!g_feedInput) return;
@@ -299,6 +299,10 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
     // as its file. Patches with borrowing off ignore both.
     g_feedKey = std::strcmp(name, "Abacus") == 0;
     if (g_feedKey) {
+        // Listen to a track, so the live analysis and the pitch follower run.
+        ParamSet &ps = m->params();
+        const int sc = ps.indexOf("sidechain");
+        if (sc >= 0) ps.jump(sc, ps.def(sc).unmap(1.0f));
         static const std::unique_ptr<machine::abacus::Spectra> table = [] {
             const std::vector<float> &v = voiceInput();
             return machine::abacus::Spectra::analyse(v.data(), static_cast<int32_t>(v.size()), kRate);

@@ -873,7 +873,7 @@ internal fun panelKnobWidth(): Modifier =
 internal fun stackedKnobW(): Dp = StackedKnobW - 52.dp + LocalKnobDial.current
 
 @Composable
-internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name) {
+internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, label: String = name, columns: Int = 0) {
     b.infoOf(name) ?: return
     val idx = switchIndex(b.value(name), labels.size)
     if (labels.size == 2) {
@@ -883,6 +883,7 @@ internal fun PanelSwitch(b: ParamBinding, name: String, labels: List<String>, la
     SwitchGrid(
         panelWord(label), panelWords(labels), idx,
         Modifier.mappable(MapTargets.param(b.trackIndex, b.unit, name)),
+        columns = columns,
     ) { i -> b.set(name, if (labels.size > 1) i.toFloat() / (labels.size - 1) else 0f) }
 }
 
@@ -2211,7 +2212,7 @@ private fun TrinityPanel(b: ParamBinding, track: Track, trackIndex: Int, editor:
                 PanelStepKnob(b, p + "dest", TRINITY_DESTS, "to", PanelAmber)
                 PanelKnob(b, p + "depth", "depth", PanelAmber)
             } }
-            7 -> for (k in 1..8) key(k) { Group("macro $k") {
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
@@ -5724,7 +5725,7 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
             }
             6 -> {
                 Group("borrow") {
-                    PanelSwitch(b, "borrow", ABACUS_BORROWS, "from")
+                    PanelSwitch(b, "borrow", ABACUS_BORROWS, "from", columns = 3)
                     PanelSwitch(b, "bmode", listOf("envelope", "partials"), "read")
                     PanelKnob(b, "bamount", "amount", PanelAmber)
                 }
@@ -5763,7 +5764,7 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "bscan", "scan")
                 }
             }
-            6 -> for (k in 1..8) key(k) { Group("macro $k") {
+            7 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },

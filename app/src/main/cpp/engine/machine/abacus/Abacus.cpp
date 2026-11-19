@@ -906,11 +906,13 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
     }
 
     // Retire on what the voice can still put out: the sum of its gains is a
-    // bound on its level. Two silent blocks, released or fully damped.
+    // bound on its level. Two silent blocks, released or fully damped. A held
+    // note borrowing a track stays: the track may sound again.
+    const bool waiting = v.gate && b.borrow == BorrowTrack && b.bAmount > 0.0f;
     float was = 0.0f;
     for (int n = 0; n < kPartials; ++n) was += v.bank.gl[n] + v.bank.gr[n];
     if (total < kSilent && was < kSilent) {
-        if (++v.quiet >= 2 && (!v.gate || v.amp.value() < kSilent || b.decay < kHeld)) {
+        if (++v.quiet >= 2 && !waiting && (!v.gate || v.amp.value() < kSilent || b.decay < kHeld)) {
             v.used = v.gate = false;
             v.amp.kill();
             v.bank.clear();
