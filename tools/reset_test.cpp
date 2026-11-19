@@ -17,6 +17,7 @@
 #include <engine/core/Reel.h>
 #include <engine/effect/EffectRegistry.h>
 #include <engine/machine/MachineRegistry.h>
+#include <engine/machine/abacus/Borrow.h>
 #include <engine/machine/cumulus/Cumulus.h>
 #include <engine/machine/formulate/Program.h>
 #include <memory>
@@ -56,6 +57,8 @@ const std::vector<float> &voiceInput() {
 
 /** The machine being checked reads the input bus. */
 bool g_feedInput = false;
+/** Whether the machine hears the voice as its sidechain key (Abacus borrowing a track). */
+bool g_feedKey = false;
 
 /** The machine being checked plays what's on the reel, so it's told where the song is (Bias). */
 bool g_inScene = false;
@@ -117,6 +120,15 @@ audio::Reel *compedReel() {
  * Publishes one block of the voice, read from [frame]. Both passes of the
  * performance read the same frames; the prelude reads others.
  */
+/** Hands [m] one block of the voice from [frame] as its sidechain key. */
+void feedKey(Machine *m, int64_t frame) {
+    static float key[kBlock];
+    if (!g_feedKey) return;
+    const std::vector<float> &v = voiceInput();
+    for (int32_t i = 0; i < kBlock; ++i) key[i] = v.empty() ? 0.0f : 0.1f * v[static_cast<size_t>(frame + i) % v.size()];
+    m->setKey(key);
+}
+
 void feedInput(int64_t frame) {
     static float block[kBlock * 2];
     if (!g_feedInput) return;
@@ -165,6 +177,7 @@ void performance(Machine *m, std::vector<float> &out) {
         if (b > 0 && b % 23 == 0) m->pitchBend(static_cast<int16_t>((b % 200) - 100));
 
         feedInput(static_cast<int64_t>(b) * kBlock);
+        feedKey(m, static_cast<int64_t>(b) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
         followScene(m, tick);
         m->onBlock(tick, tick + 4, 120.0f);
@@ -212,6 +225,7 @@ void prelude(Machine *m) {
         // A different stretch of the voice, ending on it, so the analysis
         // goes into the panic busy.
         feedInput(static_cast<int64_t>(b + 977) * kBlock);
+        feedKey(m, static_cast<int64_t>(b + 977) * kBlock);
         const int64_t tick = static_cast<int64_t>(b) * 4;
         // Somewhere else in the cell than the performance plays.
         followScene(m, tick + 333);
@@ -281,6 +295,16 @@ Dressing dress(const char *name, Machine *m, const Settings *settings) {
         for (int32_t pad = 0; pad < static_cast<int32_t>(audition::Piece::Count); ++pad)
             delete static_cast<SampleData *>(m->swapObject(pad, audition::pieceSample(static_cast<audition::Piece>(pad)).release()));
     }
+    // Abacus borrows: the voice as its key, and a table of the voice mounted
+    // as its file. Patches with borrowing off ignore both.
+    g_feedKey = std::strcmp(name, "Abacus") == 0;
+    if (g_feedKey) {
+        static const std::unique_ptr<machine::abacus::Spectra> table = [] {
+            const std::vector<float> &v = voiceInput();
+            return machine::abacus::Spectra::analyse(v.data(), static_cast<int32_t>(v.size()), kRate);
+        }();
+        delete static_cast<machine::abacus::Spectra *>(m->swapObject(0, new machine::abacus::Spectra(*table)));
+    }
     if (std::strcmp(name, "Cumulus") == 0) {
         auto *cumulus = static_cast<machine::Cumulus *>(m);
         d.cloud = machine::cumulus::buildCloud(cumulus->spec(), kRate);
@@ -340,6 +364,7 @@ Result check(const char *name, const Patch *patch = nullptr, const Settings *set
     delete m2;
     InputBus::get().publish(nullptr, 0);
     g_feedInput = false;
+    g_feedKey = false;
     g_inScene = false;
     r.reproducible = (fresh == a);
 

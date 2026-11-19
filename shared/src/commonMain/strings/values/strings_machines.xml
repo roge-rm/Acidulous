@@ -88,6 +88,7 @@
     <string name="machine_no_take">no take</string>
     <string name="machine_no_loop">no loop</string>
     <string name="machine_no_file">no file</string>
+    <string name="abacus_file_voice">voice</string>
     <string name="diction_builtin">built-in</string>
     <string name="diction_from">from…</string>
     <string name="diction_consonants_title">Consonants</string>

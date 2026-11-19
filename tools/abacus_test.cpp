@@ -2,11 +2,16 @@
 // keyboard, the laws' mode ratios, odd, comb and peak doing what they say,
 // nothing between 0.45 of the sample rate and Nyquist and no aliases,
 // damping taking the high partials first, the partial count, spread 0 mono
-// and spread 1 wide, and a released note going to sleep.
+// and spread 1 wide, a released note going to sleep, the count, and
+// borrow: a sine lights the partial at its frequency, a vowel moves the
+// envelope, freeze holds, bsmooth times, a file's place and scan, and dirty
+// material (rumble, clipping, leading room, a high crest factor).
 //
 //   abacus_test.sh
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/abacus/Abacus.h>
+#include <engine/machine/abacus/Borrow.h>
+#include "audition_material.h"
 
 #include <algorithm>
 #include <cmath>
@@ -79,6 +84,20 @@ struct Play {
         }
     }
 };
+
+/** [seconds] played with [source] (by sample index) as the sidechain key, sidechain on track 1. */
+template <class F> void playKeyed(Play &p, double seconds, F source, long *at) {
+    float L[kBlock], R[kBlock], key[kBlock];
+    const int blocks = static_cast<int>(seconds * kRate / kBlock);
+    for (int b = 0; b < blocks; ++b) {
+        for (int i = 0; i < kBlock; ++i) key[i] = source((*at)++);
+        p.a->setKey(key);
+        p.a->onBlock(0, 0, 120.0f);
+        p.a->render(L, R, kBlock);
+        p.left.insert(p.left.end(), L, L + kBlock);
+        p.right.insert(p.right.end(), R, R + kBlock);
+    }
+}
 
 /** [blocks] blocks driven the way the engine does: the song's tick, the bar and the transport, from [startTick]. */
 void playSong(Play &p, int blocks, double startTick, float swing = 50.0f, int64_t pair = 0, int *noteAtBlock = nullptr, int note = 48) {
@@ -552,6 +571,227 @@ void count() {
     }
 }
 
+/** A sung vowel at [f0] with formants [f1] and [f2], at about the house level, for a key. */
+std::vector<float> vowelKey(float f0, float f1, float f2, float seconds) {
+    std::vector<float> v = audition::vowel(f0, seconds, f1, f2);
+    double sum = 0.0;
+    for (float x : v) sum += static_cast<double>(x) * x;
+    const auto k = static_cast<float>(0.042 / std::sqrt(sum / static_cast<double>(v.size())));
+    for (float &x : v) x *= k;
+    return v;
+}
+
+/** The level of partial [n] of note [note], dB, over [from, to) seconds of the left side. */
+double partialDb(const Play &p, int note, int n, double from, double to) {
+    return level(p.left, noteHz(note) * n, from, to);
+}
+
+void borrow() {
+    using machine::abacus::Spectra;
+    const float twoPi = 2.0f * static_cast<float>(kPi);
+    auto sine = [&](float hz, float amp) {
+        return [=](long i) { return amp * std::sin(twoPi * hz * static_cast<float>(i) / kRate); };
+    };
+    // A sine an octave and a half over a 110 Hz note lights partial 8 (880 Hz).
+    {
+        Play p({{"borrow", 1}, {"sidechain", 1}, {"velbright", 0}});
+        long at = 0;
+        p.a->noteOn(45, 127);
+        playKeyed(p, 1.0, sine(880.0f, 0.06f), &at);
+        int loudest = 1;
+        double top = -1e9;
+        for (int n = 1; n <= 24; ++n) {
+            const double l = partialDb(p, 45, n, 0.5, 1.0);
+            if (l > top) { top = l; loudest = n; }
+        }
+        const double down4 = top - partialDb(p, 45, 4, 0.5, 1.0), down16 = top - partialDb(p, 45, 16, 0.5, 1.0);
+        check(loudest == 8 && down4 > 20.0 && down16 > 20.0, "envelope: a sine lights the partial at its frequency",
+              fmt("loudest %d, octave down %.1f dB, octave up %.1f dB under it", loudest, down4, down16));
+    }
+    {
+        Play p({{"borrow", 1}, {"sidechain", 1}, {"bmode", 1}, {"velbright", 0}});
+        long at = 0;
+        p.a->noteOn(45, 127);
+        playKeyed(p, 1.0, sine(330.0f, 0.06f), &at);
+        const double first = partialDb(p, 45, 1, 0.5, 1.0), second = partialDb(p, 45, 2, 0.5, 1.0),
+                     third = partialDb(p, 45, 3, 0.5, 1.0);
+        check(first - second > 30.0 && first - third > 30.0, "partials: a sine is all first harmonic",
+              fmt("2nd %.1f dB, 3rd %.1f dB under the 1st", first - second, first - third));
+    }
+    // A vowel moves the envelope: "ah" then "ee" over the same note.
+    {
+        const std::vector<float> ah = vowelKey(140.0f, 730.0f, 1090.0f, 1.0f), ee = vowelKey(140.0f, 270.0f, 2290.0f, 1.0f);
+        Play p({{"borrow", 1}, {"sidechain", 1}, {"velbright", 0}});
+        long at = 0;
+        p.a->noteOn(45, 127);
+        playKeyed(p, 2.0, [&](long i) { return i < kRate ? ah[static_cast<size_t>(i)] : ee[static_cast<size_t>(i - kRate)]; }, &at);
+        // Partial 7 (770 Hz) is ah's first formant; 21 (2310 Hz) is ee's second.
+        const double ahTilt = partialDb(p, 45, 21, 0.5, 1.0) - partialDb(p, 45, 7, 0.5, 1.0);
+        const double eeTilt = partialDb(p, 45, 21, 1.5, 2.0) - partialDb(p, 45, 7, 1.5, 2.0);
+        check(eeTilt - ahTilt > 15.0, "envelope: a vowel moves the partials with it",
+              fmt("21st against 7th: ah %.1f dB, ee %.1f dB", ahTilt, eeTilt));
+
+        // The same with freeze on halfway through ah: ee never arrives.
+        Play q({{"borrow", 1}, {"sidechain", 1}, {"velbright", 0}});
+        at = 0;
+        q.a->noteOn(45, 127);
+        playKeyed(q, 0.5, [&](long i) { return ah[static_cast<size_t>(i)]; }, &at);
+        q.set("bfreeze", 1);
+        const float held = q.a->borrowedOf(0, 20);
+        playKeyed(q, 1.5, [&](long i) { return i < kRate ? ah[static_cast<size_t>(i)] : ee[static_cast<size_t>(i - kRate)]; }, &at);
+        const double frozenTilt = partialDb(q, 45, 21, 1.5, 2.0) - partialDb(q, 45, 7, 1.5, 2.0);
+        check(q.a->borrowedOf(0, 20) == held && std::fabs(frozenTilt - ahTilt) < 1.0, "freeze holds the borrowed spectrum",
+              fmt("tilt under ee %.1f dB against ah's %.1f", frozenTilt, ahTilt));
+    }
+    // bsmooth: after the source stops, the borrowed level falls to 1/e in
+    // bsmooth, plus what the window takes to empty (about half its 43 ms).
+    for (float smooth : {0.02f, 0.2f, 0.8f}) {
+        const auto src = sine(880.0f, 0.06f);
+        // The 8th partial's borrowed level, read block by block.
+        long at = 0;
+        Play q({{"borrow", 1}, {"sidechain", 1}, {"bsmooth", smooth}});
+        at = 0;
+        q.a->noteOn(45, 127);
+        playKeyed(q, 2.0, src, &at);
+        const float steady = q.a->borrowedOf(0, 7);
+        double fell = -1.0;
+        for (int b = 0; b < static_cast<int>(4.0 * smooth * kRate / kBlock) + 100 && fell < 0.0; ++b) {
+            playKeyed(q, static_cast<double>(kBlock) / kRate, [](long) { return 0.0f; }, &at);
+            if (q.a->borrowedOf(0, 7) < steady * 0.3679f) fell = static_cast<double>((b + 1) * kBlock) / kRate;
+        }
+        const double late = fell - smooth;
+        check(fell > 0.0 && late > -0.005 && late < 0.045, fmt("bsmooth %.2f s: the borrowed level falls to 1/e in its time", smooth),
+              fmt("%.3f s", fell));
+    }
+    // Off: a key changes nothing.
+    {
+        Play a({{"borrow", 0}, {"sidechain", 1}}), b({{"borrow", 0}, {"sidechain", 0}});
+        long at = 0, bt = 0;
+        a.a->noteOn(57, 100);
+        b.a->noteOn(57, 100);
+        playKeyed(a, 0.5, sine(880.0f, 0.06f), &at);
+        b.play(0.5);
+        check(a.left == b.left && a.right == b.right, "borrow off ignores the key, bit for bit");
+        // Track with nothing to listen to plays its own spectrum.
+        Play c({{"borrow", 1}, {"sidechain", 0}});
+        c.a->noteOn(57, 100);
+        c.play(0.5);
+        check(c.left == b.left, "borrow track with no track chosen is its own spectrum");
+    }
+    // A file: a sine at 440 Hz for 1 s, then 1760 Hz for 1 s. bpos picks the
+    // place and bscan moves through it.
+    {
+        std::vector<float> two(static_cast<size_t>(2 * kRate));
+        for (size_t i = 0; i < two.size(); ++i)
+            two[i] = 0.3f * std::sin(twoPi * (i < static_cast<size_t>(kRate) ? 440.0f : 1760.0f) * static_cast<float>(i) / kRate);
+        auto run = [&](float pos, float scan, double seconds) {
+            auto pl = std::make_unique<Play>(std::initializer_list<std::pair<const char *, float>>{
+                {"borrow", 2}, {"bpos", pos}, {"bscan", scan}, {"velbright", 0}});
+            delete static_cast<Spectra *>(pl->a->swapObject(0, Spectra::analyse(two.data(), static_cast<int32_t>(two.size()), kRate).release()));
+            pl->a->noteOn(45, 127);
+            pl->play(seconds);
+            return pl;
+        };
+        auto lit = [&](const Play &p, double from, double to) {
+            return partialDb(p, 45, 16, from, to) - partialDb(p, 45, 4, from, to);
+        };
+        auto a = run(0.25f, 0.0f, 1.0), b = run(0.75f, 0.0f, 1.0), c = run(0.1f, 1.0f, 1.6);
+        const double la = lit(*a, 0.3, 1.0), lb = lit(*b, 0.3, 1.0);
+        check(la < -20.0 && lb > 20.0, "file: bpos reads where it says", fmt("16th against 4th: %.1f dB at 0.25, %.1f dB at 0.75", la, lb));
+        const double early = lit(*c, 0.2, 0.7), later = lit(*c, 1.1, 1.6);
+        check(early < -20.0 && later > 20.0, "file: bscan 1 moves through it in time", fmt("%.1f dB, then %.1f dB", early, later));
+        check(a->a->heldBytes() > 0, "the mounted table's bytes are counted", fmt("%lld", static_cast<long long>(a->a->heldBytes())));
+    }
+    // Dirty material: rumble, clipping and leading room, against the clean phrase.
+    {
+        const std::vector<float> clean = audition::speechPhrase(), dirty = audition::dirtyVoiceMono();
+        const auto cs = Spectra::analyse(clean.data(), static_cast<int32_t>(clean.size()), kRate);
+        const auto ds = Spectra::analyse(dirty.data(), static_cast<int32_t>(dirty.size()), kRate);
+        const float ppo = machine::abacus::envPointsPerOctave();
+        const int at60 = static_cast<int>(std::lround(std::log2(60.0f / machine::abacus::kEnvLowHz) * ppo));
+        // Voiced frames: the loudest half of the dirty file after its room.
+        std::vector<float> lv;
+        const size_t room = static_cast<size_t>(0.4 * kRate / machine::abacus::kHop);
+        for (size_t k = room; k < ds->frames.size(); ++k) lv.push_back(ds->frames[k].level);
+        std::nth_element(lv.begin(), lv.begin() + static_cast<std::ptrdiff_t>(lv.size() / 2), lv.end());
+        const float median = lv[lv.size() / 2];
+        std::vector<float> cl;
+        for (const auto &f : cs->frames) cl.push_back(f.level);
+        std::nth_element(cl.begin(), cl.begin() + static_cast<std::ptrdiff_t>(cl.size() / 2), cl.end());
+        // The low end of the envelope over the louder half of each file's
+        // frames: the dirty one's rumble mustn't lift it.
+        auto lowEnd = [&](const Spectra &sp, size_t from, float over) {
+            double sum = 0.0;
+            int count = 0;
+            for (size_t k = from; k < sp.frames.size(); ++k) {
+                if (sp.frames[k].level < over) continue;
+                for (int j = 0; j <= at60; ++j) sum += sp.frames[k].env[j] * 6.0206;
+                count += at60 + 1;
+            }
+            return sum / std::max(1, count);
+        };
+        const double hum = lowEnd(*ds, room, median);
+        double roomLevel = 0.0;
+        for (size_t k = 2; k + 2 < room; ++k) roomLevel = std::max(roomLevel, static_cast<double>(ds->frames[k].level));
+        // Unfiltered, the hum is the envelope's peak (0 dB) and the room reads -6 dB.
+        check(hum < -5.0, "dirty: the rumble isn't the envelope's peak", fmt("30-60 Hz %.1f dB under it", -hum));
+        const double roomDb = 20.0 * std::log10(roomLevel + 1e-9);
+        check(roomDb < -16.0, "dirty: the leading room is quiet", fmt("loudest room frame %.1f dB under the loud frames", -roomDb));
+        // Levels are set on the voice, so rumble and clipping don't move them much.
+        const double moved = 20.0 * std::log10(median / std::max(cl[cl.size() / 2], 1e-6f));
+        check(std::fabs(moved) < 3.0, "dirty: the voice's level is the clean one's", fmt("median frame %.1f dB off", moved));
+
+        // Played from the dirty file: silent in the room, sounding after it.
+        Play p({{"borrow", 2}, {"bscan", 1}});
+        delete static_cast<Spectra *>(p.a->swapObject(0, Spectra::analyse(dirty.data(), static_cast<int32_t>(dirty.size()), kRate).release()));
+        p.a->noteOn(45, 127);
+        p.play(1.5);
+        double roomRms = 0.0, voiceRms = 0.0;
+        for (size_t i = static_cast<size_t>(0.05 * kRate); i < static_cast<size_t>(0.3 * kRate); ++i) roomRms += p.left[i] * p.left[i];
+        for (size_t i = static_cast<size_t>(0.6 * kRate); i < static_cast<size_t>(1.5 * kRate); ++i) voiceRms += p.left[i] * p.left[i];
+        const double gap = 10.0 * std::log10((voiceRms / 0.9) / (roomRms / 0.25 + 1e-30));
+        check(gap > 15.0, "dirty: a note waits through the room", fmt("%.1f dB under the voice", gap));
+    }
+    // A high crest factor: plosive pops at ten times the voice's rms as a key.
+    // The power ceiling keeps the output near a plain note's.
+    {
+        const std::vector<float> pops = audition::dirtyVoiceInput();
+        Play p({{"borrow", 1}, {"sidechain", 1}}), plain;
+        long at = 0;
+        p.a->noteOn(45, 127);
+        plain.a->noteOn(45, 127);
+        playKeyed(p, 3.0, [&](long i) { return pops[static_cast<size_t>(i) % pops.size()] * 3.0f; }, &at);
+        plain.play(3.0);
+        // The loudest 50 ms against the plain note's: the ceiling is 6 dB of power over a saw.
+        bool finite = true;
+        for (float x : p.left) finite = finite && std::isfinite(x);
+        auto loudest = [](const std::vector<float> &x) {
+            const size_t w = kRate / 20;
+            double best = 0.0;
+            for (size_t a = 0; a + w <= x.size(); a += w / 4) {
+                double sum = 0.0;
+                for (size_t i = a; i < a + w; ++i) sum += static_cast<double>(x[i]) * x[i];
+                best = std::max(best, sum / static_cast<double>(w));
+            }
+            return 10.0 * std::log10(best + 1e-30);
+        };
+        const double over = loudest(p.left) - loudest(plain.left);
+        check(finite && over < 7.0, "a high crest factor stays under the power ceiling", fmt("loudest 50 ms %.1f dB over a plain note", over));
+    }
+    // Rendering twice repeats, from a track and from a file.
+    {
+        auto once = [&]() {
+            Play p({{"borrow", 1}, {"sidechain", 1}, {"bmode", 1}});
+            long at = 0;
+            const std::vector<float> v = vowelKey(150.0f, 530.0f, 1840.0f, 1.0f);
+            p.a->noteOn(50, 100);
+            playKeyed(p, 1.0, [&](long i) { return v[static_cast<size_t>(i)]; }, &at);
+            return p.left;
+        };
+        check(once() == once(), "borrowing from a track repeats, to the sample");
+    }
+}
+
 } // namespace
 
 int main() {
@@ -563,6 +803,7 @@ int main() {
     spread();
     sleep();
     count();
+    borrow();
     std::printf("\n%d of %d checks passed\n", checks - failures, checks);
     if (failures == 0) std::printf("abacus: all passed\n");
     return failures == 0 ? 0 : 1;

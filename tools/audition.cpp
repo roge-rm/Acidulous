@@ -35,6 +35,8 @@
 #include <engine/machine/MachineRegistry.h>
 #include <engine/machine/cumulus/Cloud.h>
 #include <engine/machine/cumulus/Cumulus.h>
+#include <engine/machine/abacus/Borrow.h>
+#include <map>
 #include <engine/machine/dice/Dice.h>
 #include <engine/machine/formulate/Program.h>
 #include <engine/machine/nexus/Graph.h>
@@ -863,7 +865,35 @@ struct Material {
      */
     std::vector<float> song;
     int64_t songLoop = 0;
+    /** Whether the song is mixed into the take; Abacus is heard alone. */
+    bool mixSong = true;
 };
+
+/**
+ * A file analysed for Abacus to borrow from: "voice" is the one the app
+ * ships, "speech" and "dirtyvoice" the synthetic phrases. Analysed once and
+ * copied, since the machine owns what it's given.
+ */
+std::unique_ptr<::acidulous::machine::abacus::Spectra> borrowSpectra(const std::string &name) {
+    using ::acidulous::machine::abacus::Spectra;
+    static std::map<std::string, std::unique_ptr<Spectra>> cache;
+    auto &slot = cache[name];
+    if (!slot) {
+        std::vector<float> mono;
+        if (name == "voice") {
+            const char *root = std::getenv("ACIDULOUS_ROOT");
+            std::string error;
+            mono = fileMono((std::string(root != nullptr ? root : ".") + "/shared/src/commonMain/files/borrow-voice.wav").c_str(), error);
+            if (mono.empty()) std::fprintf(stderr, "borrow-voice.wav: %s\n", error.c_str());
+        } else if (name == "dirtyvoice") {
+            mono = dirtyVoiceMono();
+        } else {
+            mono = speechPhrase();
+        }
+        slot = Spectra::analyse(mono.data(), static_cast<int32_t>(mono.size()), kSr);
+    }
+    return std::make_unique<Spectra>(*slot);
+}
 
 /** How long the reel mix plays before its silent gap, and the gap. */
 constexpr float kReelMusicSeconds = 10.0f;
@@ -961,6 +991,10 @@ void mountMaterial(Machine *m, const std::string &machine, const std::string &ki
     }
     if (kind == "reel") {
         mountReel(m, mat);
+        return;
+    }
+    if (kind.rfind("borrow:", 0) == 0) {
+        delete static_cast<::acidulous::machine::abacus::Spectra *>(m->swapObject(0, borrowSpectra(kind.substr(7)).release()));
         return;
     }
     if (kind == "kit" || (kind.empty() && machine == "Forage")) {
@@ -1335,8 +1369,9 @@ Take render(Machine *m, const Phrase &phrase, float bpm, const Material &mat, Fx
         for (int32_t i = 0; i < kBlock; ++i) {
             const size_t src = keyed ? static_cast<size_t>((at + i) % mat.songLoop) * 2 : 0;
             // A little under the key's level, so the two together stay under full scale.
-            out.stereo.push_back(L[i] + (keyed ? 0.7f * mat.song[src] : 0.0f));
-            out.stereo.push_back((stereo ? R[i] : L[i]) + (keyed ? 0.7f * mat.song[src + 1] : 0.0f));
+            const float mix = keyed && mat.mixSong ? 0.7f : 0.0f;
+            out.stereo.push_back(L[i] + (keyed ? mix * mat.song[src] : 0.0f));
+            out.stereo.push_back((stereo ? R[i] : L[i]) + (keyed ? mix * mat.song[src + 1] : 0.0f));
         }
     }
     // The song stops with the phrase; the machine rings out on silence.
@@ -2112,6 +2147,27 @@ bool auditionOne(const Bank &bank, const BankPatch &patch, const Options &opt, M
             int64_t stop = 0;
             mat.song = effectSource(bank.unit, opt.bpm, stop);
             mat.songLoop = stop;
+        }
+        // Abacus's patches that borrow from a track hear their input as
+        // that track, at the house level, on track 1; the take is Abacus alone.
+        if (bank.unit == "Abacus" && !mat.input.empty()) {
+            for (int32_t i = 0; i < count; ++i) {
+                if (std::strcmp(defs[i].name, "borrow") == 0 && defs[i].map(r.norm[static_cast<size_t>(i)]) > 0.5f &&
+                    defs[i].map(r.norm[static_cast<size_t>(i)]) < 1.5f) {
+                    std::vector<float> mono = std::move(mat.input);
+                    mat.input.clear();
+                    levelTo(mono, ::acidulous::machine::abacus::kTrackRef);
+                    mat.song.resize(mono.size() * 2);
+                    for (size_t k = 0; k < mono.size(); ++k) mat.song[2 * k] = mat.song[2 * k + 1] = mono[k];
+                    mat.songLoop = static_cast<int64_t>(mono.size());
+                    mat.mixSong = false;
+                    for (int32_t j = 0; j < count; ++j)
+                        if (std::strcmp(defs[j].name, "sidechain") == 0) {
+                            r.norm[static_cast<size_t>(j)] = defs[j].unmap(1.0f);
+                            m->params().jump(j, defs[j].unmap(1.0f));
+                        }
+                }
+            }
         }
 
         const Kit *kit = kitFor(bank.unit);

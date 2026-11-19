@@ -453,6 +453,11 @@ object NativeEngine {
      */
     suspend fun loadUtterance(rack: Int, path: String): String = EngineNative.nativeLoadUtterance(rack, path)
     /**
+     * A file for an Abacus to borrow its levels from, analysed on the
+     * caller's thread, so only call this from a worker. An empty path clears it.
+     */
+    suspend fun loadBorrowFile(rack: Int, path: String): String = EngineNative.nativeLoadBorrowFile(rack, path)
+    /**
      * A recorded voice for a Diction: a line per held vowel,
      * "PHONE|path|holdFrom|holdTo" in frames, or "" for the built-in voice.
      */

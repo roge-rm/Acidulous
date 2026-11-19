@@ -127,6 +127,9 @@
     <string name="pw_bolt">boulon</string>
     <string name="pw_bonang">bonang</string>
     <string name="pw_bongo">bongo</string>
+    <string name="pw_borrow">emprunt</string>
+    <string name="pw_borrow_amt">intensité emprunt</string>
+    <string name="pw_borrow_smooth">lissage emprunt</string>
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">les deux</string>
     <string name="pw_bow">Archet</string>
@@ -274,6 +277,8 @@
     <string name="pw_counting">comptage</string>
     <string name="pw_count_depth">prof. du compte</string>
     <string name="pw_count_glide">porta. du compte</string>
+    <string name="pw_file_place">position fichier</string>
+    <string name="pw_file_scan">balayage fichier</string>
     <string name="pw_lit">allumés</string>
     <string name="pw_depth">prof.</string>
     <string name="pw_depth_a">prof. A</string>
@@ -768,6 +773,8 @@
     <string name="pw_motion_rate">vitesse du mouvement</string>
     <string name="pw_motion_tone">ton du mouvement</string>
     <string name="pw_motion_vowel">voyelle du mouvement</string>
+    <string name="pw_place">position</string>
+    <string name="pw_read">lecture</string>
     <string name="pw_tide">marée</string>
     <string name="pw_motor">moteur</string>
     <string name="pw_mouth">Mouth</string>

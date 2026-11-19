@@ -41,6 +41,23 @@ inline F4 exp2v(F4 x) {
     return p * (F4)((xi + 127) << 23);
 }
 
+/** log2 four at a time, good to about 4e-6 with no divide; anything under 2^-100 reads as -100. */
+inline F4 log2v(F4 x) {
+    x = pick(x < splat(7.8886e-31f), splat(7.8886e-31f), x);
+    const I4 bits = (I4)x;
+    F4 e = __builtin_convertvector(((bits >> 23) & 0xff) - 127, F4);
+    // The mantissa in [1, 2), folded to [0.71, 1.41) so the polynomial in
+    // m - 1 stays short.
+    F4 m = (F4)((bits & 0x007fffff) | 0x3f800000);
+    const I4 big = m > splat(1.41421356f);
+    m = pick(big, m * splat(0.5f), m);
+    e = pick(big, e + splat(1.0f), e);
+    const F4 t = m - splat(1.0f);
+    const F4 p = splat(1.4427018f) + t * (splat(-0.721208443f) + t * (splat(0.479793639f) + t * (splat(-0.36641372f) +
+                 t * (splat(0.318410576f) + t * splat(-0.20686046f)))));
+    return e + t * p;
+}
+
 /** rotation() four at a time. */
 inline void rotationv(F4 theta, F4 &c, F4 &s) {
     const F4 h = theta * splat(0.5f);

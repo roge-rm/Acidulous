@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.rm.acidulous.engine.NativeEngine
 import com.rm.acidulous.engine.ParamInfo
+import com.rm.acidulous.model.BorrowFiles
 import com.rm.acidulous.model.Machine
 import com.rm.acidulous.model.MachineUi
 import com.rm.acidulous.model.MACRO_MACHINES
@@ -273,7 +274,7 @@ fun MachinePanel(
             "Aviary" -> AviaryPanel(binding, selectedPad, track, trackIndex, editor)
             "Fathom" -> FathomPanel(binding, selectedPad, track, trackIndex, editor)
             "Divisi" -> DivisiPanel(binding, track, trackIndex, editor)
-            "Abacus" -> AbacusPanel(binding, track, trackIndex, editor)
+            "Abacus" -> AbacusPanel(binding, track, trackIndex, editor, onImportOneSample)
             "Timber" -> TimberPanel(binding, track, trackIndex, editor)
             "Nexus" -> NexusPanel(binding, track, trackIndex, editor, onOpenPatch)
             "Pollen" -> PollenPanel(binding, track, trackIndex, editor, onImportOneSample)
@@ -5664,6 +5665,7 @@ val ABACUS_MACRO_DESTS = listOf(
     "lfo1 rate", "lfo1 pitch", "lfo1 morph", "lfo2 rate", "lfo2 bright", "lfo2 pan",
     "glide", "fine", "slide", "pressure", "volume", "pan",
     "pitch", "count depth", "count glide",
+    "borrow amt", "borrow smooth", "file place", "file scan",
 )
 
 private val ABACUS_COUNTS = listOf("off", "up", "down", "up-down", "odd/even", "fifths", "random")
@@ -5671,15 +5673,19 @@ private val ABACUS_RATES = listOf("1/32T", "1/32", "1/16T", "1/16", "1/8T", "1/8
 private val ABACUS_PARTIALS = listOf("16", "32", "64")
 private val ABACUS_LAWS = listOf("harmonic", "string", "bar", "bell", "plate")
 private val ABACUS_SPREADS = listOf("odd/even", "scatter", "low-high")
+private val ABACUS_BORROWS = listOf("off", "track", "file")
 
-/** Abacus: the macros and envelope, the spectrum, the partials' law and decay, and the motion. */
+/** Abacus: the macros and envelope, the spectrum, the partials' law and decay, the motion, counting and borrow. */
 @Composable
-private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor) {
+private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: SongEditor, onImport: () -> Unit) {
     var section by rememberSaveable { mutableStateOf(0) }
     var renaming by remember { mutableStateOf(0) }
+    var picking by remember { mutableStateOf(false) }
     val macroNames = (1..8).map { track.machine.settings["macro$it"].orEmpty() }
+    val c = Acid.colors
+    val sample = track.machine.settings["sample"].orEmpty()
     PanelSections(
-        listOf("play", "spectrum", "partials", "motion", "counting", "macros"), section, { section = it },
+        listOf("play", "spectrum", "partials", "motion", "counting", "borrow", "macros"), section, { section = it },
         above = { sec ->
             // The square layout has no room for it above the knobs.
             if ((sec == 1 || sec == 2) && screenShape() != ScreenShape.Square) BeadFrame(b, Modifier.padding(bottom = 4.dp))
@@ -5702,7 +5708,48 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
                     PanelKnob(b, "pan", "pan")
                 }
             }
-            5 -> for (k in 1..8) key(k) { Group("macro $k") {
+            5 -> {
+                Group("borrow") {
+                    PanelSwitch(b, "borrow", ABACUS_BORROWS, "from")
+                    PanelSwitch(b, "bmode", listOf("envelope", "partials"), "read")
+                    PanelKnob(b, "bamount", "amount", PanelAmber)
+                }
+                Group("follow") {
+                    PanelKnob(b, "bsmooth", "smooth")
+                    PanelSwitch(b, "bfreeze", listOf("follow", "hold"), "freeze")
+                }
+                Group("track") {
+                    // The track whose sound the partials read: none, or the track.
+                    val trackLabels = listOf(panelWord("off")) + (0 until SIDECHAIN_STEPS - 1).map { i ->
+                        editor.song.tracks.getOrNull(i)?.name ?: "${i + 1}"
+                    }
+                    PanelStepKnob(b, "sidechain", trackLabels, "track", PanelPink)
+                }
+                Group("file") {
+                    Column(Modifier.widthIn(min = 140.dp, max = 260.dp)) {
+                        Text(
+                            when {
+                                sample.isEmpty() -> stringResource(Res.string.machine_no_file)
+                                sample == BorrowFiles.FACTORY + "voice" -> stringResource(Res.string.abacus_file_voice)
+                                else -> BorrowFiles.displayName(sample)
+                            },
+                            color = if (sample.isEmpty()) c.textDim else c.textHi,
+                            fontSize = 11.sp, fontFamily = FontFamily.Monospace, maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        )
+                        Row {
+                            TextButton(onClick = onImport) { Text(stringResource(Res.string.machine_import), color = c.textMid, fontSize = 11.sp) }
+                            TextButton(onClick = { picking = true }) { Text(stringResource(Res.string.machine_samples), color = c.textMid, fontSize = 11.sp) }
+                            TextButton(onClick = { editor.edit(trackIndex) { t -> t.withSetting("sample", BorrowFiles.FACTORY + "voice") } }) {
+                                Text(stringResource(Res.string.abacus_file_voice), color = c.textMid, fontSize = 11.sp)
+                            }
+                        }
+                    }
+                    PanelKnob(b, "bpos", "place", PanelAmber)
+                    PanelKnob(b, "bscan", "scan")
+                }
+            }
+            6 -> for (k in 1..8) key(k) { Group("macro $k") {
                 TextButton(onClick = { renaming = k }) {
                     Text(
                         macroNames[k - 1].ifBlank { stringResource(Res.string.macro_unnamed) },
@@ -5811,6 +5858,16 @@ private fun AbacusPanel(b: ParamBinding, track: Track, trackIndex: Int, editor: 
             }
         }
     }
+    if (picking) RecorderDialog(
+        editor = editor,
+        startOn = RecorderPage.Library,
+        inUse = editor.song.samplesInUse(),
+        onPick = { rel ->
+            picking = false
+            editor.edit(trackIndex) { t -> t.withSetting("sample", rel) }
+        },
+        onDismiss = { picking = false },
+    )
     if (renaming > 0) MacroNameDialog(
         macroNames[renaming - 1], onDismiss = { renaming = 0 },
         onName = { name ->

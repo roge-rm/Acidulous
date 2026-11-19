@@ -4,6 +4,7 @@
 #include <engine/dsp/Adsr.h>
 #include <engine/dsp/LfoGen.h>
 #include <engine/machine/Machine.h>
+#include <engine/machine/abacus/Borrow.h>
 #include <engine/machine/abacus/PartialBank.h>
 
 namespace acidulous::machine {
@@ -58,6 +59,8 @@ class Abacus final : public Machine {
         Volume, Pan,
         // --- count: the partials play in rhythm ---
         Pattern, CRate, CSteps, CFrom, CWidth, CDepth, CGlide,
+        // --- borrow: the partials' levels from another track or a file ---
+        Borrow, Sidechain, BMode, BAmount, BSmooth, BFreeze, BPos, BScan,
         // Eight macro knobs, each with four routes: a destination (a
         // MacroDest) and a depth. A macro's knob times a route's depth is
         // added to the destination, in its own 0..1 range. Block rate. Pitch
@@ -77,6 +80,7 @@ class Abacus final : public Machine {
         McLfo1Rate, McLfo1Pitch, McLfo1Morph, McLfo2Rate, McLfo2Bright, McLfo2Pan,
         McGlide, McFine, McMpeTimbre, McMpePressure, McVolume, McPan, McPitch,
         McCDepth, McCGlide,
+        McBAmount, McBSmooth, McBPos, McBScan,
         MacroDestCount
     };
     static constexpr int kMacros = 8;
@@ -87,8 +91,12 @@ class Abacus final : public Machine {
     enum CountKind : int32_t { CountOff = 0, CountUp, CountDown, CountUpDown, CountOddEven, CountFifths, CountRandom, CountKinds };
     static constexpr int kRates = 10;
     enum SpreadKind : int32_t { OddEven = 0, Scatter, LowHigh, SpreadCount };
+    enum BorrowKind : int32_t { BorrowOff = 0, BorrowTrack, BorrowFile };
+    enum BorrowMode : int32_t { BorrowEnvelope = 0, BorrowPartials };
 
     Abacus();
+    /** Deletes the mounted file's table. */
+    ~Abacus() override;
 
     const char *typeName() const override { return "Abacus"; }
     const ParamDef *paramDefs(int32_t &count) const override;
@@ -114,9 +122,16 @@ class Abacus final : public Machine {
     void notePressure(uint8_t note, uint8_t value) override;
     void noteTimbre(uint8_t note, uint8_t value) override;
     bool render(float *L, float *R, int32_t frames) override;
+    /** Slot 0 takes an abacus::Spectra, a file analysed for borrow. */
+    void *swapObject(int32_t slot, void *object) override;
+    int64_t heldBytes() const override { return file_ != nullptr ? file_->bytes() : 0; }
 
     /** Partial [h] (1 is the note) lit on step [k] of a [kind] pattern of [steps] from partial [from], [width] wide, in bar [bar]; the first partial lit. For tests. */
     static int litStart(int kind, int k, int steps, int from, int count, int bar);
+    /** Voice [i]'s borrowed level for partial [n], linear, for tests; -1 when the voice isn't sounding. */
+    float borrowedOf(int i, int n) const { return voices[i].used ? voices[i].bor[n] : -1.0f; }
+    /** The track analysis's latest frame, for tests. */
+    const abacus::Frame &liveFrame() const { return live.current(); }
     /** Voices sounding, for tests. */
     int activeVoices() const;
     /** Partial [n]'s ratio to the note under [law] and [stretch], as the machine works it out. For tests. */
@@ -157,6 +172,29 @@ class Abacus final : public Machine {
         alignas(16) float shL1[kPartials] = {};
         alignas(16) float shP0[kPartials] = {};
         alignas(16) float shP1[kPartials] = {};
+        /** Borrow: seconds the file has been scanned since note-on, and the borrowed levels, linear, once set. */
+        float scan = 0.0f;
+        bool borSet = false;
+        alignas(16) float bor[kPartials] = {};
+        /**
+         * The source looked up at this voice's partials, kept until the
+         * source's frame, the mode, the count or the pitch (by a cent) move.
+         * A track's goal is linear; a file's two frames either side are log2
+         * shapes, mixed every block as the voice scans.
+         */
+        int32_t borKey = -1, borMode = -1, borCount = 0;
+        float borF0 = 0.0f;
+        alignas(16) float borGoal[kPartials] = {};
+        alignas(16) float borA[kPartials] = {};
+        alignas(16) float borB[kPartials] = {};
+        /**
+         * While borrowing, the peak and vowel terms of the own level, log2,
+         * kept until the pitch, the law or their knobs move.
+         */
+        float ownKey[8] = {};
+        uint32_t ownLaw = 0;
+        alignas(16) float peakLg[kPartials] = {};
+        alignas(16) float vowelLg[kPartials] = {};
     };
 
     /** Param [p], smoothed, with the macros' routes to it added. */
@@ -172,6 +210,12 @@ class Abacus final : public Machine {
     void startVoice(Voice &v, uint8_t note, uint8_t velocity);
     /** Works out the ratio and damping tables when the law, stretch or damp move. */
     void updateLaw(int law, float stretch, float damp);
+    /** Moves the voice's borrowed levels toward the source's, for a voice at log2 [f0] Hz. */
+    void borrowFor(Voice &v, float log2f0, float sec);
+    /** Fills the voice's peakLg and vowelLg when what they depend on has moved. */
+    void ownTerms(Voice &v, float log2f0, float peakLog2, float peakInv, float peakGain);
+    /** Frame [f]'s envelope read at the first [count] partials over log2 [f0] Hz into [out], log2. */
+    void lookUp(const abacus::Frame &f, float log2f0, int count, float *out) const;
     /** Renders one voice's block into the lane accumulators. */
     void renderVoice(Voice &v, int32_t frames);
 
@@ -211,6 +255,8 @@ class Abacus final : public Machine {
     alignas(16) float combMask[kPartials] = {};
     int combFor = -1;
     int lawFor = -1;
+    /** Counts the ratio table's rebuilds, 0 never, so voices know their cached terms are stale. */
+    uint32_t lawGen = 0;
     float stretchFor = 0.0f, dampFor = -1.0f;
 
     /** This block's values shared by every voice, set in render(). */
@@ -231,7 +277,18 @@ class Abacus final : public Machine {
         int countKind = 0, cSteps = 8, cFrom = 4, cWidth = 1, cRateTicks = 60;
         float cDepth = 1.0f, cGlide = 0.2f;
         float ampA = 0.005f, ampD = 1.0f, ampS = 1.0f, ampR = 0.3f;
+        /** Borrow this block: from where (off when the source isn't there), how it reads, and its knobs. */
+        int borrow = 0, bMode = 0;
+        bool bFreeze = false;
+        float bAmount = 1.0f, bCoef = 1.0f, bPos = 0.0f, bScan = 0.0f;
     } blk;
+
+    /** The track borrowed from, analysed as it plays. */
+    abacus::LiveSource live;
+    /** The file borrowed from, mounted in slot 0, or null. */
+    const abacus::Spectra *file_ = nullptr;
+    /** Counts the files mounted, so voices look a new one up. */
+    int32_t fileGen = 0;
 
     /** Every voice's lanes summed, four floats a frame, left and right. */
     alignas(16) float accL[64 * 4] = {};

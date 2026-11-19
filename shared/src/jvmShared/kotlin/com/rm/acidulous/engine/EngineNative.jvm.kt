@@ -114,6 +114,16 @@ internal actual object EngineNative {
         val result_ = jni_nativeLoadUtterance(rack, path)
         return result_
     }
+    @JvmName("nativeLoadBorrowFile")
+    private external fun jni_nativeLoadBorrowFile(rack: Int, path: String): String
+    actual suspend fun nativeLoadBorrowFile(rack: Int, path: String): String {
+        val dry_ = DryLines.writer.get()
+        if (dry_ != null) { dry_.call("LoadBorrowFile") { int(rack); path(path) }; return "" }
+        EngineLines.sent++
+        EngineLines.writer?.call("LoadBorrowFile") { int(rack); path(path) }
+        val result_ = jni_nativeLoadBorrowFile(rack, path)
+        return result_
+    }
     @JvmName("nativeLoadVoice")
     private external fun jni_nativeLoadVoice(rack: Int, slot: Int, spec: String): String
     actual suspend fun nativeLoadVoice(rack: Int, slot: Int, spec: String): String {

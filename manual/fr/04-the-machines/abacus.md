@@ -78,6 +78,35 @@ même à chaque lecture).
 Morceau arrêté, il continue de compter au tempo. **prof. du compte** et
 **porta. du compte** peuvent être des destinations de macro.
 
+## Emprunt
+
+Les partiels peuvent prendre leurs niveaux à un autre son pendant qu’il joue :
+une autre piste, ou un fichier. Vos notes gardent leur hauteur et l’autre son
+leur donne sa couleur et son volume, donc une nappe peut parler avec une voix
+ou respirer avec une piste de batterie.
+
+- **emprunt** : **de** vaut **non**, **piste** ou **fichier**. **lecture** est
+  la façon de lire le son. **enveloppe** prend sa couleur d’ensemble, ses
+  formants et sa brillance, et la pose sur vos partiels par fréquence.
+  **partiels** suit sa hauteur et prend ses harmoniques par numéro, son 3e sur
+  votre 3e, ce qui demande un son à une seule hauteur claire. **intensité**
+  passe des niveaux propres des partiels aux niveaux empruntés.
+- **suivre** : **lisse** est la vitesse à laquelle les niveaux empruntés
+  suivent, court pour la parole, plus long pour une nappe plus douce. **figer**
+  sur **tenir** garde ce qu’il a et cesse d’écouter.
+- **piste** : la piste à laquelle emprunter. Sans piste choisie, les partiels
+  jouent leurs propres niveaux.
+- **fichier** : **importer…** ouvre un fichier, **échantillons…** en choisit un
+  que vous avez, et **voix** est une ligne chantée fournie avec l’app.
+  **position** est l’endroit du fichier qu’il lit, et **balayage** le parcourt,
+  1 à la vitesse du fichier, négatif à l’envers, en boucle aux extrémités. Un
+  fichier est lu jusqu’à une minute.
+
+Le grondement sous 70 Hz est laissé de côté, pour que le ronflement d’une piste
+ne colore pas les partiels. Quand l’autre piste se tait, Abacus aussi.
+**intensité emprunt**, **lissage emprunt**, **position fichier** et **balayage
+fichier** peuvent être des destinations de macro.
+
 ## Jeu
 
 La page **jeu** a les huit boutons macro, l’enveloppe d’amplitude (**A**,
@@ -107,5 +136,7 @@ départ et la largeur du comptage, ne sont pas accessibles. Touchez le nom d’u
   vous ne baissez pas **chute**. La macro Fade fait les deux.
 - Pour un son frappé, montez **enveloppe morph** avec un **temps** court et
   donnez au **bout lointain** une pente plus brillante.
-- Les patchs forment six familles : classic, organ, vocal, strings, mallets
-  et bells.
+- Les patchs forment huit familles : classic, organ, vocal, strings, mallets,
+  bells, count et borrow.
+- Les patchs borrow qui lisent une piste n’ont pas de piste choisie : choisissez
+  en une sur la page **emprunt**, une boucle de batterie ou une voix marche bien.

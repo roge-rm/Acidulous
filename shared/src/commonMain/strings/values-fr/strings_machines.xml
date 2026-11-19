@@ -88,6 +88,7 @@
     <string name="machine_no_take">aucune prise</string>
     <string name="machine_no_loop">aucune boucle</string>
     <string name="machine_no_file">aucun fichier</string>
+    <string name="abacus_file_voice">voix</string>
     <string name="diction_builtin">intégrée</string>
     <string name="diction_from">depuis…</string>
     <string name="diction_consonants_title">Consonnes</string>

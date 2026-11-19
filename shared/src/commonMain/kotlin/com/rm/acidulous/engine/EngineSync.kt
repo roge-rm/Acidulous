@@ -44,6 +44,7 @@ import com.rm.acidulous.model.reelSpec
 import com.rm.acidulous.model.sendUnit
 import com.rm.acidulous.model.slotOf
 import com.rm.acidulous.model.VenueRooms
+import com.rm.acidulous.model.BorrowFiles
 import com.rm.acidulous.model.Song
 import com.rm.acidulous.model.laneParam
 import com.rm.acidulous.model.isPedalLane
@@ -731,19 +732,41 @@ object EngineSync {
             m.loadedTakes[rack] = wanted
             if (wanted == null) continue
             // Molt needs something different from the same file (glottal
-            // pulses rather than transients), so it gets its own decode. Both
-            // run on a worker.
-            val sung = track?.machine?.type == "Molt"
+            // pulses rather than transients), and Abacus its spectra, so each
+            // gets its own decode. All run on a worker.
+            val type = track?.machine?.type
             load(m) {
-                val path = if (wanted.isEmpty()) "" else com.rm.acidulous.io.File(root, wanted).absolutePath
-                val error = if (sung) NativeEngine.loadUtterance(rack, path)
-                            else NativeEngine.loadTake(rack, path)
+                val path = when {
+                    wanted.isEmpty() -> ""
+                    type == BorrowFiles.TYPE && wanted.startsWith(BorrowFiles.FACTORY) -> borrowAssetPath(wanted)
+                    else -> com.rm.acidulous.io.File(root, wanted).absolutePath
+                }
+                if (path == null) {
+                    problem(Res.string.sync_borrow_missing, BorrowFiles.displayName(wanted))
+                    return@load
+                }
+                val error = when (type) {
+                    "Molt" -> NativeEngine.loadUtterance(rack, path)
+                    BorrowFiles.TYPE -> NativeEngine.loadBorrowFile(rack, path)
+                    else -> NativeEngine.loadTake(rack, path)
+                }
                 // Reported and not retried: a file that won't decode won't
                 // decode the second time either. `m.loadedTakes` is already set,
                 // so changing the setting is what tries again.
                 if (error.isNotEmpty()) problem(Res.string.sync_file_failed, shortName(wanted), error)
             }
         }
+    }
+
+    /** One of Abacus's own files, copied out of the app's resources into the cache the first time; null if it isn't one. */
+    private suspend fun borrowAssetPath(setting: String): String? {
+        val asset = BorrowFiles.factoryAsset(setting) ?: return null
+        val file = com.rm.acidulous.io.File(com.rm.acidulous.io.File(EngineAssets.cacheRoot(), "borrow").apply { mkdirs() }, asset.substringAfterLast('/'))
+        if (!file.isFile) {
+            val bytes = runCatching { Res.readBytes(asset) }.getOrNull() ?: return null
+            file.writeBytesSafely(bytes)
+        }
+        return file.absolutePath
     }
 
     /**

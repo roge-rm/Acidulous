@@ -173,6 +173,9 @@
     <string name="pw_bolt">bolt</string>
     <string name="pw_bonang">bonang</string>
     <string name="pw_bongo">bongo</string>
+    <string name="pw_borrow">borrow</string>
+    <string name="pw_borrow_amt">borrow amt</string>
+    <string name="pw_borrow_smooth">borrow smooth</string>
     <string name="pw_bossa">bossa</string>
     <string name="pw_both">both</string>
     <string name="pw_bounce">bounce</string>
@@ -495,6 +498,8 @@
     <string name="pw_fifths">fifths</string>
     <string name="pw_file">file</string>
     <string name="pw_file_mod">file mod</string>
+    <string name="pw_file_place">file place</string>
+    <string name="pw_file_scan">file scan</string>
     <string name="pw_filt_decay">filt decay</string>
     <string name="pw_filter">Filter</string>
     <string name="pw_filter_4bb4ca">filter</string>
@@ -1074,6 +1079,7 @@
     <string name="pw_pitch1">pitch1</string>
     <string name="pw_pitch2">pitch2</string>
     <string name="pw_pitch3">pitch3</string>
+    <string name="pw_place">place</string>
     <string name="pw_plaster">plaster</string>
     <string name="pw_plate">plate</string>
     <string name="pw_play">play</string>
@@ -1154,6 +1160,7 @@
     <string name="pw_rattle">rattle</string>
     <string name="pw_rattle_at">rattle at</string>
     <string name="pw_rchance">rchance</string>
+    <string name="pw_read">read</string>
     <string name="pw_read_from">read from</string>
     <string name="pw_recover">recover</string>
     <string name="pw_rect">rect</string>

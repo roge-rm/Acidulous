@@ -64,6 +64,11 @@ extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadUtterance(jniweb::Arena
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadUtterance(acid_jni_env(), nullptr, rack, path))); });
 }
 
+extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadBorrowFile(JNIEnv *, jobject, jint, jstring);
+extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadBorrowFile(jniweb::Arena *arena, jint rack, jstring path) {
+    return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadBorrowFile(acid_jni_env(), nullptr, rack, path))); });
+}
+
 extern "C" jstring Java_com_rm_acidulous_engine_EngineNative_nativeLoadVoice(JNIEnv *, jobject, jint, jint, jstring);
 extern "C" EMSCRIPTEN_KEEPALIVE int acid_async_nativeLoadVoice(jniweb::Arena *arena, jint rack, jint slot, jstring spec) {
     return jniweb::runAsync(arena, [=](jniweb::Ticket &t) { t.i = static_cast<int32_t>(reinterpret_cast<intptr_t>(Java_com_rm_acidulous_engine_EngineNative_nativeLoadVoice(acid_jni_env(), nullptr, rack, slot, spec))); });

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <engine/dsp/Math.h>
 #include <sequencer/Swing.h>
 #include <engine/machine/Voices.h>
@@ -92,6 +93,15 @@ const ParamDef kBase[Abacus::MacroBase] = {
         {"cwidth", 1.0f, 8.0f, 1.0f, Curve::Stepped, 8, ""},
         {"cdepth", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
         {"cglide", 0.0f, 1.0f, 0.2f, Curve::Linear, 0, ""},
+        // --- borrow ----------------------------------------------------
+        {"borrow", 0.0f, 2.0f, 0.0f, Curve::Stepped, 3, ""}, // off, track, file
+        {"sidechain", 0.0f, 16.0f, 0.0f, Curve::Stepped, 17, ""}, // none, track 1..16
+        {"bmode", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""}, // envelope, partials
+        {"bamount", 0.0f, 1.0f, 1.0f, Curve::Linear, 0, ""},
+        {"bsmooth", 0.005f, 1.0f, 0.05f, Curve::Exponential, 0, "s"},
+        {"bfreeze", 0.0f, 1.0f, 0.0f, Curve::Stepped, 2, ""},
+        {"bpos", 0.0f, 1.0f, 0.0f, Curve::Linear, 0, ""},
+        {"bscan", -2.0f, 2.0f, 0.0f, Curve::Linear, 0, ""},
 };
 
 // The base table plus the macros' knobs and routes.
@@ -129,7 +139,7 @@ constexpr int32_t kDestParam[Abacus::MacroDestCount] = {
     Abacus::Sustain, Abacus::Release, Abacus::VelocityAmount, Abacus::VelBright, Abacus::Spread, Abacus::Shimmer,
     Abacus::ShimmerRate, Abacus::Lfo1Rate, Abacus::Lfo1Pitch, Abacus::Lfo1Morph, Abacus::Lfo2Rate, Abacus::Lfo2Bright,
     Abacus::Lfo2Pan, Abacus::Glide, Abacus::Fine, Abacus::MpeTimbre, Abacus::MpePressure, Abacus::Volume, Abacus::Pan,
-    -1, Abacus::CDepth, Abacus::CGlide,
+    -1, Abacus::CDepth, Abacus::CGlide, Abacus::BAmount, Abacus::BSmooth, Abacus::BPos, Abacus::BScan,
 };
 
 /** The other way: each param's macro destination, or 0 for none. */
@@ -270,6 +280,8 @@ Abacus::Abacus() {
     (void)plateRatio(0);
 }
 
+Abacus::~Abacus() { delete file_; }
+
 const ParamDef *Abacus::paramDefs(int32_t &count) const {
     count = Count;
     return table().defs;
@@ -311,6 +323,7 @@ void Abacus::updateLaw(int law, float stretch, float damp) {
         }
         lawFor = law;
         stretchFor = stretch;
+        if (++lawGen == 0) lawGen = 1;
         dampFor = -1.0f;
     }
     if (damp != dampFor) {
@@ -360,6 +373,7 @@ void Abacus::updateMacroGoals() {
 
 void Abacus::prepare(int32_t sr) {
     sampleRate = static_cast<float>(sr);
+    live.prepare(sampleRate);
     reset();
 }
 
@@ -386,6 +400,16 @@ void Abacus::reset() {
     freeTick = 0.0;
     songFresh = songLocked = false;
     for (float &w : cw) w = 1.0f;
+    live.reset();
+}
+
+void *Abacus::swapObject(int32_t slot, void *object) {
+    if (slot != 0) return object;
+    // Voices read the table only while rendering, so they carry on with the new one.
+    void *old = const_cast<abacus::Spectra *>(file_);
+    file_ = static_cast<const abacus::Spectra *>(object);
+    fileGen = (fileGen + 1) & 0xffff;
+    return old;
 }
 
 int Abacus::activeVoices() const {
@@ -453,6 +477,10 @@ void Abacus::startVoice(Voice &v, uint8_t note, uint8_t velocity) {
         v.shP1[n] = nextRand(v.rng) * 2.0f - 1.0f;
     }
     v.panFor = -1.0f;
+    v.scan = 0.0f;
+    v.borSet = false;
+    v.borKey = v.borMode = -1;
+    v.ownLaw = 0;
     v.amp.retrigger();
 }
 
@@ -493,6 +521,118 @@ void Abacus::noteTimbre(uint8_t note, uint8_t value) {
 }
 
 void Abacus::onBlock(int64_t, int64_t, float tempo) { bpm = tempo; }
+
+void Abacus::lookUp(const abacus::Frame &f, float log2f0, int count, float *out) const {
+    using namespace abacus;
+    const F4 ppo = splat(envPointsPerOctave());
+    const F4 from = splat(log2f0 - std::log2(kEnvLowHz));
+    const F4 top = splat(static_cast<float>(kEnvPoints - 1) - 1e-3f);
+    for (int n = 0; n < count; n += 4) {
+        F4 p = (from + load4(log2Ratio + n)) * ppo;
+        p = pick(p < splat(0.0f), splat(0.0f), p);
+        p = pick(p > top, top, p);
+        const I4 j = __builtin_convertvector(p, I4);
+        const F4 t = p - __builtin_convertvector(j, F4);
+        const F4 e0 = {f.env[j[0]], f.env[j[1]], f.env[j[2]], f.env[j[3]]};
+        const F4 e1 = {f.env[j[0] + 1], f.env[j[1] + 1], f.env[j[2] + 1], f.env[j[3] + 1]};
+        store4(out + n, e0 + (e1 - e0) * t);
+    }
+}
+
+void Abacus::borrowFor(Voice &v, float log2f0, float sec) {
+    using namespace abacus;
+    const Block &b = blk;
+    const bool envelope = b.bMode == BorrowEnvelope;
+    // The partials are looked up again only when what they read has moved.
+    const int32_t mode = (fileGen << 3) | (b.borrow << 1) | b.bMode;
+    const bool moved = v.borMode != mode || v.borCount != b.count ||
+                       (envelope && std::fabs(log2f0 - v.borF0) > 1.0f / 1200.0f);
+    const F4 silent = splat(-100.0f);
+    alignas(16) float goal[kPartials];
+    if (b.borrow == BorrowFile) {
+        // Two of the file's frames either side of the voice's place in it.
+        const Spectra &f = *file_;
+        const auto count = static_cast<int32_t>(f.frames.size());
+        const float length = std::max(f.seconds, f.hopSeconds);
+        float at = std::fmod(b.bPos * length + v.scan, length);
+        if (at < 0.0f) at += length;
+        const float pos = std::min(at / f.hopSeconds, static_cast<float>(count - 1));
+        const auto k = std::min(static_cast<int32_t>(pos), count - 1);
+        const float mix = pos - static_cast<float>(k);
+        const Frame &fa = f.frames[static_cast<size_t>(k)];
+        const Frame &fb = f.frames[static_cast<size_t>(k + 1 < count ? k + 1 : 0)];
+        if (!b.bFreeze) v.scan += b.bScan * sec;
+        if (envelope && (moved || v.borKey != k)) {
+            lookUp(fa, log2f0, b.count, v.borA);
+            lookUp(fb, log2f0, b.count, v.borB);
+        }
+        const float *sa = envelope ? v.borA : fa.harm, *sb = envelope ? v.borB : fb.harm;
+        const float level = fa.level + (fb.level - fa.level) * mix;
+        const F4 lv = splat(level > 0.0f ? std::log2(level) : -100.0f), vm = splat(mix);
+        for (int n = 0; n < b.count; n += 4) {
+            const F4 a = load4(sa + n);
+            store4(goal + n, exp2v(a + (load4(sb + n) - a) * vm + lv));
+        }
+        for (int n = b.count; n < kPartials; n += 4) store4(goal + n, exp2v(silent));
+        v.borKey = k;
+    } else {
+        // A track's latest frame: the goal only changes when a frame comes in.
+        const auto serial = static_cast<int32_t>(live.serial() & 0x7fffffff);
+        if (moved || v.borKey != serial) {
+            const Frame &f = live.current();
+            if (envelope) lookUp(f, log2f0, b.count, v.borGoal);
+            else for (int n = 0; n < b.count; ++n) v.borGoal[n] = f.harm[n];
+            const F4 lv = splat(f.level > 0.0f ? std::log2(f.level) : -100.0f);
+            for (int n = 0; n < b.count; n += 4) store4(v.borGoal + n, exp2v(load4(v.borGoal + n) + lv));
+            for (int n = b.count; n < kPartials; n += 4) store4(v.borGoal + n, exp2v(silent));
+            v.borKey = serial;
+        }
+        std::memcpy(goal, v.borGoal, sizeof(goal));
+    }
+    if (moved) {
+        v.borMode = mode;
+        v.borCount = b.count;
+        v.borF0 = log2f0;
+    }
+    if (!v.borSet) {
+        std::memcpy(v.bor, goal, sizeof(goal));
+        v.borSet = true;
+    } else if (!b.bFreeze) {
+        // A one-pole on the linear level, bsmooth its time constant.
+        const F4 k = splat(b.bCoef);
+        for (int n = 0; n < kPartials; n += 4) {
+            const F4 was = load4(v.bor + n);
+            store4(v.bor + n, was + (load4(goal + n) - was) * k);
+        }
+    }
+}
+
+// The own level's peak and vowel terms for a voice at log2 [log2f0] Hz,
+// worked out again only when the pitch, the law or their knobs move.
+void Abacus::ownTerms(Voice &v, float log2f0, float peakLog2, float peakInv, float peakGain) {
+    using namespace abacus;
+    const Block &b = blk;
+    const float key[8] = {log2f0, peakLog2, peakInv, peakGain, b.vowelF1, b.vowelF2, b.vowelAmount, static_cast<float>(b.count)};
+    if (v.ownLaw == lawGen && std::memcmp(key, v.ownKey, sizeof(key)) == 0) return;
+    const F4 zero = splat(0.0f), vlog2f0 = splat(log2f0);
+    const F4 vpeak = splat(peakLog2), vpeakInv = splat(peakInv), vpeakGain = splat(peakGain);
+    const F4 vF1 = splat(b.vowelF1), vF2 = splat(b.vowelF2), vVowel = splat(b.vowelAmount);
+    for (int n = 0; n < b.count; n += 4) {
+        const F4 lf = vlog2f0 + load4(log2Ratio + n);
+        if (peakGain > 0.0f) {
+            const F4 d = (lf - vpeak) * vpeakInv;
+            store4(v.peakLg + n, vpeakGain * exp2v(zero - d * d));
+        }
+        if (b.vowelAmount > 0.0f) {
+            const F4 d1 = (lf - vF1) * splat(1.0f / 0.35f);
+            const F4 d2 = (lf - vF2) * splat(1.0f / 0.3f);
+            const F4 resp = splat(0.06f) + exp2v(zero - d1 * d1) + splat(0.7f) * exp2v(zero - d2 * d2);
+            store4(v.vowelLg + n, log2v(splat(1.0f) + vVowel * (resp - splat(1.0f))));
+        }
+    }
+    std::memcpy(v.ownKey, key, sizeof(key));
+    v.ownLaw = lawGen;
+}
 
 void Abacus::renderVoice(Voice &v, int32_t frames) {
     const Block &b = blk;
@@ -578,6 +718,9 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
         }
     }
 
+    const bool borrowing = b.borrow != BorrowOff;
+    if (borrowing) borrowFor(v, log2f0, sec);
+
     // Every partial's target gain and rotation, four at a time with no
     // branches: masks zero what is silent, over the cutoff or past the count.
     using abacus::F4;
@@ -598,6 +741,15 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
     // Index 0 is the first partial, odd; the lanes go odd, even, odd, even.
     const F4 parity = {oddMul, evenMul, oddMul, evenMul};
     const F4 vBase = splat(base);
+    const F4 vAmount = splat(b.bAmount);
+    const bool mixing = borrowing && b.bAmount > 0.0f, whole = b.bAmount >= 1.0f;
+    auto logOf = [](float x) { return x == 1.0f ? 0.0f : (x > 7.8886e-31f ? std::log2(x) : -100.0f); };
+    const float oddLog = mixing && !whole ? logOf(oddMul) : 0.0f, evenLog = mixing && !whole ? logOf(evenMul) : 0.0f;
+    const F4 parityLog = {oddLog, evenLog, oddLog, evenLog};
+    const F4 vCombLog = splat(mixing && !whole ? logOf(combMul) : 0.0f);
+    // Borrowing, the own level's peak and vowel terms are kept per voice.
+    const bool peakOn = peakLog2Gain > 0.0f, vowelOn = b.vowelAmount > 0.0f;
+    if (mixing && !whole && (peakOn || vowelOn)) ownTerms(v, log2f0, peakLog2, peakInv, peakLog2Gain);
     F4 total4 = zero, power4 = zero;
     for (int n = 0; n < b.count; n += 4) {
         const F4 l2 = load4(log2Ratio + n);
@@ -611,16 +763,33 @@ void Abacus::renderVoice(Voice &v, int32_t frames) {
             hz *= splat(1.0f) + vshP * (p0 + (load4(v.shP1 + n) - p0) * sm);
         }
         const F4 lf = vlog2f0 + l2;
-        if (peakLog2Gain > 0.0f) {
+        if (peakLog2Gain > 0.0f && !mixing) {
             const F4 d = (lf - vpeak) * vpeakInv;
             lg += vpeakGain * abacus::exp2v(zero - d * d);
         }
-        F4 g = abacus::exp2v(lg) * parity * (splat(1.0f) - vComb * load4(combMask + n));
-        if (b.vowelAmount > 0.0f) {
-            const F4 d1 = (lf - vF1) * splat(1.0f / 0.35f);
-            const F4 d2 = (lf - vF2) * splat(1.0f / 0.3f);
-            const F4 resp = splat(0.06f) + abacus::exp2v(zero - d1 * d1) + splat(0.7f) * abacus::exp2v(zero - d2 * d2);
-            g *= splat(1.0f) + vVowel * (resp - splat(1.0f));
+        F4 g;
+        if (!mixing) {
+            g = abacus::exp2v(lg) * parity * (splat(1.0f) - vComb * load4(combMask + n));
+            if (b.vowelAmount > 0.0f) {
+                const F4 d1 = (lf - vF1) * splat(1.0f / 0.35f);
+                const F4 d2 = (lf - vF2) * splat(1.0f / 0.3f);
+                const F4 resp = splat(0.06f) + abacus::exp2v(zero - d1 * d1) + splat(0.7f) * abacus::exp2v(zero - d2 * d2);
+                g *= splat(1.0f) + vVowel * (resp - splat(1.0f));
+            }
+        } else {
+            // Own to borrowed in log2: amount 1 is the borrowed levels alone.
+            const F4 borrowed = abacus::log2v(load4(v.bor + n));
+            if (whole) {
+                lg = borrowed;
+            } else {
+                // The own level in log2: the slope and peak, odd and even, the comb and the vowel.
+                if (peakOn) lg += load4(v.peakLg + n);
+                F4 own = lg + parityLog + vCombLog * load4(combMask + n);
+                if (vowelOn) own += load4(v.vowelLg + n);
+                own = pick(own < splat(-100.0f), splat(-100.0f), own);
+                lg = own + vAmount * (borrowed - own);
+            }
+            g = abacus::exp2v(lg);
         }
         // The ceiling measures the spectrum before damping, so a decay is heard.
         const F4 damp = load4(v.damp + n);
@@ -707,6 +876,25 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
 
     bool any = false;
     for (const auto &v : voices) any = any || v.used;
+
+    // Borrow from a track: its sound goes into the analysis every block,
+    // asleep or not, so a note starts on what the track is playing now. The
+    // pitch follower looks and the STFT runs only while something sounds,
+    // and not while frozen. A frame is one step a 64 frames, so it's
+    // spread over a few blocks of its hop.
+    const int borrowKind = std::clamp(steppedOf(Borrow), 0, 2);
+    const int borrowMode = std::clamp(steppedOf(BMode), 0, 1);
+    const bool frozen = steppedOf(BFreeze) != 0;
+    const bool fromTrack = borrowKind == BorrowTrack && key_ != nullptr && sidechainRack() >= 0;
+    if (fromTrack) {
+        live.push(key_, frames, borrowMode == BorrowPartials, any);
+        if (any && !frozen) live.advance(std::max(1, (frames + 32) / 64));
+        else live.cancel(!any);
+    } else {
+        live.cancel(true);
+    }
+    const bool fromFile = borrowKind == BorrowFile && file_ != nullptr && !file_->frames.empty();
+
     if (!any) {
         // Asleep: nothing sounds and nothing is held.
         for (int32_t i = 0; i < frames; ++i) L[i] = R[i] = 0.0f;
@@ -768,6 +956,13 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
     b.ampD = paramOf(Decay2);
     b.ampS = paramOf(Sustain);
     b.ampR = paramOf(Release);
+    b.borrow = fromTrack ? BorrowTrack : (fromFile ? BorrowFile : BorrowOff);
+    b.bMode = borrowMode;
+    b.bFreeze = frozen;
+    b.bAmount = std::clamp(paramOf(BAmount), 0.0f, 1.0f);
+    b.bPos = std::clamp(paramOf(BPos), 0.0f, 1.0f);
+    b.bScan = paramOf(BScan);
+    const float bSmooth = std::max(0.001f, paramOf(BSmooth));
     updateLaw(std::clamp(steppedOf(Law), 0, LawCount - 1), paramOf(Stretch), std::clamp(paramOf(Damp), 0.0f, 1.0f));
     const float mtime = paramOf(MorphTime);
     const float shRate = paramOf(ShimmerRate);
@@ -787,6 +982,7 @@ bool Abacus::render(float *L, float *R, int32_t frames) {
         const float sec = static_cast<float>(n) * dt;
         b.morphFall = std::exp(-sec / mtime);
         b.shimmerStep = shRate * sec;
+        if (b.borrow != BorrowOff) b.bCoef = 1.0f - std::exp(-sec / bSmooth);
         for (int32_t i = 0; i < n * 4; ++i) accL[i] = accR[i] = 0.0f;
         // The gains ramp to where the pattern is at the chunk's end.
         if (b.countKind != CountOff) countWeights(tickAt + ticksPerFrame * (at + n), b.count);

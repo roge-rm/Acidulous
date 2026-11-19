@@ -111,11 +111,12 @@ object MachineUi {
     fun halfPedal(type: String): Boolean = type == "Hammer"
 
     /**
-     * Machines that hold one sample under the plain key "sample", unlike
+     * Machines that hold one sample under the plain key "sample" (Abacus's is
+     * the file it borrows from, see BorrowFiles), unlike
      * Forage where each of the thirteen pads has its own.
      */
     fun acceptsOneSample(type: String): Boolean =
-        type == "Pollen" || type == "Dice" || type == "Molt"
+        type == "Pollen" || type == "Dice" || type == "Molt" || type == "Abacus"
 
     /** What a group's tab shows. Drawn in ui/GroupIcons.kt. */
     enum class GroupIcon { Synths, Drums, Keys, Strings, Winds, Nature, Samples, Beyond }

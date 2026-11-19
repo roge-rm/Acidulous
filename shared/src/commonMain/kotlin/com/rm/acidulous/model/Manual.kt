@@ -257,6 +257,13 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**pattern** - **counting**, **rate** (1/32T to a bar; it follows the track's swing) and **steps**, how many steps before the pattern starts over."),
         ManualBlock(ManualKind.Bullet, "**lit** - **from** is the lowest partial the pattern plays on. The ones under it always sound, so the note keeps its pitch. **width** is how many partials are lit on a step. **depth** is how far the others drop, 0 is no change and 1 is silent. **glide** is how much of a step is spent fading from the last step's partials."),
         ManualBlock(ManualKind.Para, "With the song stopped it keeps counting at the tempo. **count depth** and **count glide** can be macro destinations."),
+        ManualBlock(ManualKind.Heading, "Borrow"),
+        ManualBlock(ManualKind.Para, "The partials can take their levels from another sound as it plays: another track, or a file. Your notes keep their pitch and the other sound gives them its colour and its loudness, so a pad can talk with a vocal or breathe with a drum track."),
+        ManualBlock(ManualKind.Bullet, "**borrow** - **from** is **off**, **track** or **file**. **read** is how the sound is read. **envelope** takes its overall colour, its formants and its brightness, and lays it over your partials by frequency. **partials** follows its pitch and takes its harmonics by number, its 3rd onto your 3rd, which needs a sound with one clear pitch. **amount** blends from the partials' own levels to the borrowed ones."),
+        ManualBlock(ManualKind.Bullet, "**follow** - **smooth** is how fast the borrowed levels follow, short for speech, longer for a softer pad. **freeze** set to **hold** keeps what it has and stops listening."),
+        ManualBlock(ManualKind.Bullet, "**track** - which track to borrow from. With none chosen the partials play their own levels."),
+        ManualBlock(ManualKind.Bullet, "**file** - **import…** opens a file, **samples…** picks one you have, and **voice** is a sung line that comes with the app. **place** is where in the file it reads, and **scan** moves through it, 1 at the file's own speed, negative backward, looping at the ends. A file is read up to a minute."),
+        ManualBlock(ManualKind.Para, "Rumble under 70 Hz is left out, so a track's hum doesn't colour the partials. When the other track goes quiet so does Abacus. **borrow amt**, **borrow smooth**, **file place** and **file scan** can be macro destinations."),
         ManualBlock(ManualKind.Heading, "Play"),
         ManualBlock(ManualKind.Para, "The **play** page has the eight macro knobs, the amp envelope (**A**, **D**, **S**, **R**), **velocity**, **volume** and **pan**. Pressure opens the slope and lifts the level. Takes the song's tuning, and with MPE each finger bends and brightens its own note."),
         ManualBlock(ManualKind.Heading, "Macros"),
@@ -265,7 +272,8 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Tips"),
         ManualBlock(ManualKind.Bullet, "A patch that holds has no decay, so **damp** does nothing until you bring **decay** down. The Fade macro does both."),
         ManualBlock(ManualKind.Bullet, "For a struck sound turn **morph env** up with a short **time** and give **far end** a brighter slope."),
-        ManualBlock(ManualKind.Bullet, "The patches come in six families: classic, organ, vocal, strings, mallets and bells."),
+        ManualBlock(ManualKind.Bullet, "The patches come in eight families: classic, organ, vocal, strings, mallets, bells, count and borrow."),
+        ManualBlock(ManualKind.Bullet, "The borrow patches that read a track have no track chosen: pick one on the **borrow** page, a drum loop or a vocal works well."),
     ))
 
     private fun en3_1() = ManualSection("Cumulus", "Pads built from a spectrum of partials.", listOf(
@@ -2784,6 +2792,13 @@ object Manual {
         ManualBlock(ManualKind.Bullet, "**motif** : **comptage**, **vitesse** (de 1/32T à une mesure ; elle suit le swing de la piste) et **pas**, le nombre de pas avant que le motif reparte."),
         ManualBlock(ManualKind.Bullet, "**allumés** : **de** est le plus bas partiel que joue le motif. Ceux du dessous sonnent toujours, donc la note garde sa hauteur. **largeur** est le nombre de partiels allumés à chaque pas. **prof.** est de combien les autres baissent, 0 ne change rien et 1 les rend muets. **porta.** est la part du pas passée à fondre depuis les partiels du pas précédent."),
         ManualBlock(ManualKind.Para, "Morceau arrêté, il continue de compter au tempo. **prof. du compte** et **porta. du compte** peuvent être des destinations de macro."),
+        ManualBlock(ManualKind.Heading, "Emprunt"),
+        ManualBlock(ManualKind.Para, "Les partiels peuvent prendre leurs niveaux à un autre son pendant qu’il joue : une autre piste, ou un fichier. Vos notes gardent leur hauteur et l’autre son leur donne sa couleur et son volume, donc une nappe peut parler avec une voix ou respirer avec une piste de batterie."),
+        ManualBlock(ManualKind.Bullet, "**emprunt** : **de** vaut **non**, **piste** ou **fichier**. **lecture** est la façon de lire le son. **enveloppe** prend sa couleur d’ensemble, ses formants et sa brillance, et la pose sur vos partiels par fréquence. **partiels** suit sa hauteur et prend ses harmoniques par numéro, son 3e sur votre 3e, ce qui demande un son à une seule hauteur claire. **intensité** passe des niveaux propres des partiels aux niveaux empruntés."),
+        ManualBlock(ManualKind.Bullet, "**suivre** : **lisse** est la vitesse à laquelle les niveaux empruntés suivent, court pour la parole, plus long pour une nappe plus douce. **figer** sur **tenir** garde ce qu’il a et cesse d’écouter."),
+        ManualBlock(ManualKind.Bullet, "**piste** : la piste à laquelle emprunter. Sans piste choisie, les partiels jouent leurs propres niveaux."),
+        ManualBlock(ManualKind.Bullet, "**fichier** : **importer…** ouvre un fichier, **échantillons…** en choisit un que vous avez, et **voix** est une ligne chantée fournie avec l’app. **position** est l’endroit du fichier qu’il lit, et **balayage** le parcourt, 1 à la vitesse du fichier, négatif à l’envers, en boucle aux extrémités. Un fichier est lu jusqu’à une minute."),
+        ManualBlock(ManualKind.Para, "Le grondement sous 70 Hz est laissé de côté, pour que le ronflement d’une piste ne colore pas les partiels. Quand l’autre piste se tait, Abacus aussi. **intensité emprunt**, **lissage emprunt**, **position fichier** et **balayage fichier** peuvent être des destinations de macro."),
         ManualBlock(ManualKind.Heading, "Jeu"),
         ManualBlock(ManualKind.Para, "La page **jeu** a les huit boutons macro, l’enveloppe d’amplitude (**A**, **D**, **S**, **R**), la **vélocité**, le **volume** et le **pano**. La pression ouvre la pente et relève le niveau. Suit l’accord du morceau, et en MPE chaque doigt plie et éclaircit sa propre note."),
         ManualBlock(ManualKind.Heading, "Macros"),
@@ -2792,7 +2807,8 @@ object Manual {
         ManualBlock(ManualKind.Heading, "Conseils"),
         ManualBlock(ManualKind.Bullet, "Un patch qui tient n’a pas de chute, donc **amorti** ne fait rien tant que vous ne baissez pas **chute**. La macro Fade fait les deux."),
         ManualBlock(ManualKind.Bullet, "Pour un son frappé, montez **enveloppe morph** avec un **temps** court et donnez au **bout lointain** une pente plus brillante."),
-        ManualBlock(ManualKind.Bullet, "Les patchs forment six familles : classic, organ, vocal, strings, mallets et bells."),
+        ManualBlock(ManualKind.Bullet, "Les patchs forment huit familles : classic, organ, vocal, strings, mallets, bells, count et borrow."),
+        ManualBlock(ManualKind.Bullet, "Les patchs borrow qui lisent une piste n’ont pas de piste choisie : choisissez en une sur la page **emprunt**, une boucle de batterie ou une voix marche bien."),
     ))
 
     private fun fr3_1() = ManualSection("Cumulus", "Des nappes bâties à partir d’un spectre de partiels.", listOf(

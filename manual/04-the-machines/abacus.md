@@ -70,6 +70,33 @@ in turn), **fifths** (each step a fifth up, folded into two octaves) or
 With the song stopped it keeps counting at the tempo. **count depth** and **count glide** can be macro
 destinations.
 
+## Borrow
+
+The partials can take their levels from another sound as it plays: another
+track, or a file. Your notes keep their pitch and the other sound gives them
+its colour and its loudness, so a pad can talk with a vocal or breathe with a
+drum track.
+
+- **borrow** - **from** is **off**, **track** or **file**. **read** is how
+  the sound is read. **envelope** takes its overall colour, its formants and
+  its brightness, and lays it over your partials by frequency. **partials**
+  follows its pitch and takes its harmonics by number, its 3rd onto your 3rd,
+  which needs a sound with one clear pitch. **amount** blends from the
+  partials' own levels to the borrowed ones.
+- **follow** - **smooth** is how fast the borrowed levels follow, short for
+  speech, longer for a softer pad. **freeze** set to **hold** keeps what it has
+  and stops listening.
+- **track** - which track to borrow from. With none chosen the partials play
+  their own levels.
+- **file** - **import…** opens a file, **samples…** picks one you have, and
+  **voice** is a sung line that comes with the app. **place** is where in the
+  file it reads, and **scan** moves through it, 1 at the file's own speed,
+  negative backward, looping at the ends. A file is read up to a minute.
+
+Rumble under 70 Hz is left out, so a track's hum doesn't colour the partials.
+When the other track goes quiet so does Abacus. **borrow amt**, **borrow
+smooth**, **file place** and **file scan** can be macro destinations.
+
 ## Play
 
 The **play** page has the eight macro knobs, the amp envelope (**A**, **D**,
@@ -99,5 +126,7 @@ can't be reached. Tap a macro's name to rename it.
   **decay** down. The Fade macro does both.
 - For a struck sound turn **morph env** up with a short **time** and give
   **far end** a brighter slope.
-- The patches come in six families: classic, organ, vocal, strings, mallets
-  and bells.
+- The patches come in eight families: classic, organ, vocal, strings,
+  mallets, bells, count and borrow.
+- The borrow patches that read a track have no track chosen: pick one on the
+  **borrow** page, a drum loop or a vocal works well.

@@ -175,6 +175,9 @@ private fun raw_nativeIsRunning(env: Int): Int =
 private fun async_nativeLoadUtterance(arena: Int, rack: Int, path: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadUtterance(arena, rack, path)")
 
+private fun async_nativeLoadBorrowFile(arena: Int, rack: Int, path: Int): Int =
+    js("globalThis.acid._acid_async_nativeLoadBorrowFile(arena, rack, path)")
+
 private fun async_nativeLoadVoice(arena: Int, rack: Int, slot: Int, spec: Int): Int =
     js("globalThis.acid._acid_async_nativeLoadVoice(arena, rack, slot, spec)")
 
@@ -1038,6 +1041,16 @@ internal actual object EngineNative {
         val arena_ = Jni.openArena()
         val jpath = Jni.string(path)
         val ticket_ = async_nativeLoadUtterance(arena_, rack, jpath)
+        Jni.await(ticket_)
+        val result_ = Jni.readString(Jni.resultInt(ticket_))
+        Jni.releaseAsync(ticket_)
+        return result_
+    }
+
+    actual suspend fun nativeLoadBorrowFile(rack: Int, path: String): String {
+        val arena_ = Jni.openArena()
+        val jpath = Jni.string(path)
+        val ticket_ = async_nativeLoadBorrowFile(arena_, rack, jpath)
         Jni.await(ticket_)
         val result_ = Jni.readString(Jni.resultInt(ticket_))
         Jni.releaseAsync(ticket_)
