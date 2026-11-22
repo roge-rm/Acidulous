@@ -73,6 +73,12 @@ fun PianoKeys(
      * instead of left out.
      */
     allNotes: Boolean = false,
+    /**
+     * While an octave arrow is held, a new touch moves this row by
+     * [ArrowHold.dir] through [onShift] instead of playing.
+     */
+    hold: ArrowHold? = null,
+    onShift: (Int) -> Unit = {},
 ) {
     val c = Acid.colors
     val measurer = rememberTextMeasurer()
@@ -83,6 +89,12 @@ fun PianoKeys(
     var strikes by remember { mutableStateOf(mapOf<Int, Float>()) }
     val base = 12 * (octave + 1)
     val octaves = UiPrefs.keyboardOctaves
+    val labels = UiPrefs.pianoLabels
+    val shift by rememberUpdatedState(onShift)
+    val holding by rememberUpdatedState(hold)
+    // Fingers that moved a row play nothing until they lift. Kept outside the
+    // loop, since moving the row restarts it with the finger still down.
+    val shifting = remember { HashSet<Long>() }
     val keyClasses = scalePitchClasses?.takeIf { it.isNotEmpty() }
     val dimOut = allNotes && keyClasses != null
     val scale = if (dimOut) null else keyClasses?.sorted()
@@ -98,6 +110,9 @@ fun PianoKeys(
                 // fingers that had already lifted and left keys stuck lit.
                 val down = HashMap<Long, Int>()
                 val force = HashMap<Int, Float>()
+                val startY = HashMap<Long, Float>()
+                val sent = HashMap<Long, Int>()
+                val range = PressureRange.toPx()
                 try {
                     awaitPointerEventScope {
                         while (true) {
@@ -112,11 +127,29 @@ fun PianoKeys(
                             var changed = false
                             for (change in event.changes) {
                                 val id = change.id.value
+                                if (id in shifting) {
+                                    if (!change.pressed) shifting.remove(id)
+                                    change.consume()
+                                    continue
+                                }
+                                val dir = holding?.dir ?: 0
+                                if (change.pressed && !change.previousPressed && dir != 0 && down[id] == null) {
+                                    holding?.let { it.moves++ }
+                                    shifting += id
+                                    change.consume()
+                                    shift(dir)
+                                    continue
+                                }
                                 if (change.pressed) {
                                     val note = layout.noteAt(
                                         Offset(change.position.x - grab, change.position.y),
                                     )
-                                    if (down[id] != note) {
+                                    val pressing = UiPrefs.keysPressure && down[id] != null
+                                    if (pressing) {
+                                        val heldNote = down.getValue(id)
+                                        val v = pressureFor(startY.getValue(id), change.position.y, range)
+                                        if (sent[id] != v) { sent[id] = v; NativeEngine.midiEvent(rack, 0xa0, heldNote, v) }
+                                    } else if (down[id] != note) {
                                         down[id]?.let { NativeEngine.noteOff(rack, it); force.remove(it) }
                                         if (note != null) {
                                             // Higher on the key is harder, like a pad. Read once when the
@@ -132,6 +165,8 @@ fun PianoKeys(
                                             NativeEngine.noteOn(rack, note, vel.toInt())
                                             down[id] = note
                                             force[note] = strike
+                                            startY[id] = change.position.y
+                                            sent.remove(id)
                                         } else {
                                             down.remove(id)
                                         }
@@ -139,6 +174,7 @@ fun PianoKeys(
                                     }
                                 } else if (down.containsKey(id)) {
                                     down.remove(id)?.let { NativeEngine.noteOff(rack, it); force.remove(it) }
+                                    startY.remove(id); sent.remove(id)
                                     changed = true
                                 }
                                 change.consume()
@@ -201,7 +237,12 @@ fun PianoKeys(
                             style = Stroke(1f))
                     }
                     // The tonic gets its name so the scale has a landmark.
-                    if (root != null && ((note % 12) + 12) % 12 == root) {
+                    val named = when (labels) {
+                        PianoLabels.C -> root != null && ((note % 12) + 12) % 12 == root
+                        PianoLabels.All -> true
+                        PianoLabels.None -> false
+                    }
+                    if (named) {
                         val laid = measurer.measure(
                             AnnotatedString(noteName(note, noteSpelling)),
                             nameStyle.copy(color = if (black) c.keyLabelBlack else c.keyLabel),
@@ -215,6 +256,7 @@ fun PianoKeys(
             } else {
                 for (i in 0 until layout.whiteCount) {
                     val note = layout.whiteNote(i)
+                    if (note !in 0..127) continue // past the MIDI range, left empty
                     val x = i * layout.keyW
                     drawRect(c.keyWhite, Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
                     if (down.contains(note)) {
@@ -224,7 +266,12 @@ fun PianoKeys(
                     if (outOfKey(note) && !down.contains(note)) {
                         drawRect(c.panel.copy(alpha = 0.6f), Offset(x + 0.5f, 0f), Size(layout.keyW - 1f, size.height))
                     }
-                    if (if (dimOut) scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot else note % 12 == 0) {
+                    val named = when (labels) {
+                        PianoLabels.C -> if (dimOut) scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot else note % 12 == 0
+                        PianoLabels.All -> true
+                        PianoLabels.None -> false
+                    }
+                    if (named) {
                         val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle)
                         if (laid.size.width < layout.keyW - 2f) {
                             drawText(laid, topLeft = Offset(x + (layout.keyW - laid.size.width) / 2f,
@@ -242,7 +289,12 @@ fun PianoKeys(
                         drawRect(c.panel.copy(alpha = 0.6f), Offset(x, 0f), Size(layout.blackW, layout.blackH))
                     }
                     drawRect(c.blackKeyEdge, Offset(x, 0f), Size(layout.blackW, layout.blackH), style = Stroke(1f))
-                    if (dimOut && scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot) {
+                    val named = when (labels) {
+                        PianoLabels.C -> dimOut && scaleRoot != null && ((note % 12) + 12) % 12 == scaleRoot
+                        PianoLabels.All -> true
+                        PianoLabels.None -> false
+                    }
+                    if (named) {
                         val laid = measurer.measure(AnnotatedString(noteName(note, noteSpelling)), nameStyle.copy(color = c.keyLabelBlack))
                         if (laid.size.width < layout.blackW - 2f) {
                             drawText(laid, topLeft = Offset(x + (layout.blackW - laid.size.width) / 2f, layout.blackH - laid.size.height - 3f))
@@ -355,21 +407,15 @@ private val EdgeGrab = 3.dp
 /** Semitone offsets of one octave's white keys. */
 private val WhiteSteps = intArrayOf(0, 2, 4, 5, 7, 9, 11)
 
-/**
- * Key layout for both modes. Piano mode shows as many octaves as [octaves]
- * asks for, or with 0 the most that keep the keys wide enough: up to two
- * where they can be [minKey], and up to five where there's room for
- * [roomyKey]. Scale mode fits as many in-scale notes as it can.
- */
+/** Key layout for both modes. How many keys is [pianoKeyCount]. */
 private class Layout(
     val width: Float, val height: Float, val base: Int, minKey: Float, scale: List<Int>?,
     octaves: Int = 0, roomyKey: Float = minKey,
-    /** Over 0, keys this wide as many as fit, which overrides [octaves]. */
+    /** Over 0 and with [octaves] on auto, keys this wide as many as fit. */
     fixedKey: Float = 0f,
 ) {
     val scaleKeys: List<Int>? = scale?.let { pcs ->
-        val count = if (fixedKey > 0f) (width / fixedKey).toInt().coerceIn(1, 28)
-        else ((width / minKey).toInt()).coerceIn(5, 28)
+        val count = pianoKeyCount(width, minKey, roomyKey, fixedKey, octaves, pcs.size)
         val out = ArrayList<Int>(count)
         var note = base
         while (out.size < count && note < 128) {
@@ -379,17 +425,8 @@ private class Layout(
         out
     }
 
-    val whiteCount: Int = when {
-        scaleKeys != null -> scaleKeys.size.coerceAtLeast(1)
-        fixedKey > 0f -> (width / fixedKey).toInt().coerceIn(1, 35)
-        octaves > 0 -> 7 * octaves
-        width / 35f >= roomyKey -> 35 // five octaves, on a wide screen
-        width / 28f >= roomyKey -> 28
-        width / 21f >= roomyKey -> 21
-        width / 14f >= minKey -> 14 // two octaves
-        width / 11f >= minKey -> 11 // an octave and a half
-        else -> 7
-    }
+    val whiteCount: Int = scaleKeys?.size?.coerceAtLeast(1)
+        ?: pianoKeyCount(width, minKey, roomyKey, fixedKey, octaves, null)
     val keyW = width / whiteCount
     val whiteW = keyW
     val blackW = keyW * 0.62f
@@ -403,6 +440,7 @@ private class Layout(
         val out = ArrayList<Pair<Float, Int>>()
         for (i in 0 until whiteCount - 1) {
             if (whiteSemitone(i + 1) - whiteSemitone(i) != 2) continue // E-F and B-C have none
+            if (whiteNote(i) + 1 !in 0..127) continue // past the MIDI range
             out += ((i + 1) * keyW - blackW / 2f) to (whiteNote(i) + 1)
         }
         return out
@@ -424,7 +462,7 @@ private class Layout(
             return keys.getOrNull(i)
         }
         blackAt(p)?.let { return it }
-        return whiteNote((p.x / keyW).toInt().coerceIn(0, whiteCount - 1))
+        return whiteNote((p.x / keyW).toInt().coerceIn(0, whiteCount - 1)).takeIf { it in 0..127 }
     }
 
     /**
@@ -625,7 +663,7 @@ private fun KeysForTalkBack(rack: Int, base: Int, scale: List<Int>?, spelling: M
             layout.scaleKeys.forEachIndexed { i, note -> keys += Triple(note, i * layout.keyW, layout.keyW) }
             blackH = 0f
         } else {
-            for (i in 0 until layout.whiteCount) keys += Triple(layout.whiteNote(i), i * layout.keyW, layout.keyW)
+            for (i in 0 until layout.whiteCount) if (layout.whiteNote(i) in 0..127) keys += Triple(layout.whiteNote(i), i * layout.keyW, layout.keyW)
             for ((x, note) in layout.blacks()) keys += Triple(note, x, layout.blackW)
             blackH = layout.blackH
         }

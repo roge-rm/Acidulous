@@ -75,6 +75,8 @@ fun TrackMachinePanel(
     body: Boolean = true,
     vertical: Boolean = false,
     barInRow: Boolean = false,
+    /** With [barInRow], the second screen's header: wider arrows, the bar fills its share. */
+    barOnSecond: Boolean = false,
     /** False where the panel has the screen to itself and has no fold. */
     foldable: Boolean = true,
     modifier: Modifier = Modifier,
@@ -125,6 +127,7 @@ fun TrackMachinePanel(
         sceneId = sceneId,
         bar = bar, body = body, vertical = vertical,
         barInRow = barInRow,
+        barOnSecond = barOnSecond,
         foldable = foldable,
         modifier = modifier,
     )

@@ -144,7 +144,12 @@ fun AppRoot(onLightTheme: (Boolean) -> Unit = {}) {
  * window the app opens on a screen of its own goes inside one of these.
  */
 @Composable
-fun ScaledTheme(content: @Composable () -> Unit) {
+fun ScaledTheme(
+    chosenScale: Float = com.rm.acidulous.ui.UiPrefs.uiScale,
+    /** The smallest long edge the content can be laid out in. */
+    minLongEdgeDp: Float = com.rm.acidulous.ui.MinLongEdgeDp,
+    content: @Composable () -> Unit,
+) {
     // One density above everything.
     //
     // The interface scale multiplies the density rather than each size, so
@@ -164,9 +169,10 @@ fun ScaledTheme(content: @Composable () -> Unit) {
     // The window's size, whatever the platform calls its window.
     val windowPx = androidx.compose.ui.platform.LocalWindowInfo.current.containerSize
     val scale = com.rm.acidulous.ui.appliedScale(
-        com.rm.acidulous.ui.UiPrefs.uiScale,
+        chosenScale,
         minOf(windowPx.width, windowPx.height) / base.density,
         maxOf(windowPx.width, windowPx.height) / base.density,
+        minLongEdgeDp,
     )
     androidx.compose.runtime.CompositionLocalProvider(
         androidx.compose.ui.platform.LocalDensity provides

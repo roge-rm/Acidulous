@@ -5,11 +5,11 @@
 
 - **theme** - dark, light, high contrast or follow the phone. High contrast is
   white on black, with brighter colours and outlines round every control.
-- **keyboard octaves** - how many octaves the keyboard under the editor shows. **auto** shows two on a phone and up to five on a wider screen.
 - **language** - the app's language, chosen from a list: the phone's own,
   English, or French as written in Canada or in France (the same words; France
   puts a narrow space before ; ! and ?). Not in a browser, which uses its own.
 - **size** - makes everything bigger, in four steps.
+- **second screen size** - the same for the second screen. Only there while the device has a second screen.
 <!-- desktop: - **screen scale** - how big the whole window is drawn. **system** takes the computer's own setting. -->
 - **stay awake** - on keeps the screen on while the song plays.
 - **second screen** - on by default. Only there while the device has a second screen. See below.
@@ -74,15 +74,19 @@ song starts with no tracks at all.
 
 On a device with a second built-in screen, like the Retroid Pocket Duo, the app opens on both. The top screen is the app as usual, and the bottom one follows it. Turn **second screen** off in Settings to use the top one alone.
 
-With an editor or a track on top, the bottom screen has tabs along its top edge: **keys** (**pads** on a drum machine), which is the playing strip with the octave, the chord, scale and arp chips and the wheels, and **panel**, which is that machine's panel. With the song screen on top, the tabs are **mix** and **fx**. The bottom screen remembers its tab for each kind of top screen.
+With an editor or a track on top, the bottom screen has tabs along its top edge: **keys** (**pads** on a drum machine), which is the playing strip with the octave, the chord, scale and arp chips and the wheels, and **panel**, which is that machine's panel. With the song screen on top, the tabs are **mix** and **fx**. The bottom screen remembers its tab for each kind of top screen. With a track on top, its patch bar moves to the top of the bottom screen: the patch name, save and browse on the left, and the arrows and the mark that folds the top screen's panel on the right, by the tabs.
 
-On **keys** the **piano | grid** chip, set for each track, picks between a piano with two rows an octave apart and a grid of pads. The grid's rows are a fourth apart, with the root at the bottom left. While a scale is running, the **in key | all** chip, the same for every track, picks between showing only the scale's notes and showing every note with the others dimmed.
+On **keys** the **piano | grid** chip, set for each track, picks between a piano, two rows an octave apart to start with, and a grid of pads. The grid's rows are a fourth apart, with the root at the bottom left. While a scale is running, the **in key | all** chip, the same for every track, picks between only the scale's notes and every note with the others dimmed. On the isomorphic grid the pads stay put, and **in key** leaves the pads out of key blank.
+
+Hold **grid** to open the grid window. **columns** and **rows** set how many pads there are, **layout** how a scale in key is laid out. **isomorphic** is a semitone a column, and **row** is how many semitones a row goes up. **scale** has only the scale's notes, and **row** is how many scale notes a row goes up. **piano rows** puts the scale's notes in the lower row and the notes between them above. **reset** puts it back to 6 by 4, isomorphic.
+
+Hold **piano** to open the piano window. Under the editor, hold the octave between ◀ and ▶ instead. **rows** is how many keyboards are stacked, up to four (the editor always has one). **length** is how many octaves each one shows, and **auto** fits as many as are comfortable. **labels** names the C keys, every key or none. Under **rows** each row has a knob for how many octaves it sits above or below the octave you've set, **row 1** at the bottom. **reset** puts it back to two rows an octave apart, auto length and C named. Hold ◀ or ▶ and tap a row to move just that row an octave; a tap on ◀ or ▶ on its own moves all the rows together.
 
 Whatever the bottom screen shows leaves the top one: with **keys** (or **pads**) below, the top editor has no playing strip, so the roll gets that height. With **panel** below, the top keeps the strip and drops the panel, so the roll gets the room, the width or the height. The panel below fills the screen, its cards sharing the room evenly with the knobs sized to fit.
 
-On **mix**, every strip has pan and both sends as knobs, and the master shows its two sends. On **fx**, the chips **sends**, **master** and the track's name pick what is shown: the two sends, the master's inserts or that track's inserts. Tap the track's chip again for the next track.
+On **mix**, every strip has pan and both sends as knobs, and the master shows its two sends. When the tracks don't fit across, the mixer goes to normal size. On **fx**, the chips **sends**, **master** and the track's name pick what is shown: the two sends, the master's inserts or that track's inserts. Tap the track's chip again for the next track. On a small bottom screen they show one at a time, and the numbers at the right pick which.
 
-The keys and a controller stay with the top screen, even after you touch the bottom one, and play the same track whichever screen you touched. To get round the bottom screen's controls with the d-pad or the arrows, press **L3** (the left stick) or **Ctrl+Tab** (**Alt+O**), and press it again to come back. A touch on the top screen brings them back too. While you type in a box on the bottom screen, the keys stay there until you're done.
+The keys and a controller follow the screen you touched last, and play the same track on either. To move them without touching, press **L3** (the left stick) or **Ctrl+Tab** (**Alt+O**). While you type in a box on the bottom screen, the keys stay there until you're done.
 
 ## TalkBack
 

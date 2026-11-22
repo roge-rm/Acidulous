@@ -21,6 +21,10 @@ class AndroidHost(private val context: Context) : AppHost {
 
     override val debugBuild: Boolean = (context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
+    // The Retroid Pockets' screens are small and dense, so they start at "larger".
+    override val defaultUiScale: Float =
+        if (android.os.Build.MODEL.lowercase().startsWith("retroid pocket")) 1.2f else 1f
+
     override val canQuit: Boolean get() = context is android.app.Activity
     override fun quit() { (context as? android.app.Activity)?.finishAndRemoveTask() }
 

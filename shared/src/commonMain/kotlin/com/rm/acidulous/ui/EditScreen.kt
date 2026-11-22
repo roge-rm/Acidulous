@@ -483,15 +483,26 @@ fun EditScreen(
                 else panel = if (panel == 1) 0 else 1
             }
             // Velocity mode: a wedge for velocity from where it's struck, a
-            // solid block for full strength everywhere.
+            // solid block for full strength everywhere, and for keys an arrow up
+            // from a bar for struck velocity plus pressure from a held finger
+            // sliding up. Tapping goes round them in that order.
+            val pressure = !padToggle && UiPrefs.keysPressure
             if (hasStrength) BarButton(
-                if (fullStrength) "\u25A0" else "\u25E2", view,
+                when { pressure -> "\u21A5"; fullStrength -> "\u25A0"; else -> "\u25E2" }, view,
                 description = stringResource(Res.string.a11y_velocity),
-                state = if (fullStrength) stringResource(Res.string.a11y_velocity_full) else stringResource(Res.string.a11y_velocity_touch, Res.string.a11y_velocity_touch_mouse),
-                colour = if (fullStrength) Acid.colors.accent else Color.Unspecified,
+                state = when {
+                    pressure -> stringResource(Res.string.a11y_velocity_pressure)
+                    fullStrength -> stringResource(Res.string.a11y_velocity_full)
+                    else -> stringResource(Res.string.a11y_velocity_touch, Res.string.a11y_velocity_touch_mouse)
+                },
+                colour = if (fullStrength || pressure) Acid.colors.accent else Color.Unspecified,
             ) {
-                if (padToggle) UiPrefs.choosePadsFullStrength(!fullStrength)
-                else UiPrefs.chooseKeysFullStrength(!fullStrength)
+                when {
+                    padToggle -> UiPrefs.choosePadsFullStrength(!fullStrength)
+                    pressure -> UiPrefs.chooseKeysPressure(false)
+                    fullStrength -> { UiPrefs.chooseKeysFullStrength(false); UiPrefs.chooseKeysPressure(true) }
+                    else -> UiPrefs.chooseKeysFullStrength(true)
+                }
             }
             if (hasFill) {
                 BarHoldButton(
@@ -954,6 +965,8 @@ fun EditScreen(
         // strip, so it keeps the column.
         val barInStrip = com.rm.acidulous.AppHost.current.onDesktop && landscape &&
             panel == 0 && kind != MachineKind.Audio
+        // With the second screen up, the patch bar and its fold are on it, so the bar leaves this one.
+        val companion = AppState.secondScreenShown.value && UiPrefs.secondScreen
         // fxMax is how tall the fx slots may be; the upright layout works it out from the screen below.
         val panelSlot: @Composable (bar: Boolean, body: Boolean, fxMax: Dp) -> Unit = { bar, body, fxMax ->
         androidx.compose.runtime.CompositionLocalProvider(LocalPatchWindow provides patchWindow, LocalRoomCapture provides roomCapture) {
@@ -968,7 +981,7 @@ fun EditScreen(
         }
         else TrackMachinePanel(
             track, trackIndex, editor, actions, selectedPad, sceneId,
-            bar = bar, body = body, vertical = landscape,
+            bar = bar && !companion, body = body, vertical = landscape,
             barInRow = barInStrip && !body,
             modifier = if (barInStrip && !body) Modifier
                 else Modifier.fillMaxWidth()
@@ -986,7 +999,6 @@ fun EditScreen(
         // landscape, where there's no divider.
         // With the second screen up, what it shows leaves this one: its keys or pads take the
         // strip off, its machine panel takes the panel off, so the roll gets the height or width.
-        val companion = AppState.secondScreenShown.value && UiPrefs.secondScreen
         val dropKeys = companion && UiPrefs.secondPageTrack == 0
         val dropPanel = companion && UiPrefs.secondPageTrack == 1 && panel == 0
         val keysSlot: @Composable (Dp, Modifier) -> Unit = { height, grip ->
@@ -1044,7 +1056,7 @@ fun EditScreen(
                         // the mixer carry their own and are all body. It's
                         // never folded itself and holds the mark that folds the
                         // cards.
-                        if (panel == 0 && !barInStrip && !dropPanel) Column(
+                        if (panel == 0 && !barInStrip && !companion) Column(
                             Modifier.width(PATCH_W).fillMaxHeight(),
                         ) { panelSlot(true, false, FX_PANEL_MAX_H) }
                         Box(Modifier.weight(1f).fillMaxHeight()) {

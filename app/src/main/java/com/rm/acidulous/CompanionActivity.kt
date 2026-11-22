@@ -344,12 +344,13 @@ class CompanionActivity : ComponentActivity() {
     }
 
     /*
-     * Focus. A touch on this screen gives it focus, and the keys and the
-     * controller would follow it here and go dead on the main screen. So
-     * whenever this screen takes focus by itself it hands it straight back,
-     * and checks a moment later that it went. It keeps focus while one of its
-     * text fields is typed in, while the keys were moved here on purpose, and
-     * while the main activity is paused under something else.
+     * Focus. The keys and the controller follow the screen touched last, as
+     * the handheld's own screens do: a touch here moves them here, and a
+     * touch on the main screen moves them back. Otherwise, whenever this
+     * screen takes focus by itself it hands it straight back, and checks a
+     * moment later that it went. It keeps focus while one of its text fields
+     * is typed in, while the keys are here, and while the main activity is
+     * paused under something else.
      */
 
     private val handler = android.os.Handler(android.os.Looper.getMainLooper())
@@ -437,7 +438,15 @@ class CompanionActivity : ComponentActivity() {
     override fun dispatchTouchEvent(ev: android.view.MotionEvent): Boolean {
         KeyHub.usingKeys = false
         when (ev.actionMasked) {
-            android.view.MotionEvent.ACTION_DOWN -> pointerDown = true
+            android.view.MotionEvent.ACTION_DOWN -> {
+                pointerDown = true
+                // The touch gives this window focus, so the keys come with it.
+                if (!KeyHub.onSecond && SecondScreens.mainResumed) {
+                    KeyHub.releaseAll()
+                    KeyHub.onSecond = true
+                    handler.removeCallbacks(check)
+                }
+            }
             android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> pointerDown = false
         }
         val used = super.dispatchTouchEvent(ev)

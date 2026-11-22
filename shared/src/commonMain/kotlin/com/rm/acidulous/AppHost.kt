@@ -117,6 +117,9 @@ interface AppHost {
      */
     val debugBuild: Boolean get() = false
 
+    /** The UI size until one is chosen in Settings, larger on a device with a small dense screen. */
+    val defaultUiScale: Float get() = 1f
+
     /** Whether the app can close itself (not in a browser tab), and doing it. */
     val canQuit: Boolean get() = false
     fun quit() {}

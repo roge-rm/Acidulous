@@ -6,12 +6,12 @@
 - **thème** - sombre, clair, contraste élevé ou comme le téléphone. Le contraste
   élevé, c’est du blanc sur noir, avec des couleurs plus vives et un contour
   autour de chaque commande.
-- **octaves du clavier** - combien d’octaves montre le clavier sous l’éditeur. **auto** en montre deux sur un téléphone et jusqu’à cinq sur un écran plus large.
 - **langue** - la langue de l’appli, choisie dans une liste : celle du
   téléphone, l’anglais, ou le français du Canada ou de France (les mêmes mots;
   la France met une espace fine avant ; ! et ?). Pas dans un navigateur, qui
   utilise la sienne.
 - **taille** - agrandit tout, en quatre crans.
+- **taille du second écran** - la même chose pour le second écran. Seulement là quand l’appareil a un second écran.
 <!-- desktop: - **échelle d’écran** - la taille à laquelle toute la fenêtre est dessinée. **système** prend le réglage de l’ordinateur. -->
 - **rester allumé** - activé, l’écran reste allumé pendant la lecture.
 - **second écran** - activé par défaut. Seulement là quand l’appareil a un second écran. Voir plus bas.
@@ -86,15 +86,19 @@ comme machine et un nouveau morceau commence sans aucune piste.
 
 Sur un appareil avec un second écran intégré, comme le Retroid Pocket Duo, l’appli s’ouvre sur les deux. L’écran du haut est l’appli comme d’habitude, et celui du bas le suit. Désactivez **second écran** dans les réglages pour n’utiliser que celui du haut.
 
-Avec un éditeur ou une piste en haut, l’écran du bas a des onglets sur son bord supérieur : **clavier** (**pads** sur une boîte à rythmes), qui est la bande de jeu avec l’octave, les puces d’accords, de gamme et d’arpège et les molettes, et **panneau**, qui est le panneau de cette machine. Avec l’écran du morceau en haut, les onglets sont **mix** et **fx**. L’écran du bas se souvient de son onglet pour chaque sorte d’écran du haut.
+Avec un éditeur ou une piste en haut, l’écran du bas a des onglets sur son bord supérieur : **clavier** (**pads** sur une boîte à rythmes), qui est la bande de jeu avec l’octave, les puces d’accords, de gamme et d’arpège et les molettes, et **panneau**, qui est le panneau de cette machine. Avec l’écran du morceau en haut, les onglets sont **mix** et **fx**. L’écran du bas se souvient de son onglet pour chaque sorte d’écran du haut. Avec une piste en haut, sa barre de patch passe en haut de l’écran du bas : le nom du patch, l’enregistrement et la liste à gauche, et les flèches et la marque qui replie le panneau de l’écran du haut à droite, près des onglets.
 
-Sur **clavier**, la puce **piano | grille**, réglée par piste, choisit entre un piano à deux rangées espacées d’une octave et une grille de pads. Les rangées de la grille sont espacées d’une quarte, avec la fondamentale en bas à gauche. Tant qu’une gamme joue, la puce **gamme | toutes**, la même pour toutes les pistes, choisit entre montrer seulement les notes de la gamme et montrer toutes les notes, les autres étant atténuées.
+Sur **clavier**, la puce **piano | grille**, réglée par piste, choisit entre un piano, d’abord à deux rangées espacées d’une octave, et une grille de pads. Les rangées de la grille sont espacées d’une quarte, avec la fondamentale en bas à gauche. Tant qu’une gamme joue, la puce **gamme | toutes**, la même pour toutes les pistes, choisit entre seulement les notes de la gamme et toutes les notes, les autres étant atténuées. Sur la grille isomorphe, les pads restent en place et **gamme** laisse vides les pads hors gamme.
+
+Maintenez **grille** pour ouvrir la fenêtre de la grille. **colonnes** et **rangées** règlent le nombre de pads, **disposition** la façon dont une gamme est placée. **isomorphe** est un demi-ton par colonne, et **rangée** est le nombre de demi-tons par rangée. **gamme** a seulement les notes de la gamme, et **rangée** est le nombre de notes de la gamme par rangée. **rangées piano** met les notes de la gamme en bas et les notes entre elles au-dessus. **par défaut** la remet à 6 sur 4, isomorphe.
+
+Maintenez **piano** pour ouvrir la fenêtre du piano. Sous l’éditeur, maintenez plutôt l’octave entre ◀ et ▶. **rangées** est le nombre de claviers empilés, jusqu’à quatre (l’éditeur en a toujours un). **longueur** est le nombre d’octaves de chacun, et **auto** en met autant qu’il en tient confortablement. **noms** nomme les touches C, toutes les touches ou aucune. Sous **rangées**, chaque rangée a un bouton pour le nombre d’octaves au-dessus ou au-dessous de l’octave choisie, **rangée 1** en bas. **par défaut** remet deux rangées espacées d’une octave, la longueur auto et les C nommés. Maintenez ◀ ou ▶ et touchez une rangée pour déplacer seulement cette rangée d’une octave; toucher ◀ ou ▶ seul déplace toutes les rangées ensemble.
 
 Ce que l’écran du bas montre quitte celui du haut : avec **clavier** (ou **pads**) en bas, l’éditeur du haut n’a plus de bande de jeu, et le rouleau gagne cette hauteur. Avec **panneau** en bas, celui du haut garde la bande et perd le panneau, et le rouleau gagne la place, en largeur ou en hauteur. Le panneau du bas remplit l’écran, ses cartes se partageant la place également et les boutons ajustés à leur taille.
 
-Sur **mix**, chaque tranche a le panoramique et les deux envois en boutons, et le général montre ses deux envois. Sur **fx**, les puces **envois**, **général** et le nom de la piste choisissent ce qui est montré : les deux envois, les inserts du général ou ceux de cette piste. Touchez encore la puce de la piste pour la piste suivante.
+Sur **mix**, chaque tranche a le panoramique et les deux envois en boutons, et le général montre ses deux envois. Quand les pistes ne tiennent pas en largeur, le mixage revient à la taille normale. Sur **fx**, les puces **envois**, **général** et le nom de la piste choisissent ce qui est montré : les deux envois, les inserts du général ou ceux de cette piste. Touchez encore la puce de la piste pour la piste suivante. Sur un petit écran du bas, ils s’affichent un à la fois, et les numéros à droite choisissent lequel.
 
-Les touches et la manette restent sur l’écran du haut, même après avoir touché celui du bas, et jouent la même piste quel que soit l’écran touché. Pour parcourir les commandes de l’écran du bas avec la croix ou les flèches, appuyez sur **L3** (le stick gauche) ou **Ctrl+Tab** (**Alt+O**), et encore une fois pour revenir. Toucher l’écran du haut les ramène aussi. Pendant que vous tapez dans un champ de l’écran du bas, les touches y restent jusqu’à ce que vous ayez fini.
+Les touches et la manette suivent le dernier écran touché, et jouent la même piste sur l’un comme sur l’autre. Pour les déplacer sans toucher l’écran, appuyez sur **L3** (le stick gauche) ou **Ctrl+Tab** (**Alt+O**). Pendant que vous tapez dans un champ de l’écran du bas, les touches y restent jusqu’à ce que vous ayez fini.
 
 ## TalkBack
 

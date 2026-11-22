@@ -114,9 +114,14 @@ la boucle continue ou l’arrêt après un passage.
 Chaque prise est une seule étape d’annulation, du moment où l’enregistrement et
 la lecture tournent tous les deux jusqu’à ce que l’un s’arrête.
 
-Le clavier joue plus doux en bas d’une touche et plus fort en haut. Le bouton
-de la barre du bas désactive ça pour que chaque note soit à pleine vélocité,
-et les pads de batterie ont leur propre réglage pour ça.
+Le clavier joue plus doux en bas d’une touche et plus fort en haut. Touchez le
+bouton de vélocité de la barre du bas pour passer par ses trois modes : ◢ selon
+l’endroit frappé, ■ pleine vélocité pour chaque note, et ↥ pression. Avec ↥, les
+notes jouent selon l’endroit frappé, et glisser vers le haut un doigt posé sur une
+touche ou un pad de la grille ajoute de la pression à cette note, et revenir vers
+le bas la diminue. Elle est enregistrée avec la note, et le doigt reste sur sa
+note au lieu de passer à la suivante. Les pads de batterie ont leur propre bouton,
+avec seulement ◢ et ■.
 
 Glissez vers le haut ou le bas la rangée de commandes juste au-dessus des
 touches pour agrandir ou réduire le clavier.

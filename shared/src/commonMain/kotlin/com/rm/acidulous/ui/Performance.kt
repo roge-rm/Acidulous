@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.gestures.awaitTouchSlopOrCancellation
 import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.layout.Arrangement
@@ -162,11 +164,17 @@ val OctaveW = 80.dp
  *
  * Tapping the octave also toggles the hardware keyboard's play mode, where
  * the letter keys play notes starting at this octave. It's filled in while on.
+ * Holding it runs [onOpenPiano]. With [hold], an arrow held down lets a tap on
+ * a keyboard row move just that row; see [ArrowHold].
  */
 @Composable
-fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun OctaveStepper(
+    octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Modifier,
+    hold: ArrowHold? = null, onOpenPiano: (() -> Unit)? = null,
+) {
     val c = Acid.colors
     val playMode = KeyHub.playMode
+    val openPiano by rememberUpdatedState(onOpenPiano)
     Row(
         modifier.clip(RoundedCornerShape(4.dp)).background(if (playMode) c.accent else c.card),
         verticalAlignment = Alignment.CenterVertically,
@@ -175,20 +183,27 @@ fun OctaveStepper(octave: Int, onOctave: (Int) -> Unit, modifier: Modifier = Mod
         // The arrows share the stepper's width instead of each taking a fixed
         // width, so both are always there and the same size. With fixed widths
         // the row could squeeze the up arrow to a few pixels.
-        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down), playMode) {
+        StepArrow("◀", octave > 0, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_down), playMode, hold, -1) {
             onOctave(octave - 1)
         }
         Text(
-            "C${octave + 1}", color = if (playMode) c.onAccent else c.accent, fontSize = 10.sp,
+            "C$octave", color = if (playMode) c.onAccent else c.accent, fontSize = 10.sp,
             fontFamily = FontFamily.Monospace, maxLines = 1,
-            modifier = Modifier.clickable { KeyHub.togglePlayMode() }.button(
+            modifier = (
+                if (onOpenPiano == null) Modifier.clickable { KeyHub.togglePlayMode() }
+                else Modifier.pointerInput(Unit) {
+                    detectTapGestures(onLongPress = { openPiano?.invoke() }, onTap = { KeyHub.togglePlayMode() })
+                }
+            ).button(
                 stringResource(Res.string.a11y_keys_from, spokenNote(12 * (octave + 1), emptyMap(), AppStrings)),
                 stringResource(Res.string.keys_play_mode) + ": " + stringResource(if (playMode) Res.string.a11y_on else Res.string.a11y_off),
+                actions = if (onOpenPiano == null) emptyList() else listOf(action(stringResource(Res.string.a11y_edit)) { onOpenPiano() }),
                 onClick = { KeyHub.togglePlayMode() },
-                keyFocus = false,
+                // The long-press version has no clickable, so the keyboard reaches it here.
+                keyFocus = onOpenPiano != null,
             ),
         )
-        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_up), playMode) {
+        StepArrow("▶", octave < 8, Modifier.weight(1f).widthIn(max = 32.dp), stringResource(Res.string.a11y_octave_up), playMode, hold, 1) {
             onOctave(octave + 1)
         }
     }
@@ -202,11 +217,29 @@ private fun StepArrow(
     said: String = glyph,
     /** On the play mode's accent fill. */
     onAccent: Boolean = false,
+    hold: ArrowHold? = null,
+    /** What [hold] is set to while this arrow is down. */
+    dir: Int = 0,
     onClick: () -> Unit,
 ) {
     val c = Acid.colors
+    val tap by rememberUpdatedState(if (enabled) onClick else null)
     Box(
-        modifier.fillMaxHeight().clickable(enabled = enabled, onClick = onClick).button(said),
+        modifier.fillMaxHeight().then(
+            if (hold == null) Modifier.clickable(enabled = enabled, onClick = onClick).button(said)
+            // Down marks the arrow held. Up steps the octave, unless a row was
+            // moved meanwhile.
+            else Modifier.pointerInput(hold, dir) {
+                awaitEachGesture {
+                    awaitFirstDown()
+                    val before = hold.moves
+                    hold.dir = dir
+                    // Only clear the hold if the other arrow hasn't taken it over.
+                    val up = try { waitForUpOrCancellation() } finally { if (hold.dir == dir) hold.dir = 0 }
+                    if (up != null && hold.moves == before) { up.consume(); tap?.invoke() }
+                }
+            }.button(said, onClick = if (enabled) onClick else null)
+        ),
         contentAlignment = Alignment.Center,
     ) {
         Text(glyph, color = when {

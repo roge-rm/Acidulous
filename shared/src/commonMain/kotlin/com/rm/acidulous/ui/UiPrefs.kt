@@ -100,8 +100,26 @@ object UiPrefs {
     var keysFullStrength by mutableStateOf(false)
         private set
 
+    /** Sliding a held finger up on keys or grid pads adds pressure to its note. */
+    var keysPressure by mutableStateOf(false)
+        private set
+
     /** The note grid shows every note, out-of-scale ones dimmed, instead of just the scale's. */
     var gridAllNotes by mutableStateOf(false)
+        private set
+    /** The note grid's pads across and up. */
+    var gridCols by mutableStateOf(6)
+        private set
+    var gridRows by mutableStateOf(4)
+        private set
+    /** How the grid lays out a scale running in key. */
+    var gridLayout by mutableStateOf(GridLayout.Isomorphic)
+        private set
+    /** Semitones a row up, for the isomorphic layout. */
+    var gridRowSemis by mutableStateOf(5)
+        private set
+    /** Scale notes a row up, for the scale layout; 0 is the one nearest a fourth. */
+    var gridRowSteps by mutableStateOf(0)
         private set
 
     /**
@@ -149,11 +167,23 @@ object UiPrefs {
      * `dp` and `sp` goes through. See ui/UiScale.kt for the maths and why it
      * only ever goes up.
      */
-    /** How many octaves the on-screen keyboard shows, 1 to 5, or 0 for as many as fit. */
+    /** How many octaves each keyboard row shows, 1 to 5, or 0 for as many as fit. Set in the piano window. */
     var keyboardOctaves by mutableStateOf(0)
+        private set
+    /** How many keyboards the second screen stacks, 1 to 4. The phone strip always has one. */
+    var pianoRows by mutableStateOf(2)
+        private set
+    /** What the keys are labelled with. */
+    var pianoLabels by mutableStateOf(PianoLabels.C)
+        private set
+    /** Each row's octave over the strip's, bottom row first, always four. */
+    var pianoOffsets by mutableStateOf(PianoOffsetDefaults)
         private set
 
     var uiScale by mutableStateOf(1f)
+
+    /** The second screen's own interface size. */
+    var secondUiScale by mutableStateOf(1f)
 
     /**
      * The desktop's screen scale: pixels per dp, or 0 for the system's value.
@@ -333,7 +363,13 @@ object UiPrefs {
         panelFolded = p.getBoolean(KEY_PANEL_FOLDED, false)
         padsFullStrength = p.getBoolean(KEY_PADS_FULL, false)
         keysFullStrength = p.getBoolean(KEY_KEYS_FULL, false)
+        keysPressure = p.getBoolean(KEY_KEYS_PRESSURE, false)
         gridAllNotes = p.getBoolean(KEY_GRID_ALL, false)
+        gridCols = p.getInt(KEY_GRID_COLS, 6).coerceIn(3, 12)
+        gridRows = p.getInt(KEY_GRID_ROWS, 4).coerceIn(2, 8)
+        gridLayout = GridLayout.entries.getOrElse(p.getInt(KEY_GRID_LAYOUT, 0)) { GridLayout.Isomorphic }
+        gridRowSemis = p.getInt(KEY_GRID_ROW_SEMIS, 5).coerceIn(1, 12)
+        gridRowSteps = p.getInt(KEY_GRID_ROW_STEPS, 0).coerceIn(0, 12)
         keysStretch = p.getFloat(KEY_KEYS_STRETCH, 1f)
             .coerceIn(KeysStretchMin, KeysStretchMax)
         clipMode = p.getBoolean(KEY_CLIP_MODE, false)
@@ -351,7 +387,12 @@ object UiPrefs {
         language = runCatching { Language.valueOf(p.getString(KEY_LANGUAGE, null) ?: "System") }
             .getOrDefault(Language.System)
         keyboardOctaves = p.getInt(KEY_KEYBOARD_OCTAVES, 0).coerceIn(0, 5)
-        uiScale = p.getFloat(KEY_UI_SCALE, 1f)
+        pianoRows = p.getInt(KEY_PIANO_ROWS, 2).coerceIn(PianoRowRange)
+        pianoLabels = PianoLabels.entries.getOrElse(p.getInt(KEY_PIANO_LABELS, 0)) { PianoLabels.C }
+        pianoOffsets = decodePianoOffsets(p.getString(KEY_PIANO_OFFSETS, null))
+        uiScale = p.getFloat(KEY_UI_SCALE, com.rm.acidulous.AppHost.current.defaultUiScale)
+            .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
+        secondUiScale = p.getFloat(KEY_UI_SCALE_SECOND, com.rm.acidulous.AppHost.current.defaultUiScale)
             .coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
         screenScale = p.getFloat(KEY_SCREEN_SCALE, 0f).takeIf { it in ScreenScaleSteps } ?: 0f
         outputDevice = p.getInt(KEY_OUTPUT_DEVICE, 0)
@@ -563,9 +604,42 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_PADS_FULL, on)?.apply()
     }
 
+    fun chooseGridCols(n: Int) {
+        gridCols = n.coerceIn(3, 12)
+        store?.edit()?.putInt(KEY_GRID_COLS, gridCols)?.apply()
+    }
+    fun chooseGridRows(n: Int) {
+        gridRows = n.coerceIn(2, 8)
+        store?.edit()?.putInt(KEY_GRID_ROWS, gridRows)?.apply()
+    }
+    fun chooseGridLayout(l: GridLayout) {
+        gridLayout = l
+        store?.edit()?.putInt(KEY_GRID_LAYOUT, l.ordinal)?.apply()
+    }
+    fun chooseGridRowSemis(n: Int) {
+        gridRowSemis = n.coerceIn(1, 12)
+        store?.edit()?.putInt(KEY_GRID_ROW_SEMIS, gridRowSemis)?.apply()
+    }
+    fun chooseGridRowSteps(n: Int) {
+        gridRowSteps = n.coerceIn(0, 12)
+        store?.edit()?.putInt(KEY_GRID_ROW_STEPS, gridRowSteps)?.apply()
+    }
+    /** The grid window's settings back to 6 x 4, isomorphic in fourths. */
+    fun resetGrid() {
+        chooseGridCols(6)
+        chooseGridRows(4)
+        chooseGridLayout(GridLayout.Isomorphic)
+        chooseGridRowSemis(5)
+        chooseGridRowSteps(0)
+    }
     fun chooseGridAllNotes(on: Boolean) {
         gridAllNotes = on
         store?.edit()?.putBoolean(KEY_GRID_ALL, on)?.apply()
+    }
+
+    fun chooseKeysPressure(on: Boolean) {
+        keysPressure = on
+        store?.edit()?.putBoolean(KEY_KEYS_PRESSURE, on)?.apply()
     }
 
     fun chooseKeysFullStrength(on: Boolean) {
@@ -701,6 +775,33 @@ object UiPrefs {
     fun chooseKeyboardOctaves(n: Int) {
         keyboardOctaves = n.coerceIn(0, 5)
         store?.edit()?.putInt(KEY_KEYBOARD_OCTAVES, keyboardOctaves)?.apply()
+    }
+    fun choosePianoRows(n: Int) {
+        pianoRows = n.coerceIn(PianoRowRange)
+        store?.edit()?.putInt(KEY_PIANO_ROWS, pianoRows)?.apply()
+    }
+    fun choosePianoLabels(l: PianoLabels) {
+        pianoLabels = l
+        store?.edit()?.putInt(KEY_PIANO_LABELS, l.ordinal)?.apply()
+    }
+    fun choosePianoOffsets(offsets: List<Int>) {
+        pianoOffsets = com.rm.acidulous.ui.pianoOffsets(offsets)
+        store?.edit()?.putString(KEY_PIANO_OFFSETS, encodePianoOffsets(pianoOffsets))?.apply()
+    }
+    /** Moves one row (0 = bottom) by [delta] octaves. */
+    fun movePianoRow(row: Int, delta: Int, stripOctave: Int? = null) =
+        choosePianoOffsets(com.rm.acidulous.ui.movePianoRow(pianoOffsets, row, delta, stripOctave))
+    /** The piano window's settings back to two rows an octave apart, auto length, C labelled. */
+    fun resetPiano() {
+        choosePianoRows(2)
+        chooseKeyboardOctaves(0)
+        choosePianoLabels(PianoLabels.C)
+        choosePianoOffsets(PianoOffsetDefaults)
+    }
+
+    fun chooseSecondUiScale(scale: Float) {
+        secondUiScale = scale.coerceIn(UiScaleSteps.first(), UiScaleSteps.last())
+        store?.edit()?.putFloat(KEY_UI_SCALE_SECOND, secondUiScale)?.apply()
     }
 
     fun chooseUiScale(scale: Float) {
@@ -993,7 +1094,13 @@ object UiPrefs {
     private const val KEY_PANEL_FOLDED = "panel_folded"
     private const val KEY_PADS_FULL = "pads_full_strength"
     private const val KEY_KEYS_FULL = "keys_full_strength"
+    private const val KEY_KEYS_PRESSURE = "keys_pressure"
     private const val KEY_GRID_ALL = "grid_all_notes"
+    private const val KEY_GRID_COLS = "grid_cols"
+    private const val KEY_GRID_ROWS = "grid_rows"
+    private const val KEY_GRID_LAYOUT = "grid_layout"
+    private const val KEY_GRID_ROW_SEMIS = "grid_row_semis"
+    private const val KEY_GRID_ROW_STEPS = "grid_row_steps"
     private const val KEY_KEYS_STRETCH = "keys_stretch"
     private const val KEY_CLIP_MODE = "clip_mode"
     private const val KEY_LAUNCH_Q = "launch_quantise"
@@ -1005,7 +1112,11 @@ object UiPrefs {
     private const val KEY_PAD_JOBS = "pad_jobs"
     private const val KEY_NOTE_LAYOUT = "note_layout"
     private const val KEY_UI_SCALE = "ui_scale"
+    private const val KEY_UI_SCALE_SECOND = "ui_scale_second"
     private const val KEY_KEYBOARD_OCTAVES = "keyboard_octaves"
+    private const val KEY_PIANO_ROWS = "piano_rows"
+    private const val KEY_PIANO_LABELS = "piano_labels"
+    private const val KEY_PIANO_OFFSETS = "piano_offsets"
     private const val KEY_SCREEN_SCALE = "screen_scale"
     private const val KEY_OUTPUT_DEVICE = "output_device"
     private const val KEY_BUFFER = "buffer"

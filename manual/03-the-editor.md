@@ -101,9 +101,13 @@ round or stops after one pass.
 Each take is one step of undo, from when recording and playback are both
 running until either stops.
 
-The keyboard plays softer low on a key and harder high on it. The button in the
-bottom bar turns this off so every note is full velocity, and the drum pads have
-their own setting for it.
+The keyboard plays softer low on a key and harder high on it. Tap the velocity
+button in the bottom bar to go round its three modes: ◢ from where you strike,
+■ full velocity on every note, and ↥ pressure. With ↥, notes play from where you
+strike, and sliding a held finger up on a key or a grid pad adds pressure to that
+note, and sliding back down lowers it. It's recorded with the note, and the
+finger stays on its note instead of sliding on to the next. The drum pads have
+their own button with just ◢ and ■.
 
 Drag the row of controls just above the keys up or down to make the keyboard
 taller or shorter.

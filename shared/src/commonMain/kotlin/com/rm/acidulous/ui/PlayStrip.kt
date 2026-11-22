@@ -1,6 +1,8 @@
 package com.rm.acidulous.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -89,8 +91,9 @@ internal fun applyScaleTo(editor: SongEditor, trackIndex: Int, s: ScaleSetting) 
  * [onOpenScale] are a held chip, so the caller opens the window on its own
  * screen.
  *
- * With [roomy] (the second screen) keys keep a fixed size: two keyboards an
- * octave apart, or the note grid, chosen per track by a chip in the row.
+ * With [roomy] (the second screen) keys keep a fixed size: up to four
+ * keyboards stacked at their own octaves (see the piano window), or the note
+ * grid, chosen per track by a chip in the row.
  */
 @Composable
 fun PlayStrip(
@@ -117,6 +120,10 @@ fun PlayStrip(
     var bend by remember(trackIndex) { mutableStateOf(0.5f) }
     val touchable = MachineUi.usesPerformance(track.machine.type)
     val keysFolded = foldable && UiPrefs.keysFolded
+    // An octave arrow held down, so a tap on a row moves just that row.
+    val hold = remember { ArrowHold() }
+    var pianoWindow by remember { mutableStateOf(false) }
+    if (pianoWindow) PianoDialog(roomy) { pianoWindow = false }
     val padsGrip = if (barInStrip) KeysStripH else PadsGrip
     // A tape has no instrument and no performance row, so the lanes get the
     // whole screen.
@@ -220,7 +227,12 @@ fun PlayStrip(
                 Modifier.width(OctaveW).fillMaxHeight().then(grip),
                 contentAlignment = Alignment.CenterEnd,
             ) {
-                OctaveStepper(octave, { octave = it }, Modifier.fillMaxHeight())
+                // Holding the octave opens the piano window, which the phone
+                // has no piano chip for.
+                OctaveStepper(
+                    octave, { octave = it }, Modifier.fillMaxHeight(),
+                    hold = if (roomy) hold else null, onOpenPiano = { pianoWindow = true },
+                )
             }
             // The fold mark, last in the row.
             //
@@ -234,7 +246,15 @@ fun PlayStrip(
             if (roomy && Scales.activeFor(song, track) != null) {
                 KeyChip(UiPrefs.gridAllNotes, Modifier.fillMaxHeight()) { UiPrefs.chooseGridAllNotes(it) }
             }
-            if (roomy) LayoutChip(UiPrefs.usesGrid(track.id), Modifier.fillMaxHeight()) { UiPrefs.chooseGrid(track.id, it) }
+            var gridWindow by remember { mutableStateOf(false) }
+            if (roomy) LayoutChip(
+                UiPrefs.usesGrid(track.id), Modifier.fillMaxHeight(),
+                onOpenGrid = { gridWindow = true }, onOpenPiano = { pianoWindow = true },
+            ) { UiPrefs.chooseGrid(track.id, it) }
+            if (gridWindow) {
+                val autoSteps = GridNotes(Scales.activeFor(song, track), Scales.rootFor(song, track), octave).rowStep
+                GridDialog(autoSteps) { gridWindow = false }
+            }
         }
         }
         if (keysFolded) return@Column
@@ -269,17 +289,15 @@ fun PlayStrip(
                 noteSpelling = spelling, allNotes = UiPrefs.gridAllNotes,
             )
             else Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                // The upper keyboard an octave above the lower, which the stepper sets.
-                PianoKeys(
-                    trackIndex, scale, root, octave + 1,
-                    Modifier.fillMaxWidth().weight(1f), noteSpelling = spelling, keyWidth = RoomyKeyW,
-                    allNotes = allNotes,
-                )
-                PianoKeys(
-                    trackIndex, scale, root, octave,
-                    Modifier.fillMaxWidth().weight(1f), noteSpelling = spelling, keyWidth = RoomyKeyW,
-                    allNotes = allNotes,
-                )
+                // Highest row on top. Each sits at its own offset from the
+                // stepper's octave.
+                for (row in UiPrefs.pianoRows - 1 downTo 0) {
+                    PianoKeys(
+                        trackIndex, scale, root, pianoRowOctave(octave, UiPrefs.pianoOffsets, row),
+                        Modifier.fillMaxWidth().weight(1f), noteSpelling = spelling, keyWidth = RoomyKeyW,
+                        allNotes = allNotes, hold = hold, onShift = { UiPrefs.movePianoRow(row, it, octave) },
+                    )
+                }
             }
             // Bend springs back, so it's the wheel you can let go of
             // quickly.
@@ -313,10 +331,13 @@ private val LayoutChipW = 112.dp
 
 /** Piano or the note grid, for the second screen. */
 @Composable
-private fun LayoutChip(grid: Boolean, modifier: Modifier = Modifier, onGrid: (Boolean) -> Unit) {
+private fun LayoutChip(
+    grid: Boolean, modifier: Modifier = Modifier, onOpenGrid: () -> Unit, onOpenPiano: () -> Unit, onGrid: (Boolean) -> Unit,
+) {
     Row(modifier.width(LayoutChipW), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        LayoutHalf(stringResource(Res.string.second_piano), !grid, Modifier.weight(1f)) { onGrid(false) }
-        LayoutHalf(stringResource(Res.string.second_grid), grid, Modifier.weight(1f)) { onGrid(true) }
+        // Holding either opens its settings.
+        LayoutHalf(stringResource(Res.string.second_piano), !grid, Modifier.weight(1f), onHold = onOpenPiano, holdLabel = stringResource(Res.string.a11y_edit)) { onGrid(false) }
+        LayoutHalf(stringResource(Res.string.second_grid), grid, Modifier.weight(1f), onHold = onOpenGrid, holdLabel = stringResource(Res.string.a11y_edit)) { onGrid(true) }
     }
 }
 
@@ -330,13 +351,18 @@ private fun KeyChip(all: Boolean, modifier: Modifier = Modifier, onAll: (Boolean
 }
 
 @Composable
-private fun LayoutHalf(label: String, on: Boolean, modifier: Modifier, onClick: () -> Unit) {
+private fun LayoutHalf(
+    label: String, on: Boolean, modifier: Modifier, onHold: (() -> Unit)? = null, holdLabel: String = "", onClick: () -> Unit,
+) {
     val c = Acid.colors
     Box(
         modifier.fillMaxHeight().clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accentDim else c.card)
-            .clickable(onClick = onClick)
-            .choice(label, on, onClick = onClick),
+            .then(
+                if (onHold == null) Modifier.clickable(onClick = onClick)
+                else Modifier.pointerInput(onHold) { detectTapGestures(onLongPress = { onHold() }, onTap = { onClick() }) },
+            )
+            .choice(label, on, onClick = onClick, actions = if (onHold == null) emptyList() else listOf(action(holdLabel) { onHold() })),
         contentAlignment = Alignment.Center,
     ) {
         Text(

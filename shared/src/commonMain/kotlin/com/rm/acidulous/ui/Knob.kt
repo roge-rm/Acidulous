@@ -133,6 +133,10 @@ fun Knob(
     steps: Int = 0,
     /** A hold opens a list instead of resetting, named for TalkBack. */
     holdOpensList: Boolean = false,
+    /** Label and value lines only as tall as their text, for a crowded column like the second screen's mixer. */
+    compact: Boolean = false,
+    /** What TalkBack calls it, when the visible label is short. */
+    said: String? = null,
 ) {
     val cb by rememberUpdatedState(Triple(onStart, onChange, onEnd))
     val reset by rememberUpdatedState(onReset)
@@ -141,7 +145,10 @@ fun Knob(
     val col = Acid.colors
     val measurer = knobTextMeasurer()
     val base = LocalTextStyle.current
-    val small = remember(base) { base.merge(TextStyle(fontSize = 9.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center)) }
+    val small = remember(base, compact) {
+        base.merge(TextStyle(fontSize = 9.sp, fontFamily = FontFamily.Monospace, textAlign = TextAlign.Center,
+            lineHeight = if (compact) 10.sp else androidx.compose.ui.unit.TextUnit.Unspecified))
+    }
     val markStyle = remember(base) { base.merge(TextStyle(fontSize = 11.sp)) }
     val mark = if (locked) "\u25C6" else if (automated) "\u223F" else null
     // What measuring worked out, for drawing and for telling a turn from a
@@ -159,7 +166,7 @@ fun Knob(
     // "decay" is laid out once for every knob that says it.
     Layout(
         modifier.adjustable(
-            label, state, value, steps = (steps - 2).coerceAtLeast(0),
+            said ?: label, state, value, steps = (steps - 2).coerceAtLeast(0),
             actions = onReset?.let { listOf(action(resetName, it)) } ?: emptyList(),
         ) { v -> cb.first(); cb.second(v); cb.third() }
             .pointerInput(Unit) {

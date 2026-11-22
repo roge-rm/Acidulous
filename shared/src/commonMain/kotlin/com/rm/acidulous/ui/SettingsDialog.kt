@@ -88,14 +88,14 @@ private fun DisplayTab() {
                     UiPrefs.language.ordinal,
                 ) { UiPrefs.chooseLanguage(UiPrefs.Language.entries[it]) }
             }
-            // Auto shows more on a wider screen.
-            SwitchGrid(
-                stringResource(Res.string.settings_octaves), stringArrayResource(Res.array.settings_octaves_choices).toList(),
-                UiPrefs.keyboardOctaves, columns = 3,
-            ) { UiPrefs.chooseKeyboardOctaves(it) }
             // Changes the size of this window too, as you tap it.
             SwitchGrid(stringResource(Res.string.settings_size), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.uiScale), columns = 2) {
                 UiPrefs.chooseUiScale(UiScaleSteps[it])
+            }
+            if (com.rm.acidulous.AppState.secondScreenPresent.value) {
+                SwitchGrid(stringResource(Res.string.settings_size_second), stringArrayResource(Res.array.settings_size_choices).toList(), UiScaleSteps.indexOf(UiPrefs.secondUiScale), columns = 2) {
+                    UiPrefs.chooseSecondUiScale(UiScaleSteps[it])
+                }
             }
             // On a computer: how many pixels a dp is. The phone knows its own.
             if (com.rm.acidulous.AppHost.current.onDesktop) {

@@ -1363,12 +1363,13 @@ private fun LearnChord(b: ParamBinding, trackIndex: Int, unit: String, editor: S
 @Composable
 fun SecondFxPage(
     chip: Int, song: com.rm.acidulous.model.Song, track: Track?, trackIndex: Int, editor: SongEditor, modifier: Modifier = Modifier,
+    only: Int = -1,
 ) {
     CompositionLocalProvider(LocalPanelGrid provides true) {
         // A slot's share of the width goes by how many controls its effect has, and a row of
         // empty slots shrinks.
         fun share(type: String) = if (type.isEmpty()) 4f else NativeEngine.effectParamInfo(type).size + 6f
-        val cells: List<Pair<Float, @Composable () -> Unit>> = when {
+        val all: List<Pair<Float, @Composable () -> Unit>> = when {
             chip == 0 -> List(com.rm.acidulous.model.SEND_SLOTS) { slot -> share(song.master.sendAt(slot).type) to {
                 SongSlotCell(
                     stringResource(Res.string.mixer_send, slot + 1), slot, song, editor, hideMix = true,
@@ -1395,12 +1396,14 @@ fun SecondFxPage(
             }
             else -> emptyList()
         }
+        // [only] shows that one slot, for a screen too narrow for two side by side.
+        val cells = if (only >= 0) listOfNotNull(all.getOrNull(only)) else all
         val across = if (cells.size > 2) 2 else cells.size.coerceAtLeast(1)
         Column(modifier.background(Acid.colors.panel).padding(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             cells.chunked(across).forEach { line ->
                 val empty = line.all { it.first == 4f }
                 Row(Modifier.fillMaxWidth().weight(if (empty) 0.3f else 1f), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    line.forEachIndexed { i, (w, cell) -> key(i) { Box(Modifier.weight(w).fillMaxHeight()) { cell() } } }
+                    line.forEachIndexed { i, (w, cell) -> key(only, i) { Box(Modifier.weight(w).fillMaxHeight()) { cell() } } }
                 }
             }
         }

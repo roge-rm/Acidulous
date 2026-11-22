@@ -43,6 +43,9 @@ val ScreenScaleSteps = listOf(0f, 1f, 1.5f, 2f, 2.5f, 3f)
 const val MinShortEdgeDp = 300f
 const val MinLongEdgeDp = 560f
 
+/** The second screen has no editor, only keys, a panel or the mixer, so it can go bigger. */
+const val SecondMinLongEdgeDp = 440f
+
 /**
  * The scale actually in force: what was chosen, capped by what the screen
  * can fit. On a 393 dp phone the cap never kicks in, on a 320 dp one it does.
@@ -51,9 +54,9 @@ const val MinLongEdgeDp = 560f
  *
  * Pure and top-level so it can be tested without a device.
  */
-fun appliedScale(chosen: Float, shortEdgeDp: Float, longEdgeDp: Float): Float {
+fun appliedScale(chosen: Float, shortEdgeDp: Float, longEdgeDp: Float, minLongEdgeDp: Float = MinLongEdgeDp): Float {
     if (shortEdgeDp <= 0f || longEdgeDp <= 0f) return chosen
-    return minOf(chosen, shortEdgeDp / MinShortEdgeDp, longEdgeDp / MinLongEdgeDp)
+    return minOf(chosen, shortEdgeDp / MinShortEdgeDp, longEdgeDp / minLongEdgeDp)
         .coerceAtLeast(1f)
 }
 

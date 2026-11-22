@@ -61,6 +61,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.sp
 import kotlin.math.roundToInt
 import com.rm.acidulous.engine.NativeEngine
@@ -166,6 +168,7 @@ fun MachinePanel(
      * padding of its own. The desktop puts it in the keyboard's strip.
      */
     barInRow: Boolean = false,
+    barOnSecond: Boolean = false,
     /** False where the panel has the screen to itself: no fold, never folded. */
     foldable: Boolean = true,
     modifier: Modifier = Modifier,
@@ -246,6 +249,7 @@ fun MachinePanel(
             minimized = minimized, onToggleMinimized = if (foldable) ({ UiPrefs.foldPanel(!minimized) }) else null,
             vertical = vertical && !barInRow,
             inRow = barInRow,
+            onSecond = barInRow && barOnSecond,
         )
         if (body && !minimized) when (type) {
             "Reflux" -> RefluxPanel(binding, track, trackIndex, editor)
@@ -494,6 +498,34 @@ private fun BarIcon(glyph: String, tint: Color, vertical: Boolean = false, said:
     }
 }
 
+/**
+ * A patch arrow in the bottom screen's header: a 44 x 28 button whose touch
+ * area reaches 8 dp above the row, into the screen's edge, and 4 dp below,
+ * into the gap over the keys strip, while the row stays 28 dp tall. Nothing
+ * above it may clip, or the extra reach is lost.
+ */
+@Composable
+private fun RowArrow(glyph: String, said: String, onClick: () -> Unit) {
+    val up = 8.dp
+    val down = 4.dp
+    Box(
+        Modifier
+            .layout { m, _ ->
+                val p = m.measure(Constraints.fixed(44.dp.roundToPx(), (28.dp + up + down).roundToPx()))
+                layout(p.width, 28.dp.roundToPx()) { p.place(0, -up.roundToPx()) }
+            }
+            .clickable(onClick = onClick)
+            .button(said)
+            .padding(top = up, bottom = down),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier.fillMaxSize().clip(RoundedCornerShape(4.dp)).background(Acid.colors.raised),
+            contentAlignment = Alignment.Center,
+        ) { Text(glyph, color = Acid.colors.accent, fontSize = 18.sp, maxLines = 1, softWrap = false) }
+    }
+}
+
 @Composable
 private fun PatchBar(
     type: String, patchNames: () -> List<String>, onSave: (String, Boolean) -> Unit, onLoad: (String) -> Unit,
@@ -508,6 +540,8 @@ private fun PatchBar(
      * be longer, and the fold points sideways at the cards.
      */
     inRow: Boolean = false,
+    /** In a row on the second screen: wider arrows, and the bar fills its share. */
+    onSecond: Boolean = false,
 ) {
     /**
      * Step one patch through the list without opening it.
@@ -594,6 +628,36 @@ private fun PatchBar(
                     // characters.
                     SideText(type, Acid.colors.text, SideNameSp, Modifier.height(typeH))
                 }
+            }
+        }
+        return
+    }
+    if (onSecond) {
+        // The arrows and the fold go at the right end, next to the bottom screen's page tabs.
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Text(type, color = Acid.colors.text, fontSize = 13.sp, maxLines = 1)
+                PatchPicker(
+                    type, patchNames, { onSave(it, true) }, onLoad, factoryPatches, userNames, onDelete, current, edited,
+                    onSaveWithEffects = onSave, labelMax = 240.dp,
+                )
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                RowArrow("\u2039", stringResource(Res.string.a11y_prev_patch)) { step(-1) }
+                RowArrow("\u203A", stringResource(Res.string.a11y_next_patch)) { step(1) }
+            }
+            if (onToggleMinimized != null) {
+                Spacer(Modifier.width(8.dp))
+                // The cards are off to the right of the roll, so the fold points that way like
+                // the landscape column's.
+                BarIcon(
+                    if (minimized) "\u25C2" else "\u25B8", Acid.colors.textMid,
+                    said = stringResource(if (minimized) Res.string.a11y_unfold else Res.string.a11y_fold),
+                ) { onToggleMinimized() }
             }
         }
         return

@@ -9,15 +9,6 @@
     </string-array>
     <string name="settings_screen">screen</string>
     <string name="settings_theme">theme</string>
-    <string name="settings_octaves">keyboard octaves</string>
-    <string-array name="settings_octaves_choices">
-        <item>auto</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-    </string-array>
     <!-- Look for a new version once a day. -->
     <string name="settings_updates">updates</string>
     <string name="settings_stay_awake">stay awake</string>
@@ -36,6 +27,7 @@
         <item>dark</item>
         <item>high contrast</item>
     </string-array>
+    <string name="settings_size_second">second screen size</string>
     <string name="settings_size">size</string>
     <!-- The desktop build's output choice; the phone has none. -->
     <string name="settings_output">output</string>
@@ -136,4 +128,21 @@
     <string name="second_sends">sends</string>
     <string name="second_in_key">in key</string>
     <string name="second_all_notes">all</string>
+    <string name="grid_pads">pads</string>
+    <string name="grid_columns">columns</string>
+    <string name="grid_rows">rows</string>
+    <string name="grid_layout">layout</string>
+    <string name="grid_isomorphic">isomorphic</string>
+    <string name="grid_scale">scale</string>
+    <string name="grid_piano_rows">piano rows</string>
+    <string name="grid_row">row</string>
+    <string name="grid_auto">auto</string>
+    <string name="piano_keys">keys</string>
+    <string name="piano_length">length</string>
+    <string name="piano_labels">labels</string>
+    <string name="piano_labels_c">C</string>
+    <string name="piano_labels_all">all</string>
+    <string name="piano_labels_none">none</string>
+    <!-- A keyboard row in the piano window, 1 at the bottom. -->
+    <string name="piano_row">row %d</string>
 </resources>

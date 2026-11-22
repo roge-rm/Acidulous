@@ -51,6 +51,7 @@
     <string name="a11y_velocity_touch">from where you touch</string>
     <!-- The same for the desktop build, where the pointer is a mouse. -->
     <string name="a11y_velocity_touch_mouse">from where you click</string>
+    <string name="a11y_velocity_pressure">touch, with pressure</string>
     <string name="a11y_velocity_full">full</string>
     <string name="a11y_step_view">Step view</string>
     <string name="a11y_edit_mode">Edit mode</string>

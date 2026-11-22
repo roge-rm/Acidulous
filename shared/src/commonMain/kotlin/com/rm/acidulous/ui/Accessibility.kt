@@ -82,11 +82,12 @@ internal fun Modifier.button(
 }.keyPress(if (keyFocus) onClick else null, actions)
 
 /** One of a set where one is chosen, like a switch's cell or a tab. */
-internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false, onClick: (() -> Unit)? = null): Modifier =
+internal fun Modifier.choice(name: String, chosen: Boolean, tab: Boolean = false, actions: List<CustomAccessibilityAction> = emptyList(), onClick: (() -> Unit)? = null): Modifier =
     clearAndSetSemantics {
         contentDescription = name
         role = if (tab) Role.Tab else Role.RadioButton
         selected = chosen
+        if (actions.isNotEmpty()) customActions = actions
         if (onClick != null) onClick { onClick(); true }
     }.keyPress(onClick, emptyList())
 

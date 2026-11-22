@@ -76,7 +76,7 @@ private fun SecondScreenContent() {
             AppState.patchEdit.value = null
         }
     }
-    ScaledTheme {
+    ScaledTheme(UiPrefs.secondUiScale, SecondMinLongEdgeDp) {
         CompositionLocalProvider(
             LocalSongMappings provides song.mappings,
             LocalRoomChanged provides { old, new -> AppState.editor.editSong { it.withImpulseChanged(old, new) } },
@@ -180,6 +180,7 @@ private fun SecondScreen() {
     // again goes to the next track.
     var fxChip by remember { mutableStateOf(0) }
     var fxTrack by remember { mutableStateOf("") }
+    var fxSlot by remember { mutableStateOf(0) }
     val fxIndex = song.tracks.indexOfFirst { it.id == fxTrack }.takeIf { it >= 0 } ?: index
     val c = Acid.colors
     Column(Modifier.fillMaxSize().padding(8.dp)) {
@@ -188,7 +189,15 @@ private fun SecondScreen() {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            Text(
+            // With a track on top, its patch bar takes the name's place. Its fold folds the top
+            // screen's cards, so it's there while the keys are here and the cards up there.
+            val topHooks = hooks
+            if (!home && track != null && topHooks != null) Box(Modifier.weight(1f)) {
+                TrackMachinePanel(
+                    track, index, AppState.editor, remember(topHooks.panel) { topHooks.panel.forSecondScreen() }, selectedPad, sceneId,
+                    body = false, barInRow = true, barOnSecond = true, foldable = page == 0,
+                )
+            } else Text(
                 if (home && page == 0 || track == null) song.name else track.name,
                 color = c.textHi, fontSize = 15.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
@@ -208,25 +217,38 @@ private fun SecondScreen() {
             track == null || h != null && home && page == 0 -> if (h != null) MixerPanel(
                 song, AppState.editor, h.rackPeaks, h.masterPeak, h.clickOn(), h.onClick, body, fill = true,
             )
-            h != null && home -> Column(body) {
-                FxChips(
-                    fxChip, song.tracks.getOrNull(fxIndex)?.name.orEmpty(),
-                    onChip = { fxChip = it },
-                    onTrack = {
-                        if (fxChip == 2 && song.tracks.size > 1) fxTrack = song.tracks[(fxIndex + 1) % song.tracks.size].id
-                        fxChip = 2
-                    },
-                )
-                SecondFxPage(
-                    fxChip, song, song.tracks.getOrNull(fxIndex), fxIndex, AppState.editor,
-                    Modifier.fillMaxWidth().weight(1f).padding(top = 4.dp),
-                )
+            h != null && home -> BoxWithConstraints(body) {
+                // Too narrow for two slots side by side, one slot shows at a time, picked by number.
+                val slots = when (fxChip) {
+                    0 -> com.rm.acidulous.model.SEND_SLOTS
+                    1 -> com.rm.acidulous.model.MASTER_INSERT_SLOTS
+                    else -> SlotKind.Effects.slots
+                }
+                val single = maxWidth < 640.dp
+                val shown = fxSlot.coerceIn(0, slots - 1)
+                Column(Modifier.fillMaxSize()) {
+                    FxChips(
+                        fxChip, song.tracks.getOrNull(fxIndex)?.name.orEmpty(),
+                        onChip = { fxChip = it; fxSlot = 0 },
+                        onTrack = {
+                            if (fxChip == 2 && song.tracks.size > 1) fxTrack = song.tracks[(fxIndex + 1) % song.tracks.size].id
+                            fxChip = 2
+                            fxSlot = 0
+                        },
+                        slots = if (single) slots else 0, slot = shown, onSlot = { fxSlot = it },
+                    )
+                    SecondFxPage(
+                        fxChip, song, song.tracks.getOrNull(fxIndex), fxIndex, AppState.editor,
+                        Modifier.fillMaxWidth().weight(1f).padding(top = 4.dp),
+                        only = if (single) shown else -1,
+                    )
+                }
             }
             h != null && page == 1 -> Box(body) {
                 CompositionLocalProvider(LocalPanelGrid provides true) {
                     TrackMachinePanel(
                         track, index, AppState.editor, remember(h.panel) { h.panel.forSecondScreen() }, selectedPad, sceneId,
-                        foldable = false, modifier = Modifier.fillMaxSize(),
+                        bar = false, foldable = false, modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -268,13 +290,25 @@ private fun PlayArea(
     }
 }
 
-/** The fx page's chips: the sends, the master, and a track by name. */
+/**
+ * The fx page's chips: the sends, the master, and a track by name. With [slots]
+ * above 0, the slot numbers follow on the right to pick the one slot shown.
+ */
 @Composable
-private fun FxChips(chip: Int, trackName: String, onChip: (Int) -> Unit, onTrack: () -> Unit) {
+private fun FxChips(
+    chip: Int, trackName: String, onChip: (Int) -> Unit, onTrack: () -> Unit,
+    slots: Int, slot: Int, onSlot: (Int) -> Unit,
+) {
     Row(Modifier.fillMaxWidth().height(28.dp).padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         PageTab(stringResource(Res.string.second_sends), chip == 0) { onChip(0) }
         PageTab(stringResource(Res.string.mixer_master), chip == 1) { onChip(1) }
-        PageTab(trackName + if (chip == 2) " \u25B8" else "", chip == 2, onTrack)
+        Box(Modifier.weight(1f, fill = false)) {
+            PageTab(trackName + if (chip == 2) " \u25B8" else "", chip == 2, onTrack)
+        }
+        if (slots > 0) {
+            Box(Modifier.weight(1f))
+            for (i in 0 until slots) PageTab("${i + 1}", i == slot) { onSlot(i) }
+        }
     }
 }
 

@@ -51,6 +51,7 @@
     <string name="a11y_velocity_touch">selon l’endroit touché</string>
     <!-- The same for the desktop build, where the pointer is a mouse. -->
     <string name="a11y_velocity_touch_mouse">selon l’endroit cliqué</string>
+    <string name="a11y_velocity_pressure">toucher, avec pression</string>
     <string name="a11y_velocity_full">maximale</string>
     <string name="a11y_step_view">Vue des pas</string>
     <string name="a11y_edit_mode">Mode d’édition</string>

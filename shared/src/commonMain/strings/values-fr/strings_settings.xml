@@ -9,15 +9,6 @@
     </string-array>
     <string name="settings_screen">écran</string>
     <string name="settings_theme">thème</string>
-    <string name="settings_octaves">octaves du clavier</string>
-    <string-array name="settings_octaves_choices">
-        <item>auto</item>
-        <item>1</item>
-        <item>2</item>
-        <item>3</item>
-        <item>4</item>
-        <item>5</item>
-    </string-array>
     <!-- Look for a new version once a day. -->
     <string name="settings_updates">mises à jour</string>
     <string name="settings_stay_awake">rester allumé</string>
@@ -36,6 +27,7 @@
         <item>sombre</item>
         <item>contraste élevé</item>
     </string-array>
+    <string name="settings_size_second">taille du second écran</string>
     <string name="settings_size">taille</string>
     <!-- The desktop build's output choice; the phone has none. -->
     <string name="settings_output">sortie</string>
@@ -136,4 +128,21 @@
     <string name="second_sends">envois</string>
     <string name="second_in_key">gamme</string>
     <string name="second_all_notes">toutes</string>
+    <string name="grid_pads">pads</string>
+    <string name="grid_columns">colonnes</string>
+    <string name="grid_rows">rangées</string>
+    <string name="grid_layout">disposition</string>
+    <string name="grid_isomorphic">isomorphe</string>
+    <string name="grid_scale">gamme</string>
+    <string name="grid_piano_rows">rangées piano</string>
+    <string name="grid_row">rangée</string>
+    <string name="grid_auto">auto</string>
+    <string name="piano_keys">touches</string>
+    <string name="piano_length">longueur</string>
+    <string name="piano_labels">noms</string>
+    <string name="piano_labels_c">C</string>
+    <string name="piano_labels_all">tous</string>
+    <string name="piano_labels_none">aucun</string>
+    <!-- A keyboard row in the piano window, 1 at the bottom. -->
+    <string name="piano_row">rangée %d</string>
 </resources>

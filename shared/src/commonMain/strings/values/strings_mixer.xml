@@ -35,6 +35,7 @@
     <!-- A master insert slot. -->
     <string name="mixer_master_insert">master %d</string>
     <string name="mixer_limit_drive">limit drive</string>
+    <string name="mixer_drive">drive</string>
     <!-- Short-term loudness, and true peak. -->
     <string name="mixer_lufs_short">S</string>
     <string name="mixer_true_peak">TP</string>
