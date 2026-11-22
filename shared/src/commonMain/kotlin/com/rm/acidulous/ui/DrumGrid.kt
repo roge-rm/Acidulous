@@ -77,6 +77,8 @@ fun DrumGrid(
     onScrollTime: (ticks: Float) -> Unit = {},
     /** A pinch. Sideways changes the span, the other way the row height. */
     onZoomTime: (scale: Float) -> Unit = {},
+    /** The fingers lifted after a sideways pinch. */
+    onZoomEnd: () -> Unit = {},
     /** Lock mode: a tap on a hit selects its step instead of taking the hit away. */
     lockMode: Boolean = false,
     selectedTicks: Set<Int> = emptySet(),
@@ -87,6 +89,7 @@ fun DrumGrid(
     actions: SelectionActions? = null,
     modifier: Modifier = Modifier,
 ) {
+    val zoomEnd by androidx.compose.runtime.rememberUpdatedState(onZoomEnd)
     val grid = clip.grid.coerceAtLeast(1)
     val steps = (visibleTicks / grid).coerceIn(1, 64)
     val scroll = rememberScrollState()
@@ -188,6 +191,7 @@ fun DrumGrid(
                         }
                         last = now
                     }
+                    if (mode == TwoFingerMode.ZoomTime) zoomEnd()
                 }
             },
     ) {

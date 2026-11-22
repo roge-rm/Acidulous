@@ -120,6 +120,8 @@ fun MixerPanel(
      * and both sends are knobs, and the master shows its two send returns.
      */
     fill: Boolean = false,
+    /** The strips fill the height given and their faders take the extra, for a panel with the screen to itself. */
+    tall: Boolean = false,
 ) {
     val c = Acid.colors
     // The fader height comes from the room available, floored at a height you
@@ -186,10 +188,11 @@ fun MixerPanel(
             // The first strip is measured and the groups and master are given
             // its height, so the whole row ends level.
             Box(if (index == 0) Modifier.onSizeChanged { stripH = with(density) { it.height.toDp() } } else Modifier) {
-                ChannelStrip(track, index, { rackPeaks().getOrElse(index) { 0f } }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups)
+                ChannelStrip(track, index, { rackPeaks().getOrElse(index) { 0f } }, editor, trackColour(index, track.colour), automated, faderH, room, tight, sendNames, groups, grow = tall)
             }
         }
-        val fullH = if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
+        // Tall, every strip is the room less the row's padding, known before anything is measured.
+        val fullH = if (tall && room != Dp.Infinity) room - 12.dp else if (song.tracks.isEmpty() || tight) Dp.Unspecified else stripH
         // The groups get their own strips between the tracks and the master,
         // plus a button to add one while there's room.
         song.master.groups.forEachIndexed { g, group -> GroupStrip(g, group, song, editor, faderH, room, tight, fullH) }
@@ -211,7 +214,8 @@ fun MixerPanel(
         ) { strips() }
     } else {
         Row(
-            Modifier.background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp)
+            Modifier.then(if (tall) Modifier.fillMaxHeight() else Modifier)
+                .background(c.panelAlt).horizontalScrollWithBar(rememberScrollState()).padding(6.dp)
                 .then(if (room == Dp.Infinity) Modifier else Modifier.widthIn(min = maxWidth - 12.dp)),
             horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
         ) { strips() }
@@ -255,10 +259,11 @@ private fun FillMixer(
         horizontalArrangement = Arrangement.spacedBy(FILL_GAP),
     ) {
         // The master stays at the right edge and the rest scroll. The bar gets
-        // its own room under the strips when they do.
+        // its own room under the strips when they do. A new ScrollState reports
+        // Int.MAX_VALUE until it has been measured, so that counts as no scroll.
         Row(
             Modifier.weight(1f).fillMaxHeight().horizontalScrollWithBar(scroll)
-                .then(if (scroll.maxValue > 0) Modifier.padding(bottom = 6.dp) else Modifier),
+                .then(if (scroll.maxValue in 1 until Int.MAX_VALUE) Modifier.padding(bottom = 6.dp) else Modifier),
             horizontalArrangement = Arrangement.spacedBy(FILL_GAP),
         ) {
             song.tracks.forEachIndexed { index, track ->
@@ -648,6 +653,8 @@ private fun ChannelStrip(
     /** The strip's width, and the dial of its knobs when pan and the sends are knobs (the second screen's). */
     stripW: Dp = STRIP_W,
     knobDial: Dp = Dp.Unspecified,
+    /** The strip fills the height and the fader takes what's left, as with knobs. */
+    grow: Boolean = false,
 ) {
     val c = Acid.colors
     val knobs = knobDial != Dp.Unspecified
@@ -706,7 +713,7 @@ private fun ChannelStrip(
     }
 
     Column(
-        Modifier.width(stripW).then(if (knobs) Modifier.fillMaxHeight() else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
+        Modifier.width(stripW).then(if (knobs || grow) Modifier.fillMaxHeight() else if (room == Dp.Infinity) Modifier else Modifier.heightIn(max = room))
             .clip(RoundedCornerShape(6.dp)).background(c.cardAlt)
             .then(if (tight) Modifier.verticalScrollWithBar(rememberScrollState()) else Modifier)
             .padding(4.dp).together(),
@@ -730,7 +737,7 @@ private fun ChannelStrip(
             }
         }
         Row(
-            if (knobs) Modifier.weight(1f).heightIn(min = FADER_MIN) else Modifier.height(faderH),
+            if (knobs || grow) Modifier.weight(1f).heightIn(min = FADER_MIN) else Modifier.height(faderH),
             horizontalArrangement = Arrangement.spacedBy(if (knobs) 3.dp else 4.dp),
         ) {
             LiveMeter(peak, Modifier.width(8.dp).fillMaxHeight())
@@ -1170,6 +1177,10 @@ private val ROW_SLIDER_H = 32.dp
 private val MASTER_W = STRIP_W
 /** The fader height when there's room, and the maximum anywhere. */
 private val FADER_H = 110.dp
+
+/** How tall the mixer is as a bar under the song grid, with room to spare. */
+internal fun mixerBarHeight(song: Song): Dp =
+    STRIP_CHROME + FADER_H + (if (song.master.groups.isEmpty()) 0.dp else OUTPUT_ROW) + 12.dp
 
 /** Below this a fader is too short to drag. */
 private val FADER_MIN = 56.dp

@@ -105,6 +105,27 @@ private class PerformSender(private val track: Int) {
 
 private val KILLS = listOf("killlow", "killmid", "killhigh")
 private val KILL_H = 52.dp
+private val CHIP_H = 28.dp
+
+/** The height of the pages' chips and settings: [CHIP_H], or more when a page fills a screen. */
+private val LocalChipH = androidx.compose.runtime.staticCompositionLocalOf { CHIP_H }
+
+/**
+ * A page's room. With [fill] it takes all of [modifier] and its chips grow to
+ * finger size, as far as the height allows: about a ninth of it, 28 to 44 dp.
+ */
+@Composable
+private fun PageRoom(fill: Boolean, modifier: Modifier, content: @Composable (Modifier) -> Unit) {
+    if (!fill) return content(modifier)
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier) {
+        val chip = (maxHeight / 9).coerceIn(CHIP_H, 44.dp)
+        androidx.compose.runtime.CompositionLocalProvider(LocalChipH provides chip) { content(Modifier.fillMaxSize()) }
+    }
+}
+
+/** Text in the chips, a little bigger once they've grown. */
+@Composable
+private fun chipText() = if (LocalChipH.current > 36.dp) 13.sp else 11.sp
 
 /**
  * Timed effects: repeat, gate, reverse, tape stop and the riser. Held, or
@@ -112,7 +133,11 @@ private val KILL_H = 52.dp
  * whatever it was holding.
  */
 @Composable
-fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
+fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier, fill: Boolean = false) =
+    PageRoom(fill, modifier) { HoldPageIn(song, editor, track, state, it) }
+
+@Composable
+private fun HoldPageIn(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier) {
     val c = Acid.colors
     val out = remember(track) { PerformSender(track) }
     val settings = song.master.perform
@@ -175,7 +200,11 @@ fun HoldPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mo
  * is how much of the mix goes into an echo or a wash.
  */
 @Composable
-fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier) {
+fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier = Modifier, fill: Boolean = false) =
+    PageRoom(fill, modifier) { PadPageIn(song, editor, track, state, it, fill) }
+
+@Composable
+private fun PadPageIn(song: Song, editor: SongEditor, track: Int, state: PerformState, modifier: Modifier, fill: Boolean) {
     val c = Acid.colors
     val out = remember(track) { PerformSender(track) }
     val settings = song.master.perform
@@ -204,7 +233,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
                 }
                 Caption(stringResource(Res.string.perform_feedback), Modifier.silent())
                 MiniSlider(
-                    settings.feedback / 0.9f, Modifier.fillMaxWidth().height(20.dp),
+                    settings.feedback / 0.9f, Modifier.fillMaxWidth().height(if (fill) LocalChipH.current else 20.dp),
                     name = stringResource(Res.string.perform_feedback),
                     onStart = { editor.beginSongGesture() },
                     onChange = { v ->
@@ -237,7 +266,7 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
             }
         }
         // The kills sit under the pad so they're in reach.
-        Row(Modifier.fillMaxWidth().height(KILL_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(Modifier.fillMaxWidth().height(if (fill) LocalChipH.current * 1.5f else KILL_H), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             val kills = stringArrayResource(Res.array.perform_kills)
             for (b in 0 until 3) {
                 HoldPad(kills[b], state.kills[b], state.padLatch, c.red, Modifier.weight(1f).fillMaxHeight()) { on ->
@@ -258,7 +287,11 @@ fun PadPage(song: Song, editor: SongEditor, track: Int, state: PerformState, mod
  * can land it early. Fill is the editor's held fill and is never recorded.
  */
 @Composable
-fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modifier: Modifier = Modifier) {
+fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modifier: Modifier = Modifier, fill: Boolean = false) =
+    PageRoom(fill, modifier) { LivePageIn(song, editor, playing, scene, it) }
+
+@Composable
+private fun LivePageIn(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modifier: Modifier) {
     val c = Acid.colors
     val settings = song.master.perform
     // The state each waiting mute is heading to.
@@ -326,7 +359,7 @@ fun LivePage(song: Song, editor: SongEditor, playing: Boolean, scene: Int, modif
 
 @Composable
 private fun Caption(text: String, modifier: Modifier = Modifier) {
-    Text(text, color = Acid.colors.textDim, fontSize = 9.sp, fontFamily = FontFamily.Monospace, modifier = modifier)
+    Text(text, color = Acid.colors.textDim, fontSize = if (LocalChipH.current > 36.dp) 11.sp else 9.sp, fontFamily = FontFamily.Monospace, modifier = modifier)
 }
 
 /** A setting you tap through, showing its name and value. */
@@ -334,10 +367,10 @@ private fun Caption(text: String, modifier: Modifier = Modifier) {
 private fun Setting(label: String, value: String, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
-        modifier.height(28.dp).clip(RoundedCornerShape(4.dp)).background(c.raised)
+        modifier.height(LocalChipH.current).clip(RoundedCornerShape(4.dp)).background(c.raised)
             .clickable(role = androidx.compose.ui.semantics.Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(stringResource(Res.string.perform_setting, label, value), color = c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false) }
+    ) { Text(stringResource(Res.string.perform_setting, label, value), color = c.textMid, fontSize = chipText(), maxLines = 1, softWrap = false) }
 }
 
 /**
@@ -351,7 +384,7 @@ private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
     val c = Acid.colors
     val target = song.master.perform.target.takeIf { it in 1..groups.size } ?: 0
     Box(
-        modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
+        modifier.height(LocalChipH.current).clip(RoundedCornerShape(4.dp))
             .background(if (target > 0) c.accent.copy(alpha = 0.25f) else c.raised)
             .clickable(role = androidx.compose.ui.semantics.Role.Button) {
                 editor.editSong { s ->
@@ -362,7 +395,7 @@ private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
     ) {
         Text(
             stringResource(Res.string.perform_on, if (target == 0) stringResource(Res.string.perform_on_all) else groups[target - 1].name), color = if (target > 0) c.accent else c.textMid,
-            fontSize = 11.sp, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
+            fontSize = chipText(), maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 6.dp),
         )
     }
@@ -372,11 +405,11 @@ private fun TargetChip(song: Song, editor: SongEditor, modifier: Modifier) {
 private fun LatchChip(on: Boolean, modifier: Modifier, onClick: () -> Unit) {
     val c = Acid.colors
     Box(
-        modifier.height(28.dp).clip(RoundedCornerShape(4.dp))
+        modifier.height(LocalChipH.current).clip(RoundedCornerShape(4.dp))
             .background(if (on) c.accent.copy(alpha = 0.25f) else c.raised).clickable(onClick = onClick)
             .button(stringResource(Res.string.perform_latch), stringResource(if (on) Res.string.a11y_on else Res.string.a11y_off)),
         contentAlignment = Alignment.Center,
-    ) { Text(stringResource(Res.string.perform_latch), color = if (on) c.accent else c.textMid, fontSize = 11.sp) }
+    ) { Text(stringResource(Res.string.perform_latch), color = if (on) c.accent else c.textMid, fontSize = chipText()) }
 }
 
 /**
@@ -404,7 +437,7 @@ private fun TrackMute(name: String, colour: Color, muted: Boolean, waiting: Bool
     ) {
         Box(Modifier.width(3.dp).fillMaxHeight().background(colour))
         Text(
-            name, color = if (muted) c.red else c.textMid, fontSize = 11.sp, maxLines = 1, softWrap = false,
+            name, color = if (muted) c.red else c.textMid, fontSize = chipText(), maxLines = 1, softWrap = false,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 4.dp),
         )
     }

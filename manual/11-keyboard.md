@@ -126,7 +126,8 @@ touching the screen, on a handheld like the Retroid Pocket.
 - **Y** - play / stop.
 - **L1** and **R1** - previous and next page in the editor, and a window's
   tabs.
-- **L2** and **R2** - previous and next track in the editor.
+- **L2** and **R2** - previous and next track in the editor. On the song screen
+  they pick the track you play, and its name lights up for a moment.
 - **Start** - play mode.
 - **Select** - the file menu.
 - **L3** (press the left stick) - the d-pad to the second screen and back, on

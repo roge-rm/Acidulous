@@ -9,8 +9,8 @@ across.
 
 - Tap an empty square to add a note, and tap a note to delete it.
 - Drag a note to move it, or drag its right edge to change its length.
-- Drag with **two fingers** to scroll and pinch to zoom. One finger always
-  draws.
+- Drag with **two fingers** to scroll and pinch to zoom. A sideways pinch
+  settles on whole bars when you let go. One finger always draws.
 - The **scl** corner changes how the song's scale is shown: all notes, scale
   notes highlighted, only the scale notes or **used**, only the pitches the clip
   has notes on (a pitch stays until you leave that view).

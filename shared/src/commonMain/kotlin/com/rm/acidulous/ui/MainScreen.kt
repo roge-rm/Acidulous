@@ -44,12 +44,15 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.Modifier
@@ -152,6 +155,8 @@ fun MainScreen(
     rackHot: BooleanArray = BooleanArray(16),
     /** The track a performance on the perform page records into, the last one opened. */
     performTrack: Int = 0,
+    /** What the perform pages hold, shared with the second screen's. App forgets it on a stop. */
+    performState: PerformState = remember { PerformState() },
     /** Empty launcher cells record into themselves, see Looper. */
     looper: Looper? = null,
     masterPeak: () -> Float,
@@ -200,14 +205,20 @@ fun MainScreen(
     }
     var fileMenu by remember { mutableStateOf(false) }
     var showMixer by remember { mutableStateOf(false) }
+    // The track just picked with L2/R2 and a count, so picking it again flashes again.
+    var picked by remember { mutableStateOf(-1 to 0) }
+    val pickGlow = remember { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(picked) {
+        if (picked.first < 0) return@LaunchedEffect
+        pickGlow.snapTo(1f)
+        pickGlow.animateTo(0f, androidx.compose.animation.core.tween(800))
+    }
     // The slide-up panel's two pages: the mixer, and the held effects.
     var panelPage by rememberSaveable { mutableStateOf(0) }
     // What a looper tap did, by cell, so its double tap can undo it.
     val looperUndo = remember { mutableMapOf<Pair<Int, String>, () -> Unit>() }
     // What the perform pages are holding, kept here so a latch survives a tab
     // change. A stop releases everything in the engine, so here too.
-    val performState = remember { PerformState() }
-    LaunchedEffect(playing) { if (!playing) performState.forgetHeld() }
     var panelH by remember { mutableStateOf(Dp.Unspecified) }
 
     // In landscape the transport goes in the header, like in the editor. The
@@ -468,6 +479,9 @@ fun MainScreen(
         KeyAction.Undo to { if (editor.canUndoSong()) { editor.undoSong(); lostKeys = 0 to lostKeys.second } },
         KeyAction.Redo to { if (editor.canRedoSong()) editor.redoSong() },
         KeyAction.Panel to { showMixer = !showMixer },
+        // The track the keys, MIDI and controller play.
+        KeyAction.TrackPrev to { stepPlayedTrack(song, -1)?.let { picked = it to picked.second + 1 } },
+        KeyAction.TrackNext to { stepPlayedTrack(song, 1)?.let { picked = it to picked.second + 1 } },
         KeyAction.Save to { onSave() },
         KeyAction.FileMenu to { fileMenu = true },
         KeyAction.Help to { dialog = Dialog.Help },
@@ -584,6 +598,12 @@ fun MainScreen(
         // page with it. A full last page leaves it out, each scene's menu can
         // add one too.
         val showAddScene = !talkBack || (page == pages - 1 && shownScenes.count() < perPage)
+        val minGridPx = with(androidx.compose.ui.platform.LocalDensity.current) { (cell.sceneH + cell.cellH).roundToPx() }
+        // The grid and panel's room, measured with or without the panel. When the
+        // mixer would leave less grid than minGridPx, the panel takes it all.
+        var areaPx by remember { mutableIntStateOf(0) }
+        val barPx = with(androidx.compose.ui.platform.LocalDensity.current) { mixerBarHeight(song).roundToPx() }
+        val fillPanel = showMixer && areaPx > 0 && areaPx - barPx < minGridPx
         if (pages > 1) {
             val first = shownScenes.first + 1
             val last = shownScenes.last + 1
@@ -607,8 +627,9 @@ fun MainScreen(
                 HeaderButton("▶", description = stringResource(Res.string.a11y_next_scenes)) { scenePage = (page + 1) % pages }
             }
         }
+        GridOverPanel(minGridPx, fillPanel, Acid.colors.panelAlt, Modifier.fillMaxWidth().weight(1f).onSizeChanged { areaPx = it.height }, grid = {
         Row(
-            Modifier.fillMaxWidth().weight(1f)
+            Modifier.fillMaxSize()
                 .onSizeChanged { gridW = it.width; gridH = it.height }
                 // Not on to the time readout either.
                 .rowEnd()
@@ -700,6 +721,14 @@ fun MainScreen(
                     val rowFrozen = remember(song, index) {
                         song.scenes.count { track.clips[it.id]?.frozen != null }
                     }
+                    val accent = Acid.colors.accent
+                    Box(Modifier.drawWithContent {
+                        drawContent()
+                        if (picked.first == index && pickGlow.value > 0f) drawRoundRect(
+                            accent.copy(alpha = 0.35f * pickGlow.value),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(6.dp.toPx()),
+                        )
+                    }) {
                     TrackHeader(
                         hot = straining && rackHot.getOrElse(index) { false },
                         name = track.name, machine = track.machine.type, colour = trackColour(index, track.colour),
@@ -716,6 +745,7 @@ fun MainScreen(
                         onFreeze = { onFreeze(row) },
                         onThaw = { onThaw(song.scenes.map { Freeze.Target(index, it.id) }) },
                     )
+                    }
                 }
                 OutlinedButton(
                     onClick = { dialog = Dialog.PickMachine(null) },
@@ -892,7 +922,7 @@ fun MainScreen(
             }
         }
         }
-
+        }, panel = {
         if (showMixer) {
             // The tabs are rotated down the left edge so they cost the strips a
             // little width but no height. The perform pages get the mixer's
@@ -927,12 +957,15 @@ fun MainScreen(
                     3 -> LivePage(song, editor, playing, atScene, pageModifier)
                     else -> MixerPanel(
                         song, editor, rackPeaks, masterPeak, clickOn, onClick,
-                        Modifier.weight(1f).onSizeChanged { panelH = with(density) { it.height.toDp() } }.together(),
+                        Modifier.weight(1f).then(if (fillPanel) Modifier.fillMaxHeight() else Modifier)
+                            .onSizeChanged { panelH = with(density) { it.height.toDp() } }.together(),
                         rows = false,
+                        tall = fillPanel,
                     )
                 }
             }
         }
+        })
 
         // In landscape the pills are in the header and this is just the
         // readout, with the bar behind it so it doesn't read as part of the
@@ -1619,4 +1652,48 @@ internal fun pulseWhile(on: Boolean, from: Float, to: Float, ms: Int, label: Str
         animationSpec = infiniteRepeatable(tween(ms), RepeatMode.Reverse), label = label,
     )
     return value
+}
+
+/**
+ * The song grid with the panel under it, laid out in one pass. The panel takes
+ * its own height and the grid the rest. With [fill] the panel takes it all.
+ * Otherwise, if the grid would be left less than [minGridPx], the grid gets
+ * nothing and the panel's colour fills the gap above it, so opening the panel
+ * never moves anything a frame later.
+ */
+@Composable
+private fun GridOverPanel(
+    minGridPx: Int,
+    fill: Boolean,
+    panelColour: Color,
+    modifier: Modifier,
+    grid: @Composable () -> Unit,
+    panel: @Composable () -> Unit,
+) {
+    val gap = remember { IntArray(1) }
+    Layout(
+        contents = listOf(grid, panel),
+        modifier = modifier.drawBehind { if (gap[0] > 0) drawRect(panelColour, size = androidx.compose.ui.geometry.Size(size.width, gap[0].toFloat())) },
+    ) { (grids, panels), c ->
+        val w = c.maxWidth
+        val h = c.maxHeight
+        val p = panels.firstOrNull()?.measure(if (fill) Constraints.fixed(w, h) else Constraints(0, w, 0, h))
+        val ph = p?.height ?: 0
+        val gh = if (p != null && h - ph < minGridPx) 0 else h - ph
+        gap[0] = h - ph - gh
+        val g = grids.map { it.measure(Constraints.fixed(w, gh.coerceAtLeast(0))) }
+        layout(w, h) {
+            g.forEach { it.place(0, 0) }
+            p?.place(0, h - ph)
+        }
+    }
+}
+
+/** Moves the played track ([AppState.midiTrack]) by [by], round the ends, and returns it. */
+private fun stepPlayedTrack(song: Song, by: Int): Int? {
+    val n = song.tracks.size
+    if (n == 0) return null
+    val t = com.rm.acidulous.AppState.midiTrack
+    t.value = ((t.value + by) % n + n) % n
+    return t.value
 }

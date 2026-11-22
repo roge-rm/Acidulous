@@ -110,7 +110,7 @@ DESKTOP_SENTENCES = {
         "The mouse wheel moves around the grid, sideways with Shift held, and Ctrl and the wheel make the cells bigger or smaller.",
     "On a tablet or a big window the cells grow to fill the screen, up to three times their size, until you pinch.":
         "In a big window the cells grow to fill it, up to three times their size, until you zoom.",
-    "Drag with **two fingers** to scroll and pinch to zoom. One finger always draws.":
+    "Drag with **two fingers** to scroll and pinch to zoom. A sideways pinch settles on whole bars when you let go. One finger always draws.":
         "The mouse wheel scrolls up and down, and sideways with Shift held. Ctrl and the wheel zoom in on time, Ctrl, Shift and the wheel zoom the rows, and dragging always draws.",
     "The arrows, or swipes on a touchpad, move between controls.":
         "The arrows move between controls.",
@@ -188,7 +188,7 @@ FRENCH = {
             "La molette déplace la grille, de côté avec Maj enfoncée, et Ctrl avec la molette agrandit ou réduit les cases.",
         "Sur une tablette ou une grande fenêtre, les cases grandissent pour remplir l’écran, jusqu’à trois fois leur taille, tant que vous ne pincez pas.":
             "Dans une grande fenêtre, les cases grandissent pour la remplir, jusqu’à trois fois leur taille, tant que vous ne zoomez pas.",
-        "Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un doigt dessine toujours.":
+        "Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un pincement de côté se cale sur des mesures entières quand vous lâchez. Un doigt dessine toujours.":
             "La molette fait défiler de haut en bas, et de côté avec Maj enfoncée. Ctrl avec la molette zoome sur le temps, Ctrl, Maj et la molette zooment sur les rangées, et glisser dessine toujours.",
         "Les flèches, ou des balayages sur un pavé tactile, passent d’une commande à l’autre.":
             "Les flèches passent d’une commande à l’autre.",

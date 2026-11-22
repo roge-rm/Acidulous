@@ -174,7 +174,7 @@ private fun SecondScreen() {
     // A song with no tracks still has a mixer.
     // A stale index falls back to the first track, and its index goes on with it.
     val index = if (trackIndex in song.tracks.indices) trackIndex else 0
-    val track = song.tracks.getOrNull(index) ?: if (home && page == 0) null else return
+    val track = song.tracks.getOrNull(index) ?: if (home && page != 1) null else return
     var selectedPad by AppState.selectedPad(track?.id ?: "")
     // The fx page: 0 the sends, 1 the master's inserts, 2 a track's. A tap on the track's chip
     // again goes to the next track.
@@ -198,22 +198,34 @@ private fun SecondScreen() {
                     body = false, barInRow = true, barOnSecond = true, foldable = page == 0,
                 )
             } else Text(
-                if (home && page == 0 || track == null) song.name else track.name,
+                if (home && page !in 2..3 || track == null) song.name else track.name,
                 color = c.textHi, fontSize = 15.sp, maxLines = 1,
                 overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
             )
+            if (hooks != null && home) {
+                // The perform pages, before fx and mix: 2 hold, 3 pad, 4 live.
+                stringArrayResource(Res.array.main_panel_pages).drop(1).forEachIndexed { i, name ->
+                    PageTab(name, page == i + 2) { UiPrefs.chooseSecondPage(true, i + 2) }
+                }
+            }
             if (hooks != null) {
-                val names = if (home) listOf(stringResource(Res.string.second_mix), stringResource(Res.string.edit_fx))
+                // Page numbers and their order on screen: fx then mix under the song screen.
+                val tabs = if (home) listOf(1 to stringResource(Res.string.edit_fx), 0 to stringResource(Res.string.second_mix))
                 else listOf(
-                    stringResource(if (track != null && MachineUi.kindOf(track.machine) == MachineKind.Drums) Res.string.edit_pads else Res.string.edit_keys),
-                    stringResource(Res.string.second_panel),
+                    0 to stringResource(if (track != null && MachineUi.kindOf(track.machine) == MachineKind.Drums) Res.string.edit_pads else Res.string.edit_keys),
+                    1 to stringResource(Res.string.second_panel),
                 )
-                names.forEachIndexed { i, name -> PageTab(name, page == i) { UiPrefs.chooseSecondPage(home, i) } }
+                tabs.forEach { (i, name) -> PageTab(name, page == i) { UiPrefs.chooseSecondPage(home, i) } }
             }
         }
         val body = Modifier.fillMaxWidth().weight(1f).padding(top = 4.dp)
         val h = hooks
+        // Its own state, so the position changing every poll doesn't rebuild the screen.
+        val scene by remember(h) { androidx.compose.runtime.derivedStateOf { h?.scene?.invoke() ?: 0 } }
         when {
+            h != null && home && page == 2 -> HoldPage(song, AppState.editor, rack, h.perform, body, fill = true)
+            h != null && home && page == 3 -> PadPage(song, AppState.editor, rack, h.perform, body, fill = true)
+            h != null && home && page == 4 -> LivePage(song, AppState.editor, h.playing(), scene, body, fill = true)
             track == null || h != null && home && page == 0 -> if (h != null) MixerPanel(
                 song, AppState.editor, h.rackPeaks, h.masterPeak, h.clickOn(), h.onClick, body, fill = true,
             )
@@ -312,7 +324,7 @@ private fun FxChips(
     }
 }
 
-/** One of the header's two pages. */
+/** One of the header's pages. */
 @Composable
 private fun PageTab(label: String, on: Boolean, onClick: () -> Unit) {
     val c = Acid.colors

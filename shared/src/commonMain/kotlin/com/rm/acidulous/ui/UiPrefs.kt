@@ -269,7 +269,7 @@ object UiPrefs {
     /**
      * Show the diagnostics numbers: the line under the transport, the readings
      * in Settings, the MIDI counters and the editor's note count. Only in a
-     * debug build (AppHost.debugBuild), where they're on unless switched off;
+     * debug build (AppHost.debugBuild), where they are off until switched on;
      * a release has neither the numbers nor the switch.
      */
     var showDiagnostics by mutableStateOf(false)
@@ -409,7 +409,7 @@ object UiPrefs {
         inputClean = p.getBoolean(KEY_INPUT_CLEAN, false)
         readZooms(p.getString(KEY_ZOOMS, null))
         keepAwake = p.getBoolean(KEY_AWAKE, true)
-        showDiagnostics = com.rm.acidulous.AppHost.current.debugBuild && p.getBoolean(KEY_DIAGNOSTICS, true)
+        showDiagnostics = com.rm.acidulous.AppHost.current.debugBuild && p.getBoolean(KEY_DIAGNOSTICS, false)
         linkWanted = p.getBoolean(KEY_LINK, false)
         com.rm.acidulous.engine.LinkHub.chooseStartStop(p.getBoolean(KEY_LINK_STARTSTOP, true))
         mappings = runCatching {
@@ -467,7 +467,7 @@ object UiPrefs {
         updateCheckedAt = p.getString(KEY_UPDATE_CHECKED, null)?.toLongOrNull() ?: 0L
         updateDismissed = p.getString(KEY_UPDATE_DISMISSED, null)
         secondScreen = p.getBoolean(KEY_SECOND_SCREEN, true)
-        secondPageHome = p.getInt(KEY_SECOND_PAGE_HOME, 0)
+        secondPageHome = p.getInt(KEY_SECOND_PAGE_HOME, 0).coerceIn(0, 4)
         secondPageTrack = p.getInt(KEY_SECOND_PAGE_TRACK, 0)
         gridTracks = p.getString(KEY_GRID_TRACKS, null).orEmpty().split(',').filter { it.isNotEmpty() }
     }
@@ -480,7 +480,7 @@ object UiPrefs {
         store?.edit()?.putBoolean(KEY_SECOND_SCREEN, on)?.apply()
     }
 
-    /** The second screen's page under the song screen: 0 mixer, 1 effects. */
+    /** The second screen's page under the song screen: 0 mixer, 1 effects, 2 hold, 3 pad, 4 live. */
     var secondPageHome by mutableStateOf(0)
         private set
     /** The second screen's page under a track's editor: 0 the keys or pads, 1 the machine's panel. */

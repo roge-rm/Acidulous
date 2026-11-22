@@ -1407,7 +1407,7 @@ private fun DialogShell(
                             .heightIn(max = maxBodyHeight)
                             .onSizeChanged { bodyViewport = it.height }
                             .verticalScrollWithBar(bodyScroll)
-                            .padding(end = if (bodyScroll.maxValue > 0) 10.dp else 0.dp)
+                            .padding(end = if (bodyScroll.maxValue in 1 until Int.MAX_VALUE) 10.dp else 0.dp)
                             // Where the keyboard's first focus goes: the
                             // body's first control, not the footer's button.
                             .focusRequester(bodyFocus)

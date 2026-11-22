@@ -11,8 +11,9 @@ verticale et le temps à l’horizontale.
   supprimer.
 - Glissez une note pour la déplacer, ou glissez son bord droit pour changer sa
   longueur.
-- Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un doigt
-  dessine toujours.
+- Glissez à **deux doigts** pour défiler et pincez pour zoomer. Un pincement
+  de côté se cale sur des mesures entières quand vous lâchez. Un doigt dessine
+  toujours.
 - Le coin **gam** change l’affichage de la gamme du morceau : toutes les notes,
   notes de la gamme en surbrillance, seulement les notes de la gamme ou **util**,
   seulement les hauteurs que le clip utilise (une hauteur reste jusqu’à ce que

@@ -2137,7 +2137,12 @@ fun App(modifier: Modifier = Modifier) {
     }
     val onClickNow: (Boolean) -> Unit = { on -> clickOn = on; EngineSync.setMetronome(on, com.rm.acidulous.ui.UiPrefs.clickVolume, com.rm.acidulous.ui.UiPrefs.clickVoice, com.rm.acidulous.ui.UiPrefs.clickDivision, com.rm.acidulous.ui.UiPrefs.clickWhen) }
     // Lent to the second screen while this is composed.
-    val hooks = remember { TopHooks({ rackPeaks }, { peak }, { clickOn }, onClickNow, panelActions) }
+    // One for both screens, so a pad held on one shows on the other. A stop releases everything.
+    val performState = remember { com.rm.acidulous.ui.PerformState() }
+    LaunchedEffect(playing) { if (!playing) performState.forgetHeld() }
+    val hooks = remember {
+        TopHooks({ rackPeaks }, { peak }, { clickOn }, onClickNow, panelActions, performState, { playing }, { position.scene })
+    }
     androidx.compose.runtime.DisposableEffect(hooks) {
         AppState.hooks.value = hooks
         onDispose { if (AppState.hooks.value === hooks) AppState.hooks.value = null }
@@ -2179,6 +2184,7 @@ fun App(modifier: Modifier = Modifier) {
             position = { if (hidden) heldPosition[0] else position.also { heldPosition[0] = it } },
             playing = heldWhile(hidden, playing), armed = heldWhile(hidden, armed),
             performTrack = heldWhile(hidden, midiTrack),
+            performState = performState,
             looper = looper,
             countInBeats = heldWhile(hidden, countInBeats),
             elapsedSeconds = { elapsedSeconds },

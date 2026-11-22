@@ -138,7 +138,8 @@ Pocket.
 - **Y** - jouer / arrêter.
 - **L1** et **R1** - page précédente et suivante dans l’éditeur, et les onglets
   d’une fenêtre.
-- **L2** et **R2** - piste précédente et suivante dans l’éditeur.
+- **L2** et **R2** - piste précédente et suivante dans l’éditeur. Sur l’écran du
+  morceau, ils choisissent la piste que vous jouez, et son nom s’allume un instant.
 - **Start** - mode jeu.
 - **Select** - le menu fichier.
 - **L3** (appuyer sur le stick gauche) - la croix vers le second écran et

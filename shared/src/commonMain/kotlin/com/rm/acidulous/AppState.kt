@@ -111,6 +111,11 @@ class TopHooks(
     val clickOn: () -> Boolean,
     val onClick: (Boolean) -> Unit,
     val panel: com.rm.acidulous.ui.PanelActions,
+    /** What the perform pages hold, shared with the top screen's. */
+    val perform: com.rm.acidulous.ui.PerformState,
+    val playing: () -> Boolean,
+    /** The scene playing. Read in a derivedStateOf, since the position changes every poll. */
+    val scene: () -> Int,
 )
 
 class PresetChoice(val track: Int, val presets: List<String>, val bottom: Boolean)

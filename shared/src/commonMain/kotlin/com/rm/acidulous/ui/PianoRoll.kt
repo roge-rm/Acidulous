@@ -133,6 +133,8 @@ fun PianoRoll(
      * zooms time.
      */
     onZoom: (pitchScale: Float, timeScale: Float) -> Unit = { _, _ -> },
+    /** The fingers lifted after a pinch that zoomed time. */
+    onZoomEnd: () -> Unit = {},
     /** A singer's roll: each note shows its syllable. */
     lyrics: Boolean = false,
     /** Delete or Backspace with notes selected removes them all. */
@@ -159,7 +161,7 @@ fun PianoRoll(
     val rowsState by rememberUpdatedState(rows)
     val cb by rememberUpdatedState(
         Callbacks(onTapEmpty, onTapNote, onSelectionChange, onGestureBegin, onMove, onResize, onDraw, onGestureEnd,
-            onAudition, onCycleScaleView, onScrollPitch, onScrollTime, onZoom),
+            onAudition, onCycleScaleView, onScrollPitch, onScrollTime, onZoom, onZoomEnd),
     )
     // The pitch of each row. Chromatic and Dim step by semitone; Fold keeps
     // only the scale's notes, so every row is playable.
@@ -803,6 +805,7 @@ private class Callbacks(
     val onScrollPitch: (Int) -> Unit,
     val onScrollTime: (Float) -> Unit,
     val onZoom: (Float, Float) -> Unit,
+    val onZoomEnd: () -> Unit,
 )
 
 /**
@@ -927,6 +930,7 @@ private suspend fun AwaitPointerEventScope.twoFingers(geo: Geometry, cb: Callbac
         }
         last = now
     }
+    if (mode == TwoFingerMode.ZoomTime) cb.onZoomEnd()
 }
 
 private class Hit(val index: Int, val onEdge: Boolean)

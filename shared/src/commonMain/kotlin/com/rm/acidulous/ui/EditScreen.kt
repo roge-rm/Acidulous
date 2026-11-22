@@ -370,6 +370,29 @@ fun EditScreen(
         .coerceIn(PPQN.toFloat(), clipLen.toFloat().coerceAtLeast(PPQN.toFloat()))
     val maxScroll = (clipLen - pageTicks).coerceAtLeast(0f)
     scrollTick = scrollTick.coerceIn(0f, maxScroll)
+    // When a pinch that zoomed time lets go, the window eases onto whole bars,
+    // starting on a bar line. A new pinch stops the ease.
+    val snapScope = androidx.compose.runtime.rememberCoroutineScope()
+    val snapJob = remember { arrayOfNulls<kotlinx.coroutines.Job>(1) }
+    fun stopSnap() { snapJob[0]?.cancel(); snapJob[0] = null }
+    fun snapToBars() {
+        if (kind == MachineKind.Audio) return
+        val bar = ticksPerBar.toFloat().coerceAtLeast(1f)
+        val span = clipLen.toFloat().coerceAtLeast(PPQN.toFloat())
+        val fromTicks = if (zoomTicks > 0f) zoomTicks else defaultTicks
+        val maxBars = (span / bar).toInt().coerceAtLeast(1)
+        val toTicks = ((fromTicks / bar).roundToInt().coerceIn(1, maxBars) * bar).coerceAtMost(span)
+        val fromScroll = scrollTick
+        val toScroll = ((fromScroll / bar).roundToInt() * bar).coerceIn(0f, (span - toTicks).coerceAtLeast(0f))
+        if (toTicks == fromTicks && toScroll == fromScroll) return
+        stopSnap()
+        snapJob[0] = snapScope.launch {
+            androidx.compose.animation.core.animate(0f, 1f, animationSpec = androidx.compose.animation.core.tween(160)) { t, _ ->
+                zoomTicks = fromTicks + (toTicks - fromTicks) * t
+                scrollTick = fromScroll + (toScroll - fromScroll) * t
+            }
+        }
+    }
     // The drum grid's window is whole steps, starting on a step. Otherwise a
     // pinch or drag could leave the cells between the hits and the grid would
     // show none. The lane and automation strip use the same window so they stay
@@ -707,6 +730,7 @@ fun EditScreen(
             visibleTicks = visibleTicks,
             onScrollTime = { ticks -> scrollTick = (scrollTick + ticks).coerceIn(0f, maxScroll) },
             onZoomTime = { scale ->
+                stopSnap()
                 val was = if (zoomTicks > 0f) zoomTicks else defaultTicks
                 val span = clipLen.toFloat().coerceAtLeast(PPQN.toFloat())
                 val centre = scrollTick + was / 2f
@@ -714,6 +738,7 @@ fun EditScreen(
                 zoomTicks = want
                 scrollTick = (centre - want / 2f).coerceIn(0f, (clipLen - want).coerceAtLeast(0f))
             },
+            onZoomEnd = { snapToBars() },
             onSetHit = { tick, note, hit ->
                 editor.editClip(trackIndex, sceneId) { c ->
                     val others = c.notes.filter { !(it.tick == tick && it.pitch == note) }
@@ -812,6 +837,7 @@ fun EditScreen(
                     lowestPitch = (centre - want.toInt() / 2).coerceIn(0, 127 - want.toInt())
                 }
                 if (timeScale != 1f) {
+                    stopSnap()
                     val was = if (zoomTicks > 0f) zoomTicks else defaultTicks
                     val span = clipLen.toFloat().coerceAtLeast(PPQN.toFloat())
                     val centre = scrollTick + was / 2f
@@ -820,6 +846,7 @@ fun EditScreen(
                     scrollTick = (centre - want / 2f).coerceIn(0f, (clipLen - want).coerceAtLeast(0f))
                 }
             },
+            onZoomEnd = { snapToBars() },
             onGestureBegin = { editor.beginGesture(trackIndex) },
             onMove = { indices, dTick, dPitch ->
                 editor.updateGestureClip(sceneId) { base ->
