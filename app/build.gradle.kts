@@ -224,15 +224,17 @@ android {
         // inserts per track with a mod slot each, Bias comping.
         // 0.15.0: Abacus, an additive machine; one house level for every
         // machine; second-screen support for dual-screen handhelds.
+        // 0.16.0: the second screen tried on the Retroid Pocket Duo: keys,
+        // piano and grid windows, pressure, the mixer and perform pages below.
         //
         // Two APKs per release: 64-bit, and with -Parm32 a 32-bit one for
         // tablets like the Fire HD 8. A store installs the highest versionCode
         // a device can run, and most 64-bit phones can also run 32-bit code,
         // so the 64-bit APK must be higher: the release number times ten,
         // plus 2 for 64-bit and 1 for 32-bit. Bump [release], not the code.
-        val release = 47
+        val release = 48
         versionCode = release * 10 + if (arm32) 1 else 2
-        versionName = "0.15.0"
+        versionName = "0.16.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
