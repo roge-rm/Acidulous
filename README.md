@@ -120,6 +120,20 @@ Two controllers have special support, as I have these myself. Each has its own p
 
 Either can be kept on its notes page, to play live while you change scenes and clips on the screen.
 
+### Two screens
+
+On a device with a second built-in screen, like the Retroid Pocket Duo, the app opens on both. The top screen is the app as usual and the bottom one follows it:
+
+- under the editor, the keys (or pads on a drum machine) or the machine's panel. Whichever it is leaves the top screen, so the notes get more room.
+- under the song screen, the mixer, the effects and the perform pages, hold, pad and live.
+
+| | | |
+|---|---|---|
+| <img src="screenshots/duo-keys.png" width="260" alt="The editor on top and two rows of keys below"> | <img src="screenshots/duo-mixer.png" width="260" alt="The song grid on top and the mixer below"> | <img src="screenshots/duo-perform.png" width="260" alt="The song grid on top and the perform pad below"> |
+| Play the keys below while the notes record on top. Hold **piano** for up to four rows, or **grid** for pads. | The mixer below, with pan and both sends on every strip. | The perform pages below, so you can play the effects while you change scenes on top. |
+
+The keys and a controller follow the screen you touched last. **L3** or **Ctrl+Tab** moves them without touching. The bottom screen has its own size in Settings, and **second screen** there turns it off.
+
 ### Import and export
 
 Export WAV, AIFF, FLAC, MP3 or AAC, as the whole song, one scene or stems, and MIDI files or a song bundle you can share.
